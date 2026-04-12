@@ -735,10 +735,18 @@ export const BusinessProvider = ({ children }) => {
         let userRole = 'STAFF';
         const superAdmins = ['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com'];
         if (superAdmins.includes(user.email)) {
+          console.log("Email reconnu comme Super Admin:", user.email);
           userRole = 'SUPER_ADMIN';
         }
 
-        if (docSnap.exists()) {
+        let docSnap;
+        try {
+            docSnap = await getDoc(doc(db, 'users', user.uid));
+        } catch (err) {
+            console.error("Erreur récupération doc utilisateur:", err);
+        }
+
+        if (docSnap && docSnap.exists()) {
           const userData = docSnap.data();
           if (userData.data) setData(userData.data);
           if (userData.config) setConfig(userData.config);
@@ -749,13 +757,16 @@ export const BusinessProvider = ({ children }) => {
             email: user.email,
             poste: userData.profile?.poste || (userRole === 'SUPER_ADMIN' ? 'Admin Suprême' : 'Utilisateur'),
             dept: userData.profile?.dept || 'Direction',
-            role: userData.profile?.role || userRole
+            role: userRole === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : (userData.profile?.role || userRole)
           });
           
           if (userData.permissions) {
             setPermissions(prev => ({
               ...prev,
-              [user.uid]: userData.permissions
+              [user.uid]: userRole === 'SUPER_ADMIN' ? {
+                roles: ['SUPER_ADMIN'],
+                allowedModules: ['home', 'crm', 'sales', 'inventory', 'accounting', 'hr', 'production', 'projects', 'purchase', 'marketing', 'bi', 'masterdata', 'calendar', 'helpdesk', 'timesheets', 'fleet', 'quality', 'expenses', 'budget', 'dms', 'contracts', 'manufacturing', 'planning', 'analytics', 'settings', 'studio', 'user_management']
+              } : userData.permissions
             }));
           }
         } else {
