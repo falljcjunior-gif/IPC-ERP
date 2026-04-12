@@ -19,19 +19,9 @@ import { BarChartComp } from '../components/BusinessCharts';
 const Contracts = () => {
   useBusiness();
 
-  const contractsData = [
-    { id: 'C-2026-001', titre: 'Support Premium Gold', client: 'TotalEnergies', amount: 1500, type: 'Mensuel', status: 'Actif', end: '2026-12-31', sla: '99.9%' },
-    { id: 'C-2026-002', titre: 'Maintenance Cloud VPC', client: 'Air France', amount: 12000, type: 'Annuel', status: 'À renouveler', end: '2026-05-15', sla: '99.5%' },
-    { id: 'C-2026-003', titre: 'Licences Pack Elite', client: 'Orange Business', amount: 450, type: 'Mensuel', status: 'Actif', end: '2027-01-20', sla: '99.9%' },
-    { id: 'C-2026-004', titre: 'Conseil Stratégique', client: 'Crédit Agricole', amount: 5000, type: 'Unique', status: 'Expiré', end: '2026-03-01', sla: 'N/A' },
-  ];
+  const contractsData = [];
 
-  const mrrData = [
-    { name: 'Jan', value: 45000 },
-    { name: 'Fév', value: 48500 },
-    { name: 'Mar', value: 52000 },
-    { name: 'Avr', value: 58000 },
-  ];
+  const mrrData = [];
 
   return (
     <div style={{ padding: '2.5rem' }}>
@@ -56,15 +46,15 @@ const Contracts = () => {
                <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>MRR (REVENU RÉCURRENT)</div>
                <TrendingUp size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>18 450 FCFA</div>
-            <div style={{ fontSize: '0.7rem', color: '#10B981', marginTop: '0.5rem', fontWeight: 700 }}>+12% ce mois</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0 FCFA</div>
+            <div style={{ fontSize: '0.7rem', color: '#10B981', marginTop: '0.5rem', fontWeight: 700 }}>0% ce mois</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>TAUX DE CHURN</div>
                <AlertTriangle size={18} color="#F59E0B" />
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>1.2%</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0%</div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Stable vs mois dernier</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
@@ -72,7 +62,7 @@ const Contracts = () => {
                <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>CONFORMITÉ SLA</div>
                <CheckCircle2 size={18} color="#10B981" />
             </div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>99.98%</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0%</div>
             <div style={{ fontSize: '0.7rem', color: '#10B981', marginTop: '0.5rem', fontWeight: 700 }}>Obj: 99.9%</div>
          </div>
       </div>

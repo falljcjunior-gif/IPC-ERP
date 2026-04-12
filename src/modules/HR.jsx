@@ -70,7 +70,7 @@ const HR = ({ onOpenDetail }) => {
 
   /* ─── KPIs ─── */
   const kpis = useMemo(() => {
-    const masseSalariale = enrichedEmployees.reduce((s, e) => s + (e.salaire || 3500000), 0) * 12;
+    const masseSalariale = enrichedEmployees.reduce((s, e) => s + (e.salaire || 0), 0) * 12;
     const turnover = 8.4;
     const absenteisme = 3.2;
     const engagementScore = 76;

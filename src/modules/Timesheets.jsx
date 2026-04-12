@@ -47,14 +47,7 @@ const Timesheets = () => {
   // Initialize timesheets with fallback to avoid direct data mutation
   const timesheets = useMemo(() => {
     if (data.hr.timesheets) return data.hr.timesheets;
-    return [
-      { id: '1', collaborateur: 'Jean Dupont',  date: '2026-04-07', projet: 'IPC ERP v2.0',           tache: 'Interface Dashboard',   heures: 7.5, statut: 'Validé',     commentaire: 'Phase design finalisée', facturable: true },
-      { id: '2', collaborateur: 'Jean Dupont',  date: '2026-04-08', projet: 'Migration Cloud Partner', tache: 'Audit Sécurité Cloud',  heures: 4,   statut: 'Validé',     commentaire: 'Analyse des logs',       facturable: true },
-      { id: '3', collaborateur: 'Sarah Miller', date: '2026-04-08', projet: 'IPC ERP v2.0',           tache: 'Module Production',     heures: 8,   statut: 'En attente', commentaire: 'Spécifications',         facturable: false },
-      { id: '4', collaborateur: 'Paul Brunet',  date: '2026-04-09', projet: 'IPC ERP v2.0',           tache: 'Développement FullStack',heures: 7,   statut: 'Validé',     commentaire: 'API endpoints',          facturable: false },
-      { id: '5', collaborateur: 'Marie Lefebvre',date: '2026-04-09', projet: 'Interne',               tache: 'Recrutement technique', heures: 3,   statut: 'En attente', commentaire: 'Entretiens',             facturable: false },
-      { id: '6', collaborateur: 'Sarah Miller', date: '2026-04-10', projet: 'Migration Cloud Partner', tache: 'Présentation client',   heures: 5,   statut: 'Validé',     commentaire: 'Kickoff réunion',        facturable: true },
-    ];
+    return data.hr.timesheets || [];
   }, [data.hr.timesheets]);
   const isManager = userRole === 'ADMIN' || userRole === 'HR' || userRole === 'SUPER_ADMIN';
 
@@ -86,13 +79,7 @@ const Timesheets = () => {
     return Object.entries(map).map(([nom, heures]) => ({ nom: nom.split(' ')[0], heures })).sort((a, b) => b.heures - a.heures);
   }, [timesheets]);
 
-  const weeklyTrend = [
-    { sem: 'S01', heures: 142, facturables: 98 },
-    { sem: 'S02', heures: 158, facturables: 112 },
-    { sem: 'S03', heures: 134, facturables: 88 },
-    { sem: 'S04', heures: 165, facturables: 128 },
-    { sem: 'S05', heures: 149, facturables: 105 },
-  ];
+  const weeklyTrend = [];
 
   const handleValidation = (id, newStatut) => updateRecord('hr', 'timesheets', id, { statut: newStatut });
 

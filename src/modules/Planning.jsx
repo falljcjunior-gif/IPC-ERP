@@ -17,13 +17,7 @@ import {
 const Planning = () => {
   const [currentMonth] = useState('Avril 2026');
   
-  const events = [
-    { id: 1, title: 'Lancement Projet X', date: '2026-04-12', type: 'projet', color: '#3B82F6' },
-    { id: 2, title: 'Maintenance Van #02', date: '2026-04-15', type: 'flotte', color: '#F59E0B' },
-    { id: 3, title: 'Congés Marie L.', date: '2026-04-18', type: 'rh', color: '#8B5CF6' },
-    { id: 4, title: 'Prod OF-2026-001', date: '2026-04-12', type: 'prod', color: '#10B981' },
-    { id: 5, title: 'Revue Trimestrielle', date: '2026-04-20', type: 'management', color: '#EC4899' },
-  ];
+  const events = [];
 
   // Simplified calendar grid generation for demo
   const days = Array.from({ length: 30 }, (_, i) => i + 1);

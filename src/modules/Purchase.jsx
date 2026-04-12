@@ -54,28 +54,24 @@ const Purchase = ({ onOpenDetail }) => {
   const vendors = useMemo(() => (data.base?.contacts || []).filter(c => c.type === 'Fournisseur'), [data.base?.contacts]);
 
   /* ─── Vendor Scorecards (enrichis) ─── */
-  const vendorScores = useMemo(() => [
-    ...vendors,
-    { id: 'V3', nom: 'Samsung Components', type: 'Fournisseur', categories: 'Matériel', email: 'b2b@samsung.com' },
-    { id: 'V4', nom: 'Microsoft Licensing', type: 'Fournisseur', categories: 'Licences', email: 'ent@microsoft.com' },
-  ].map((v, i) => ({
+  const vendorScores = useMemo(() => vendors.map((v, i) => ({
     ...v,
     categories: v.tags?.[0] || v.categories || 'Général',
-    delaiMoyen: [3, 5, 7, 2, 8][i % 5],
-    conformite: [96, 88, 72, 99, 65][i % 5],
-    retardRate: [4, 12, 28, 1, 35][i % 5],
-    score: [94, 80, 68, 98, 58][i % 5],
-    totalAchats: [45000000, 28000000, 12000000, 68000000, 8000000][i % 5],
-    nbCommandes: [12, 8, 4, 18, 3][i % 5],
+    delaiMoyen: 0,
+    conformite: 0,
+    retardRate: 0,
+    score: 0,
+    totalAchats: 0,
+    nbCommandes: 0,
   })), [vendors]);
 
   /* ─── Computed KPIs ─── */
   const kpis = useMemo(() => {
-    const totalDepenses = orders.reduce((s, o) => s + (o.total || 0), 0) + 95600000;
-    const budgetAchats = 120000000;
-    const economiesRealisees = 8500000;
+    const totalDepenses = orders.reduce((s, o) => s + (o.total || 0), 0);
+    const budgetAchats = 0;
+    const economiesRealisees = 0;
     const nbFournisseurs = vendorScores.length;
-    const avgScore = Math.round(vendorScores.reduce((s, v) => s + v.score, 0) / vendorScores.length);
+    const avgScore = vendorScores.length > 0 ? Math.round(vendorScores.reduce((s, v) => s + v.score, 0) / vendorScores.length) : 0;
     const enAttente = orders.filter(o => o.statut === 'Commandé').length;
     return { totalDepenses, budgetAchats, economiesRealisees, nbFournisseurs, avgScore, enAttente };
   }, [orders, vendorScores]);
@@ -88,22 +84,10 @@ const Purchase = ({ onOpenDetail }) => {
     { cat: 'Services',  val: 8000000,  color: '#F59E0B' },
     { cat: 'Autre',     val: 2600000,  color: '#64748B' },
   ];
-  const depensesTrend = [
-    { mois: 'Oct', depenses: 14000000, budget: 12000000 },
-    { mois: 'Nov', depenses: 11500000, budget: 12000000 },
-    { mois: 'Déc', depenses: 18000000, budget: 12000000 },
-    { mois: 'Jan', depenses: 9800000,  budget: 10000000 },
-    { mois: 'Fév', depenses: 12400000, budget: 10000000 },
-    { mois: 'Mar', depenses: 10200000, budget: 10000000 },
-    { mois: 'Avr', depenses: kpis.totalDepenses / 9, budget: 10000000 },
-  ];
+  const depensesTrend = [];
 
   /* ─── RFQ mockup ─── */
-  const rfqs = [
-    { id: 'DA-001', objet: 'Serveurs Gen4 x30',      fournisseurs: ['Intel Europe', 'Samsung Components'], statut: 'En cours',  budget: 90000000, echeance: '2026-05-01' },
-    { id: 'DA-002', objet: 'Licences ERP 2027',       fournisseurs: ['Microsoft Licensing', 'AWS'],        statut: 'Clôturé',   budget: 45000000, echeance: '2026-04-30' },
-    { id: 'DA-003', objet: 'Formation IA Équipes',     fournisseurs: ['DataIQ Training'],                  statut: 'Brouillon', budget: 12000000, echeance: '2026-06-15' },
-  ];
+  const rfqs = [];
 
   /* ─── Modal configs ─── */
   const modalConfigs = useMemo(() => ({
@@ -303,10 +287,7 @@ const Purchase = ({ onOpenDetail }) => {
             </tr>
           </thead>
           <tbody>
-            {[...orders,
-              { id: 'S1', num: 'ACH-2026-003', fournisseur: 'Samsung Components',  date: '2026-04-08', echeance: '2026-04-22', total: 38000000, statut: 'Commandé' },
-              { id: 'S2', num: 'ACH-2026-004', fournisseur: 'Microsoft Licensing',  date: '2026-04-10', echeance: '2026-04-30', total: 14500000, statut: 'En approbation' },
-            ].map((o, i) => {
+            {orders.map((o, i) => {
               const sColors = { Réceptionné: '#10B981', Commandé: '#3B82F6', Facturé: '#8B5CF6', Brouillon: '#64748B', 'En approbation': '#F59E0B' };
               const c = sColors[o.statut] || '#64748B';
               return (

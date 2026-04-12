@@ -115,7 +115,7 @@ const Client360Panel = ({ lead, onClose, formatCurrency }) => {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>LTV Estimée</div>
-          <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{formatCurrency(lead.valeur || 5000000)}</div>
+          <div style={{ fontWeight: 700, fontSize: '1.1rem' }}>{formatCurrency(lead.valeur || 0)}</div>
           <Badge label={lead.statut || 'Nouveau'} color="#3B82F6" />
         </div>
       </div>

@@ -21,15 +21,9 @@ const Fleet = ({ onOpenDetail }) => {
 
   // Initialize mock data if missing - using useMemo to avoid direct mutation of data object
   const fleetData = useMemo(() => {
-    if (data.fleet) return data.fleet;
-    return {
-      vehicles: [
-        { id: '1', name: 'Peugeot Partner', plate: 'AB-123-CD', driver: 'Jean Dupont', status: 'En service', location: 'Entrepôt A', odo: 45200 },
-        { id: '2', name: 'Renault Master', plate: 'XY-987-ZZ', driver: 'Marie Leroy', status: 'En maintenance', location: 'Garage Central', odo: 128500 },
-      ],
-      maintenance: [
-        { id: '1', vehicle: 'Renault Master', date: '2026-04-05', type: 'Révision', cost: 450, status: 'Terminé' },
-      ]
+    return data.fleet || {
+      vehicles: [],
+      maintenance: []
     };
   }, [data.fleet]);
 

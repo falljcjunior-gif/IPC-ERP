@@ -23,10 +23,7 @@ const Helpdesk = ({ onOpenDetail }) => {
   
   /* ─── Data ─── */
   const tickets = useMemo(() => {
-    return data.helpdesk?.tickets || [
-      { id: '1', num: 'TKT-2026-0001', client: 'Société Générale', titre: 'Problème accès API', priorite: 'Haute', statut: 'En cours', assigne: 'Raphaël', echeance: '2026-04-10' },
-      { id: '2', num: 'TKT-2026-0002', client: 'Air France', titre: 'Erreur facturation TVA', priorite: 'Moyenne', statut: 'Nouveau', assigne: 'Sarah', echeance: '2026-04-12' },
-    ];
+    return data.helpdesk?.tickets || [];
   }, [data.helpdesk?.tickets]);
   const stages = ['Nouveau', 'En cours', 'En attente', 'Résolu'];
 

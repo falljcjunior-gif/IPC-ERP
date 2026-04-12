@@ -48,15 +48,7 @@ const Budget = () => {
   const [modal, setModal] = useState(false);
 
   /* ─── Data ─── */
-  const departments = useMemo(() => [
-    { dept: 'Marketing',     prevision: 180000000, realise: 148000000, engage: 22000000, color: '#EC4899' },
-    { dept: 'R&D / Innov.',  prevision: 420000000, realise: 398000000, engage: 15000000, color: '#8B5CF6' },
-    { dept: 'Opérations',   prevision: 650000000, realise: 712000000, engage: 0,        color: '#F59E0B' },
-    { dept: 'RH',            prevision: 120000000, realise: 108000000, engage: 8000000,  color: '#F97316' },
-    { dept: 'Ventes',        prevision: 210000000, realise: 228000000, engage: 0,        color: '#10B981' },
-    { dept: 'Finance',       prevision: 80000000,  realise: 72000000,  engage: 6000000,  color: '#3B82F6' },
-    { dept: 'Direction',     prevision: 50000000,  realise: 42000000,  engage: 4000000,  color: '#14B8A6' },
-  ], []);
+  const departments = useMemo(() => data.finance?.budgets || [], [data.finance?.budgets]);
 
   const kpis = useMemo(() => {
     const totalPrev  = departments.reduce((s, d) => s + d.prevision, 0);
@@ -68,20 +60,7 @@ const Budget = () => {
     return { totalPrev, totalReal, totalEngage, burnRate, ecart, depass };
   }, [departments]);
 
-  const mensuel = [
-    { mois: 'Jan', prev: 148000000, real: 132000000 },
-    { mois: 'Fév', prev: 148000000, real: 145000000 },
-    { mois: 'Mar', prev: 148000000, real: 168000000 },
-    { mois: 'Avr', prev: 148000000, real: 143000000 },
-    { mois: 'Mai', prev: 148000000, real: 0 },
-    { mois: 'Jun', prev: 148000000, real: 0 },
-    { mois: 'Jul', prev: 148000000, real: 0 },
-    { mois: 'Aoû', prev: 148000000, real: 0 },
-    { mois: 'Sep', prev: 148000000, real: 0 },
-    { mois: 'Oct', prev: 148000000, real: 0 },
-    { mois: 'Nov', prev: 148000000, real: 0 },
-    { mois: 'Déc', prev: 148000000, real: 0 },
-  ];
+  const mensuel = [];
 
   const modalFields = [
     { name: 'dept',     label: 'Département', required: true },
@@ -173,10 +152,10 @@ const Budget = () => {
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
         {[
-          { type: 'OPEX Total',     val: 1248000000, sub: 'Charges d\'exploitation récurrentes', c: '#3B82F6', icon: <RefreshCcw size={18}/> },
-          { type: 'CAPEX Total',    val: 462000000,  sub: 'Investissements & Immobilisations',   c: '#8B5CF6', icon: <Layers size={18}/> },
-          { type: 'Provisions',     val: 85000000,   sub: 'Risques & litiges provisionnés',     c: '#F59E0B', icon: <AlertTriangle size={18}/> },
-          { type: 'Économies YTD',  val: 42000000,   sub: 'Vs budget cible optimisé',           c: '#10B981', icon: <TrendingDown size={18}/> },
+          { type: 'OPEX Total',     val: 0, sub: 'Charges d\'exploitation récurrentes', c: '#3B82F6', icon: <RefreshCcw size={18}/> },
+          { type: 'CAPEX Total',    val: 0,  sub: 'Investissements & Immobilisations',   c: '#8B5CF6', icon: <Layers size={18}/> },
+          { type: 'Provisions',     val: 0,   sub: 'Risques & litiges provisionnés',     c: '#F59E0B', icon: <AlertTriangle size={18}/> },
+          { type: 'Économies YTD',  val: 0,   sub: 'Vs budget cible optimisé',           c: '#10B981', icon: <TrendingDown size={18}/> },
         ].map((s, i) => (
           <div key={i} className="glass" style={{ padding: '1.4rem', borderRadius: '1.25rem', borderLeft: `4px solid ${s.c}` }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>

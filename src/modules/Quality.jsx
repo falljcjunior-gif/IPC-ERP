@@ -20,15 +20,9 @@ const Quality = ({ onOpenDetail }) => {
 
   // Initialize mock data if missing — using useMemo to avoid direct mutation
   const qualityData = useMemo(() => {
-    if (data.quality) return data.quality;
-    return {
-      controls: [
-        { id: '1', item: 'Tige Inox 304', type: 'Réception', date: '2026-04-09', inspector: 'Marc Lucas', status: 'Conforme', result: 'Dimensions OK, pas de rayures.' },
-        { id: '2', item: 'Boîtier Plastique X', type: 'Production', date: '2026-04-08', inspector: 'Sarah Connor', status: 'Échec', result: 'Défaut de moulage sur 5% du lot.' },
-      ],
-      nonConformities: [
-        { id: '1', ref: 'NC-2026-001', item: 'Boîtier Plastique X', source: 'Production', gravity: 'Majeure', status: 'Ouvert', detection: '2026-04-08' },
-      ]
+    return data.quality || {
+      controls: [],
+      nonConformities: []
     };
   }, [data.quality]);
 
@@ -101,7 +95,7 @@ const Quality = ({ onOpenDetail }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>TAUX DE CONFORMITÉ</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981' }}>98.2%</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981' }}>0%</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>NC OUVERTES</div>
@@ -109,11 +103,11 @@ const Quality = ({ onOpenDetail }) => {
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>CONTRÔLES / MOIS</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>142</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>ACTIONS RÉUSSIES</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent)' }}>89%</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent)' }}>0%</div>
          </div>
       </div>
 

@@ -47,16 +47,7 @@ const EXPENSE_TYPES = {
   Autre:         { icon: <CreditCard size={16}/>,color: '#EC4899' },
 };
 
-const ALL_EXPENSES = [
-  { id: '1', employee: 'Jean Dupont',    date: '2026-04-05', title: 'Déplacement Client - Lyon', amount: 125000,  type: 'Transport',   status: 'Remboursé',  receipt: true,  mission: 'Mission Commerciale' },
-  { id: '2', employee: 'Sarah Miller',   date: '2026-04-08', title: 'Déjeuner Partenaire',       amount: 42000,   type: 'Repas',       status: 'Approuvé',   receipt: true,  mission: 'Prospection' },
-  { id: '3', employee: 'Jean Dupont',    date: '2026-04-09', title: 'Abonnement Outil SaaS',     amount: 29900,   type: 'Autre',       status: 'En attente', receipt: true,  mission: 'IT' },
-  { id: '4', employee: 'Paul Brunet',    date: '2026-04-07', title: 'Hôtel - Déplacement Dakar', amount: 185000,  type: 'Hébergement', status: 'Approuvé',   receipt: true,  mission: 'Mission Technique' },
-  { id: '5', employee: 'Amara Diallo',   date: '2026-04-10', title: 'Vol Abidjan-Paris-Return',  amount: 420000,  type: 'Déplacement', status: 'En attente', receipt: true,  mission: 'Salon Marketing' },
-  { id: '6', employee: 'Kofi Mensah',    date: '2026-04-06', title: 'Fournitures Bureau',        amount: 18500,   type: 'Fournitures', status: 'Remboursé',  receipt: true,  mission: 'Interne' },
-  { id: '7', employee: 'Omar Sy',        date: '2026-04-11', title: 'Restaurant Client VIP',     amount: 68000,   type: 'Repas',       status: 'En attente', receipt: false, mission: 'Relation Client' },
-  { id: '8', employee: 'Sarah Miller',   date: '2026-04-04', title: 'Transport Aéroport',        amount: 25000,   type: 'Transport',   status: 'Remboursé',  receipt: true,  mission: 'Mission Commerciale' },
-];
+const ALL_EXPENSES_FALLBACK = [];
 
 /* ════════════════════════════════════
    EXPENSES MODULE — Full Enterprise
@@ -70,49 +61,47 @@ const Expenses = ({ onOpenDetail }) => {
   const isManager = userRole === 'ADMIN' || userRole === 'HR' || userRole === 'FINANCE' || userRole === 'SUPER_ADMIN';
 
   /* ─── KPIs ─── */
+  const allExpenses = useMemo(() => data?.hr?.expenses || [], [data?.hr?.expenses]);
+
+  /* ─── KPIs ─── */
   const kpis = useMemo(() => {
-    const total       = ALL_EXPENSES.reduce((s, e) => s + e.amount, 0);
-    const enAttente   = ALL_EXPENSES.filter(e => e.status === 'En attente');
-    const approuves   = ALL_EXPENSES.filter(e => e.status === 'Approuvé' || e.status === 'Remboursé');
-    const totalAppr   = approuves.reduce((s, e) => s + e.amount, 0);
-    const txValidation= Math.round((approuves.length / ALL_EXPENSES.length) * 100);
-    const sansRecu    = ALL_EXPENSES.filter(e => !e.receipt && e.status === 'En attente').length;
+    const total       = allExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+    const enAttente   = allExpenses.filter(e => e.status === 'En attente');
+    const approuves   = allExpenses.filter(e => e.status === 'Approuvé' || e.status === 'Remboursé');
+    const totalAppr   = approuves.reduce((s, e) => s + (e.amount || 0), 0);
+    const txValidation= allExpenses.length > 0 ? Math.round((approuves.length / allExpenses.length) * 100) : 0;
+    const sansRecu    = allExpenses.filter(e => !e.receipt && e.status === 'En attente').length;
     return { total, enAttente, totalAppr, txValidation, sansRecu };
-  }, []);
+  }, [allExpenses]);
 
   /* ─── Par catégorie ─── */
   const parCategorie = useMemo(() => {
-    const map = ALL_EXPENSES.reduce((acc, e) => {
-      acc[e.type] = (acc[e.type] || 0) + e.amount;
+    const map = allExpenses.reduce((acc, e) => {
+      acc[e.type] = (acc[e.type] || 0) + (e.amount || 0);
       return acc;
     }, {});
     return Object.entries(map).map(([name, value]) => ({ name, value, fill: EXPENSE_TYPES[name]?.color || '#64748B' }))
       .sort((a, b) => b.value - a.value);
-  }, []);
+  }, [allExpenses]);
 
   /* ─── Par employé ─── */
   const parEmploye = useMemo(() => {
-    const map = ALL_EXPENSES.reduce((acc, e) => {
-      acc[e.employee] = (acc[e.employee] || 0) + e.amount;
+    const map = allExpenses.reduce((acc, e) => {
+      acc[e.employee] = (acc[e.employee] || 0) + (e.amount || 0);
       return acc;
     }, {});
-    return Object.entries(map).map(([nom, montant]) => ({ nom: nom.split(' ')[0], montant })).sort((a, b) => b.montant - a.montant);
-  }, []);
+    return Object.entries(map).map(([nom, montant]) => ({ nom: (nom || 'N/A').split(' ')[0], montant })).sort((a, b) => b.montant - a.montant);
+  }, [allExpenses]);
 
-  const mensuel = [
-    { mois: 'Jan', total: 680000, approuve: 540000 },
-    { mois: 'Fév', total: 520000, approuve: 480000 },
-    { mois: 'Mar', total: 890000, approuve: 720000 },
-    { mois: 'Avr', total: kpis.total, approuve: kpis.totalAppr },
-  ];
+  const mensuel = [];
 
   const handleAction = (id, newStatus) => updateRecord('hr', 'expenses', id, { status: newStatus });
 
   const filteredExpenses = filter === 'pending'
-    ? ALL_EXPENSES.filter(e => e.status === 'En attente')
+    ? allExpenses.filter(e => e.status === 'En attente')
     : filter === 'mine'
-    ? ALL_EXPENSES.filter(e => e.employee === 'Jean Dupont')
-    : ALL_EXPENSES;
+    ? allExpenses.filter(e => e.employee === currentUser.nom)
+    : allExpenses;
 
   /* ═══════════ DASHBOARD ═══════════ */
   const renderDashboard = () => (

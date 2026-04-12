@@ -52,24 +52,9 @@ const SHIP_STATUS = {
 };
 
 /* ─── Shipments mock data ─── */
-const SHIPMENTS = [
-  { id: 'BL-2026-001', client: 'TechnoFrance',     dest: 'Paris, FR',       transporteur: 'DHL Express',    date: '2026-04-01', dateExpec: '2026-04-04', poids: '42 kg',  statut: 'Livré',       tracking: 'DHL123456', colis: 3, montant: 4500000 },
-  { id: 'BL-2026-002', client: 'GlobalConnect',    dest: 'New York, US',    transporteur: 'FedEx Priority', date: '2026-04-03', dateExpec: '2026-04-06', poids: '128 kg', statut: 'Livré',       tracking: 'FX789012', colis: 8, montant: 18000000 },
-  { id: 'BL-2026-003', client: 'EuroVision Tech',  dest: 'Munich, DE',     transporteur: 'UPS Standard',   date: '2026-04-07', dateExpec: '2026-04-10', poids: '18 kg',  statut: 'Retardé',     tracking: 'UPS345678', colis: 2, montant: 2800000 },
-  { id: 'BL-2026-004', client: 'MegaCorp Inc.',    dest: 'Londres, GB',     transporteur: 'DHL Express',    date: '2026-04-08', dateExpec: '2026-04-11', poids: '75 kg',  statut: 'En Transit',  tracking: 'DHL901234', colis: 5, montant: 8200000 },
-  { id: 'BL-2026-005', client: 'AeroSpace Ltd',    dest: 'Dubai, AE',       transporteur: 'TNT Air',        date: '2026-04-09', dateExpec: '2026-04-13', poids: '220 kg', statut: 'Expédié',     tracking: 'TNT567890', colis: 12, montant: 15600000 },
-  { id: 'BL-2026-006', client: 'ImmoLux Group',    dest: 'Dakar, SN',       transporteur: 'Bolloré Africa', date: '2026-04-10', dateExpec: '2026-04-17', poids: '500 kg', statut: 'En Transit',  tracking: 'BOL123789', colis: 20, montant: 22000000 },
-  { id: 'BL-2026-007', client: 'TechnoFrance',     dest: 'Lyon, FR',        transporteur: 'Chronopost',     date: '2026-04-11', dateExpec: '2026-04-12', poids: '8 kg',   statut: 'Livré',       tracking: 'CHR456012', colis: 1, montant: 1200000 },
-  { id: 'BL-2026-008', client: 'EcoLogic',         dest: 'Douala, CM',      transporteur: 'Bolloré Africa', date: '2026-04-12', dateExpec: '2026-04-19', poids: '180 kg', statut: 'Préparation', tracking: 'En attente', colis: 9, montant: 9800000 },
-];
+const SHIPMENTS = [];
 
-const TRANSPORTEURS = [
-  { nom: 'DHL Express',    livraisons: 145, otif: 96.2, retards: 5,  coutMoy: 45000, color: '#F59E0B' },
-  { nom: 'FedEx Priority', livraisons: 92,  otif: 94.8, retards: 8,  coutMoy: 58000, color: '#8B5CF6' },
-  { nom: 'UPS Standard',  livraisons: 78,  otif: 88.5, retards: 18, coutMoy: 32000, color: '#3B82F6' },
-  { nom: 'TNT Air',        livraisons: 35,  otif: 91.4, retards: 12, coutMoy: 72000, color: '#10B981' },
-  { nom: 'Bolloré Africa', livraisons: 62,  otif: 82.1, retards: 25, coutMoy: 38000, color: '#EF4444' },
-];
+const TRANSPORTEURS = [];
 
 /* ════════════════════════════════════
    SHIPPING MODULE
@@ -87,36 +72,17 @@ const Shipping = ({ onOpenDetail }) => {
     const livres   = SHIPMENTS.filter(s => s.statut === 'Livré').length;
     const retardes = SHIPMENTS.filter(s => s.statut === 'Retardé').length;
     const transit  = SHIPMENTS.filter(s => s.statut === 'En Transit' || s.statut === 'Expédié').length;
-    const otif     = Math.round((livres / (livres + retardes)) * 100 * 10) / 10;
-    const totalColis = SHIPMENTS.reduce((s, x) => s + x.colis, 0);
-    const caMoyen    = SHIPMENTS.reduce((s, x) => s + x.montant, 0) / SHIPMENTS.length;
+    const otif     = (livres + retardes) > 0 ? Math.round((livres / (livres + retardes)) * 100 * 10) / 10 : 0;
+    const totalColis = SHIPMENTS.reduce((s, x) => s + (x.colis || 0), 0);
+    const caMoyen    = SHIPMENTS.length > 0 ? SHIPMENTS.reduce((s, x) => s + (x.montant || 0), 0) / SHIPMENTS.length : 0;
     return { livres, retardes, transit, otif, totalColis, caMoyen };
-  }, []);
+  }, [SHIPMENTS]);
 
-  const otifTrend = [
-    { mois: 'Oct', otif: 95.8, retards: 8  },
-    { mois: 'Nov', otif: 96.2, retards: 6  },
-    { mois: 'Déc', otif: 93.1, retards: 18 },
-    { mois: 'Jan', otif: 94.5, retards: 12 },
-    { mois: 'Fév', otif: 95.0, retards: 10 },
-    { mois: 'Mar', otif: 94.8, retards: 11 },
-    { mois: 'Avr', otif: kpis.otif, retards: kpis.retardes },
-  ];
+  const otifTrend = [];
 
-  const volumeTrend = [
-    { sem: 'S1 Avr', colisExp: 180, colisLiv: 168, retours: 4 },
-    { sem: 'S2 Avr', colisExp: 220, colisLiv: 205, retours: 6 },
-    { sem: 'S3 Avr', colisExp: 195, colisLiv: 188, retours: 3 },
-    { sem: 'S4 Avr', colisExp: 240, colisLiv: 221, retours: 8 },
-  ];
+  const volumeTrend = [];
 
-  const causeRetards = [
-    { cause: 'Transporteur',   pct: 42, color: '#EF4444' },
-    { cause: 'Douane',         pct: 28, color: '#F59E0B' },
-    { cause: 'Météo',          pct: 15, color: '#3B82F6' },
-    { cause: 'Adresse Erronée',pct: 10, color: '#8B5CF6' },
-    { cause: 'Rupture Stock',  pct: 5,  color: '#64748B' },
-  ];
+  const causeRetards = [];
 
   /* ─── Timeline tracker visual ─── */
   const TrackingTimeline = ({ statut }) => {
@@ -345,12 +311,7 @@ const Shipping = ({ onOpenDetail }) => {
       <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Flux par Région de Destination</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-          {[
-            { region: 'Europe',       pct: 48, livraisons: 185, color: '#3B82F6' },
-            { region: 'Afrique',      pct: 30, livraisons: 115, color: '#10B981' },
-            { region: 'Amériques',    pct: 14, livraisons: 55,  color: '#8B5CF6' },
-            { region: 'Moyen-Orient', pct: 8,  livraisons: 32,  color: '#F59E0B' },
-          ].map((r, i) => (
+          {[].map((r, i) => (
             <div key={i}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

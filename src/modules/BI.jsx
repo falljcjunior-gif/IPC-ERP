@@ -156,7 +156,7 @@ const BI = () => {
               </div>
               <div style={{ flex: '1 1 200px' }}>
                 <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((r.ca / 520000000) * 100, 100)}%` }} transition={{ duration: 1, delay: i * 0.1 }}
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((r.ca / 1) * 100, 100)}%` }} transition={{ duration: 1, delay: i * 0.1 }}
                     style={{ height: '100%', background: r.color, borderRadius: '999px' }} />
                 </div>
               </div>
@@ -252,11 +252,11 @@ const BI = () => {
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Ratio LTV / CAC — Efficacité d'Acquisition</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
           {[
-            { canal: 'Google Ads',    ltv: 820000, cac: 95000,  ratio: 8.6 },
-            { canal: 'LinkedIn',      ltv: 1200000, cac: 180000, ratio: 6.7 },
-            { canal: 'Emailing',      ltv: 680000, cac: 35000,  ratio: 19.4},
-            { canal: 'Salons',        ltv: 950000, cac: 220000, ratio: 4.3 },
-            { canal: 'SEO/Organic',   ltv: 740000, cac: 28000,  ratio: 26.4},
+            { canal: 'Google Ads',    ltv: 0, cac: 0,  ratio: 0 },
+            { canal: 'LinkedIn',      ltv: 0, cac: 0, ratio: 0 },
+            { canal: 'Emailing',      ltv: 0, cac: 0,  ratio: 0 },
+            { canal: 'Salons',        ltv: 0, cac: 0, ratio: 0 },
+            { canal: 'SEO/Organic',   ltv: 0, cac: 0,  ratio: 0 },
           ].map((c, i) => {
             const good = c.ratio >= 6;
             return (

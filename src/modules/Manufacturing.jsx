@@ -20,17 +20,9 @@ const Manufacturing = ({ onOpenDetail }) => {
   useBusiness();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
 
-  const workOrders = [
-    { id: 'OF-2026-001', produit: 'Moteur Électrique X1', qte: 50, progress: 85, status: 'En cours', due: '2026-04-15' },
-    { id: 'OF-2026-002', produit: 'Batterie Lithium-Ion 5kW', qte: 100, progress: 20, status: 'Planifié', due: '2026-04-20' },
-    { id: 'OF-2026-003', produit: 'Châssis Aluminium ModA', qte: 10, progress: 100, status: 'Terminé', due: '2026-04-10' },
-    { id: 'OF-2026-004', produit: 'Capteur Proximité S-4', qte: 500, progress: 0, status: 'Brouillon', due: '2026-04-25' },
-  ];
+  const workOrders = data.production?.workOrders || [];
 
-  const boms = [
-    { id: 'BOM-001', product: 'Moteur Électrique X1', components: 12, version: '2.4', type: 'Production' },
-    { id: 'BOM-002', product: 'Châssis Aluminium ModA', components: 5, version: '1.0', type: 'Assemblage' },
-  ];
+  const boms = data.production?.boms || [];
 
   return (
     <div style={{ padding: '2.5rem' }}>
@@ -51,21 +43,21 @@ const Manufacturing = ({ onOpenDetail }) => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
-         <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #3B82F6' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #3B82F6' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>OF EN COURS</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>12</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-         <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #10B981' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #10B981' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>TERMINÉS (MOIS)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>84</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-         <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #F59E0B' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #F59E0B' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>ARRÊT MACHINE</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#EF4444' }}>2</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-         <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--accent)' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--accent)' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>EFFICACITÉ (TRS)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>92.4%</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0%</div>
          </div>
       </div>
 
