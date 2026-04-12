@@ -125,6 +125,7 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
       // Create call document and set up PeerConnection
       const callId = await webrtcService.createCall(
         currentUser.id, 
+        currentUser.nom,
         receiverId, 
         type, 
         null // Stream handling is done in CallInterface
