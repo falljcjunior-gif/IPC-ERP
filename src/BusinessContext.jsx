@@ -113,16 +113,18 @@ export const BusinessProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('ipc_erp_permissions', JSON.stringify(permissions)); }, [permissions]);
   useEffect(() => { localStorage.setItem('ipc_erp_config', JSON.stringify(config)); }, [config]);
   useEffect(() => { localStorage.setItem('ipc_erp_global_settings', JSON.stringify(globalSettings)); }, [globalSettings]);
+  useEffect(() => { localStorage.setItem('daxcelor_data', JSON.stringify(data)); }, [data]);
+
   useEffect(() => {
     localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
     localStorage.setItem('daxcelor_user_role', currentUser.role);
     
-    // Cloud Sync for Admin
+    // Cloud Sync for User settings
     if (auth.currentUser) {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      setDoc(userDoc, { config, permissions, data }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
+      setDoc(userDoc, { config, permissions }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
     }
-  }, [currentUser, config, permissions, data]);
+  }, [currentUser, config, permissions]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      3. UTILITY LOGIC (Stable Helpers)
