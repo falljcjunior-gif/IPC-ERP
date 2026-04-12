@@ -1,269 +1,421 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Calendar, 
-  Wallet, 
-  Plus, 
-  Mail, 
-  Phone, 
-  Briefcase, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle,
-  MoreVertical,
-  ChevronRight,
-  BarChart3,
-  Layout,
-  TrendingUp,
-  UserCheck, 
-  Check, 
-  X 
+import {
+  Users, Calendar, Wallet, Plus, Mail, Phone, Briefcase, Clock,
+  CheckCircle2, AlertCircle, ChevronRight, BarChart3, TrendingUp,
+  TrendingDown, UserCheck, Check, X, Star, Target, Activity,
+  Award, BookOpen, AlertTriangle, MapPin, Search, Filter,
+  ArrowUpRight, Zap, Heart, Shield
 } from 'lucide-react';
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
+  CartesianGrid, Cell, ComposedChart, Line, Legend,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  AreaChart, Area, PieChart, Pie
+} from 'recharts';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
-import { DonutChartComp } from '../components/BusinessCharts';
 
+/* ─── Helpers ─── */
+const fadeIn = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const Chip = ({ label, color = '#64748B' }) => (
+  <span style={{ padding: '2px 9px', borderRadius: '999px', background: `${color}18`, color, fontSize: '0.71rem', fontWeight: 700 }}>{label}</span>
+);
+const TabBar = ({ tabs, active, onChange }) => (
+  <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.9rem', border: '1px solid var(--border)', gap: '0.2rem', width: 'fit-content', flexWrap: 'wrap' }}>
+    {tabs.map(t => (
+      <button key={t.id} onClick={() => onChange(t.id)} style={{ padding: '0.48rem 1.05rem', borderRadius: '0.7rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.83rem', background: active === t.id ? 'var(--bg)' : 'transparent', color: active === t.id ? 'var(--accent)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}>
+        {t.icon} {t.label}
+      </button>
+    ))}
+  </div>
+);
+const TT = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.8rem' }}>
+      <p style={{ fontWeight: 700, marginBottom: '4px' }}>{label}</p>
+      {payload.map((p, i) => <p key={i} style={{ color: p.color, margin: '2px 0' }}>{p.name}: {p.value?.toLocaleString?.('fr-FR') ?? p.value}</p>)}
+    </div>
+  );
+};
+
+const DEPT_COLORS = { IT: '#3B82F6', Ventes: '#10B981', RH: '#F97316', Finance: '#8B5CF6', Marketing: '#EC4899', Production: '#F59E0B', Direction: '#14B8A6' };
+
+/* ════════════════════════════════════
+   HR MODULE — Full Enterprise
+════════════════════════════════════ */
 const HR = ({ onOpenDetail }) => {
-  const { data, addRecord, approveRequest, rejectRequest, formatCurrency } = useBusiness();
-  const [view, setView] = useState('dashboard'); // 'employees', 'leaves', 'expenses', 'dashboard'
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data, addRecord, approveRequest, rejectRequest, updateRecord, formatCurrency } = useBusiness();
+  const [tab, setTab] = useState('dashboard');
+  const [modal, setModal] = useState(null);
+  const [search, setSearch] = useState('');
   const { employees, leaves, expenses } = data.hr;
 
-  const deptData = [
-    { name: 'IT', value: employees.filter(e => e.dept === 'IT').length },
-    { name: 'Ventes', value: employees.filter(e => e.dept === 'Ventes').length },
-    { name: 'Production', value: employees.filter(e => e.dept === 'Production').length },
-    { name: 'Finance', value: employees.filter(e => e.dept === 'Finance').length },
-    { name: 'RH', value: employees.filter(e => e.dept === 'RH').length },
+  /* ─── Enriched employee data ─── */
+  const enrichedEmployees = useMemo(() => [
+    ...employees,
+    { id: 5,  nom: 'Amara Diallo',   poste: 'Marketing Manager',    dept: 'Marketing',   manager: 'Jean Dupont',   dateEntree: '2023-09-01', avatar: 'AD', email: 'a.diallo@ipc.com',    tel: '+225 07 12 34 56', contrat: 'CDI', salaire: 4800000, performance: 88, congesRestants: 18 },
+    { id: 6,  nom: 'Kofi Mensah',    poste: 'Finance Analyst',       dept: 'Finance',     manager: 'Jean Dupont',   dateEntree: '2024-03-15', avatar: 'KM', email: 'k.mensah@ipc.com',    tel: '+225 05 98 76 54', contrat: 'CDI', salaire: 4200000, performance: 91, congesRestants: 22 },
+    { id: 7,  nom: 'Fatou Traoré',   poste: 'Production Supervisor', dept: 'Production',  manager: 'Paul Brunet',   dateEntree: '2025-01-10', avatar: 'FT', email: 'f.traore@ipc.com',   tel: '+225 01 23 45 67', contrat: 'CDD', salaire: 3600000, performance: 76, congesRestants: 12 },
+    { id: 8,  nom: 'Omar Sy',        poste: 'Sales Executive',       dept: 'Ventes',      manager: 'Sarah Miller',  dateEntree: '2024-08-20', avatar: 'OS', email: 'o.sy@ipc.com',        tel: '+225 08 22 33 44', contrat: 'CDI', salaire: 3900000, performance: 82, congesRestants: 15 },
+  ].map(e => ({
+    ...e,
+    salaire: e.salaire || 3500000,
+    performance: e.performance || Math.floor(Math.random() * 30) + 65,
+    congesRestants: e.congesRestants || 15,
+    contrat: e.contrat || 'CDI',
+    email: e.email || `${e.nom.split(' ')[0].toLowerCase()}@ipc.com`,
+    tel: e.tel || '+225 00 00 00 00',
+  })), [employees]);
+
+  /* ─── KPIs ─── */
+  const kpis = useMemo(() => {
+    const masseSalariale = enrichedEmployees.reduce((s, e) => s + (e.salaire || 3500000), 0) * 12;
+    const turnover = 8.4;
+    const absenteisme = 3.2;
+    const engagementScore = 76;
+    const enFormation = 3;
+    const deptDist = Object.entries(
+      enrichedEmployees.reduce((acc, e) => ({ ...acc, [e.dept]: (acc[e.dept] || 0) + 1 }), {})
+    ).map(([name, value]) => ({ name, value, fill: DEPT_COLORS[name] || '#64748B' }));
+    return { masseSalariale, turnover, absenteisme, engagementScore, enFormation, deptDist };
+  }, [enrichedEmployees]);
+
+  const headcountTrend = [
+    { mois: 'Oct', effectif: 6, entrees: 0, sorties: 0 },
+    { mois: 'Nov', effectif: 6, entrees: 0, sorties: 0 },
+    { mois: 'Déc', effectif: 7, entrees: 1, sorties: 0 },
+    { mois: 'Jan', effectif: 7, entrees: 0, sorties: 0 },
+    { mois: 'Fév', effectif: 7, entrees: 0, sorties: 0 },
+    { mois: 'Mar', effectif: 8, entrees: 1, sorties: 0 },
+    { mois: 'Avr', effectif: enrichedEmployees.length, entrees: 0, sorties: 0 },
   ];
 
-  const handleSave = (formData) => {
-    const subModule = view === 'employees' ? 'employees' : view === 'leaves' ? 'leaves' : 'expenses';
-    addRecord('hr', subModule, formData);
+  const performanceData = enrichedEmployees.map(e => ({
+    nom: e.nom.split(' ')[0],
+    score: e.performance || 80,
+    fill: e.performance >= 85 ? '#10B981' : e.performance >= 70 ? '#F59E0B' : '#EF4444',
+  }));
+
+  const formations = [
+    { titre: 'Leadership & Management',     employe: 'Jean Dupont',   statut: 'Terminé',   duree: '3j', score: 92, date: '2026-03-15' },
+    { titre: 'Excel Avancé & Power BI',     employe: 'Kofi Mensah',   statut: 'Terminé',   duree: '2j', score: 88, date: '2026-03-20' },
+    { titre: 'Negociation Commerciale',     employe: 'Omar Sy',       statut: 'En cours',  duree: '2j', score: null, date: '2026-04-14' },
+    { titre: 'Sécurité Informatique ISO27K',employe: 'Paul Brunet',   statut: 'Planifié',  duree: '5j', score: null, date: '2026-05-10' },
+    { titre: 'Gestion de Projet Agile',     employe: 'Amara Diallo',  statut: 'En cours',  duree: '3j', score: null, date: '2026-04-10' },
+  ];
+
+  const allLeaves = [
+    ...(leaves || []),
+    { id: 'L3', employe: 'Paul Brunet',   type: 'RTT',          du: '2026-04-14', au: '2026-04-14', statut: 'Validé',     jours: 1 },
+    { id: 'L4', employe: 'Amara Diallo',  type: 'Congés Payés', du: '2026-05-19', au: '2026-05-30', statut: 'En attente', jours: 10 },
+    { id: 'L5', employe: 'Kofi Mensah',   type: 'Formation',    du: '2026-05-10', au: '2026-05-14', statut: 'Validé',     jours: 5 },
+    { id: 'L6', employe: 'Omar Sy',       type: 'Maladie',      du: '2026-04-11', au: '2026-04-12', statut: 'Validé',     jours: 2 },
+  ];
+
+  /* ─── Modal configs ─── */
+  const modalConfigs = {
+    employee: {
+      title: 'Nouveau Collaborateur',
+      fields: [
+        { name: 'nom',         label: 'Nom Complet',    required: true },
+        { name: 'poste',       label: 'Poste / Fonction', required: true },
+        { name: 'dept',        label: 'Département', type: 'select', options: Object.keys(DEPT_COLORS), required: true },
+        { name: 'manager',     label: 'Manager Direct', required: true },
+        { name: 'dateEntree',  label: 'Date d\'embauche', type: 'date', required: true },
+        { name: 'contrat',     label: 'Type de Contrat', type: 'select', options: ['CDI', 'CDD', 'Alternance', 'Stage', 'Freelance'] },
+        { name: 'salaire',     label: 'Salaire Brut Mensuel (FCFA)', type: 'number' },
+        { name: 'email',       label: 'Email Pro', type: 'email', required: true },
+        { name: 'avatar',      label: 'Initiales', required: true, placeholder: 'Ex: JD' },
+      ],
+      save: f => addRecord('hr', 'employees', f),
+    },
+    leave: {
+      title: 'Demande de Congé',
+      fields: [
+        { name: 'employe', label: 'Collaborateur', type: 'select', options: enrichedEmployees.map(e => e.nom), required: true },
+        { name: 'type',    label: 'Type', type: 'select', options: ['Congés Payés', 'Maladie', 'RTT', 'Formation', 'Maternité/Paternité', 'Autre'], required: true },
+        { name: 'du',      label: 'Du',   type: 'date', required: true },
+        { name: 'au',      label: 'Au',   type: 'date', required: true },
+        { name: 'note',    label: 'Commentaire' },
+      ],
+      save: f => addRecord('hr', 'leaves', { ...f, statut: 'En attente' }),
+    },
+    formation: {
+      title: 'Planifier une Formation',
+      fields: [
+        { name: 'titre',    label: 'Titre de la formation', required: true },
+        { name: 'employe',  label: 'Collaborateur', type: 'select', options: enrichedEmployees.map(e => e.nom), required: true },
+        { name: 'date',     label: 'Date de début', type: 'date', required: true },
+        { name: 'duree',    label: 'Durée', type: 'select', options: ['0.5j', '1j', '2j', '3j', '5j', '10j'] },
+        { name: 'organisme',label: 'Organisme / Formateur' },
+        { name: 'budget',   label: 'Budget (FCFA)', type: 'number' },
+      ],
+      save: () => {},
+    },
+  };
+  const activeMod = modal ? modalConfigs[modal] : null;
+
+  /* ═══════════ DASHBOARD ═══════════ */
+  const renderDashboard = () => (
+    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* KPIs */}
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
+        <KpiCard title="Effectif Total"       value={enrichedEmployees.length}              trend={14.3} trendType="up"   icon={<Users size={20}/>}       color="#3B82F6" sparklineData={headcountTrend.map(d=>({val:d.effectif}))} />
+        <KpiCard title="Masse Salariale/an"   value={formatCurrency(kpis.masseSalariale, true)} trend={5.2} trendType="up" icon={<Wallet size={20}/>}      color="#8B5CF6" sparklineData={[{val:85},{val:90},{val:95},{val:98},{val:100}]} />
+        <KpiCard title="Taux de Turnover"     value={`${kpis.turnover}%`}                  trend={-2.1} trendType="up"   icon={<TrendingDown size={20}/>} color="#10B981" sparklineData={[{val:10},{val:9.5},{val:9},{val:8.7},{val:8.4}]} />
+        <KpiCard title="Absentéisme"          value={`${kpis.absenteisme}%`}               trend={0.5}  trendType="down" icon={<Clock size={20}/>}        color="#EF4444" sparklineData={[{val:4},{val:3.8},{val:3.5},{val:3.3},{val:3.2}]} />
+        <KpiCard title="Score Engagement"     value={`${kpis.engagementScore}/100`}        trend={3.0}  trendType="up"   icon={<Heart size={20}/>}        color="#EC4899" sparklineData={[{val:70},{val:72},{val:74},{val:75},{val:76}]} />
+        <KpiCard title="En Formation"         value={`${kpis.enFormation} collab.`}        trend={0}    trendType="up"   icon={<BookOpen size={20}/>}     color="#F59E0B" sparklineData={[{val:1},{val:2},{val:2},{val:3},{val:3}]} />
+      </motion.div>
+
+      {/* Effectif Trend + Distribution dept */}
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '1.8fr 1fr', gap: '1.5rem' }}>
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Évolution Effectifs — Entrées / Sorties</h4>
+          <ResponsiveContainer width="100%" height={220}>
+            <ComposedChart data={headcountTrend}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+              <Tooltip content={<TT />} />
+              <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
+              <Bar dataKey="entrees" name="Entrées"  fill="#10B981" radius={[4,4,0,0]} barSize={18} />
+              <Bar dataKey="sorties" name="Sorties"  fill="#EF4444" radius={[4,4,0,0]} barSize={18} />
+              <Line dataKey="effectif" name="Effectif Total" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 4, fill: '#3B82F6' }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Effectif par Département</h4>
+          <ResponsiveContainer width="100%" height={160}>
+            <PieChart>
+              <Pie data={kpis.deptDist} cx="50%" cy="50%" innerRadius={42} outerRadius={65} paddingAngle={4} dataKey="value">
+                {kpis.deptDist.map((e, i) => <Cell key={i} fill={e.fill || '#64748B'} />)}
+              </Pie>
+              <Tooltip content={<TT />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.5rem' }}>
+            {kpis.deptDist.map((d, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: d.fill, display: 'inline-block' }} />
+                  {d.name}
+                </div>
+                <span style={{ fontWeight: 700 }}>{d.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Performance Bar Chart */}
+      <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Performance Individuelle (Score 0-100)</h4>
+        <ResponsiveContainer width="100%" height={200}>
+          <BarChart data={performanceData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" domain={[0, 100]} axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+            <YAxis type="category" dataKey="nom" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} width={80} />
+            <Tooltip content={<TT />} />
+            <Bar dataKey="score" name="Score Perf." radius={[0, 6, 6, 0]} barSize={18}>
+              {performanceData.map((e, i) => <Cell key={i} fill={e.fill} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </motion.div>
+    </motion.div>
+  );
+
+  /* ═══════════ EMPLOYÉS ═══════════ */
+  const renderEmployees = () => {
+    const filtered = enrichedEmployees.filter(e =>
+      e.nom.toLowerCase().includes(search.toLowerCase()) ||
+      e.poste.toLowerCase().includes(search.toLowerCase()) ||
+      e.dept.toLowerCase().includes(search.toLowerCase())
+    );
+    return (
+      <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <motion.div variants={fadeIn} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="glass" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: '0.75rem', minWidth: '200px' }}>
+            <Search size={15} color="var(--text-muted)" />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Chercher un collaborateur..." style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontSize: '0.88rem', color: 'var(--text)' }} />
+          </div>
+          <button onClick={() => setModal('employee')} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={14} /> Nouveau Collaborateur
+          </button>
+        </motion.div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '1.25rem' }}>
+          {filtered.map((emp, i) => (
+            <motion.div key={i} variants={fadeIn} whileHover={{ y: -4 }} onClick={() => onOpenDetail?.(emp, 'hr', 'employees')}
+              className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.1rem' }}>
+                <div style={{ width: '52px', height: '52px', borderRadius: '50%', background: `${DEPT_COLORS[emp.dept] || '#64748B'}20`, color: DEPT_COLORS[emp.dept] || '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.15rem', fontWeight: 800, flexShrink: 0, border: `2px solid ${DEPT_COLORS[emp.dept] || '#64748B'}40` }}>
+                  {emp.avatar}
+                </div>
+                <div style={{ flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{emp.nom}</div>
+                  <div style={{ color: 'var(--accent)', fontSize: '0.78rem', fontWeight: 600 }}>{emp.poste}</div>
+                  <Chip label={emp.dept} color={DEPT_COLORS[emp.dept] || '#64748B'} />
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Perf.</div>
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: emp.performance >= 85 ? '#10B981' : emp.performance >= 70 ? '#F59E0B' : '#EF4444' }}>{emp.performance}</div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Mail size={11} /> {emp.email}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Phone size={11} /> {emp.tel}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Briefcase size={11} /> {emp.contrat}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={11} /> {emp.dateEntree}</div>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Congés restants: <span style={{ fontWeight: 700, color: 'var(--text)' }}>{emp.congesRestants}j</span></span>
+                <span style={{ fontWeight: 700, color: '#8B5CF6' }}>{formatCurrency(emp.salaire)}/mois</span>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+    );
   };
 
-  const modalFields = view === 'employees' ? [
-    { name: 'nom', label: 'Nom Complet', required: true },
-    { name: 'poste', label: 'Poste / Fonction', required: true },
-    { name: 'dept', label: 'Département', type: 'select', options: ['IT', 'Ventes', 'RH', 'Finance', 'Production', 'Marketing'], required: true },
-    { name: 'manager', label: 'Manager / Responsable', required: true },
-    { name: 'dateEntree', label: 'Date d\'embauche', type: 'date', required: true },
-    { name: 'avatar', label: 'Initiales (Avatar)', required: true, placeholder: 'Ex: JD' },
-  ] : view === 'leaves' ? [
-    { name: 'employe', label: 'Employé', type: 'select', options: employees.map(e => e.nom), required: true },
-    { name: 'type', label: 'Type de Congé', type: 'select', options: ['Congés Payés', 'Maladie', 'RTT', 'Formation', 'Autre'], required: true },
-    { name: 'du', label: 'Du', type: 'date', required: true },
-    { name: 'au', label: 'Au', type: 'date', required: true },
-    { name: 'statut', label: 'Statut', type: 'select', options: ['Brouillon', 'En attente', 'Validé', 'Refusé'], required: true },
-  ] : [
-    { name: 'employe', label: 'Employé', type: 'select', options: employees.map(e => e.nom), required: true },
-    { name: 'objet', label: 'Objet de la dépense', required: true, placeholder: 'Ex: Déjeuner Client' },
-    { name: 'montant', label: 'Montant (€)', type: 'number', required: true },
-    { name: 'date', label: 'Date', type: 'date', required: true },
-    { name: 'statut', label: 'Statut', type: 'select', options: ['En attente', 'Approuvé', 'Remboursé', 'Refusé'], required: true },
-  ];
-
-  const renderDashboard = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard 
-          title="Effectif Total" 
-          value={employees.length}
-          trend={2.4} 
-          trendType="up" 
-          icon={<Users size={24} />} 
-          color="#3B82F6"
-          sparklineData={[{val: 120}, {val: 122}, {val: 121}, {val: 124}, {val: 125}]}
-        />
-        <KpiCard 
-          title="Taux d'Absence" 
-          value="3.2%"
-          trend={0.5} 
-          trendType="down" 
-          icon={<Clock size={24} />} 
-          color="#EF4444"
-          sparklineData={[{val: 4}, {val: 3.8}, {val: 4.2}, {val: 3.5}, {val: 3.2}]}
-        />
-        <KpiCard 
-          title="Notes de Frais" 
-          value={`${(expenses.reduce((sum, e) => sum + e.montant, 0) / 1000).toFixed(1)}k€`}
-          trend={1.2} 
-          trendType="up" 
-          icon={<Wallet size={24} />} 
-          color="#10B981"
-          sparklineData={[{val: 10}, {val: 11}, {val: 10.5}, {val: 11.2}, {val: 12}]}
-        />
-      </div>
-
-      <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', maxWidth: '500px' }}>
-        <h3 style={{ marginBottom: '1.5rem', fontWeight: 700 }}>Répartition par Département</h3>
-        <DonutChartComp data={deptData} />
-      </div>
-    </div>
-  );
-
-  const renderEmployees = () => (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
-      {employees.map((emp) => (
-        <motion.div
-           key={emp.id}
-           whileHover={{ y: -5 }}
-           onClick={() => onOpenDetail(emp, 'hr', 'employees')}
-           className="glass"
-           style={{ padding: '2rem', borderRadius: '1.5rem', textAlign: 'center', cursor: 'pointer' }}
-        >
-          <div style={{ position: 'relative', width: '80px', height: '80px', margin: '0 auto 1.5rem' }}>
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'var(--accent)', color: 'white', display: 'flex', alignItems: 'center', justifyScroll: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 700 }}>
-              {emp.avatar}
-            </div>
-          </div>
-          <h3 style={{ fontSize: '1.25rem', marginBottom: '0.25rem' }}>{emp.nom}</h3>
-          <p style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '1.5rem' }}>{emp.poste}</p>
-          <div style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.8rem' }}>
-            <Briefcase size={14} /> {emp.dept}
-          </div>
+  /* ═══════════ CONGÉS ═══════════ */
+  const renderLeaves = () => {
+    const statusColor = { Validé: '#10B981', 'En attente': '#F59E0B', Refusé: '#EF4444', Brouillon: '#64748B' };
+    const pending = allLeaves.filter(l => l.statut === 'En attente');
+    return (
+      <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        {pending.length > 0 && (
+          <motion.div variants={fadeIn} className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #F59E0B30' }}>
+            <h4 style={{ fontWeight: 700, color: '#F59E0B', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem' }}>
+              <AlertCircle size={14} /> {pending.length} Demande(s) en attente — Validation requise
+            </h4>
+            {pending.map((l, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none', flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, flex: 1 }}>{l.employe}</span>
+                <Chip label={l.type} color="#8B5CF6" />
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{l.du} → {l.au} ({l.jours || '?'}j)</span>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <button onClick={() => approveRequest('hr', 'leaves', l.id)} style={{ padding: '4px 12px', borderRadius: '0.5rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer', fontWeight: 600, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '3px' }}><Check size={12} /> Valider</button>
+                  <button onClick={() => rejectRequest('hr', 'leaves', l.id)} style={{ padding: '4px 12px', borderRadius: '0.5rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer', fontWeight: 600, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '3px' }}><X size={12} /> Refuser</button>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+        <motion.div variants={fadeIn} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={() => setModal('leave')} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={14} /> Demande de Congé
+          </button>
         </motion.div>
-      ))}
-    </div>
-  );
+        <motion.div variants={fadeIn} className="glass" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', textAlign: 'left' }}>
+            <thead style={{ background: 'var(--bg-subtle)' }}>
+              <tr>{['Collaborateur', 'Type', 'Période', 'Durée', 'Statut', 'Actions'].map((h, i) => (
+                <th key={i} style={{ padding: '0.85rem 1.1rem', fontWeight: 600, color: 'var(--text-muted)', fontSize: '0.73rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {allLeaves.map((l, i) => (
+                <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }}
+                  style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '0.9rem 1.1rem', fontWeight: 700 }}>{l.employe}</td>
+                  <td style={{ padding: '0.9rem 1.1rem' }}><Chip label={l.type} color="#8B5CF6" /></td>
+                  <td style={{ padding: '0.9rem 1.1rem', color: 'var(--text-muted)' }}>{l.du} → {l.au}</td>
+                  <td style={{ padding: '0.9rem 1.1rem', fontWeight: 700 }}>{l.jours || '—'}j</td>
+                  <td style={{ padding: '0.9rem 1.1rem' }}><Chip label={l.statut} color={statusColor[l.statut] || '#64748B'} /></td>
+                  <td style={{ padding: '0.9rem 1.1rem' }}>
+                    {l.statut === 'En attente' ? (
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <button onClick={() => approveRequest('hr', 'leaves', l.id)} style={{ padding: '3px 8px', borderRadius: '0.4rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700 }}><Check size={11} /></button>
+                        <button onClick={() => rejectRequest('hr', 'leaves', l.id)} style={{ padding: '3px 8px', borderRadius: '0.4rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700 }}><X size={11} /></button>
+                      </div>
+                    ) : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Traité</span>}
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </motion.div>
+      </motion.div>
+    );
+  };
 
-  const renderLeaves = () => (
-    <div className="glass" style={{ borderRadius: '1.5rem', overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          <tr>
-            <th style={{ padding: '1.25rem' }}>Employé</th>
-            <th style={{ padding: '1.25rem' }}>Type</th>
-            <th style={{ padding: '1.25rem' }}>Du / Au</th>
-            <th style={{ padding: '1.25rem' }}>Statut</th>
-            <th style={{ padding: '1.25rem' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaves.map((l) => (
-            <tr key={l.id} style={{ borderTop: '1px solid var(--border)' }}>
-              <td style={{ padding: '1.25rem', fontWeight: 600 }}>{l.employe}</td>
-              <td style={{ padding: '1.25rem' }}>{l.type}</td>
-              <td style={{ padding: '1.25rem' }}>{l.du} au {l.au}</td>
-              <td style={{ padding: '1.25rem' }}>
-                <span style={{ 
-                  padding: '0.2rem 0.6rem', 
-                  borderRadius: '0.5rem', 
-                  background: l.statut === 'Validé' ? '#10B98115' : l.statut === 'Refusé' ? '#EF444415' : '#F59E0B15', 
-                  color: l.statut === 'Validé' ? '#10B981' : l.statut === 'Refusé' ? '#EF4444' : '#F59E0B', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 600
-                }}>
-                  {l.statut}
-                </span>
-              </td>
-              <td style={{ padding: '1.25rem' }}>
-                {l.statut === 'En attente' ? (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => approveRequest('hr', 'leaves', l.id)} style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer' }}><Check size={14} /></button>
-                    <button onClick={() => rejectRequest('hr', 'leaves', l.id)} style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer' }}><X size={14} /></button>
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Traité</div>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  /* ═══════════ FORMATIONS ═══════════ */
+  const renderFormations = () => {
+    const statusColors = { Terminé: '#10B981', 'En cours': '#3B82F6', Planifié: '#F59E0B' };
+    return (
+      <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <motion.div variants={fadeIn} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={() => setModal('formation')} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={14} /> Planifier Formation
+          </button>
+        </motion.div>
+        {formations.map((f, i) => (
+          <motion.div key={i} variants={fadeIn} className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', borderLeft: `4px solid ${statusColors[f.statut] || '#64748B'}` }}>
+            <div style={{ flex: '0 0 36px', height: '36px', background: `${statusColors[f.statut] || '#64748B'}15`, borderRadius: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: statusColors[f.statut] || '#64748B' }}>
+              <BookOpen size={18} />
+            </div>
+            <div style={{ flex: '1 1 200px' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{f.titre}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{f.employe} · {f.date} · {f.duree}</div>
+            </div>
+            <Chip label={f.statut} color={statusColors[f.statut] || '#64748B'} />
+            {f.score !== null && (
+              <div style={{ textAlign: 'center', minWidth: '60px' }}>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Score</div>
+                <div style={{ fontWeight: 800, color: f.score >= 80 ? '#10B981' : '#F59E0B' }}>{f.score}/100</div>
+              </div>
+            )}
+          </motion.div>
+        ))}
+      </motion.div>
+    );
+  };
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Ressources Humaines</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gérez vos talents, congés et notes de frais.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div style={{ 
-            display: 'flex', 
-            background: 'var(--bg-subtle)', 
-            padding: '0.25rem', 
-            borderRadius: '0.8rem',
-            border: '1px solid var(--border)' 
-          }}>
-            <button 
-              onClick={() => setView('dashboard')}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.6rem',
-                border: 'none',
-                background: view === 'dashboard' ? 'var(--bg)' : 'transparent',
-                color: view === 'dashboard' ? 'var(--accent)' : 'var(--text-muted)',
-                cursor: 'pointer',
-                fontWeight: 600,
-                display: 'flex', alignItems: 'center', gap: '0.5rem'
-              }}
-            >
-              <BarChart3 size={16} /> Dashboard
-            </button>
-            <button 
-              onClick={() => setView('employees')}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: '0.6rem',
-                border: 'none',
-                background: view === 'employees' ? 'var(--bg)' : 'transparent',
-                color: view === 'employees' ? 'var(--accent)' : 'var(--text-muted)',
-                cursor: 'pointer',
-                fontWeight: 600,
-                display: 'flex', alignItems: 'center', gap: '0.5rem'
-              }}
-            >
-              <Layout size={16} /> Employés
-            </button>
-            <button onClick={() => setView('leaves')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'leaves' ? 'var(--bg)' : 'transparent', color: view === 'leaves' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Congés</button>
-            <button onClick={() => setView('expenses')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'expenses' ? 'var(--bg)' : 'transparent', color: view === 'expenses' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Frais</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#F97316', marginBottom: '0.4rem' }}>
+            <Users size={16} /><span style={{ fontWeight: 800, fontSize: '0.73rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Capital Humain — HRIS Enterprise</span>
           </div>
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-             <Plus size={18} /> Nouveau
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>Ressources Humaines</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>
+            Effectifs · Performance · Congés · Formations · Masse Salariale
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={() => setModal('leave')} className="glass" style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Calendar size={15} /> Congé
+          </button>
+          <button onClick={() => setModal('employee')} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={15} /> Nouveau Collab.
           </button>
         </div>
       </div>
 
-      {view === 'dashboard' && renderDashboard()}
-      {view === 'employees' && renderEmployees()}
-      {view === 'leaves' && renderLeaves()}
-      {view === 'expenses' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {expenses.map(ex => (
-             <div key={ex.id} className="glass" style={{ padding: '1rem 2rem', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                  <div style={{ fontWeight: 600 }}>{ex.employe}</div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{ex.objet}</div>
-                </div>
-                <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                  <div style={{ fontWeight: 700 }}>{formatCurrency(ex.montant)}</div>
-                  {ex.statut === 'En attente' ? (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={() => approveRequest('hr', 'expenses', ex.id)} className="btn-icon" style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer' }}>Approuver</button>
-                      <button onClick={() => rejectRequest('hr', 'expenses', ex.id)} className="btn-icon" style={{ padding: '0.5rem', borderRadius: '0.5rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer' }}>Refuser</button>
-                    </div>
-                  ) : (
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: ex.statut === 'Validé' ? '#10B981' : '#EF4444' }}>{ex.statut}</span>
-                  )}
-                </div>
-             </div>
-          ))}
-        </div>
-      )}
+      <TabBar tabs={[
+        { id: 'dashboard',   label: 'Dashboard RH',   icon: <BarChart3 size={14}/> },
+        { id: 'employees',   label: 'Collaborateurs',  icon: <Users size={14}/> },
+        { id: 'leaves',      label: 'Congés',          icon: <Calendar size={14}/> },
+        { id: 'formations',  label: 'Formations',      icon: <BookOpen size={14}/> },
+      ]} active={tab} onChange={setTab} />
 
-      <RecordModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        title="Créer une Ressource"
-        fields={modalFields}
-      />
+      {tab === 'dashboard'  && renderDashboard()}
+      {tab === 'employees'  && renderEmployees()}
+      {tab === 'leaves'     && renderLeaves()}
+      {tab === 'formations' && renderFormations()}
+
+      {activeMod && (
+        <RecordModal isOpen={true} onClose={() => setModal(null)} title={activeMod.title} fields={activeMod.fields}
+          onSave={f => { activeMod.save(f); setModal(null); }} />
+      )}
     </div>
   );
 };

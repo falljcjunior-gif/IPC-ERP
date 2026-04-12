@@ -1,140 +1,292 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Wallet, 
-  Plus, 
-  Search, 
-  CheckCircle2, 
-  XCircle, 
-  ChevronRight, 
-  CreditCard,
-  FileText,
-  Clock,
-  User,
-  Truck
+import {
+  Wallet, Plus, Search, CheckCircle2, XCircle, ChevronRight,
+  CreditCard, FileText, Clock, User, Truck, Plane, Coffee,
+  Home, BarChart3, TrendingUp, Target, AlertCircle, Download,
+  Filter, Activity, DollarSign
 } from 'lucide-react';
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  Cell, ComposedChart, Line, Legend, PieChart, Pie
+} from 'recharts';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
+import KpiCard from '../components/KpiCard';
 
+const fadeIn = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const Chip = ({ label, color = '#64748B' }) => (
+  <span style={{ padding: '2px 9px', borderRadius: '999px', background: `${color}18`, color, fontSize: '0.71rem', fontWeight: 700 }}>{label}</span>
+);
+const TabBar = ({ tabs, active, onChange }) => (
+  <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.9rem', border: '1px solid var(--border)', gap: '0.2rem', width: 'fit-content', flexWrap: 'wrap' }}>
+    {tabs.map(t => (
+      <button key={t.id} onClick={() => onChange(t.id)} style={{ padding: '0.48rem 1.05rem', borderRadius: '0.7rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.83rem', background: active === t.id ? 'var(--bg)' : 'transparent', color: active === t.id ? 'var(--accent)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem', transition: 'all 0.2s' }}>
+        {t.icon} {t.label}
+      </button>
+    ))}
+  </div>
+);
+const TT = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.8rem' }}>
+      <p style={{ fontWeight: 700, marginBottom: '4px' }}>{label}</p>
+      {payload.map((p, i) => <p key={i} style={{ color: p.color, margin: '2px 0' }}>{p.name}: {p.value?.toLocaleString?.('fr-FR') ?? p.value}</p>)}
+    </div>
+  );
+};
+
+const EXPENSE_TYPES = {
+  Transport:     { icon: <Truck size={16}/>,    color: '#3B82F6' },
+  Repas:         { icon: <Coffee size={16}/>,   color: '#F59E0B' },
+  Hébergement:   { icon: <Home size={16}/>,     color: '#8B5CF6' },
+  'Déplacement': { icon: <Plane size={16}/>,    color: '#10B981' },
+  Fournitures:   { icon: <FileText size={16}/>, color: '#64748B' },
+  Autre:         { icon: <CreditCard size={16}/>,color: '#EC4899' },
+};
+
+const ALL_EXPENSES = [
+  { id: '1', employee: 'Jean Dupont',    date: '2026-04-05', title: 'Déplacement Client - Lyon', amount: 125000,  type: 'Transport',   status: 'Remboursé',  receipt: true,  mission: 'Mission Commerciale' },
+  { id: '2', employee: 'Sarah Miller',   date: '2026-04-08', title: 'Déjeuner Partenaire',       amount: 42000,   type: 'Repas',       status: 'Approuvé',   receipt: true,  mission: 'Prospection' },
+  { id: '3', employee: 'Jean Dupont',    date: '2026-04-09', title: 'Abonnement Outil SaaS',     amount: 29900,   type: 'Autre',       status: 'En attente', receipt: true,  mission: 'IT' },
+  { id: '4', employee: 'Paul Brunet',    date: '2026-04-07', title: 'Hôtel - Déplacement Dakar', amount: 185000,  type: 'Hébergement', status: 'Approuvé',   receipt: true,  mission: 'Mission Technique' },
+  { id: '5', employee: 'Amara Diallo',   date: '2026-04-10', title: 'Vol Abidjan-Paris-Return',  amount: 420000,  type: 'Déplacement', status: 'En attente', receipt: true,  mission: 'Salon Marketing' },
+  { id: '6', employee: 'Kofi Mensah',    date: '2026-04-06', title: 'Fournitures Bureau',        amount: 18500,   type: 'Fournitures', status: 'Remboursé',  receipt: true,  mission: 'Interne' },
+  { id: '7', employee: 'Omar Sy',        date: '2026-04-11', title: 'Restaurant Client VIP',     amount: 68000,   type: 'Repas',       status: 'En attente', receipt: false, mission: 'Relation Client' },
+  { id: '8', employee: 'Sarah Miller',   date: '2026-04-04', title: 'Transport Aéroport',        amount: 25000,   type: 'Transport',   status: 'Remboursé',  receipt: true,  mission: 'Mission Commerciale' },
+];
+
+/* ════════════════════════════════════
+   EXPENSES MODULE — Full Enterprise
+════════════════════════════════════ */
 const Expenses = ({ onOpenDetail }) => {
-  const { data, addRecord, updateRecord, userRole } = useBusiness();
-  const [view, setView] = useState('mine'); // 'mine', 'to-validate'
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data, addRecord, updateRecord, userRole, formatCurrency } = useBusiness();
+  const [tab, setTab] = useState('dashboard');
+  const [modal, setModal] = useState(false);
+  const [filter, setFilter] = useState('all');
 
-  // Initialize mock data if missing
-  if (!data.hr.expenses) {
-    data.hr.expenses = [
-      { id: '1', employee: 'Jean Dupont', date: '2026-04-05', title: 'Déplacement Client Lyon', amount: 125.50, type: 'Transport', status: 'Payé', receipt: true },
-      { id: '2', employee: 'Marie Leroy', date: '2026-04-08', title: 'Déjeuner Projet X', amount: 42.00, type: 'Repas', status: 'En attente', receipt: true },
-      { id: '3', employee: 'Jean Dupont', date: '2026-04-09', title: 'Abonnement SaaS', amount: 29.99, type: 'Autre', status: 'En attente', receipt: true },
-    ];
-  }
+  const isManager = userRole === 'ADMIN' || userRole === 'HR' || userRole === 'FINANCE' || userRole === 'SUPER_ADMIN';
 
-  const { expenses } = data.hr;
-  const isManager = userRole === 'ADMIN' || userRole === 'HR' || userRole === 'FINANCE';
+  /* ─── KPIs ─── */
+  const kpis = useMemo(() => {
+    const total       = ALL_EXPENSES.reduce((s, e) => s + e.amount, 0);
+    const enAttente   = ALL_EXPENSES.filter(e => e.status === 'En attente');
+    const approuves   = ALL_EXPENSES.filter(e => e.status === 'Approuvé' || e.status === 'Remboursé');
+    const totalAppr   = approuves.reduce((s, e) => s + e.amount, 0);
+    const txValidation= Math.round((approuves.length / ALL_EXPENSES.length) * 100);
+    const sansRecu    = ALL_EXPENSES.filter(e => !e.receipt && e.status === 'En attente').length;
+    return { total, enAttente, totalAppr, txValidation, sansRecu };
+  }, []);
 
-  const handleSave = (formData) => {
-    addRecord('hr', 'expenses', { ...formData, status: 'En attente', receipt: true });
-    setIsModalOpen(false);
+  /* ─── Par catégorie ─── */
+  const parCategorie = useMemo(() => {
+    const map = ALL_EXPENSES.reduce((acc, e) => {
+      acc[e.type] = (acc[e.type] || 0) + e.amount;
+      return acc;
+    }, {});
+    return Object.entries(map).map(([name, value]) => ({ name, value, fill: EXPENSE_TYPES[name]?.color || '#64748B' }))
+      .sort((a, b) => b.value - a.value);
+  }, []);
+
+  /* ─── Par employé ─── */
+  const parEmploye = useMemo(() => {
+    const map = ALL_EXPENSES.reduce((acc, e) => {
+      acc[e.employee] = (acc[e.employee] || 0) + e.amount;
+      return acc;
+    }, {});
+    return Object.entries(map).map(([nom, montant]) => ({ nom: nom.split(' ')[0], montant })).sort((a, b) => b.montant - a.montant);
+  }, []);
+
+  const mensuel = [
+    { mois: 'Jan', total: 680000, approuve: 540000 },
+    { mois: 'Fév', total: 520000, approuve: 480000 },
+    { mois: 'Mar', total: 890000, approuve: 720000 },
+    { mois: 'Avr', total: kpis.total, approuve: kpis.totalAppr },
+  ];
+
+  const handleAction = (id, newStatus) => updateRecord('hr', 'expenses', id, { status: newStatus });
+
+  const filteredExpenses = filter === 'pending'
+    ? ALL_EXPENSES.filter(e => e.status === 'En attente')
+    : filter === 'mine'
+    ? ALL_EXPENSES.filter(e => e.employee === 'Jean Dupont')
+    : ALL_EXPENSES;
+
+  /* ═══════════ DASHBOARD ═══════════ */
+  const renderDashboard = () => (
+    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
+        <KpiCard title="Total Frais (M)"       value={formatCurrency(kpis.total, true)}      trend={12.4} trendType="up"   icon={<Wallet size={20}/>}      color="#3B82F6" sparklineData={mensuel.map(d=>({val:d.total/1000}))} />
+        <KpiCard title="Total Approuvés"       value={formatCurrency(kpis.totalAppr, true)}  trend={8.2}  trendType="up"   icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={mensuel.map(d=>({val:d.approuve/1000}))} />
+        <KpiCard title="En Attente"            value={`${kpis.enAttente.length} dossiers`}   trend={0}    trendType="down" icon={<Clock size={20}/>}        color="#F59E0B" sparklineData={[{val:4},{val:3},{val:5},{val:kpis.enAttente.length}]} />
+        <KpiCard title="Taux de Validation"    value={`${kpis.txValidation}%`}               trend={3.0}  trendType="up"   icon={<Target size={20}/>}       color="#8B5CF6" sparklineData={[{val:72},{val:74},{val:76},{val:kpis.txValidation}]} />
+        <KpiCard title="Sans Justificatif"     value={`${kpis.sansRecu} frais`}              trend={0}    trendType="down" icon={<AlertCircle size={20}/>}  color="#EF4444" sparklineData={[{val:2},{val:1},{val:2},{val:kpis.sansRecu}]} />
+      </motion.div>
+
+      {kpis.enAttente.length > 0 && isManager && (
+        <motion.div variants={fadeIn} className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #F59E0B30' }}>
+          <h4 style={{ fontWeight: 700, color: '#F59E0B', marginBottom: '0.75rem', fontSize: '0.88rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <AlertCircle size={14} /> {kpis.enAttente.length} Note(s) de Frais en attente d'approbation
+          </h4>
+          {kpis.enAttente.map((e, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 700, flex: 1 }}>{e.employee}</span>
+              <span style={{ fontSize: '0.8rem' }}>{e.title}</span>
+              <span style={{ fontWeight: 800, color: 'var(--accent)' }}>{formatCurrency(e.amount)}</span>
+              {!e.receipt && <Chip label="Sans reçu" color="#EF4444" />}
+              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                <button onClick={() => handleAction(e.id, 'Approuvé')} style={{ padding: '3px 10px', borderRadius: '0.4rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer', fontWeight: 600, fontSize: '0.78rem' }}>✓ Approuver</button>
+                <button onClick={() => handleAction(e.id, 'Rejeté')} style={{ padding: '3px 10px', borderRadius: '0.4rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer', fontWeight: 600, fontSize: '0.78rem' }}>✕ Rejeter</button>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Frais Mensuels vs Approuvés</h4>
+          <ResponsiveContainer width="100%" height={220}>
+            <ComposedChart data={mensuel}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+              <Tooltip content={<TT />} />
+              <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
+              <Bar dataKey="total"    name="Total"     fill="#3B82F630" radius={[4,4,0,0]} barSize={24} />
+              <Bar dataKey="approuve" name="Approuvé"  fill="#10B981"   radius={[4,4,0,0]} barSize={24} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+          <h4 style={{ fontWeight: 700, marginBottom: '0.75rem', fontSize: '0.95rem' }}>Répartition par Catégorie</h4>
+          <ResponsiveContainer width="100%" height={140}>
+            <PieChart>
+              <Pie data={parCategorie} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={4} dataKey="value">
+                {parCategorie.map((e, i) => <Cell key={i} fill={e.fill} />)}
+              </Pie>
+              <Tooltip content={<TT />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.5rem' }}>
+            {parCategorie.map((c, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.76rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.fill, display: 'inline-block' }} /> {c.name}
+                </div>
+                <span style={{ fontWeight: 700 }}>{formatCurrency(c.value)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Par employé */}
+      <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
+        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Top Dépenses — Par Collaborateur</h4>
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={parEmploye} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+            <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <YAxis type="category" dataKey="nom" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} width={70} />
+            <Tooltip content={<TT />} />
+            <Bar dataKey="montant" name="Montant (FCFA)" fill="var(--accent)" radius={[0,6,6,0]} barSize={16} />
+          </BarChart>
+        </ResponsiveContainer>
+      </motion.div>
+    </motion.div>
+  );
+
+  /* ═══════════ NOTES DE FRAIS ═══════════ */
+  const renderExpenses = () => {
+    const statusColor = { Remboursé: '#10B981', Approuvé: '#3B82F6', 'En attente': '#F59E0B', Rejeté: '#EF4444' };
+    return (
+      <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <motion.div variants={fadeIn} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.4rem', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+            {[{ k: 'all', l: 'Tous' }, { k: 'mine', l: 'Mes Frais' }, { k: 'pending', l: `À Valider (${kpis.enAttente.length})` }].map(f => (
+              <button key={f.k} onClick={() => setFilter(f.k)} style={{ padding: '0.4rem 0.75rem', borderRadius: '0.55rem', border: 'none', background: filter === f.k ? 'var(--bg)' : 'transparent', color: filter === f.k ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem' }}>
+                {f.l}
+              </button>
+            ))}
+          </div>
+          <div style={{ flex: 1 }} />
+          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={14} /> Déclarer un Frais
+          </button>
+        </motion.div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {filteredExpenses.map((exp, i) => {
+            const typeConf = EXPENSE_TYPES[exp.type] || EXPENSE_TYPES['Autre'];
+            return (
+              <motion.div key={i} variants={fadeIn} className="glass"
+                style={{ padding: '1.1rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', cursor: 'pointer' }}
+                onClick={() => onOpenDetail?.(exp, 'hr', 'expenses')}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: `${typeConf.color}15`, color: typeConf.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {typeConf.icon}
+                </div>
+                <div style={{ flex: '1 1 160px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{exp.title}</div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{exp.employee} · {exp.date} · {exp.mission}</div>
+                </div>
+                <Chip label={exp.type} color={typeConf.color} />
+                <div style={{ fontWeight: 800, fontSize: '1rem', minWidth: '90px', textAlign: 'right' }}>{formatCurrency(exp.amount)}</div>
+                {!exp.receipt && <Chip label="⚠ Sans reçu" color="#EF4444" />}
+                <Chip label={exp.status} color={statusColor[exp.status] || '#64748B'} />
+                {filter === 'pending' && (
+                  <div style={{ display: 'flex', gap: '0.4rem' }}>
+                    <button onClick={e => { e.stopPropagation(); handleAction(exp.id, 'Approuvé'); }} style={{ padding: '4px 10px', borderRadius: '0.4rem', border: 'none', background: '#10B98120', color: '#10B981', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>✓</button>
+                    <button onClick={e => { e.stopPropagation(); handleAction(exp.id, 'Rejeté'); }} style={{ padding: '4px 10px', borderRadius: '0.4rem', border: 'none', background: '#EF444420', color: '#EF4444', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>✕</button>
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+    );
   };
-
-  const handleAction = (id, newStatus) => {
-    updateRecord('hr', 'expenses', id, { status: newStatus });
-  };
-
-  const filteredExpenses = view === 'mine' 
-    ? expenses.filter(e => e.employee === 'Jean Dupont') 
-    : expenses.filter(e => e.status === 'En attente');
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Notes de Frais</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gérez vo dépenses professionnelles et les remboursements collaborateurs.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-           <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.8rem', border: '1px solid var(--border)' }}>
-            <button onClick={() => setView('mine')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'mine' ? 'var(--bg)' : 'transparent', color: view === 'mine' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Mes Frais</button>
-            {isManager && (
-               <button onClick={() => setView('to-validate')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'to-validate' ? 'var(--bg)' : 'transparent', color: view === 'to-validate' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>À Valider</button>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8B5CF6', marginBottom: '0.4rem' }}>
+            <Wallet size={16} /><span style={{ fontWeight: 800, fontSize: '0.73rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Finance RH — Notes de Frais</span>
           </div>
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-            <Plus size={18} /> Déclarer un frais
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>Gestion des Notes de Frais</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>Déclaration · Approbation · Rapports · Top Dépenses</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="glass" style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Download size={15} /> Export
+          </button>
+          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={15} /> Déclarer un Frais
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {filteredExpenses.map(exp => (
-          <motion.div
-            key={exp.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass"
-            style={{ padding: '1.25rem 2rem', borderRadius: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            onClick={() => onOpenDetail(exp, 'hr', 'expenses')}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--accent)10', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     {exp.type === 'Transport' ? <Truck size={20} /> : exp.type === 'Repas' ? <CreditCard size={20} /> : <FileText size={20} />}
-                  </div>
-                  <div>
-                     <div style={{ fontWeight: 700, fontSize: '1rem' }}>{exp.title}</div>
-                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <User size={12} /> {exp.employee} • {exp.date}
-                     </div>
-                  </div>
-               </div>
-               
-               <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '2rem' }}>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Type</div>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{exp.type}</div>
-               </div>
+      <TabBar tabs={[
+        { id: 'dashboard', label: 'Analytics',       icon: <BarChart3 size={14}/> },
+        { id: 'expenses',  label: 'Notes de Frais',  icon: <Wallet size={14}/> },
+      ]} active={tab} onChange={setTab} />
 
-               <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '2rem' }}>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Montant</div>
-                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary)' }}>{exp.amount.toFixed(2)} FCFA</div>
-               </div>
-            </div>
+      {tab === 'dashboard' && renderDashboard()}
+      {tab === 'expenses'  && renderExpenses()}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-               <span style={{ 
-                 padding: '0.25rem 0.75rem', 
-                 borderRadius: '0.6rem', 
-                 background: exp.status === 'Payé' ? '#10B98115' : exp.status === 'Validé' ? '#3B82F615' : '#F59E0B15', 
-                 color: exp.status === 'Payé' ? '#10B981' : exp.status === 'Validé' ? '#3B82F6' : '#F59E0B',
-                 fontSize: '0.75rem',
-                 fontWeight: 700
-               }}>
-                 {exp.status}
-               </span>
-
-               {view === 'to-validate' && (
-                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={(e) => { e.stopPropagation(); handleAction(exp.id, 'Rejeté'); }} className="glass" style={{ p: '0.5rem', borderRadius: '0.5rem', color: '#EF4444', border: 'none' }}><XCircle size={20} /></button>
-                    <button onClick={(e) => { e.stopPropagation(); handleAction(exp.id, 'Validé'); }} className="btn btn-primary" style={{ padding: '0.5rem', borderRadius: '0.5rem' }}><CheckCircle2 size={20} /></button>
-                 </div>
-               )}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      <RecordModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        title="Nouvelle Note de Frais"
+      <RecordModal isOpen={modal} onClose={() => setModal(false)} title="Nouvelle Note de Frais"
         fields={[
-          { name: 'title', label: 'Libellé de la dépense', required: true },
-          { name: 'amount', label: 'Montant TTC (FCFA)', type: 'number', required: true },
-          { name: 'date', label: 'Date de la dépense', type: 'date', required: true },
-          { name: 'type', label: 'Catégorie', type: 'select', options: ['Transport', 'Repas', 'Hébergement', 'Fournitures', 'Autre'], required: true },
-          { name: 'employee', label: 'Collaborateur', type: 'select', options: data.hr.employees.map(e => e.nom), required: true },
+          { name: 'title',    label: 'Libellé',        required: true },
+          { name: 'amount',   label: 'Montant TTC (FCFA)', type: 'number', required: true },
+          { name: 'date',     label: 'Date',           type: 'date', required: true },
+          { name: 'type',     label: 'Catégorie',      type: 'select', options: Object.keys(EXPENSE_TYPES), required: true },
+          { name: 'employee', label: 'Collaborateur',  type: 'select', options: data.hr.employees.map(e => e.nom), required: true },
+          { name: 'mission',  label: 'Mission / Objet', required: true },
         ]}
+        onSave={f => { addRecord('hr', 'expenses', { ...f, status: 'En attente', receipt: true }); setModal(false); }}
       />
     </div>
   );
