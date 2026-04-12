@@ -148,10 +148,14 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
           exit={{ x: '100%', opacity: 0 }}
           style={{ 
             position: 'fixed', right: 0, top: 0, bottom: 0, 
-            width: isMobile ? '100%' : '500px', 
-            background: 'var(--bg)', boxShadow: '-10px 0 30px rgba(0,0,0,0.1)', 
-            zIndex: 2000, display: 'flex', flexDirection: 'column',
-            borderLeft: '1px solid var(--border)'
+            width: isMobile ? '100%' : '850px', 
+            background: 'var(--bg)', 
+            boxShadow: '-20px 0 50px rgba(0,0,0,0.15)', 
+            zIndex: 3000, 
+            display: 'flex', 
+            flexDirection: 'column',
+            borderLeft: '1px solid var(--border)',
+            overflow: 'hidden'
           }}
         >
           {/* Main Layout: Sidebar & Chat Area */}
@@ -159,9 +163,9 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
             
             {/* LEFT PANELS (Navigation & Lists) */}
             <div style={{ 
-              width: '85px', borderRight: '1px solid var(--border)', 
+              width: '70px', borderRight: '1px solid var(--border)', 
               background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', 
-              alignItems: 'center', paddingTop: '1.5rem', gap: '1.5rem' 
+              alignItems: 'center', paddingTop: '1.5rem', gap: '1.5rem', flexShrink: 0 
             }}>
               {[
                 { id: 'chats', icon: <MessageSquare size={22} />, label: 'Discussions' },
@@ -192,7 +196,7 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
             </div>
 
             {/* MIDDLE PANEL (Lists) */}
-            <div style={{ width: '220px', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)' }}>
+            <div style={{ width: '280px', display: 'flex', flexDirection: 'column', borderRight: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg)' }}>
               <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)' }}>
                 <h3 style={{ fontWeight: 800, fontSize: '1.2rem', marginBottom: '1rem' }}>
                   {activeTab === 'chats' ? 'Discussions' : activeTab === 'contacts' ? 'Contacts' : 'Groupes'}
