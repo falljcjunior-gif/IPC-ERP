@@ -97,36 +97,36 @@ const GlobalDashboard = () => {
 
   // ─── KPI Metrics ───
   const metrics = useMemo(() => ({
-    sales:   { caRealise:2540000000, caPrevu:2800000000, cac:125000,     ltv:8500000,    pipelineEvo:15.2 },
-    finance: { cashFlow:850000000,   dso:42,             margeNette:18.5 },
-    hr:      { masseSalariale:120000000, turnover:4.2,   absenteisme:2.1, effectif: data.hr?.employees?.length || 0 },
-    supply:  { rotationStocks:8.5,   otif:94.2,          coutLogistique:15000 }
+    sales:   { caRealise:0, caPrevu:0, cac:0,     ltv:0,    pipelineEvo:0 },
+    finance: { cashFlow:0,   dso:0,             margeNette:0 },
+    hr:      { masseSalariale:0, turnover:0,   absenteisme:0, effectif: data.hr?.employees?.length || 0 },
+    supply:  { rotationStocks:0,   otif:0,          coutLogistique:0 }
   }), [data]);
 
   // ─── CA Mensuel Réalisé vs Prévisions (12 mois) ───
   const caComparaisonData = [
-    { mois:'Jan', realise:1900000000, prevu:2000000000 },
-    { mois:'Fév', realise:2100000000, prevu:2100000000 },
-    { mois:'Mar', realise:2300000000, prevu:2200000000 },
-    { mois:'Avr', realise:2150000000, prevu:2250000000 },
-    { mois:'Mai', realise:2400000000, prevu:2400000000 },
-    { mois:'Jun', realise:2600000000, prevu:2500000000 },
-    { mois:'Juil',realise:2350000000, prevu:2600000000 },
-    { mois:'Aoû', realise:2250000000, prevu:2700000000 },
-    { mois:'Sep', realise:2480000000, prevu:2750000000 },
-    { mois:'Oct', realise:2540000000, prevu:2800000000 },
-    { mois:'Nov', realise:null,       prevu:2850000000 },
-    { mois:'Déc', realise:null,       prevu:2900000000 },
+    { mois:'Jan', realise:0, prevu:0 },
+    { mois:'Fév', realise:0, prevu:0 },
+    { mois:'Mar', realise:0, prevu:0 },
+    { mois:'Avr', realise:0, prevu:0 },
+    { mois:'Mai', realise:0, prevu:0 },
+    { mois:'Jun', realise:0, prevu:0 },
+    { mois:'Juil',realise:0, prevu:0 },
+    { mois:'Aoû', realise:0, prevu:0 },
+    { mois:'Sep', realise:0, prevu:0 },
+    { mois:'Oct', realise:0, prevu:0 },
+    { mois:'Nov', realise:0,       prevu:0 },
+    { mois:'Déc', realise:0,       prevu:0 },
   ];
 
   // ─── Department Health Scores (RAG) ───
   const deptHealth = [
-    { dept: 'Finance',      score: 82, rag: 'green', trend: +3.2, icon: <DollarSign size={18} />,  color:'#10B981', link:'accounting' },
-    { dept: 'Commercial',   score: 71, rag: 'amber', trend: -5.1, icon: <Target size={18} />,       color:'#3B82F6', link:'crm' },
-    { dept: 'Supply Chain', score: 64, rag: 'amber', trend: -2.8, icon: <Truck size={18} />,        color:'#F59E0B', link:'inventory' },
-    { dept: 'Production',   score: 89, rag: 'green', trend: +1.1, icon: <ActivityIcon size={18} />, color:'#8B5CF6', link:'production' },
-    { dept: 'RH',           score: 77, rag: 'green', trend: +0.8, icon: <Users size={18} />,        color:'#06B6D4', link:'hr' },
-    { dept: 'Projets',      score: 58, rag: 'red',   trend: -8.3, icon: <Briefcase size={18} />,    color:'#EF4444', link:'projects' },
+    { dept: 'Finance',      score: 0, rag: 'green', trend: 0, icon: <DollarSign size={18} />,  color:'#10B981', link:'accounting' },
+    { dept: 'Commercial',   score: 0, rag: 'green', trend: 0, icon: <Target size={18} />,       color:'#3B82F6', link:'crm' },
+    { dept: 'Supply Chain', score: 0, rag: 'green', trend: 0, icon: <Truck size={18} />,        color:'#F59E0B', link:'inventory' },
+    { dept: 'Production',   score: 0, rag: 'green', trend: 0, icon: <ActivityIcon size={18} />, color:'#8B5CF6', link:'production' },
+    { dept: 'RH',           score: 0, rag: 'green', trend: 0, icon: <Users size={18} />,        color:'#06B6D4', link:'hr' },
+    { dept: 'Projets',      score: 0, rag: 'green',   trend: 0, icon: <Briefcase size={18} />,    color:'#EF4444', link:'projects' },
   ];
 
   // ─── Drill-Down configs ───
@@ -261,22 +261,10 @@ const GlobalDashboard = () => {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'1rem' }}>
             {[
               {
-                level:'red', icon:<AlertTriangle size={16} />, color:'#EF4444',
-                title:'⚠ Risque Cash-Flow Imminent',
-                body:`Le DSO de 42 jours combiné aux décaissements Q3 crée un risque de déficit de ${formatCurrency(150000000, true)} d'ici 90 jours. Recouvrement urgent sur MegaCorp & TechGlobal.`,
-                action:'Voir DSO', link:'finance_dso'
-              },
-              {
-                level:'amber', icon:<Package size={16} />, color:'#F59E0B',
-                title:'📦 Rupture Stock Prévue — J+14',
-                body:`Le produit "Serveur Gen3" (Europe) connaît une hausse de demande de +27%. Sans réassort ce jour, rupture prévue dans 14 jours → Perte estimée: ${formatCurrency(80000000, true)}.`,
-                action:'Voir Stock', link:null
-              },
-              {
-                level:'green', icon:<TrendingUp size={16} />, color:'#10B981',
-                title:'✅ Opportunité Croissance B2B',
-                body:`La baisse du CAC (-8%) sur le segment B2B génère une fenêtre d'acquisition optimale. L'IA recommande d'augmenter le budget Mktg de 20% → ROI projeté ×3.2.`,
-                action:'Voir Pipeline', link:null
+                level:'green', icon:<CheckCircle2 size={16} />, color:'#10B981',
+                title:'Système Prêt',
+                body:`Toutes les fonctions critiques sont opérationnelles. L'IA attend vos premières données pour générer des analyses prédictives.`,
+                action: null, link: null
               },
             ].map((alert, i) => (
               <motion.div key={i} whileHover={{ scale:1.015 }} className="glass" style={{ padding:'1.25rem', borderRadius:'1rem', borderLeft:`4px solid ${alert.color}`, background:'var(--bg)', cursor:'pointer' }}
@@ -368,10 +356,10 @@ const GlobalDashboard = () => {
               <Target size={18} color="#3B82F6" /> Direction Commerciale
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
-              <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={-9.2} trendType="down" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[{val:10},{val:15},{val:12},{val:9},{val:8}]} onDrillDown={() => handleDrillDown('sales_ca')} />
-              <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={metrics.sales.pipelineEvo} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[{val:5},{val:8},{val:10},{val:12},{val:15}]} />
-              <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={5.4}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[{val:140},{val:135},{val:130},{val:128},{val:125}]} />
-              <KpiCard title="Valeur Vie Client (LTV)"   value={formatCurrency(metrics.sales.ltv, true)}       trend={2.1}  trendType="up"   icon={<Users size={22} />} color="#F43F5E" sparklineData={[{val:80},{val:82},{val:83},{val:84},{val:85}]}  />
+              <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} />
+              <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} />
+              <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} />
+              <KpiCard title="Valeur Vie Client (LTV)"   value={formatCurrency(metrics.sales.ltv, true)}       trend={0}  trendType="up"   icon={<Users size={22} />} color="#F43F5E" sparklineData={[]}  />
             </div>
           </motion.div>
         )}
@@ -383,9 +371,9 @@ const GlobalDashboard = () => {
               <DollarSign size={18} color="#10B981" /> Direction Financière (CFO)
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
-              <KpiCard title="Cash-flow Opérationnel" value={formatCurrency(metrics.finance.cashFlow, true)} trend={4.5}  trendType="up"   icon={<ActivityIcon size={22} />} color="#10B981" sparklineData={[{val:700},{val:750},{val:800},{val:780},{val:850}]} onDrillDown={() => handleDrillDown('finance_cashflow')} />
-              <KpiCard title="DSO (Délai Recouvrement)" value={`${metrics.finance.dso} Jours`}             trend={12.5} trendType="down" icon={<Calendar size={22} />}  color="#EF4444" sparklineData={[{val:35},{val:36},{val:38},{val:40},{val:42}]}   onDrillDown={() => handleDrillDown('finance_dso')} />
-              <KpiCard title="Marge Nette Globale"     value={`${metrics.finance.margeNette}%`}             trend={1.2}  trendType="up"   icon={<ArrowUpRight size={22} />} color="#06B6D4" sparklineData={[{val:17},{val:17.5},{val:18},{val:18.2},{val:18.5}]} />
+              <KpiCard title="Cash-flow Opérationnel" value={formatCurrency(metrics.finance.cashFlow, true)} trend={0}  trendType="up"   icon={<ActivityIcon size={22} />} color="#10B981" sparklineData={[]} onDrillDown={() => handleDrillDown('finance_cashflow')} />
+              <KpiCard title="DSO (Délai Recouvrement)" value={`${metrics.finance.dso} Jours`}             trend={0} trendType="down" icon={<Calendar size={22} />}  color="#EF4444" sparklineData={[]}   onDrillDown={() => handleDrillDown('finance_dso')} />
+              <KpiCard title="Marge Nette Globale"     value={`${metrics.finance.margeNette}%`}             trend={0}  trendType="up"   icon={<ArrowUpRight size={22} />} color="#06B6D4" sparklineData={[]} />
             </div>
           </motion.div>
         )}
@@ -397,9 +385,9 @@ const GlobalDashboard = () => {
               <Truck size={18} color="#F59E0B" /> Supply Chain & Logistique
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
-              <KpiCard title="Taux de Service (OTIF)"      value={`${metrics.supply.otif}%`}             trend={2.1}  trendType="down" icon={<Target size={22} />}    color="#F59E0B" sparklineData={[{val:96},{val:95.5},{val:95},{val:94.8},{val:94.2}]} onDrillDown={() => handleDrillDown('supply_otif')} />
-              <KpiCard title="Rotation des Stocks"          value={`${metrics.supply.rotationStocks}x/an`} trend={0.5}  trendType="up"   icon={<Package size={22} />}   color="#8B5CF6" sparklineData={[{val:7.8},{val:8.0},{val:8.2},{val:8.4},{val:8.5}]} />
-              <KpiCard title="Coût Logistique / Commande"  value={formatCurrency(metrics.supply.coutLogistique)} trend={1.5} trendType="up" icon={<ArrowDownRight size={22} />} color="#10B981" sparklineData={[{val:15500},{val:15400},{val:15200},{val:15100},{val:15000}]} />
+              <KpiCard title="Taux de Service (OTIF)"      value={`${metrics.supply.otif}%`}             trend={0}  trendType="down" icon={<Target size={22} />}    color="#F59E0B" sparklineData={[]} onDrillDown={() => handleDrillDown('supply_otif')} />
+              <KpiCard title="Rotation des Stocks"          value={`${metrics.supply.rotationStocks}x/an`} trend={0}  trendType="up"   icon={<Package size={22} />}   color="#8B5CF6" sparklineData={[]} />
+              <KpiCard title="Coût Logistique / Commande"  value={formatCurrency(metrics.supply.coutLogistique)} trend={0} trendType="up" icon={<ArrowDownRight size={22} />} color="#10B981" sparklineData={[]} />
             </div>
           </motion.div>
         )}
@@ -411,10 +399,10 @@ const GlobalDashboard = () => {
               <HeartPulse size={18} color="#F43F5E" /> Ressources Humaines
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
-              <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={2.4}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[{val:110},{val:112},{val:115},{val:118},{val:120}]} />
-              <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0.8}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[{val:5.2},{val:5.0},{val:4.8},{val:4.5},{val:4.2}]} />
-              <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0.3}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[{val:1.8},{val:1.9},{val:1.9},{val:2.0},{val:2.1}]} />
-              <KpiCard title="Effectif Total"     value={metrics.hr.effectif || 125}                      trend={1.1}  trendType="up"   icon={<Users size={22} />}          color="#8B5CF6" sparklineData={[{val:118},{val:120},{val:121},{val:123},{val:125}]} />
+              <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} />
+              <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} />
+              <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} />
+              <KpiCard title="Effectif Total"     value={metrics.hr.effectif}                      trend={0}  trendType="up"   icon={<Users size={22} />}          color="#8B5CF6" sparklineData={[]} />
             </div>
           </motion.div>
         )}

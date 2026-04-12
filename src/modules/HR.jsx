@@ -152,12 +152,12 @@ const HR = ({ onOpenDetail }) => {
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
-        <KpiCard title="Effectif Total"       value={enrichedEmployees.length}              trend={14.3} trendType="up"   icon={<Users size={20}/>}       color="#3B82F6" sparklineData={headcountTrend.map(d=>({val:d.effectif}))} />
-        <KpiCard title="Masse Salariale/an"   value={formatCurrency(kpis.masseSalariale, true)} trend={5.2} trendType="up" icon={<Wallet size={20}/>}      color="#8B5CF6" sparklineData={[{val:85},{val:90},{val:95},{val:98},{val:100}]} />
-        <KpiCard title="Taux de Turnover"     value={`${kpis.turnover}%`}                  trend={-2.1} trendType="up"   icon={<TrendingDown size={20}/>} color="#10B981" sparklineData={[{val:10},{val:9.5},{val:9},{val:8.7},{val:8.4}]} />
-        <KpiCard title="Absentéisme"          value={`${kpis.absenteisme}%`}               trend={0.5}  trendType="down" icon={<Clock size={20}/>}        color="#EF4444" sparklineData={[{val:4},{val:3.8},{val:3.5},{val:3.3},{val:3.2}]} />
-        <KpiCard title="Score Engagement"     value={`${kpis.engagementScore}/100`}        trend={3.0}  trendType="up"   icon={<Heart size={20}/>}        color="#EC4899" sparklineData={[{val:70},{val:72},{val:74},{val:75},{val:76}]} />
-        <KpiCard title="En Formation"         value={`${kpis.enFormation} collab.`}        trend={0}    trendType="up"   icon={<BookOpen size={20}/>}     color="#F59E0B" sparklineData={[{val:1},{val:2},{val:2},{val:3},{val:3}]} />
+        <KpiCard title="Effectif Total"       value={enrichedEmployees.length}              trend={0} trendType="up"   icon={<Users size={20}/>}       color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="Masse Salariale/an"   value={formatCurrency(kpis.masseSalariale, true)} trend={0} trendType="up" icon={<Wallet size={20}/>}      color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Taux de Turnover"     value={`${kpis.turnover}%`}                  trend={0} trendType="up"   icon={<TrendingDown size={20}/>} color="#10B981" sparklineData={[]} />
+        <KpiCard title="Absentéisme"          value={`${kpis.absenteisme}%`}               trend={0}  trendType="down" icon={<Clock size={20}/>}        color="#EF4444" sparklineData={[]} />
+        <KpiCard title="Score Engagement"     value={`${kpis.engagementScore}/100`}        trend={0}  trendType="up"   icon={<Heart size={20}/>}        color="#EC4899" sparklineData={[]} />
+        <KpiCard title="En Formation"         value={`${kpis.enFormation} collab.`}        trend={0}    trendType="up"   icon={<BookOpen size={20}/>}     color="#F59E0B" sparklineData={[]} />
       </motion.div>
 
       {/* Effectif Trend + Distribution dept */}

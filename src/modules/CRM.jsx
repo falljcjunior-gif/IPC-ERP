@@ -267,11 +267,11 @@ const CRM = ({ onOpenDetail }) => {
           <Target size={16} color="#3B82F6" /> Ventes & Pipeline
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem' }}>
-          <KpiCard title="Valeur Brute Pipeline"   value={formatCurrency(kpis.totalPipeline, true)}    trend={8.2}  trendType="up"   icon={<DollarSign size={20} />} color="#3B82F6" sparklineData={[{val:30},{val:35},{val:32},{val:40},{val:45}]} />
-          <KpiCard title="Pipeline Pondéré"        value={formatCurrency(kpis.weightedPipeline, true)} trend={5.1}  trendType="up"   icon={<Activity size={20} />}   color="#8B5CF6" sparklineData={[{val:15},{val:18},{val:17},{val:20},{val:22}]} />
-          <KpiCard title="Taux de Conversion"      value={`${kpis.convRate}%`}                          trend={12.5} trendType="up"   icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[{val:10},{val:15},{val:12},{val:18},{val:25}]} />
-          <KpiCard title="Win Rate"                value={`${kpis.winRate}%`}                           trend={3.2}  trendType="up"   icon={<Award size={20} />}      color="#F59E0B" sparklineData={[{val:40},{val:42},{val:41},{val:44},{val:46}]} />
-          <KpiCard title="Cycle de Vente Moyen"    value={`${kpis.avgCycleDays} Jours`}                 trend={5.1}  trendType="up"   icon={<Clock size={20} />}      color="#06B6D4" sparklineData={[{val:35},{val:32},{val:30},{val:29},{val:28}]} />
+          <KpiCard title="Valeur Brute Pipeline"   value={formatCurrency(kpis.totalPipeline, true)}    trend={0} trendType="up" icon={<DollarSign size={20} />} color="#3B82F6" sparklineData={[]} />
+          <KpiCard title="Pipeline Pondéré"        value={formatCurrency(kpis.weightedPipeline, true)} trend={0} trendType="up" icon={<Activity size={20} />} color="#8B5CF6" sparklineData={[]} />
+          <KpiCard title="Taux de Conversion"      value={`${kpis.convRate}%`}                          trend={0} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[]} />
+          <KpiCard title="Win Rate"                value={`${kpis.winRate}%`}                           trend={0} trendType="up" icon={<Award size={20} />} color="#F59E0B" sparklineData={[]} />
+          <KpiCard title="Cycle de Vente Moyen"    value={`${kpis.avgCycleDays} Jours`}                 trend={0} trendType="up" icon={<Clock size={20} />} color="#06B6D4" sparklineData={[]} />
         </div>
       </motion.div>
 
@@ -363,11 +363,11 @@ const CRM = ({ onOpenDetail }) => {
           <Headphones size={16} color="#06B6D4" /> Service Client & Fidélisation
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-          <KpiCard title="NPS Score"               value={kpis.nps}                           trend={4.1} trendType="up"   icon={<ThumbsUp size={20} />}    color="#10B981" sparklineData={[{val:55},{val:57},{val:60},{val:61},{val:62}]} />
-          <KpiCard title="CSAT"                    value={`${kpis.csat}%`}                    trend={2.3} trendType="up"   icon={<Star size={20} />}        color="#F59E0B" sparklineData={[{val:84},{val:85},{val:86},{val:87},{val:88}]} />
-          <KpiCard title="Taux d'Attrition (Churn)"value={`${kpis.churn}%`}                  trend={0.5} trendType="up"   icon={<RefreshCcw size={20} />}  color="#EF4444" sparklineData={[{val:3.8},{val:3.6},{val:3.5},{val:3.3},{val:3.2}]} />
-          <KpiCard title="Résolution Moy. SAV"     value={`${kpis.avgResolutionHours}h`}      trend={8.2} trendType="up"   icon={<Clock size={20} />}       color="#8B5CF6" sparklineData={[{val:6},{val:5.5},{val:5},{val:4.5},{val:4.2}]} />
-          <KpiCard title="LTV / CLTV"              value={formatCurrency(kpis.cltv, true)}   trend={3.0} trendType="up"   icon={<Award size={20} />}       color="#06B6D4" sparklineData={[{val:20},{val:22},{val:23},{val:24},{val:25.5}]} />
+          <KpiCard title="NPS Score"               value={kpis.nps}                           trend={0} trendType="up" icon={<ThumbsUp size={20} />} color="#10B981" sparklineData={[]} />
+          <KpiCard title="CSAT"                    value={`${kpis.csat}%`}                    trend={0} trendType="up" icon={<Star size={20} />} color="#F59E0B" sparklineData={[]} />
+          <KpiCard title="Taux d'Attrition (Churn)"value={`${kpis.churn}%`}                  trend={0} trendType="up" icon={<RefreshCcw size={20} />} color="#EF4444" sparklineData={[]} />
+          <KpiCard title="Résolution Moy. SAV"     value={`${kpis.avgResolutionHours}h`}      trend={0} trendType="up" icon={<Clock size={20} />} color="#8B5CF6" sparklineData={[]} />
+          <KpiCard title="LTV / CLTV"              value={formatCurrency(kpis.cltv, true)}   trend={0} trendType="up" icon={<Award size={20} />} color="#06B6D4" sparklineData={[]} />
         </div>
       </motion.div>
 

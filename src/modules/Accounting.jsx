@@ -106,12 +106,12 @@ const Accounting = ({ onOpenDetail }) => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1rem' }}>
-        <KpiCard title="Solde Trésorerie"    value={formatCurrency(kpis.solde, true)}               trend={2.1}   trendType="up"   icon={<DollarSign size={20}/>}   color="#10B981" sparklineData={cashflowData.map(d=>({val:d.solde/1e6}))} />
-        <KpiCard title="CA Réalisé (Année)"  value={formatCurrency(kpis.totalCA, true)}              trend={14.5}  trendType="up"   icon={<TrendingUp size={20}/>}   color="#3B82F6" sparklineData={performancePL.map(d=>({val:d.ca/1e6}))} />
-        <KpiCard title="DSO (Jours)"         value={`${kpis.dso} j`}                                trend={3.8}   trendType="down" icon={<Clock size={20}/>}        color="#F59E0B" sparklineData={[{val:32},{val:30},{val:29},{val:28},{val:28}]} />
-        <KpiCard title="Marge Brute"         value={`${kpis.margeBrute}%`}                          trend={1.2}   trendType="up"   icon={<BarChart3 size={20}/>}    color="#8B5CF6" sparklineData={[{val:36},{val:37},{val:37.5},{val:38},{val:38.4}]} />
-        <KpiCard title="Marge Nette"         value={`${kpis.margeNette}%`}                          trend={0.8}   trendType="up"   icon={<Target size={20}/>}       color="#14B8A6" sparklineData={[{val:13},{val:13.5},{val:14},{val:14},{val:14.2}]} />
-        <KpiCard title="Créances Impayées"   value={formatCurrency(kpis.creancesImpayees, true)}    trend={-4.1}  trendType="down" icon={<AlertTriangle size={20}/>} color="#EF4444" sparklineData={[{val:50},{val:48},{val:45},{val:46},{val:44}]} />
+        <KpiCard title="Solde Trésorerie"    value={formatCurrency(kpis.solde, true)}               trend={0}   trendType="up"   icon={<DollarSign size={20}/>}   color="#10B981" sparklineData={[]} />
+        <KpiCard title="CA Réalisé (Année)"  value={formatCurrency(kpis.totalCA, true)}              trend={0}   trendType="up"   icon={<TrendingUp size={20}/>}   color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="DSO (Jours)"         value={`${kpis.dso} j`}                                trend={0}   trendType="down" icon={<Clock size={20}/>}        color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Marge Brute"         value={`${kpis.margeBrute}%`}                          trend={0}   trendType="up"   icon={<BarChart3 size={20}/>}    color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Marge Nette"         value={`${kpis.margeNette}%`}                          trend={0}   trendType="up"   icon={<Target size={20}/>}       color="#14B8A6" sparklineData={[]} />
+        <KpiCard title="Créances Impayées"   value={formatCurrency(kpis.creancesImpayees, true)}    trend={0}  trendType="down" icon={<AlertTriangle size={20}/>} color="#EF4444" sparklineData={[]} />
       </motion.div>
 
       {/* Alertes factures en retard */}

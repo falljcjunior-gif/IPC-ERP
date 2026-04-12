@@ -104,11 +104,12 @@ const Marketing = ({ onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <KpiCard title="Visiteurs Mensuels"    value={(82000).toLocaleString('fr-FR')}          trend={10.6} trendType="up"   icon={<Globe size={20} />}    color="#3B82F6" sparklineData={leadFunnel.map(d => ({ val: d.visiteurs / 1000 }))} />
-        <KpiCard title="MQL (Leads Marketing)" value={mktStats.mql}                             trend={18.4} trendType="up"   icon={<Users size={20} />}    color="#8B5CF6" sparklineData={leadFunnel.map(d => ({ val: d.mql / 10 }))} />
-        <KpiCard title="SQL (Acceptés Ventes)" value={mktStats.sql}                             trend={14.8} trendType="up"   icon={<Target size={20} />}   color="#10B981" sparklineData={leadFunnel.map(d => ({ val: d.sql / 5 }))} />
-        <KpiCard title="Taux Conv. Visiteur→MQL" value={`${mktStats.convVisiteur}%`}            trend={0.4}  trendType="up"   icon={<Activity size={20} />} color="#F59E0B" sparklineData={[{val:2.2},{val:2.4},{val:2.5},{val:2.7},{val:2.8}]} />
-        <KpiCard title="Clients Signés"          value={mktStats.clients}                       trend={9.2}  trendType="up"   icon={<CheckCircle2 size={20}/>}color="#EC4899" sparklineData={leadFunnel.map(d => ({ val: d.clients }))} />
+        <KpiCard title="Visiteurs Mensuels"    value="0"                                        trend={0} trendType="up"   icon={<Globe size={20} />}    color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="MQL (Leads Marketing)" value={mktStats.mql}                             trend={0} trendType="up"   icon={<Users size={20} />}    color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="SQL (Acceptés Ventes)" value={mktStats.sql}                             trend={0} trendType="up"   icon={<Target size={20} />}   color="#10B981" sparklineData={[]} />
+        <KpiCard title="Taux Conv. Visiteur→MQL" value={`${mktStats.convVisiteur}%`}            trend={0}  trendType="up"   icon={<Activity size={20} />} color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Coût par Lead (CPL)"   value={formatCurrency(mktStats.cpl)}             trend={0} trendType="down" icon={<Zap size={20} />}      color="#EF4444" sparklineData={[]} />
+        <KpiCard title="Clients Signés"          value={mktStats.clients}                       trend={0}  trendType="up"   icon={<CheckCircle2 size={20}/>}color="#EC4899" sparklineData={[]} />
       </motion.div>
 
       {/* Funnel Chart */}
@@ -134,10 +135,10 @@ const Marketing = ({ onOpenDetail }) => {
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Entonnoir de Conversion</h4>
           {[
-            { label: 'Visiteurs', val: 82000, pct: 100, color: '#3B82F6' },
-            { label: 'MQL',       val: mktStats.mql, pct: Math.round((mktStats.mql / 82000) * 100 * 10) / 10, color: '#8B5CF6' },
-            { label: 'SQL',       val: mktStats.sql, pct: Math.round((mktStats.sql / mktStats.mql) * 100), color: '#F59E0B' },
-            { label: 'Clients',   val: mktStats.clients, pct: Math.round((mktStats.clients / mktStats.sql) * 100), color: '#10B981' },
+            { label: 'Visiteurs', val: 0, pct: 0, color: '#3B82F6' },
+            { label: 'MQL',       val: mktStats.mql, pct: 0, color: '#8B5CF6' },
+            { label: 'SQL',       val: mktStats.sql, pct: 0, color: '#F59E0B' },
+            { label: 'Clients',   val: mktStats.clients, pct: 0, color: '#10B981' },
           ].map((step, i, arr) => (
             <div key={i} style={{ marginBottom: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
@@ -197,10 +198,10 @@ const Marketing = ({ onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Budget Overview */}
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <KpiCard title="Budget Total Consommé" value={formatCurrency(mktStats.totalBudget, true)} trend={-8.4} trendType="up" icon={<CreditCard size={20} />} color="#F43F5E" sparklineData={[{val:10},{val:11},{val:11.5},{val:12},{val:12.5}]} />
-        <KpiCard title="ROI Global Marketing" value={`${mktStats.roiGlobal}x`} trend={12.5} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[{val:2.8},{val:3.0},{val:3.1},{val:3.3},{val:3.4}]} />
-        <KpiCard title="CAC Moyen"             value={formatCurrency(mktStats.cac)} trend={5.4} trendType="up" icon={<DollarSign size={20} />} color="#F59E0B" sparklineData={[{val:140},{val:138},{val:135},{val:130},{val:125}]} />
-        <KpiCard title="Budget Restant"       value={formatCurrency(mktStats.budgetAlloc - mktStats.totalBudget, true)} trend={0} trendType="up" icon={<Activity size={20} />} color="#8B5CF6" sparklineData={[{val:6},{val:5},{val:4},{val:3},{val:2.5}]} />
+        <KpiCard title="Budget Total Consommé" value={formatCurrency(mktStats.totalBudget, true)} trend={-8.4} trendType="up" icon={<CreditCard size={20} />} color="#F43F5E" sparklineData={[]} />
+        <KpiCard title="ROI Global Marketing" value={`${mktStats.roiGlobal}x`} trend={12.5} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[]} />
+        <KpiCard title="CAC Moyen"             value={formatCurrency(mktStats.cac)} trend={0} trendType="up" icon={<DollarSign size={20} />} color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Budget Restant"       value={formatCurrency(mktStats.budgetAlloc - mktStats.totalBudget, true)} trend={0} trendType="up" icon={<Activity size={20} />} color="#8B5CF6" sparklineData={[]} />
       </motion.div>
 
       {/* Budget Bar */}
@@ -272,10 +273,10 @@ const Marketing = ({ onOpenDetail }) => {
           <Globe size={16} color="#3B82F6" /> Trafic Web — 4 Dernières Semaines
         </h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <KpiCard title="Sessions Mensuelles"  value={(65000).toLocaleString('fr-FR')} trend={10.2} trendType="up"   icon={<Monitor size={20} />}       color="#3B82F6" sparklineData={webTrend.map(d => ({ val: d.sessions / 1000 }))} />
-          <KpiCard title="Pages Vues"            value={(174000).toLocaleString('fr-FR')}trend={8.4}  trendType="up"   icon={<Eye size={20} />}           color="#8B5CF6" sparklineData={webTrend.map(d => ({ val: d.pageVues / 1000 }))} />
-          <KpiCard title="Taux de Rebond"        value="39.2%"                          trend={2.8}  trendType="up"   icon={<RefreshCcw size={20} />}    color="#10B981" sparklineData={[{val:44},{val:42},{val:41},{val:40},{val:39}]} />
-          <KpiCard title="Durée Moy. Session"   value="3m 42s"                         trend={5.1}  trendType="up"   icon={<Activity size={20} />}      color="#F59E0B" sparklineData={[{val:2.8},{val:3.1},{val:3.3},{val:3.5},{val:3.7}]} />
+          <KpiCard title="Sessions Mensuelles"  value="0" trend={0} trendType="up"   icon={<Monitor size={20} />}       color="#3B82F6" sparklineData={[]} />
+          <KpiCard title="Pages Vues"            value="0" trend={0}  trendType="up"   icon={<Eye size={20} />}           color="#8B5CF6" sparklineData={[]} />
+          <KpiCard title="Taux de Rebond"        value="0%"                          trend={0}  trendType="up"   icon={<RefreshCcw size={20} />}    color="#10B981" sparklineData={[]} />
+          <KpiCard title="Durée Moy. Session"   value="0s"                         trend={0}  trendType="up"   icon={<Activity size={20} />}      color="#F59E0B" sparklineData={[]} />
         </div>
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <ResponsiveContainer width="100%" height={200}>

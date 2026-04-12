@@ -121,10 +121,10 @@ const Sales = ({ onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-        <KpiCard title="Pipeline Brut Total"  value={formatCurrency(pipeline.total, true)}    trend={8.2}  trendType="up"   icon={<DollarSign size={20} />}  color="#3B82F6" sparklineData={[{val:20},{val:25},{val:30},{val:32},{val:35}]} />
-        <KpiCard title="Pipeline Pondéré"     value={formatCurrency(pipeline.weighted, true)} trend={5.1}  trendType="up"   icon={<Target size={20} />}      color="#8B5CF6" sparklineData={[{val:10},{val:12},{val:14},{val:15},{val:16}]} />
-        <KpiCard title="Win Rate Global"      value={`${pipeline.winRate}%`}                  trend={3.2}  trendType="up"   icon={<Award size={20} />}       color="#10B981" sparklineData={[{val:40},{val:42},{val:43},{val:45},{val:46}]} />
-        <KpiCard title="Opportunités Actives" value={opportunities.filter(o => !['Gagné','Perdu'].includes(o.etape)).length} trend={2.1} trendType="up" icon={<Briefcase size={20} />} color="#F59E0B" sparklineData={[{val:8},{val:9},{val:10},{val:11},{val:12}]} />
+        <KpiCard title="Pipeline Brut Total"  value={formatCurrency(pipeline.total, true)}    trend={0}  trendType="up"   icon={<DollarSign size={20} />}  color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="Pipeline Pondéré"     value={formatCurrency(pipeline.weighted, true)} trend={0}  trendType="up"   icon={<Target size={20} />}      color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Win Rate Global"      value={`${pipeline.winRate}%`}                  trend={0}  trendType="up"   icon={<Award size={20} />}       color="#10B981" sparklineData={[]} />
+        <KpiCard title="Opportunités Actives" value={opportunities.filter(o => !['Gagné','Perdu'].includes(o.etape)).length} trend={0} trendType="up" icon={<Briefcase size={20} />} color="#F59E0B" sparklineData={[]} />
       </motion.div>
 
       {/* Pipeline Funnel + Forecast */}
@@ -291,9 +291,9 @@ const Sales = ({ onOpenDetail }) => {
   const renderKeyAccounts = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '0.5rem' }}>
-        <KpiCard title="CA Comptes Clés"   value={formatCurrency(keyAccounts.reduce((s,k)=>s+k.ca,0), true)} trend={4.2} trendType="up" icon={<Crown size={20}/>}    color="#F59E0B" sparklineData={[{val:20},{val:22},{val:25},{val:26},{val:27}]} />
-        <KpiCard title="Santé Moy. Clients" value={`${Math.round(keyAccounts.reduce((s,k)=>s+k.health,0)/keyAccounts.length)}/100`} trend={1.1} trendType="up" icon={<Activity size={20}/>} color="#10B981" sparklineData={[{val:68},{val:70},{val:71},{val:72},{val:72}]} />
-        <KpiCard title="Opportunités Cross-sell" value={keyAccounts.length} trend={0} trendType="up" icon={<ArrowUpRight size={20}/>} color="#8B5CF6" sparklineData={[{val:3},{val:4},{val:4},{val:5},{val:5}]} />
+        <KpiCard title="CA Comptes Clés"   value={formatCurrency(keyAccounts.reduce((s,k)=>s+k.ca,0), true)} trend={0} trendType="up" icon={<Crown size={20}/>}    color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Santé Moy. Clients" value={`${Math.round(keyAccounts.reduce((s,k)=>s+k.health,0)/keyAccounts.length)}/100`} trend={0} trendType="up" icon={<Activity size={20}/>} color="#10B981" sparklineData={[]} />
+        <KpiCard title="Opportunités Cross-sell" value={keyAccounts.length} trend={0} trendType="up" icon={<ArrowUpRight size={20}/>} color="#8B5CF6" sparklineData={[]} />
       </motion.div>
 
       {keyAccounts.map((acc, i) => {
