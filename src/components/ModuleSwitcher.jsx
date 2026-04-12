@@ -13,7 +13,8 @@ import {
   Factory,
   Mail,
   PieChart,
-  HardDrive
+  HardDrive,
+  Truck
 } from 'lucide-react';
 
 const categories = [
@@ -28,10 +29,11 @@ const categories = [
   {
     name: 'Opérations',
     apps: [
-      { id: 'inventory', name: 'Stocks', icon: <Package />, color: '#EF4444' },
-      { id: 'projects', name: 'Projets', icon: <Briefcase />, color: '#8B5CF6' },
-      { id: 'production', name: 'Production', icon: <Factory />, color: '#06B6D4' },
-      { id: 'purchase', name: 'Achats', icon: <HardDrive />, color: '#64748B' },
+      { id: 'inventory',  name: 'Stocks',       icon: <Package />,  color: '#EF4444' },
+      { id: 'shipping',   name: 'Expéditions',  icon: <Truck />,    color: '#3B82F6' },
+      { id: 'purchase',   name: 'Achats',       icon: <HardDrive />,color: '#64748B' },
+      { id: 'projects',   name: 'Projets',      icon: <Briefcase />,color: '#8B5CF6' },
+      { id: 'production', name: 'Production',   icon: <Factory />,  color: '#06B6D4' },
     ]
   },
   {

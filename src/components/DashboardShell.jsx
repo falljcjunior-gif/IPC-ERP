@@ -68,6 +68,7 @@ import UserManagement from '../modules/UserManagement';
 import History from '../modules/History';
 import Workflows from '../modules/Workflows';
 import SettingsModule from '../modules/Settings';
+import Shipping from '../modules/Shipping';
 import Studio from '../modules/Studio';
 import { useBusiness } from '../BusinessContext';
 import DetailOverlay from './DetailOverlay';
@@ -122,12 +123,13 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
     {
       label: 'Opérations & Logistique',
       items: [
-        { id: 'inventory', icon: <Package size={18} />, label: 'Stocks', roles: ['ADMIN', 'SALES', 'FINANCE'] },
-        { id: 'production', icon: <Factory size={18} />, label: 'Projets Prod', roles: ['ADMIN', 'HR'] },
-        { id: 'manufacturing', icon: <Layers size={18} />, label: 'Manufacturing', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'] },
-        { id: 'purchase', icon: <ShoppingBag size={18} />, label: 'Achats', roles: ['ADMIN', 'FINANCE'] },
-        { id: 'fleet', icon: <Truck size={18} />, label: 'Parc Auto', roles: ['ADMIN', 'SALES', 'HR'] },
-        { id: 'quality', icon: <ShieldCheck size={18} />, label: 'Qualité', roles: ['ADMIN', 'PRODUCTION'] },
+        { id: 'inventory',     icon: <Package size={18} />,     label: 'Stocks',        roles: ['ADMIN', 'SALES', 'FINANCE'] },
+        { id: 'shipping',      icon: <Truck size={18} />,       label: 'Expéditions',   roles: ['ADMIN', 'SALES', 'FINANCE'] },
+        { id: 'purchase',      icon: <ShoppingBag size={18} />, label: 'Achats',        roles: ['ADMIN', 'FINANCE'] },
+        { id: 'production',    icon: <Factory size={18} />,     label: 'Projets Prod',  roles: ['ADMIN', 'HR'] },
+        { id: 'manufacturing', icon: <Layers size={18} />,      label: 'Manufacturing', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'] },
+        { id: 'fleet',         icon: <Truck size={18} />,       label: 'Parc Auto',     roles: ['ADMIN', 'SALES', 'HR'] },
+        { id: 'quality',       icon: <ShieldCheck size={18} />, label: 'Qualité',       roles: ['ADMIN', 'PRODUCTION'] },
       ]
     },
     {
@@ -204,6 +206,8 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
         return <Project {...commonProps} />;
       case 'purchase':
         return <Purchase {...commonProps} />;
+      case 'shipping':
+        return <Shipping {...commonProps} />;
       case 'marketing':
         return <Marketing {...commonProps} />;
       case 'bi':
