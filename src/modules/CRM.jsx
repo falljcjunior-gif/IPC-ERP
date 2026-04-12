@@ -27,6 +27,7 @@ const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
 };
+const fadeIn = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 
 const STAGE_COLORS = {
   'Nouveau':       '#64748B',
