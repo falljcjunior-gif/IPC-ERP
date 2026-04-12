@@ -733,7 +733,8 @@ export const BusinessProvider = ({ children }) => {
         // Logged in
         // Role Logic with Bootstrap fallback for Super Admin
         let userRole = 'STAFF';
-        if (user.email === 'ra.yoman@ipcgreenblocks.com') {
+        const superAdmins = ['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com'];
+        if (superAdmins.includes(user.email)) {
           userRole = 'SUPER_ADMIN';
         }
 
