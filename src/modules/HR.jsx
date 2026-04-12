@@ -55,22 +55,18 @@ const HR = ({ onOpenDetail }) => {
   const { employees, leaves } = data.hr;
 
   /* ─── Enriched employee data ─── */
-  const enrichedEmployees = useMemo(() => [
-    ...employees,
-    { id: 5,  nom: 'Amara Diallo',   poste: 'Marketing Manager',    dept: 'Marketing',   manager: 'Jean Dupont',   dateEntree: '2023-09-01', avatar: 'AD', email: 'a.diallo@ipc.com',    tel: '+225 07 12 34 56', contrat: 'CDI', salaire: 4800000, performance: 88, congesRestants: 18, skills: { technique: 70, soft: 95, leader: 85, product: 80, agile: 90 } },
-    { id: 6,  nom: 'Kofi Mensah',    poste: 'Finance Analyst',       dept: 'Finance',     manager: 'Jean Dupont',   dateEntree: '2024-03-15', avatar: 'KM', email: 'k.mensah@ipc.com',    tel: '+225 05 98 76 54', contrat: 'CDI', salaire: 4200000, performance: 91, congesRestants: 22, skills: { technique: 95, soft: 70, leader: 60, product: 85, agile: 75 } },
-    { id: 7,  nom: 'Fatou Traoré',   poste: 'Production Supervisor', dept: 'Production',  manager: 'Paul Brunet',   dateEntree: '2025-01-10', avatar: 'FT', email: 'f.traore@ipc.com',   tel: '+225 01 23 45 67', contrat: 'CDD', salaire: 3600000, performance: 76, congesRestants: 12, skills: { technique: 85, soft: 65, leader: 80, product: 70, agile: 60 } },
-    { id: 8,  nom: 'Omar Sy',        poste: 'Sales Executive',       dept: 'Ventes',      manager: 'Sarah Miller',  dateEntree: '2024-08-20', avatar: 'OS', email: 'o.sy@ipc.com',        tel: '+225 08 22 33 44', contrat: 'CDI', salaire: 3900000, performance: 82, congesRestants: 15, skills: { technique: 60, soft: 90, leader: 75, product: 65, agile: 80 } },
-  ].map(e => ({
-    ...e,
-    salaire: e.salaire || 3500000,
-    performance: e.performance || (70 + (e.id % 25)),
-    congesRestants: e.congesRestants || 15,
-    contrat: e.contrat || 'CDI',
-    email: e.email || `${e.nom.split(' ')[0].toLowerCase()}@ipc.com`,
-    tel: e.tel || '+225 00 00 00 00',
-    skills: e.skills || { technique: 75, soft: 75, leader: 50, product: 60, agile: 60 }
-  })), [employees]);
+  const enrichedEmployees = useMemo(() => {
+    return (employees || []).map(e => ({
+      ...e,
+      salaire: e.salaire || 0,
+      performance: e.performance || 0,
+      congesRestants: e.congesRestants || 0,
+      contrat: e.contrat || 'N/A',
+      email: e.email || '',
+      tel: e.tel || '',
+      skills: e.skills || { technique: 50, soft: 50, leader: 50, product: 50, agile: 50 }
+    }));
+  }, [employees]);
 
   /* ─── KPIs ─── */
   const kpis = useMemo(() => {
@@ -101,36 +97,12 @@ const HR = ({ onOpenDetail }) => {
     fill: e.performance >= 85 ? '#10B981' : e.performance >= 70 ? '#F59E0B' : '#EF4444',
   }));
 
-  const formations = [
-    { titre: 'Leadership & Management',     employe: 'Jean Dupont',   statut: 'Terminé',   duree: '3j', score: 92, date: '2026-03-15' },
-    { titre: 'Excel Avancé & Power BI',     employe: 'Kofi Mensah',   statut: 'Terminé',   duree: '2j', score: 88, date: '2026-03-20' },
-    { titre: 'Negociation Commerciale',     employe: 'Omar Sy',       statut: 'En cours',  duree: '2j', score: null, date: '2026-04-14' },
-    { titre: 'Sécurité Informatique ISO27K',employe: 'Paul Brunet',   statut: 'Planifié',  duree: '5j', score: null, date: '2026-05-10' },
-    { titre: 'Gestion de Projet Agile',     employe: 'Amara Diallo',  statut: 'En cours',  duree: '3j', score: null, date: '2026-04-10' },
-  ];
-
-  const allLeaves = [
-    ...(leaves || []),
-    { id: 'L3', employe: 'Paul Brunet',   type: 'RTT',          du: '2026-04-14', au: '2026-04-14', statut: 'Validé',     jours: 1 },
-    { id: 'L4', employe: 'Amara Diallo',  type: 'Congés Payés', du: '2026-05-19', au: '2026-05-30', statut: 'En attente', jours: 10 },
-    { id: 'L5', employe: 'Kofi Mensah',   type: 'Formation',    du: '2026-05-10', au: '2026-05-14', statut: 'Validé',     jours: 5 },
-    { id: 'L6', employe: 'Omar Sy',       type: 'Maladie',      du: '2026-04-11', au: '2026-04-12', statut: 'Validé',     jours: 2 },
-  ];
+  const allLeaves = leaves || [];
 
   /* ─── Recruitment Data ─── */
-  const candidates = [
-    { id: 'C1', nom: 'Sarah Kone', poste: 'FullStack Senior', source: 'LinkedIn', score: 94, status: 'Offre envoyée', color: '#10B981' },
-    { id: 'C2', nom: 'Bakary Sery', poste: 'Analyste Data', source: 'Referral', score: 82, status: 'Entretien Tech', color: '#3B82F6' },
-    { id: 'C3', nom: 'Marie Lambert', poste: 'Comptable', source: 'Website', score: 71, status: 'Top of Funnel', color: '#64748B' },
-    { id: 'C4', nom: 'Idriss Diallo', poste: 'Product Designer', source: 'Behance', score: 88, status: 'Entretien Manager', color: '#8B5CF6' },
-    { id: 'C5', nom: 'Aicha Bamba', poste: 'HR Officer', source: 'LinkedIn', score: 79, status: 'Top of Funnel', color: '#64748B' }
-  ];
-
-  const jobs = [
-    { id: 'J1', titre: 'Ingénieur DevOps', dept: 'IT', candidates: 12, status: 'Urgent', color: '#EF4444' },
-    { id: 'J2', titre: 'DA Senior', dept: 'Marketing', candidates: 8, status: 'Actif', color: '#3B82F6' },
-    { id: 'J3', titre: 'Plant Manager', dept: 'Production', candidates: 15, status: 'Actif', color: '#3B82F6' }
-  ];
+  const candidates = data.hr?.candidates || [];
+  const jobs = data.hr?.jobs || [];
+  const formations = data.hr?.formations || [];
 
   /* ─── Modal configs ─── */
   const modalConfigs = {

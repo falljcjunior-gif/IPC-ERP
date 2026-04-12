@@ -52,60 +52,27 @@ const Accounting = ({ onOpenDetail }) => {
   const { invoices = [], treasury = [] } = data.finance || {};
 
   /* ─── Enhanced Mock Data ─── */
-  const allInvoices = useMemo(() => [
-    ...invoices,
-    { id: 'I3', num: 'FACT-2026-03', client: 'MegaCorp Inc.',   echeance: '2026-05-20', montant: 8200000,  statut: 'En attente', dateEmission: '2026-04-05', devise: 'FCFA' },
-    { id: 'I4', num: 'FACT-2026-04', client: 'AeroSpace Ltd',   echeance: '2026-04-18', montant: 15600000, statut: 'Retard',     dateEmission: '2026-03-18', devise: 'FCFA' },
-    { id: 'I5', num: 'FACT-2026-05', client: 'GlobalConnect',   echeance: '2026-04-30', montant: 22000000, statut: 'Brouillon',  dateEmission: '2026-04-10', devise: 'USD'  },
-    { id: 'I6', num: 'FACT-2026-06', client: 'EcoLogic',        echeance: '2026-05-05', montant: 1200000,  statut: 'Payé',       dateEmission: '2026-04-01', devise: 'FCFA' },
-  ], [invoices]);
+  const allInvoices = useMemo(() => invoices || [], [invoices]);
 
-  const allTreasury = useMemo(() => [
-    ...treasury,
-    { id: 'T3', libelle: 'Recouvrement GlobalConnect', montant:  18000000, date: '2026-04-08', type: 'Encaissement', compte: 'BNP 001' },
-    { id: 'T4', libelle: 'Salaires Mars 2026',         montant: -32000000, date: '2026-04-05', type: 'Décaissement', compte: 'BNP 001' },
-    { id: 'T5', libelle: 'Loyer Bureaux Q2',           montant: -4800000,  date: '2026-04-01', type: 'Décaissement', compte: 'SG 002'  },
-    { id: 'T6', libelle: 'Virement Fournisseur Intel', montant: -15600000, date: '2026-04-09', type: 'Virement',     compte: 'BNP 001' },
-    { id: 'T7', libelle: 'Encaissement AeroSpace',     montant:  12400000, date: '2026-04-11', type: 'Encaissement', compte: 'SG 002'  },
-  ], [treasury]);
+  const allTreasury = useMemo(() => treasury || [], [treasury]);
 
   /* ─── KPIs computed ─── */
   const kpis = useMemo(() => {
-    const solde = allTreasury.reduce((s, t) => s + t.montant, 0) + 48000000;
+    const solde = allTreasury.reduce((s, t) => s + t.montant, 0);
     const creancesImpayees = allInvoices.filter(i => i.statut !== 'Payé' && i.statut !== 'Brouillon').reduce((s, i) => s + i.montant, 0);
     const facturesRetard = allInvoices.filter(i => i.statut === 'Retard');
-    const totalCA = allInvoices.filter(i => i.statut === 'Payé').reduce((s, i) => s + i.montant, 0) + 42000000;
-    const dso = 28; // Days Sales Outstanding
-    const margeBrute = 38.4;
-    const margeNette = 14.2;
+    const totalCA = allInvoices.filter(i => i.statut === 'Payé').reduce((s, i) => s + i.montant, 0);
+    const dso = 0;
+    const margeBrute = 0;
+    const margeNette = 0;
     return { solde, creancesImpayees, facturesRetard, totalCA, dso, margeBrute, margeNette };
   }, [allInvoices, allTreasury]);
 
-  const cashflowData = [
-    { mois: 'Oct', entrees: 42000000, sorties: 38000000, solde: 4000000 },
-    { mois: 'Nov', entrees: 38000000, sorties: 41000000, solde: -3000000 },
-    { mois: 'Déc', entrees: 55000000, sorties: 48000000, solde: 7000000 },
-    { mois: 'Jan', entrees: 31000000, sorties: 29000000, solde: 2000000 },
-    { mois: 'Fév', entrees: 48000000, sorties: 43000000, solde: 5000000 },
-    { mois: 'Mar', entrees: 52000000, sorties: 45000000, solde: 7000000 },
-    { mois: 'Avr', entrees: 44000000, sorties: 56000000, solde: -12000000 },
-  ];
+  const cashflowData = [];
 
-  const performancePL = [
-    { mois: 'Jan', ca: 450000000, couts: 320000000, marge: 130000000 },
-    { mois: 'Fév', ca: 520000000, couts: 380000000, marge: 140000000 },
-    { mois: 'Mar', ca: 490000000, couts: 350000000, marge: 140000000 },
-    { mois: 'Avr', ca: 680000000, couts: 420000000, marge: 260000000 },
-    { mois: 'Mai', ca: 580000000, couts: 390000000, marge: 190000000 },
-    { mois: 'Juin', ca: 720000000, couts: 450000000, marge: 270000000 },
-  ];
+  const performancePL = [];
 
-  const immos = [
-    { item: 'Serveur Calcul Intensif',   date: '2025-10-12', valAcq: 12000000,  valNet: 8500000,  duree: 5, amort: 2400000 },
-    { item: 'Mobilier Bureau (Lot 10)',  date: '2026-01-20', valAcq: 4500000,   valNet: 4200000,  duree: 10, amort: 450000  },
-    { item: 'Véhicule Direction',        date: '2024-05-15', valAcq: 35000000,  valNet: 22000000, duree: 5, amort: 7000000 },
-    { item: 'Logiciels Licence Perpét.', date: '2025-03-01', valAcq: 8000000,   valNet: 5300000,  duree: 3, amort: 2666666 },
-  ];
+  const immos = data.finance?.immos || [];
 
   /* ─── Modal configs ─── */
   const modalConfigs = {

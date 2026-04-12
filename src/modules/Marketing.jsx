@@ -62,61 +62,30 @@ const Marketing = ({ onOpenDetail }) => {
 
   /* ─── Computed ─── */
   const mktStats = useMemo(() => {
-    const mql = leads.filter(l => l.statut === 'En cours').length + 48;
-    const sql = leads.filter(l => l.statut === 'Assigné').length + 29;
-    const clients = Math.round(sql * 0.52);
-    const convVisiteur = 2.8;   // % simulation
-    const cac         = 125000;
-    const totalBudget = campaigns.reduce((s, c) => s + (c.budget || 0), 0) + 12500000;
-    const budgetAlloc = 15000000;
-    const budgetPct   = Math.round((totalBudget / budgetAlloc) * 100);
-    const roiGlobal   = 3.4;
+    const mql = leads.filter(l => l.statut === 'En cours').length;
+    const sql = leads.filter(l => l.statut === 'Assigné').length;
+    const clients = leads.filter(l => l.statut === 'Terminé').length;
+    const convVisiteur = 0;
+    const cac         = 0;
+    const totalBudget = campaigns.reduce((s, c) => s + (c.budget || 0), 0);
+    const budgetAlloc = 0;
+    const budgetPct   = 0;
+    const roiGlobal   = 0;
     return { mql, sql, clients, convVisiteur, cac, totalBudget, budgetAlloc, budgetPct, roiGlobal };
   }, [leads, campaigns]);
 
   /* ─── Channel ROI Data ─── */
-  const channelROI = [
-    { canal: 'Google Ads',    depense: 3500000, revenus: 14200000, roi: 306, leads: 145, color: '#3B82F6' },
-    { canal: 'LinkedIn Ads',  depense: 2800000, revenus: 9800000,  roi: 250, leads: 98,  color: '#0077B5' },
-    { canal: 'Emailing',      depense: 800000,  revenus: 6400000,  roi: 700, leads: 210, color: '#8B5CF6' },
-    { canal: 'Salons/Events', depense: 4200000, revenus: 11500000, roi: 174, leads: 62,  color: '#F59E0B' },
-    { canal: 'SEO/Content',   depense: 1200000, revenus: 8800000,  roi: 633, leads: 180, color: '#10B981' },
-    { canal: 'Social Organic',depense: 500000,  revenus: 1800000,  roi: 260, leads: 95,  color: '#EC4899' },
-  ];
+  const channelROI = [];
 
   /* ─── Lead Funnel Monthly ─── */
-  const leadFunnel = [
-    { mois: 'Oct', visiteurs: 48000, mql: 890,  sql: 310, clients: 58  },
-    { mois: 'Nov', visiteurs: 52000, mql: 1020, sql: 370, clients: 72  },
-    { mois: 'Déc', visiteurs: 41000, mql: 780,  sql: 290, clients: 52  },
-    { mois: 'Jan', visiteurs: 61000, mql: 1250, sql: 480, clients: 91  },
-    { mois: 'Fév', visiteurs: 68000, mql: 1420, sql: 540, clients: 104 },
-    { mois: 'Mar', visiteurs: 74000, mql: 1680, sql: 620, clients: 120 },
-    { mois: 'Avr', visiteurs: 82000, mql: mktStats.mql + 1580, sql: mktStats.sql + 590, clients: 132 },
-  ];
+  const leadFunnel = [];
 
   /* ─── Digital Engagement ─── */
-  const webTrend = [
-    { sem: 'S1', sessions: 14500, pageVues: 38000, tauxRebond: 42 },
-    { sem: 'S2', sessions: 16800, pageVues: 44200, tauxRebond: 39 },
-    { sem: 'S3', sessions: 15200, pageVues: 40100, tauxRebond: 41 },
-    { sem: 'S4', sessions: 18400, pageVues: 52000, tauxRebond: 36 },
-  ];
+  const webTrend = [];
 
-  const emailStats = [
-    { campagne: 'Newsletter Mai',    envoye: 12500, ouverture: 28.4, clic: 4.2, desinscrit: 0.3 },
-    { campagne: 'Promo Flash Q2',    envoye: 8200,  ouverture: 34.1, clic: 8.7, desinscrit: 0.6 },
-    { campagne: 'Onboarding Séq.1',  envoye: 3100,  ouverture: 52.8, clic: 14.1,desinscrit: 0.1 },
-    { campagne: 'Reactivation B2C',  envoye: 5400,  ouverture: 18.2, clic: 2.8, desinscrit: 1.1 },
-    { campagne: 'Webinar Invitation',envoye: 9800,  ouverture: 41.3, clic: 11.6,desinscrit: 0.2 },
-  ];
+  const emailStats = [];
 
-  const socialData = [
-    { reseau: 'LinkedIn',   followers: 28400, engagement: 4.8, reach: 142000, posts: 24, icon: '💼', color: '#0077B5' },
-    { reseau: 'Twitter/X',  followers: 15200, engagement: 2.1, reach: 62000,  posts: 48, icon: '𝕏',  color: '#1DA1F2' },
-    { reseau: 'Instagram',  followers: 22800, engagement: 6.2, reach: 98000,  posts: 36, icon: '📷', color: '#EC4899' },
-    { reseau: 'YouTube',    followers: 8400,  engagement: 8.4, reach: 218000, posts: 8,  icon: '📹', color: '#EF4444' },
-  ];
+  const socialData = [];
 
   /* ─── Modal Fields ─── */
   const modalFields = [

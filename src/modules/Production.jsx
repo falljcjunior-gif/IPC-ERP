@@ -200,17 +200,17 @@ const Production = ({ onOpenDetail }) => {
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div style={{ background: '#F59E0B15', color: '#F59E0B', padding: '0.75rem', borderRadius: '1rem' }}><AlertTriangle /></div>
-            <div>
-               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Alertes Retard</div>
-               <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>2 OF</div>
-            </div>
-         </div>
-         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ background: '#10B98115', color: '#10B981', padding: '0.75rem', borderRadius: '1rem' }}><CheckCircle2 /></div>
-            <div>
-               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Qualité (Contrôle)</div>
-               <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>99.2 %</div>
-            </div>
+             <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Alertes Retard</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>0 OF</div>
+             </div>
+          </div>
+          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+             <div style={{ background: '#10B98115', color: '#10B981', padding: '0.75rem', borderRadius: '1rem' }}><CheckCircle2 /></div>
+             <div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Qualité (Contrôle)</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>0 %</div>
+             </div>
          </div>
       </div>
 

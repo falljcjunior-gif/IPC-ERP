@@ -56,12 +56,12 @@ const Inventory = ({ onOpenDetail }) => {
   const { movements = [] } = data.inventory;
   const products = (data.base.catalog || []).map((p, i) => ({
     ...p,
-    stock: p.stock ?? [42, 8, 120, 3, 67][i % 5],
-    alerte: p.alerte ?? [10, 10, 20, 5, 15][i % 5],
-    emplacement: p.emplacement ?? ['WH-CENT A1', 'WH-CENT B3', 'DEPOT-NORD', 'WH-CENT C2', 'DEPOT-SUD'][i % 5],
-    coutUnit: p.prixMoyen * 0.6,
-    sorties30j: [18, 12, 45, 8, 30][i % 5],
-    entrees30j: [50, 0, 80, 0, 35][i % 5],
+    stock: p.stock ?? 0,
+    alerte: p.alerte ?? 0,
+    emplacement: p.emplacement ?? 'N/A',
+    coutUnit: (p.prixMoyen || 0) * 0.6,
+    sorties30j: p.sorties30j ?? 0,
+    entrees30j: p.entrees30j ?? 0,
   }));
 
   /* ─── Computed KPIs ─── */
@@ -80,19 +80,9 @@ const Inventory = ({ onOpenDetail }) => {
     return { enAlerte, valeurTotale, rotations, avgRotation, otif, serviceRate };
   }, [products]);
 
-  const warehouses = [
-    { id: 'WH-CENT',  nom: 'Entrepôt Central', lieu: 'Abidjan, CI',    capacite: 5000, occupe: 2840, items: 1540, taux: 57 },
-    { id: 'DEPOT-NORD',nom: 'Dépôt Nord',      lieu: 'Dakar, SN',     capacite: 2000, occupe: 890,  items: 420,  taux: 44 },
-    { id: 'DEPOT-SUD', nom: 'Dépôt Sud',        lieu: 'Douala, CM',    capacite: 3000, occupe: 2300, items: 890,  taux: 76 },
-    { id: 'ZONE-LIBRE', nom: 'Zone Franche',    lieu: 'Lomé, TG',      capacite: 1500, occupe: 300,  items: 180,  taux: 20 },
-  ];
+  const warehouses = data.inventory?.warehouses || [];
 
-  const rotationTrend = [
-    { mois: 'Oct', rotation: 7.1, valeur: 420 }, { mois: 'Nov', rotation: 7.8, valeur: 450 },
-    { mois: 'Déc', rotation: 8.2, valeur: 390 }, { mois: 'Jan', rotation: 7.5, valeur: 480 },
-    { mois: 'Fév', rotation: 8.1, valeur: 510 }, { mois: 'Mar', rotation: 8.5, valeur: 535 },
-    { mois: 'Avr', rotation: kpis.avgRotation.toFixed(1), valeur: 560 },
-  ];
+  const rotationTrend = [];
 
   const abcDistrib = [
     { name: 'Classe A', value: kpis.rotations.filter(p => p.abcClass === 'A').length, fill: '#10B981' },

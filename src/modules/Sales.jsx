@@ -92,31 +92,13 @@ const Sales = ({ onOpenDetail }) => {
   }, [opportunities]);
 
   /* ─── Forecasting Chart (monthly projected) ─── */
-  const forecastData = useMemo(() => [
-    { mois: 'Mai',  pipeline: 850000000, pondéré: 425000000, objectif: 500000000 },
-    { mois: 'Jun',  pipeline: 920000000, pondéré: 460000000, objectif: 520000000 },
-    { mois: 'Jul',  pipeline: 780000000, pondéré: 390000000, objectif: 540000000 },
-    { mois: 'Aoû',  pipeline: 1050000000,pondéré: 525000000, objectif: 560000000 },
-    { mois: 'Sep',  pipeline: 1100000000,pondéré: 580000000, objectif: 580000000 },
-  ], []);
+  const forecastData = useMemo(() => [], []);
 
   /* ─── Team Performance Data ─── */
-  const teamData = useMemo(() => [
-    { rep: 'A. Diallo',   region: 'Afrique W.', quota: 300000000, realise: 285000000, rdv: 24, appels: 112, emails: 340, winRate: 48 },
-    { rep: 'M. Traoré',   region: 'Europe',     quota: 450000000, realise: 512000000, rdv: 31, appels: 145, emails: 412, winRate: 61 },
-    { rep: 'F. Kouassi',  region: 'Afrique E.', quota: 280000000, realise: 198000000, rdv: 18, appels: 88,  emails: 215, winRate: 38 },
-    { rep: 'S. Ndiaye',   region: 'Amériques',  quota: 380000000, realise: 401000000, rdv: 26, appels: 132, emails: 390, winRate: 55 },
-    { rep: 'L. Bamba',    region: 'Moyen-Orient',quota:310000000, realise: 270000000, rdv: 20, appels: 95,  emails: 280, winRate: 42 },
-  ], []);
+  const teamData = useMemo(() => [], []);
 
   /* ─── Key Accounts ─── */
-  const keyAccounts = useMemo(() => [
-    { name: 'MegaCorp Inc.',    ca: 820000000, health: 88, trend: 'up',   churnRisk: 'Faible',  upsell: 'Serveur Gen4 (+150M)', region:'Europe' },
-    { name: 'TechGlobal',       ca: 640000000, health: 62, trend: 'down', churnRisk: 'Moyen',   upsell: 'Formation Cloud (+40M)', region:'Amériques' },
-    { name: 'AeroSpace Ltd',    ca: 520000000, health: 75, trend: 'up',   churnRisk: 'Faible',  upsell: 'Support Premium (+80M)', region:'Europe' },
-    { name: 'ImmoLux Group',    ca: 380000000, health: 45, trend: 'down', churnRisk: 'Élevé',   upsell: 'Migration ERP (+200M)', region:'Afrique W.' },
-    { name: 'EuroVision Tech',  ca: 310000000, health: 91, trend: 'up',   churnRisk: 'Faible',  upsell: 'Pack Analytics (+60M)', region:'Europe' },
-  ], []);
+  const keyAccounts = useMemo(() => [], []);
 
   const radarData = teamData.map(t => ({
     rep: t.rep.split(' ')[1], quota: Math.round((t.realise / t.quota) * 100), rdv: Math.round((t.rdv / 35) * 100), winRate: t.winRate

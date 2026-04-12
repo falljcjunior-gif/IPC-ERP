@@ -46,79 +46,36 @@ const BI = () => {
 
   /* ─── Cross-departmental Aggregation ─── */
   const stats = useMemo(() => {
-    const totalCA      = data.sales.orders.reduce((s, o) => s + (o.totalTTC || 0), 0) + 1240000000;
-    const pipeline     = data.crm.opportunities.reduce((s, o) => s + (o.montant || 0), 0) + 250000000;
-    const masse        = data.hr.employees.length * 3500000 * 12;
-    const cac          = 125000;
-    const ltv          = 880000;
-    const ebitda       = totalCA * 0.18;
-    const margeBrute   = 38.4;
-    const margeNette   = 14.2;
-    const churn        = 3.8;
-    const nps          = 52;
+    const totalCA      = data.sales.orders.reduce((s, o) => s + (o.totalTTC || 0), 0);
+    const pipeline     = data.crm.opportunities.reduce((s, o) => s + (o.montant || 0), 0);
+    const masse        = data.hr.employees.length * 0;
+    const cac          = 0;
+    const ltv          = 0;
+    const ebitda       = 0;
+    const margeBrute   = 0;
+    const margeNette   = 0;
+    const churn        = 0;
+    const nps          = 0;
     return { totalCA, pipeline, masse, cac, ltv, ebitda, margeBrute, margeNette, churn, nps };
   }, [data]);
 
   /* ─── Monthly P&L 12 mois ─── */
-  const pl12 = [
-    { m: 'Mai 25', ca: 380,   couts: 280, ebitda: 68  },
-    { m: 'Jun 25', ca: 420,   couts: 310, ebitda: 75  },
-    { m: 'Jul 25', ca: 360,   couts: 270, ebitda: 59  },
-    { m: 'Aoû 25', ca: 310,   couts: 250, ebitda: 48  },
-    { m: 'Sep 25', ca: 480,   couts: 340, ebitda: 90  },
-    { m: 'Oct 25', ca: 520,   couts: 380, ebitda: 100 },
-    { m: 'Nov 25', ca: 580,   couts: 400, ebitda: 116 },
-    { m: 'Déc 25', ca: 640,   couts: 450, ebitda: 128 },
-    { m: 'Jan 26', ca: 450,   couts: 320, ebitda: 81  },
-    { m: 'Fév 26', ca: 520,   couts: 380, ebitda: 94  },
-    { m: 'Mar 26', ca: 490,   couts: 360, ebitda: 88  },
-    { m: 'Avr 26', ca: 680,   couts: 470, ebitda: 122 },
-  ];
+  const pl12 = [];
 
   /* ─── CA par activité ─── */
-  const caBySegment = [
-    { name: 'Licences Cloud',    value: 48, fill: '#3B82F6' },
-    { name: 'Hardware',          value: 22, fill: '#8B5CF6' },
-    { name: 'Consulting',        value: 18, fill: '#10B981' },
-    { name: 'Maintenance',       value: 8,  fill: '#F59E0B' },
-    { name: 'Formation',         value: 4,  fill: '#EC4899' },
-  ];
+  const caBySegment = [];
 
   /* ─── Scorecard KPIs par département ─── */
-  const deptScores = [
-    { dept: 'Finance',       scores: { profitabilite: 88, cash: 72, recouvrement: 85, risque: 90 } },
-    { dept: 'Ventes',        scores: { pipeline: 82, winRate: 68, quota: 91, cycle: 75 } },
-    { dept: 'RH',            scores: { engagement: 76, turnover: 88, formation: 71, absenteisme: 92 } },
-    { dept: 'Opérations',   scores: { otif: 94, rotation: 81, couts: 69, qc: 88 } },
-  ];
+  const deptScores = [];
 
   /* ─── RegionPerf ─── */
-  const regionPerf = [
-    { region: 'Afrique Ouest',  ca: 420000000, marge: 42, growth: 18.2, color: '#10B981' },
-    { region: 'Europe',         ca: 520000000, marge: 38, growth: 8.4,  color: '#3B82F6' },
-    { region: 'Amériques',      ca: 180000000, marge: 35, growth: 12.1, color: '#8B5CF6' },
-    { region: 'Moyen-Orient',   ca: 80000000,  marge: 44, growth: 28.6, color: '#F59E0B' },
-    { region: 'Afrique Est',    ca: 40000000,  marge: 29, growth: 42.0, color: '#EC4899' },
-  ];
+  const regionPerf = [];
 
   /* ─── Radar Santé Org ─── */
-  const orgHealth = [
-    { subject: 'Rentabilité', val: 82 },
-    { subject: 'Croissance',  val: 74 },
-    { subject: 'Satisfaction',val: 68 },
-    { subject: 'Innovation',  val: 61 },
-    { subject: 'Résilience',  val: 79 },
-    { subject: 'Efficacité',  val: 85 },
-  ];
+  const orgHealth = [];
 
   /* ─── Prévisions IA ─── */
-  const forecasts = [
-    { indicateur: 'CA Trimestre Prochain',       valeur: formatCurrency(1820000000, true), confianceIA: 87, tendance: 'up',   note: 'Basé sur pipeline pondéré + tendances' },
-    { indicateur: 'EBITDA T3 2026',              valeur: '19.2%',              confianceIA: 82, tendance: 'up',   note: 'Amélioration marges opérationnelles' },
-    { indicateur: 'Taux de Churn Clients',       valeur: '4.1%',               confianceIA: 79, tendance: 'down', note: 'Légère hausse si NPS non amélioré' },
-    { indicateur: 'Besoin Trésorerie 90j',       valeur: formatCurrency(480000000, true), confianceIA: 91, tendance: 'up',   note: 'Cash suffisant selon flux projetés' },
-    { indicateur: 'Effectif Recommandé',         valeur: '+8 ETP',             confianceIA: 73, tendance: 'up',   note: 'Croissance Afrique Ouest & Innov.' },
-  ];
+  const forecasts = [];
 
   /* ═══════════ EXECUTIVE DASHBOARD ═══════════ */
   const renderExecutive = () => (

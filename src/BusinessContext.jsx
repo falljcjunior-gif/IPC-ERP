@@ -92,7 +92,7 @@ export const BusinessProvider = ({ children }) => {
   const [permissions, setPermissions] = useState(() => safeParse('ipc_erp_permissions', {}));
   
   const [currentUser, setCurrentUser] = useState(() => {
-    return safeParse('ipc_erp_current_user', { id: 'superadmin', nom: 'Super Admin', role: 'SUPER_ADMIN' });
+    return safeParse('ipc_erp_current_user', { id: 'admin', nom: 'Administrateur', role: 'SUPER_ADMIN' });
   });
 
   const [activeApp, setActiveApp] = useState('home');
@@ -311,7 +311,7 @@ export const BusinessProvider = ({ children }) => {
         }
       } else {
         setData(mockData);
-        setCurrentUser({ id: 'guest', nom: 'Invité', role: 'GUEST' });
+        setCurrentUser({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
       }
     });
     return () => unsubscribe();

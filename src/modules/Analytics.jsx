@@ -20,18 +20,8 @@ const Analytics = () => {
   const { formatCurrency } = useBusiness();
   const [timeRange, setTimeRange] = useState('month');
 
-  const performanceData = [
-    { name: 'S1', value: 450000000 },
-    { name: 'S2', value: 1200000000 },
-    { name: 'S3', value: 890000000 },
-    { name: 'S4', value: 1550000000 },
-  ];
-
-  const distributionData = [
-    { name: 'Ventes', value: 55 },
-    { name: 'Services', value: 30 },
-    { name: 'Maintenance', value: 15 },
-  ];
+  const performanceData = [];
+  const distributionData = [];
 
   return (
     <div style={{ padding: '2.5rem' }}>
@@ -65,7 +55,7 @@ const Analytics = () => {
                <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>+5.2%</span>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>CLIENTS ACTIFS</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>1,284</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -73,7 +63,7 @@ const Analytics = () => {
                <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>98%</span>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>OBJECTIF VENTES</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{formatCurrency(850000000, true)}</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{formatCurrency(0, true)}</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -81,7 +71,7 @@ const Analytics = () => {
                <span style={{ fontSize: '0.7rem', color: '#EF4444', fontWeight: 700 }}>-2.1%</span>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>CHARGES OPÉR.</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{formatCurrency(125000000, true)}</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{formatCurrency(0, true)}</div>
          </div>
          <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -89,7 +79,7 @@ const Analytics = () => {
                <span style={{ fontSize: '0.7rem', color: '#10B981', fontWeight: 700 }}>+15.4%</span>
             </div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '0.5rem' }}>MARGE BRUTE</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>38.2%</div>
+            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0%</div>
          </div>
       </div>
 
@@ -112,11 +102,7 @@ const Analytics = () => {
             <button className="btn" style={{ fontSize: '0.8rem' }}><RefreshCcw size={14} /> Rafraîchir</button>
          </div>
          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {[
-               { name: 'Division Industrie', revenue: 1200000000, margin: '42%', trend: 'up' },
-               { name: 'Division Services', revenue: 850000000, margin: '65%', trend: 'up' },
-               { name: 'Division Logistique', revenue: 420000000, margin: '12%', trend: 'down' },
-            ].map((div, i) => (
+            {[].map((div, i) => (
                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-subtle)', borderRadius: '1rem' }}>
                   <div style={{ fontWeight: 700 }}>{div.name}</div>
                   <div style={{ display: 'flex', gap: '3rem', alignItems: 'center' }}>

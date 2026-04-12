@@ -90,12 +90,7 @@ const StatBox = ({ label, value, sub, color, icon }) => (
 /* ─── Client 360 Panel ─── */
 const Client360Panel = ({ lead, onClose, formatCurrency }) => {
   if (!lead) return null;
-  const activities = [
-    { type: 'Email', msg: 'Proposition commerciale envoyée', date: '10 Avr', icon: <Mail size={14} />, color: '#3B82F6' },
-    { type: 'Appel', msg: 'Démo produit réalisée — réaction positive', date: '08 Avr', icon: <Phone size={14} />, color: '#10B981' },
-    { type: 'Note', msg: 'Budget confirmé: 15M FCFA pour Q3', date: '05 Avr', icon: <MessageSquare size={14} />, color: '#8B5CF6' },
-    { type: 'Support', msg: 'Ticket SAV #2041 résolu en 2h', date: '01 Avr', icon: <Headphones size={14} />, color: '#F59E0B' },
-  ];
+  const activities = lead.activities || [];
   return (
     <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }}
       className="glass" style={{ width: '380px', minWidth: '380px', borderRadius: '1.5rem', padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', maxHeight: '80vh' }}>
@@ -197,17 +192,17 @@ const CRM = ({ onOpenDetail }) => {
     const lost = opportunities.filter(o => o.etape === 'Perdu');
     const convRate = leads.length > 0 ? Math.round((opportunities.length / leads.length) * 100) : 0;
     const winRate  = (won.length + lost.length) > 0 ? Math.round((won.length / (won.length + lost.length)) * 100) : 0;
-    const avgCycleDays = 28;  // simulated
-    const nps    = 62;        // simulated
-    const csat   = 88;        // simulated
-    const churn  = 3.2;       // simulated
-    const avgResolutionHours = 4.2; // simulated
-    const cac    = 125000;    // simulated
-    const ltv    = 8500000;   // simulated
-    const cltv   = ltv * 3;   // LTV * avg years
+    const avgCycleDays = 0;
+    const nps    = 0;
+    const csat   = 0;
+    const churn  = 0;
+    const avgResolutionHours = 0;
+    const cac    = 0;
+    const ltv    = 0;
+    const cltv   = 0;
     const mqlCount = leads.filter(l => l.statut === 'En cours').length;
     const sqlCount = leads.filter(l => l.statut === 'Assigné').length;
-    const roiCampaign = 340;  // % simulated
+    const roiCampaign = 0;
     return { totalPipeline, weightedPipeline, convRate, winRate, avgCycleDays, nps, csat, churn, avgResolutionHours, cac, ltv, cltv, mqlCount, sqlCount, won, lost, roiCampaign };
   }, [leads, opportunities]);
 
@@ -219,36 +214,18 @@ const CRM = ({ onOpenDetail }) => {
     color: STAGE_COLORS[stage]
   }));
 
-  const monthlyLeads = [
-    { mois: 'Oct', mql: 28, sql: 14, clients: 6 },
-    { mois: 'Nov', mql: 32, sql: 18, clients: 8 },
-    { mois: 'Déc', mql: 25, sql: 12, clients: 5 },
-    { mois: 'Jan', mql: 40, sql: 22, clients: 10 },
-    { mois: 'Fév', mql: 45, sql: 27, clients: 13 },
-    { mois: 'Mar', mql: 52, sql: 31, clients: 16 },
-    { mois: 'Avr', mql: kpis.mqlCount + 48, sql: kpis.sqlCount + 29, clients: 15 },
-  ];
+  const monthlyLeads = [];
 
-  const npsData = [
-    { name: 'Promoteurs', value: 62, fill: '#10B981' },
-    { name: 'Passifs',    value: 23, fill: '#F59E0B' },
-    { name: 'Détracteurs',value: 15, fill: '#EF4444' },
-  ];
+  const npsData = [];
 
-  const winLossData = [
-    { reason: 'Prix / Budget',  won: 42, lost: 58 },
-    { reason: 'Fonctionnalités',won: 65, lost: 35 },
-    { reason: 'Concurrence',    won: 38, lost: 62 },
-    { reason: 'Délai',          won: 70, lost: 30 },
-    { reason: 'Relation',       won: 80, lost: 20 },
-  ];
+  const winLossData = [];
 
   const sourceData = [
-    { name: 'Site Web',    value: leads.filter(l => l.source === 'Site Web').length || 12,    fill:'#3B82F6' },
-    { name: 'E-mail',      value: leads.filter(l => l.source === 'E-mail').length || 8,       fill:'#8B5CF6' },
-    { name: 'Appel entrant', value: leads.filter(l => l.source === 'Appel entrant').length || 5, fill:'#10B981' },
-    { name: 'Partenaires', value: leads.filter(l => l.source === 'Partenaire').length || 6,   fill:'#F59E0B' },
-    { name: 'Conférence',  value: leads.filter(l => l.source === 'Conférence').length || 4,   fill:'#EC4899' },
+    { name: 'Site Web',    value: leads.filter(l => l.source === 'Site Web').length,    fill:'#3B82F6' },
+    { name: 'E-mail',      value: leads.filter(l => l.source === 'E-mail').length,       fill:'#8B5CF6' },
+    { name: 'Appel entrant', value: leads.filter(l => l.source === 'Appel entrant').length, fill:'#10B981' },
+    { name: 'Partenaires', value: leads.filter(l => l.source === 'Partenaire').length,   fill:'#F59E0B' },
+    { name: 'Conférence',  value: leads.filter(l => l.source === 'Conférence').length,   fill:'#EC4899' },
   ];
 
   /* ─── Modal Fields ─── */
