@@ -428,15 +428,50 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
           borderBottom: '1px solid var(--border)',
           zIndex: 50
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <button 
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center' }}
             >
-              {isSidebarOpen ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+              {isSidebarOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
             </button>
+
+            {activeApp !== 'home' && (
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }} 
+                animate={{ opacity: 1, x: 0 }}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+              >
+                <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
+                <button 
+                  onClick={() => setActiveApp('home')}
+                  style={{ 
+                    background: 'var(--bg-subtle)', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '0.5rem', 
+                    padding: '0.4rem 0.75rem', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--accent)40'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                >
+                  <Home size={14} /> Retour
+                </button>
+                <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                  {categories.flatMap(c => c.items).find(i => i.id === activeApp)?.label || 'Module'}
+                </span>
+                <div style={{ width: '1px', height: '20px', background: 'var(--border)' }} />
+              </motion.div>
+            )}
             
-            <div style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : '400px' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: isMobile ? '40px' : '300px' }}>
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
