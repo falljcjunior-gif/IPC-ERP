@@ -48,7 +48,7 @@ const Budget = () => {
   const [modal, setModal] = useState(false);
 
   /* ─── Data ─── */
-  const departments = [
+  const departments = useMemo(() => [
     { dept: 'Marketing',     prevision: 180000000, realise: 148000000, engage: 22000000, color: '#EC4899' },
     { dept: 'R&D / Innov.',  prevision: 420000000, realise: 398000000, engage: 15000000, color: '#8B5CF6' },
     { dept: 'Opérations',   prevision: 650000000, realise: 712000000, engage: 0,        color: '#F59E0B' },
@@ -56,7 +56,7 @@ const Budget = () => {
     { dept: 'Ventes',        prevision: 210000000, realise: 228000000, engage: 0,        color: '#10B981' },
     { dept: 'Finance',       prevision: 80000000,  realise: 72000000,  engage: 6000000,  color: '#3B82F6' },
     { dept: 'Direction',     prevision: 50000000,  realise: 42000000,  engage: 4000000,  color: '#14B8A6' },
-  ];
+  ], []);
 
   const kpis = useMemo(() => {
     const totalPrev  = departments.reduce((s, d) => s + d.prevision, 0);

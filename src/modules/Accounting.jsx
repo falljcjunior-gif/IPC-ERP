@@ -52,22 +52,22 @@ const Accounting = ({ onOpenDetail }) => {
   const { invoices = [], treasury = [] } = data.finance || {};
 
   /* ─── Enhanced Mock Data ─── */
-  const allInvoices = [
+  const allInvoices = useMemo(() => [
     ...invoices,
     { id: 'I3', num: 'FACT-2026-03', client: 'MegaCorp Inc.',   echeance: '2026-05-20', montant: 8200000,  statut: 'En attente', dateEmission: '2026-04-05', devise: 'FCFA' },
     { id: 'I4', num: 'FACT-2026-04', client: 'AeroSpace Ltd',   echeance: '2026-04-18', montant: 15600000, statut: 'Retard',     dateEmission: '2026-03-18', devise: 'FCFA' },
     { id: 'I5', num: 'FACT-2026-05', client: 'GlobalConnect',   echeance: '2026-04-30', montant: 22000000, statut: 'Brouillon',  dateEmission: '2026-04-10', devise: 'USD'  },
     { id: 'I6', num: 'FACT-2026-06', client: 'EcoLogic',        echeance: '2026-05-05', montant: 1200000,  statut: 'Payé',       dateEmission: '2026-04-01', devise: 'FCFA' },
-  ];
+  ], [invoices]);
 
-  const allTreasury = [
+  const allTreasury = useMemo(() => [
     ...treasury,
     { id: 'T3', libelle: 'Recouvrement GlobalConnect', montant:  18000000, date: '2026-04-08', type: 'Encaissement', compte: 'BNP 001' },
     { id: 'T4', libelle: 'Salaires Mars 2026',         montant: -32000000, date: '2026-04-05', type: 'Décaissement', compte: 'BNP 001' },
     { id: 'T5', libelle: 'Loyer Bureaux Q2',           montant: -4800000,  date: '2026-04-01', type: 'Décaissement', compte: 'SG 002'  },
     { id: 'T6', libelle: 'Virement Fournisseur Intel', montant: -15600000, date: '2026-04-09', type: 'Virement',     compte: 'BNP 001' },
     { id: 'T7', libelle: 'Encaissement AeroSpace',     montant:  12400000, date: '2026-04-11', type: 'Encaissement', compte: 'SG 002'  },
-  ];
+  ], [treasury]);
 
   /* ─── KPIs computed ─── */
   const kpis = useMemo(() => {

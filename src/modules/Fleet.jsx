@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Truck, 
@@ -19,9 +19,10 @@ const Fleet = ({ onOpenDetail }) => {
   const [view, setView] = useState('vehicles'); // 'vehicles', 'maintenance', 'fuel'
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Initialize mock data if missing
-  if (!data.fleet) {
-    data.fleet = {
+  // Initialize mock data if missing - using useMemo to avoid direct mutation of data object
+  const fleetData = useMemo(() => {
+    if (data.fleet) return data.fleet;
+    return {
       vehicles: [
         { id: '1', name: 'Peugeot Partner', plate: 'AB-123-CD', driver: 'Jean Dupont', status: 'En service', location: 'Entrepôt A', odo: 45200 },
         { id: '2', name: 'Renault Master', plate: 'XY-987-ZZ', driver: 'Marie Leroy', status: 'En maintenance', location: 'Garage Central', odo: 128500 },
@@ -30,9 +31,9 @@ const Fleet = ({ onOpenDetail }) => {
         { id: '1', vehicle: 'Renault Master', date: '2026-04-05', type: 'Révision', cost: 450, status: 'Terminé' },
       ]
     };
-  }
+  }, [data.fleet]);
 
-  const { vehicles, maintenance } = data.fleet;
+  const { vehicles, maintenance } = fleetData;
 
   const handleSave = (formData) => {
     const subModule = view === 'vehicles' ? 'vehicles' : 'maintenance';

@@ -9,7 +9,6 @@ import './index.css';
 function App() {
   const [view, setView] = useState('login'); // 'login', 'dashboard'
   const [isInitializing, setIsInitializing] = useState(true);
-  const [user, setUser] = useState(null);
   
   const [theme, setTheme] = useState(() => {
     try {
@@ -22,7 +21,6 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
       if (firebaseUser) {
         setView('dashboard');
       } else {

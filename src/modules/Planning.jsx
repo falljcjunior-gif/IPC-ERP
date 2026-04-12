@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 
 const Planning = () => {
-  const [currentMonth, setCurrentMonth] = useState('Avril 2026');
+  const [currentMonth] = useState('Avril 2026');
   
   const events = [
     { id: 1, title: 'Lancement Projet X', date: '2026-04-12', type: 'projet', color: '#3B82F6' },

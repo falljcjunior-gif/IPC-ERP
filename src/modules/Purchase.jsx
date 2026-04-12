@@ -51,7 +51,7 @@ const Purchase = ({ onOpenDetail }) => {
   const [modal, setModal] = useState(null); // 'order' | 'vendor' | 'rfq'
 
   const { orders = [] } = data.purchase || {};
-  const vendors = (data.base?.contacts || []).filter(c => c.type === 'Fournisseur');
+  const vendors = useMemo(() => (data.base?.contacts || []).filter(c => c.type === 'Fournisseur'), [data.base?.contacts]);
 
   /* ─── Vendor Scorecards (enrichis) ─── */
   const vendorScores = useMemo(() => [
@@ -106,7 +106,7 @@ const Purchase = ({ onOpenDetail }) => {
   ];
 
   /* ─── Modal configs ─── */
-  const modalConfigs = {
+  const modalConfigs = useMemo(() => ({
     order: {
       title: "Créer un Bon de Commande Fournisseur",
       fields: [
@@ -119,14 +119,13 @@ const Purchase = ({ onOpenDetail }) => {
       ],
       save: f => addRecord('purchase', 'orders', f)
     },
-    vendor: {
-      title: "Nouveau Fournisseur",
+    supplier: {
+      title: 'Nouveau Fournisseur',
       fields: [
-        { name: 'nom',        label: 'Raison Sociale', required: true },
-        { name: 'contact',    label: 'Contact Principal', required: true },
-        { name: 'email',      label: 'Email Pro', type: 'email', required: true },
-        { name: 'tel',        label: 'Téléphone', required: true },
-        { name: 'categories', label: 'Catégorie', type: 'select', options: ['Matériel', 'Cloud', 'Services', 'Licences', 'Autre'], required: true },
+        { name: 'nom',          label: 'Nom de l\'entreprise', required: true },
+        { name: 'contact',      label: 'Personne de Contact', required: true },
+        { name: 'email',        label: 'Email Pro', type: 'email', required: true },
+        { name: 'categorie',    label: 'Catégorie', type: 'select', options: ['Hardware', 'Software', 'Services', 'Logistique', 'Office'] },
         { name: 'paymentTerms', label: 'Conditions Paiement', type: 'select', options: ['30 jours', '45 jours', '60 jours', 'Immédiat'] },
       ],
       save: f => addRecord('base', 'contacts', { ...f, type: 'Fournisseur' })
@@ -143,7 +142,7 @@ const Purchase = ({ onOpenDetail }) => {
       ],
       save: f => addRecord('purchase', 'orders', { ...f, statut: 'Brouillon', num: `DA-${Date.now()}` })
     }
-  };
+  }), [addRecord, vendorScores]);
   const activeModal = modal ? modalConfigs[modal] : null;
 
   /* ═══════════ DASHBOARD ═══════════ */

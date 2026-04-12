@@ -10,11 +10,8 @@ import {
   X,
   Clock
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
 
 const NotificationCenter = ({ isOpen, onClose }) => {
-  const { data } = useBusiness();
-  
   // Real notifications would come from a Firestore collection
   // Mocking based on current state + system triggers
   const notifications = [

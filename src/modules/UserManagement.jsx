@@ -19,7 +19,7 @@ import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 
 const UserManagement = () => {
-  const { data, permissions, updateUserRole, toggleModuleAccess, addRecord, createFullUser, deleteFullUser, currentUser } = useBusiness();
+  const { data, permissions, updateUserRole, toggleModuleAccess, createFullUser, deleteFullUser, currentUser } = useBusiness();
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);

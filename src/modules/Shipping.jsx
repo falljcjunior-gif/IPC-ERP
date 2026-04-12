@@ -75,7 +75,7 @@ const TRANSPORTEURS = [
    SHIPPING MODULE
 ════════════════════════════════════ */
 const Shipping = ({ onOpenDetail }) => {
-  const { data, addRecord, formatCurrency } = useBusiness();
+  const { data, addRecord } = useBusiness();
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(false);
   const [search, setSearch] = useState('');

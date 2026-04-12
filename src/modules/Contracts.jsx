@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileSignature, 
@@ -16,9 +16,8 @@ import {
 import { useBusiness } from '../BusinessContext';
 import { BarChartComp } from '../components/BusinessCharts';
 
-const Contracts = ({ onOpenDetail }) => {
-  const { data } = useBusiness();
-  const [activeTab, setActiveTab] = useState('all');
+const Contracts = () => {
+  useBusiness();
 
   const contractsData = [
     { id: 'C-2026-001', titre: 'Support Premium Gold', client: 'TotalEnergies', amount: 1500, type: 'Mensuel', status: 'Actif', end: '2026-12-31', sla: '99.9%' },

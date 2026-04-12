@@ -419,7 +419,7 @@ const CRM = ({ onOpenDetail }) => {
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '280px', overflowY: 'auto' }}>
             {opportunities.slice(0, 6).map((opp, i) => (
-              <div key={i} onClick={() => oOpenDetail?.(opp, 'crm', 'opportunities')}
+              <div key={i} onClick={() => onOpenDetail?.(opp, 'crm', 'opportunities')}
                 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--bg-subtle)', borderRadius: '0.75rem', cursor: 'pointer' }}>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{opp.titre}</div>

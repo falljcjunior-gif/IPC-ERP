@@ -57,8 +57,8 @@ const Marketing = ({ onOpenDetail }) => {
   const [mainTab, setMainTab] = useState('leadgen');
   const [campaignModal, setCampaignModal] = useState(false);
 
-  const campaigns = data?.marketing?.campaigns || [];
-  const leads = data?.crm?.leads || [];
+  const campaigns = useMemo(() => data?.marketing?.campaigns || [], [data?.marketing?.campaigns]);
+  const leads = useMemo(() => data?.crm?.leads || [], [data?.crm?.leads]);
 
   /* ─── Computed ─── */
   const mktStats = useMemo(() => {

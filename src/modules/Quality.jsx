@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -14,13 +14,14 @@ import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 
 const Quality = ({ onOpenDetail }) => {
-  const { data, addRecord, updateRecord } = useBusiness();
+  const { data, addRecord } = useBusiness();
   const [view, setView] = useState('controls'); // 'controls', 'non-conformities', 'plans'
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Initialize mock data if missing
-  if (!data.quality) {
-    data.quality = {
+  // Initialize mock data if missing — using useMemo to avoid direct mutation
+  const qualityData = useMemo(() => {
+    if (data.quality) return data.quality;
+    return {
       controls: [
         { id: '1', item: 'Tige Inox 304', type: 'Réception', date: '2026-04-09', inspector: 'Marc Lucas', status: 'Conforme', result: 'Dimensions OK, pas de rayures.' },
         { id: '2', item: 'Boîtier Plastique X', type: 'Production', date: '2026-04-08', inspector: 'Sarah Connor', status: 'Échec', result: 'Défaut de moulage sur 5% du lot.' },
@@ -29,9 +30,9 @@ const Quality = ({ onOpenDetail }) => {
         { id: '1', ref: 'NC-2026-001', item: 'Boîtier Plastique X', source: 'Production', gravity: 'Majeure', status: 'Ouvert', detection: '2026-04-08' },
       ]
     };
-  }
+  }, [data.quality]);
 
-  const { controls, nonConformities } = data.quality;
+  const { controls, nonConformities } = qualityData;
 
   const handleSave = (formData) => {
     const subModule = view === 'controls' ? 'controls' : 'nonConformities';

@@ -14,14 +14,13 @@ import {
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 import { db, auth } from '../firebase/config';
-import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp } from 'firebase/firestore';
 
 const TeamChat = ({ isOpen, onClose }) => {
-  const { currentUser, data } = useBusiness();
+  const { currentUser } = useBusiness();
   const [activeRoom, setActiveRoom] = useState({ id: 'team_it', label: 'Équipe IT', type: 'team' });
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
-  const [searchRoom, setSearchRoom] = useState('');
   const scrollRef = useRef();
 
   const rooms = [
@@ -31,8 +30,6 @@ const TeamChat = ({ isOpen, onClose }) => {
     { id: 'project_1', label: 'IPC ERP v2.0', type: 'project' },
     { id: 'project_2', label: 'Migration Cloud Partner', type: 'project' },
   ];
-
-  const filteredRooms = rooms.filter(r => r.label.toLowerCase().includes(searchRoom.toLowerCase()));
 
   // Listen for messages in the active room
   useEffect(() => {
@@ -144,7 +141,7 @@ const TeamChat = ({ isOpen, onClose }) => {
                     <p>Début de la conversation...</p>
                   </div>
                 )}
-                {messages.map((msg, idx) => {
+                {messages.map((msg) => {
                   const isMe = msg.userId === currentUser.id;
                   return (
                     <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>

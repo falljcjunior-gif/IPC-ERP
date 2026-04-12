@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ArrowRight,
   Download,
-  Clock,
   User,
   Activity as ActivityIcon
 } from 'lucide-react';
@@ -20,16 +19,19 @@ import Timeline from './Timeline';
 import { useBusiness } from '../BusinessContext';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
-  const { data, config } = useBusiness();
+  const { config } = useBusiness();
   const [activeTab, setActiveTab] = useState('infos');
-  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [prevRecord, setPrevRecord] = useState(null);
 
-  const customFields = config.customFields[appId] || [];
+  const customFields = config?.customFields?.[appId] || [];
 
-  useEffect(() => {
+  // Synchronize formData with record prop safely
+  React.useEffect(() => {
     if (record) {
       setFormData(record);
+    } else {
+      setFormData({});
     }
   }, [record]);
 

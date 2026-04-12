@@ -63,7 +63,7 @@ const Settings = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'general':
+      case 'general': {
         const isAdmin = userRole === 'SUPER_ADMIN' || userRole === 'ADMIN';
         return (
           <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }}>
@@ -154,6 +154,7 @@ const Settings = () => {
             </div>
           </motion.div>
         );
+      }
 
       case 'appearance':
         return (

@@ -78,7 +78,7 @@ import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 
 const DashboardShell = ({ toggleTheme, theme, setView }) => {
-  const { globalSearch, searchResults, updateRecord, userRole, config, globalSettings, currentUser, switchUser, permissions, logout, activeApp, setActiveApp } = useBusiness();
+  const { globalSearch, searchResults, updateRecord, userRole, config, globalSettings, currentUser, permissions, logout, activeApp, setActiveApp } = useBusiness();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
@@ -105,10 +105,10 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [detailContext, setDetailContext] = useState({ appId: '', subModule: '' });
 
-  const openDetail = (record, appId, subModule) => {
+  const openDetail = useCallback((record, appId, subModule) => {
     setSelectedRecord(record);
     setDetailContext({ appId, subModule });
-  };
+  }, []);
 
   const categories = [
     {
@@ -182,7 +182,7 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
 
   useEffect(() => {
     globalSearch(searchQuery);
-  }, [searchQuery]);
+  }, [searchQuery, globalSearch]);
 
   const renderContent = () => {
     const commonProps = { onOpenDetail: openDetail };

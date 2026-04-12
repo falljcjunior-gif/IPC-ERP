@@ -48,11 +48,11 @@ const DEPT_COLORS = { IT: '#3B82F6', Ventes: '#10B981', RH: '#F97316', Finance: 
    HR MODULE — Full Enterprise
 ════════════════════════════════════ */
 const HR = ({ onOpenDetail }) => {
-  const { data, addRecord, approveRequest, rejectRequest, updateRecord, formatCurrency } = useBusiness();
+  const { data, addRecord, approveRequest, rejectRequest, formatCurrency } = useBusiness();
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
-  const { employees, leaves, expenses } = data.hr;
+  const { employees, leaves } = data.hr;
 
   /* ─── Enriched employee data ─── */
   const enrichedEmployees = useMemo(() => [
@@ -64,7 +64,7 @@ const HR = ({ onOpenDetail }) => {
   ].map(e => ({
     ...e,
     salaire: e.salaire || 3500000,
-    performance: e.performance || Math.floor(Math.random() * 30) + 65,
+    performance: e.performance || (70 + (e.id % 25)),
     congesRestants: e.congesRestants || 15,
     contrat: e.contrat || 'CDI',
     email: e.email || `${e.nom.split(' ')[0].toLowerCase()}@ipc.com`,

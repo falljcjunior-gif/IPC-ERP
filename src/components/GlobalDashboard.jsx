@@ -340,7 +340,7 @@ const GlobalDashboard = () => {
             </div>
             <div style={{ display:'flex', gap:'1.5rem', fontSize:'0.8rem' }}>
               <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', height:'3px', background:'var(--accent)', display:'inline-block', borderRadius:'2px' }} /> Réalisé</span>
-              <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', height:'3px', background:'#8B5CF6', display:'inline-block', borderRadius:'2px', borderTop:'3px dashed #8B5CF6', height:'0' }} /> Prévisions</span>
+              <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', background:'#8B5CF6', display:'inline-block', borderRadius:'2px', borderTop:'3px dashed #8B5CF6', height:'0' }} /> Prévisions</span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={280}>

@@ -1,13 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Clock, CheckCircle2, XCircle, Plus, Calendar, User, ChevronRight,
-  BarChart3, TrendingUp, Target, Activity, Download, Filter,
-  Zap, Award, AlertCircle, Users, Briefcase
+  Clock, CheckCircle2, XCircle, Plus,
+  BarChart3, Target, AlertCircle
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  Cell, ComposedChart, Line, Legend, AreaChart, Area, PieChart, Pie
+  ComposedChart, Legend
 } from 'recharts';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
@@ -41,12 +40,14 @@ const TT = ({ active, payload, label }) => {
    TIMESHEETS MODULE — Full Enterprise
 ════════════════════════════════════ */
 const Timesheets = () => {
-  const { data, addRecord, updateRecord, userRole, formatCurrency } = useBusiness();
+  const { data, addRecord, updateRecord, userRole } = useBusiness();
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(false);
 
-  if (!data.hr.timesheets) {
-    data.hr.timesheets = [
+  // Initialize timesheets with fallback to avoid direct data mutation
+  const timesheets = useMemo(() => {
+    if (data.hr.timesheets) return data.hr.timesheets;
+    return [
       { id: '1', collaborateur: 'Jean Dupont',  date: '2026-04-07', projet: 'IPC ERP v2.0',           tache: 'Interface Dashboard',   heures: 7.5, statut: 'Validé',     commentaire: 'Phase design finalisée', facturable: true },
       { id: '2', collaborateur: 'Jean Dupont',  date: '2026-04-08', projet: 'Migration Cloud Partner', tache: 'Audit Sécurité Cloud',  heures: 4,   statut: 'Validé',     commentaire: 'Analyse des logs',       facturable: true },
       { id: '3', collaborateur: 'Sarah Miller', date: '2026-04-08', projet: 'IPC ERP v2.0',           tache: 'Module Production',     heures: 8,   statut: 'En attente', commentaire: 'Spécifications',         facturable: false },
@@ -54,9 +55,7 @@ const Timesheets = () => {
       { id: '5', collaborateur: 'Marie Lefebvre',date: '2026-04-09', projet: 'Interne',               tache: 'Recrutement technique', heures: 3,   statut: 'En attente', commentaire: 'Entretiens',             facturable: false },
       { id: '6', collaborateur: 'Sarah Miller', date: '2026-04-10', projet: 'Migration Cloud Partner', tache: 'Présentation client',   heures: 5,   statut: 'Validé',     commentaire: 'Kickoff réunion',        facturable: true },
     ];
-  }
-
-  const { timesheets } = data.hr;
+  }, [data.hr.timesheets]);
   const isManager = userRole === 'ADMIN' || userRole === 'HR' || userRole === 'SUPER_ADMIN';
 
   /* ─── KPIs ─── */
@@ -75,7 +74,7 @@ const Timesheets = () => {
       acc[t.projet] = (acc[t.projet] || 0) + (parseFloat(t.heures) || 0);
       return acc;
     }, {});
-    return Object.entries(map).map(([name, heures], i) => ({ name: name.substring(0, 20), heures, fill: ['#3B82F6','#10B981','#8B5CF6','#F59E0B'][i%4] }));
+    return Object.entries(map).map(([name, heures], _i) => ({ name: name.substring(0, 20), heures, fill: ['#3B82F6','#10B981','#8B5CF6','#F59E0B'][_i%4] }));
   }, [timesheets]);
 
   /* ─── Heures par collaborateur ─── */
@@ -139,16 +138,16 @@ const Timesheets = () => {
       <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Répartition Heures par Projet</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-          {heuresParProjet.map((p, i) => {
+          {heuresParProjet.map((p, index) => {
             const pct = Math.round((p.heures / kpis.totalH) * 100);
             return (
-              <div key={i}>
+              <div key={index}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
                   <span style={{ fontWeight: 600 }}>{p.name}</span>
                   <span style={{ color: p.fill, fontWeight: 700 }}>{p.heures}h · {pct}%</span>
                 </div>
                 <div style={{ height: '7px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: i * 0.1 }}
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: index * 0.1 }}
                     style={{ height: '100%', background: p.fill, borderRadius: '999px' }} />
                 </div>
               </div>
@@ -169,7 +168,7 @@ const Timesheets = () => {
           </div>
         </motion.div>
       )}
-      {timesheets.map((ts, i) => (
+      {timesheets.map((ts) => (
         <motion.div key={ts.id} variants={fadeIn} className="glass"
           style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', borderLeft: `4px solid ${ts.statut === 'Validé' ? '#10B981' : ts.statut === 'Refusé' ? '#EF4444' : '#F59E0B'}` }}>
           {/* Avatar */}

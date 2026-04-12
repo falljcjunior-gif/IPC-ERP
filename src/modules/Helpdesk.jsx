@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LifeBuoy, 
@@ -21,17 +21,13 @@ const Helpdesk = ({ onOpenDetail }) => {
   const [view, setView] = useState('kanban'); // 'list', 'kanban'
   const [isModalOpen, setIsModalOpen] = useState(false);
   
-  // Initialize mock data if missing
-  if (!data.helpdesk) {
-    data.helpdesk = {
-      tickets: [
-        { id: '1', num: 'TKT-2026-0001', client: 'Société Générale', titre: 'Problème accès API', priorite: 'Haute', statut: 'En cours', assigne: 'Raphaël', echeance: '2026-04-10' },
-        { id: '2', num: 'TKT-2026-0002', client: 'Air France', titre: 'Erreur facturation TVA', priorite: 'Moyenne', statut: 'Nouveau', assigne: 'Sarah', echeance: '2026-04-12' },
-      ]
-    };
-  }
-
-  const { tickets } = data.helpdesk;
+  /* ─── Data ─── */
+  const tickets = useMemo(() => {
+    return data.helpdesk?.tickets || [
+      { id: '1', num: 'TKT-2026-0001', client: 'Société Générale', titre: 'Problème accès API', priorite: 'Haute', statut: 'En cours', assigne: 'Raphaël', echeance: '2026-04-10' },
+      { id: '2', num: 'TKT-2026-0002', client: 'Air France', titre: 'Erreur facturation TVA', priorite: 'Moyenne', statut: 'Nouveau', assigne: 'Sarah', echeance: '2026-04-12' },
+    ];
+  }, [data.helpdesk?.tickets]);
   const stages = ['Nouveau', 'En cours', 'En attente', 'Résolu'];
 
   const handleSave = (formData) => {

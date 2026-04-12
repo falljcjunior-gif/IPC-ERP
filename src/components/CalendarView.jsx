@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Video, Calendar as CalIcon } from 'lucide-react';
 
-const CalendarView = ({ events = [] }) => {
+const CalendarView = () => {
   const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 

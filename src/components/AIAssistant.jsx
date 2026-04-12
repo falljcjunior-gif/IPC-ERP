@@ -30,9 +30,6 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
   ]);
   
   const inputRef = useRef(null);
-  const listRef = useRef(null);
-
-  const mode = config.aiPreference || 'floating';
 
   useEffect(() => {
     if (spotlightOpen && inputRef.current) {
@@ -54,7 +51,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [setSpotlightOpen]);
 
   const startVoice = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -83,7 +80,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
           content: `✅ Action exécutée : ${action.label} a été créé avec succès.` 
         }]);
       }
-    } catch (e) {
+    } catch (_e) {
       setMessages(prev => [...prev, { role: 'assistant', content: "❌ Désolé, je n'ai pas pu exécuter cette action." }]);
     }
   };
