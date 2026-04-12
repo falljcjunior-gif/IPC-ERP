@@ -54,7 +54,7 @@ const Budget = () => {
     const totalPrev  = departments.reduce((s, d) => s + d.prevision, 0);
     const totalReal  = departments.reduce((s, d) => s + d.realise, 0);
     const totalEngage= departments.reduce((s, d) => s + d.engage, 0);
-    const burnRate   = Math.round((totalReal / totalPrev) * 100);
+    const burnRate   = totalPrev > 0 ? Math.round((totalReal / totalPrev) * 100) : 0;
     const ecart      = totalPrev - totalReal - totalEngage;
     const depass     = departments.filter(d => d.realise > d.prevision).length;
     return { totalPrev, totalReal, totalEngage, burnRate, ecart, depass };

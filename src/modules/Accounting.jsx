@@ -145,7 +145,7 @@ const Accounting = ({ onOpenDetail }) => {
               <ReferenceLine y={0} stroke="#64748B" strokeDasharray="4 2" />
               <Bar dataKey="entrees" name="Entrées"  fill="#10B98130" radius={[4,4,0,0]} barSize={18} />
               <Bar dataKey="sorties" name="Sorties"  fill="#EF444430" radius={[4,4,0,0]} barSize={18} />
-              <Line dataKey="solde"   name="Solde Net" stroke={cashflowData[cashflowData.length-1].solde < 0 ? '#EF4444' : '#10B981'} strokeWidth={2.5} dot={{ r: 4 }} />
+              <Line dataKey="solde"   name="Solde Net" stroke={(cashflowData?.[cashflowData.length-1]?.solde || 0) < 0 ? '#EF4444' : '#10B981'} strokeWidth={2.5} dot={{ r: 4 }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
