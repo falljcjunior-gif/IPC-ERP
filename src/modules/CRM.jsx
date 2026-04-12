@@ -266,7 +266,7 @@ const CRM = ({ onOpenDetail }) => {
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Target size={16} color="#3B82F6" /> Ventes & Pipeline
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           <KpiCard title="Valeur Brute Pipeline"   value={formatCurrency(kpis.totalPipeline, true)}    trend={0} trendType="up" icon={<DollarSign size={20} />} color="#3B82F6" sparklineData={[]} />
           <KpiCard title="Pipeline Pondéré"        value={formatCurrency(kpis.weightedPipeline, true)} trend={0} trendType="up" icon={<Activity size={20} />} color="#8B5CF6" sparklineData={[]} />
           <KpiCard title="Taux de Conversion"      value={`${kpis.convRate}%`}                          trend={0} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[]} />
@@ -312,12 +312,12 @@ const CRM = ({ onOpenDetail }) => {
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Megaphone size={16} color="#EC4899" /> Marketing & Génération de Leads
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           <StatBox label="MQL (Leads Marketing)"  value={kpis.mqlCount + 48} sub="Prospects qualifiés Mktg"     color="#3B82F6" icon={<UserCheck size={16} />} />
           <StatBox label="SQL (Leads Ventes)"      value={kpis.sqlCount + 29}  sub="Validés par les commerciaux" color="#8B5CF6" icon={<Target size={16} />} />
           <StatBox label="CAC"                     value={formatCurrency(kpis.cac, true)} sub="Coût d'Acquisition Client"  color="#F59E0B" icon={<DollarSign size={16} />} />
           <StatBox label="ROI Campagnes"            value={`${kpis.roiCampaign}%`}         sub="Rentabilité Mktg globale"   color="#10B981" icon={<TrendingUp size={16} />} />
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* ── Lead Gen Chart + Sources ── */}
@@ -362,7 +362,7 @@ const CRM = ({ onOpenDetail }) => {
         <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Headphones size={16} color="#06B6D4" /> Service Client & Fidélisation
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           <KpiCard title="NPS Score"               value={kpis.nps}                           trend={0} trendType="up" icon={<ThumbsUp size={20} />} color="#10B981" sparklineData={[]} />
           <KpiCard title="CSAT"                    value={`${kpis.csat}%`}                    trend={0} trendType="up" icon={<Star size={20} />} color="#F59E0B" sparklineData={[]} />
           <KpiCard title="Taux d'Attrition (Churn)"value={`${kpis.churn}%`}                  trend={0} trendType="up" icon={<RefreshCcw size={20} />} color="#EF4444" sparklineData={[]} />

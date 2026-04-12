@@ -132,7 +132,7 @@ const Shipping = ({ onOpenDetail }) => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="OTIF Livraisons"      value={`${kpis.otif}%`}                           trend={-2.1} trendType="down"  icon={<Target size={20}/>}       color="#F59E0B" sparklineData={otifTrend.map(d=>({val:d.otif}))} />
         <KpiCard title="Livraisons Réalisées" value={kpis.livres}                               trend={8.2}  trendType="up"    icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={[{val:110},{val:120},{val:118},{val:125},{val:kpis.livres+120}]} />
         <KpiCard title="En Transit / Expédié" value={kpis.transit}                              trend={0}    trendType="up"    icon={<Navigation size={20}/>}   color="#3B82F6" sparklineData={[{val:5},{val:6},{val:4},{val:5},{val:kpis.transit}]} />

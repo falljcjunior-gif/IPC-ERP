@@ -136,7 +136,7 @@ const Inventory = ({ onOpenDetail }) => {
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(195px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Valeur Stock Totale"    value={formatCurrency(kpis.valeurTotale, true)} trend={3.2} trendType="up"   icon={<Package size={20}/>}      color="#3B82F6" sparklineData={rotationTrend.map(d => ({ val: d.valeur }))} />
         <KpiCard title="Rotation des Stocks"    value={`${kpis.avgRotation.toFixed(1)}x / an`} trend={4.5} trendType="up"   icon={<RefreshCcw size={20}/>}   color="#10B981" sparklineData={rotationTrend.map(d => ({ val: d.rotation }))} />
         <KpiCard title="OTIF"                   value={`${kpis.otif}%`}                         trend={-2.1}trendType="down"  icon={<Target size={20}/>}       color="#F59E0B" sparklineData={[{val:96},{val:95.5},{val:95},{val:94.8},{val:94.2}]} />

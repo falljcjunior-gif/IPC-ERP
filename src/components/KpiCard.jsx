@@ -12,11 +12,11 @@ const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, o
       whileHover={{ y: -5, scale: onDrillDown ? 1.02 : 1, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
       className="glass"
       style={{
-        padding: '1.5rem',
-        borderRadius: '1.25rem',
+        padding: '1.75rem',
+        borderRadius: '1.5rem',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.75rem',
+        gap: '1.25rem',
         minWidth: '240px',
         position: 'relative',
         overflow: 'hidden',
@@ -38,22 +38,23 @@ const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, o
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '0.25rem', 
-          padding: '0.25rem 0.5rem', 
-          borderRadius: '0.5rem', 
+          gap: '0.35rem', 
+          padding: '0.3rem 0.65rem', 
+          borderRadius: '0.6rem', 
           background: isPositive ? '#10B98115' : '#EF444415',
           color: isPositive ? '#10B981' : '#EF4444',
-          fontSize: '0.75rem',
-          fontWeight: 700
+          fontSize: '0.7rem',
+          fontWeight: 800,
+          border: `1px solid ${isPositive ? '#10B98120' : '#EF444420'}`
         }}>
           {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
           {trend}%
         </div>
       </div>
 
-      <div>
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem', fontWeight: 600 }}>{title}</div>
-        <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{value}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</div>
+        <div style={{ fontSize: '1.85rem', fontWeight: 900, color: 'var(--text)' }}>{value}</div>
       </div>
 
       {/* Sparkline */}

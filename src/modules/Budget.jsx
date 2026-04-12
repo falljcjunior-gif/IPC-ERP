@@ -74,7 +74,7 @@ const Budget = () => {
   const renderOverview = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(195px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Budget Total"      value={formatCurrency(kpis.totalPrev, true)}  trend={5.0}  trendType="up"   icon={<PiggyBank size={20}/>}      color="#3B82F6" sparklineData={[{val:16},{val:16},{val:16},{val:16},{val:17.1}]} />
         <KpiCard title="Consommé"          value={formatCurrency(kpis.totalReal, true)}  trend={0}    trendType="up"   icon={<Activity size={20}/>}       color="#F59E0B" sparklineData={[{val:12},{val:13},{val:14},{val:15},{val:17.1}]} />
         <KpiCard title="Engagé (Non Payé)" value={formatCurrency(kpis.totalEngage, true)}trend={0}    trendType="up"   icon={<Target size={20}/>}         color="#8B5CF6" sparklineData={[{val:2},{val:3},{val:4},{val:5},{val:5.5}]} />
@@ -150,7 +150,7 @@ const Budget = () => {
   /* ═══════════ DÉTAIL OPEX / CAPEX ═══════════ */
   const renderDetail = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         {[
           { type: 'OPEX Total',     val: 0, sub: 'Charges d\'exploitation récurrentes', c: '#3B82F6', icon: <RefreshCcw size={18}/> },
           { type: 'CAPEX Total',    val: 0,  sub: 'Investissements & Immobilisations',   c: '#8B5CF6', icon: <Layers size={18}/> },

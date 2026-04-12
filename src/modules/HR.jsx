@@ -151,7 +151,7 @@ const HR = ({ onOpenDetail }) => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Effectif Total"       value={enrichedEmployees.length}              trend={0} trendType="up"   icon={<Users size={20}/>}       color="#3B82F6" sparklineData={[]} />
         <KpiCard title="Masse Salariale/an"   value={formatCurrency(kpis.masseSalariale, true)} trend={0} trendType="up" icon={<Wallet size={20}/>}      color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="Taux de Turnover"     value={`${kpis.turnover}%`}                  trend={0} trendType="up"   icon={<TrendingDown size={20}/>} color="#10B981" sparklineData={[]} />

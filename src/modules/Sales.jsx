@@ -120,7 +120,7 @@ const Sales = ({ onOpenDetail }) => {
   const renderPipeline = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Pipeline Brut Total"  value={formatCurrency(pipeline.total, true)}    trend={0}  trendType="up"   icon={<DollarSign size={20} />}  color="#3B82F6" sparklineData={[]} />
         <KpiCard title="Pipeline Pondéré"     value={formatCurrency(pipeline.weighted, true)} trend={0}  trendType="up"   icon={<Target size={20} />}      color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="Win Rate Global"      value={`${pipeline.winRate}%`}                  trend={0}  trendType="up"   icon={<Award size={20} />}       color="#10B981" sparklineData={[]} />

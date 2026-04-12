@@ -81,7 +81,7 @@ const BI = () => {
   const renderExecutive = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* C-Suite KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="CA Annualisé"     value={formatCurrency(stats.totalCA, true)}     trend={14.5} trendType="up"   icon={<DollarSign size={20}/>}  color="#3B82F6" sparklineData={pl12.slice(-5).map(d=>({val:d.ca}))} />
         <KpiCard title="EBITDA Est."      value={formatCurrency(stats.ebitda, true)}       trend={6.2}  trendType="up"   icon={<TrendingUp size={20}/>}  color="#10B981" sparklineData={pl12.slice(-5).map(d=>({val:d.ebitda}))} />
         <KpiCard title="Marge Brute"      value={`${stats.margeBrute}%`}                trend={1.2}  trendType="up"   icon={<BarChart3 size={20}/>}   color="#8B5CF6" sparklineData={[{val:36},{val:37},{val:37.5},{val:38},{val:38.4}]} />
@@ -250,7 +250,7 @@ const BI = () => {
       {/* LTV/CAC scatter concept */}
       <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Ratio LTV / CAC — Efficacité d'Acquisition</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
           {[
             { canal: 'Google Ads',    ltv: 0, cac: 0,  ratio: 0 },
             { canal: 'LinkedIn',      ltv: 0, cac: 0, ratio: 0 },

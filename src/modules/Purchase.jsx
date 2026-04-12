@@ -133,7 +133,7 @@ const Purchase = ({ onOpenDetail }) => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(195px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Dépenses Totales"      value={formatCurrency(kpis.totalDepenses, true)} trend={-5.2} trendType="up"   icon={<DollarSign size={20}/>}    color="#3B82F6" sparklineData={depensesTrend.map(d=>({val:d.depenses/1e6}))} />
         <KpiCard title="Budget Achats"         value={formatCurrency(kpis.budgetAchats, true)}  trend={0}    trendType="up"   icon={<Target size={20}/>}        color="#8B5CF6" sparklineData={[{val:10},{val:10},{val:10},{val:10},{val:10}]} />
         <KpiCard title="Économies Réalisées"   value={formatCurrency(kpis.economiesRealisees, true)} trend={12.4} trendType="up" icon={<TrendingUp size={20}/>} color="#10B981" sparklineData={[{val:5},{val:6},{val:7},{val:8},{val:8.5}]} />

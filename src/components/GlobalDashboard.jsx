@@ -355,7 +355,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <Target size={18} color="#3B82F6" /> Direction Commerciale
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} />
               <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} />
               <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} />
@@ -370,7 +370,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <DollarSign size={18} color="#10B981" /> Direction Financière (CFO)
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Cash-flow Opérationnel" value={formatCurrency(metrics.finance.cashFlow, true)} trend={0}  trendType="up"   icon={<ActivityIcon size={22} />} color="#10B981" sparklineData={[]} onDrillDown={() => handleDrillDown('finance_cashflow')} />
               <KpiCard title="DSO (Délai Recouvrement)" value={`${metrics.finance.dso} Jours`}             trend={0} trendType="down" icon={<Calendar size={22} />}  color="#EF4444" sparklineData={[]}   onDrillDown={() => handleDrillDown('finance_dso')} />
               <KpiCard title="Marge Nette Globale"     value={`${metrics.finance.margeNette}%`}             trend={0}  trendType="up"   icon={<ArrowUpRight size={22} />} color="#06B6D4" sparklineData={[]} />
@@ -384,7 +384,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <Truck size={18} color="#F59E0B" /> Supply Chain & Logistique
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Taux de Service (OTIF)"      value={`${metrics.supply.otif}%`}             trend={0}  trendType="down" icon={<Target size={22} />}    color="#F59E0B" sparklineData={[]} onDrillDown={() => handleDrillDown('supply_otif')} />
               <KpiCard title="Rotation des Stocks"          value={`${metrics.supply.rotationStocks}x/an`} trend={0}  trendType="up"   icon={<Package size={22} />}   color="#8B5CF6" sparklineData={[]} />
               <KpiCard title="Coût Logistique / Commande"  value={formatCurrency(metrics.supply.coutLogistique)} trend={0} trendType="up" icon={<ArrowDownRight size={22} />} color="#10B981" sparklineData={[]} />
@@ -398,7 +398,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <HeartPulse size={18} color="#F43F5E" /> Ressources Humaines
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.25rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} />
               <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} />
               <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} />

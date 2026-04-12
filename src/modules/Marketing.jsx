@@ -103,7 +103,7 @@ const Marketing = ({ onOpenDetail }) => {
   const renderLeadGen = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Visiteurs Mensuels"    value="0"                                        trend={0} trendType="up"   icon={<Globe size={20} />}    color="#3B82F6" sparklineData={[]} />
         <KpiCard title="MQL (Leads Marketing)" value={mktStats.mql}                             trend={0} trendType="up"   icon={<Users size={20} />}    color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="SQL (Acceptés Ventes)" value={mktStats.sql}                             trend={0} trendType="up"   icon={<Target size={20} />}   color="#10B981" sparklineData={[]} />
@@ -197,7 +197,7 @@ const Marketing = ({ onOpenDetail }) => {
   const renderROI = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Budget Overview */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Budget Total Consommé" value={formatCurrency(mktStats.totalBudget, true)} trend={-8.4} trendType="up" icon={<CreditCard size={20} />} color="#F43F5E" sparklineData={[]} />
         <KpiCard title="ROI Global Marketing" value={`${mktStats.roiGlobal}x`} trend={12.5} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[]} />
         <KpiCard title="CAC Moyen"             value={formatCurrency(mktStats.cac)} trend={0} trendType="up" icon={<DollarSign size={20} />} color="#F59E0B" sparklineData={[]} />
@@ -272,7 +272,7 @@ const Marketing = ({ onOpenDetail }) => {
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Globe size={16} color="#3B82F6" /> Trafic Web — 4 Dernières Semaines
         </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
           <KpiCard title="Sessions Mensuelles"  value="0" trend={0} trendType="up"   icon={<Monitor size={20} />}       color="#3B82F6" sparklineData={[]} />
           <KpiCard title="Pages Vues"            value="0" trend={0}  trendType="up"   icon={<Eye size={20} />}           color="#8B5CF6" sparklineData={[]} />
           <KpiCard title="Taux de Rebond"        value="0%"                          trend={0}  trendType="up"   icon={<RefreshCcw size={20} />}    color="#10B981" sparklineData={[]} />

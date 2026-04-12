@@ -106,7 +106,7 @@ const Expenses = ({ onOpenDetail }) => {
   /* ═══════════ DASHBOARD ═══════════ */
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Total Frais (M)"       value={formatCurrency(kpis.total, true)}      trend={12.4} trendType="up"   icon={<Wallet size={20}/>}      color="#3B82F6" sparklineData={mensuel.map(d=>({val:d.total/1000}))} />
         <KpiCard title="Total Approuvés"       value={formatCurrency(kpis.totalAppr, true)}  trend={8.2}  trendType="up"   icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={mensuel.map(d=>({val:d.approuve/1000}))} />
         <KpiCard title="En Attente"            value={`${kpis.enAttente.length} dossiers`}   trend={0}    trendType="down" icon={<Clock size={20}/>}        color="#F59E0B" sparklineData={[{val:4},{val:3},{val:5},{val:kpis.enAttente.length}]} />

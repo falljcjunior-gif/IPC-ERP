@@ -105,7 +105,7 @@ const Accounting = ({ onOpenDetail }) => {
   /* ═══════════ DASHBOARD ═══════════ */
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '1rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '0.5rem' }}>
         <KpiCard title="Solde Trésorerie"    value={formatCurrency(kpis.solde, true)}               trend={0}   trendType="up"   icon={<DollarSign size={20}/>}   color="#10B981" sparklineData={[]} />
         <KpiCard title="CA Réalisé (Année)"  value={formatCurrency(kpis.totalCA, true)}              trend={0}   trendType="up"   icon={<TrendingUp size={20}/>}   color="#3B82F6" sparklineData={[]} />
         <KpiCard title="DSO (Jours)"         value={`${kpis.dso} j`}                                trend={0}   trendType="down" icon={<Clock size={20}/>}        color="#F59E0B" sparklineData={[]} />
@@ -213,7 +213,7 @@ const Accounting = ({ onOpenDetail }) => {
     const typeColors = { Encaissement: '#10B981', Décaissement: '#EF4444', Virement: '#3B82F6' };
     return (
       <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+        <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           {[
             { l: 'Solde Global', v: formatCurrency(solde, true),  c: '#10B981' },
             { l: 'BNP 001',      v: formatCurrency(36800000, true), c: '#3B82F6' },
@@ -351,7 +351,7 @@ const Accounting = ({ onOpenDetail }) => {
       {tab === 'treasury'  && renderTreasury()}
       {tab === 'immos'     && renderImmos()}
       {tab === 'taxes'     && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           {(data?.base?.taxes || []).map((tax, i) => (
             <div key={i} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
