@@ -71,10 +71,10 @@ const HR = ({ onOpenDetail }) => {
   /* ─── KPIs ─── */
   const kpis = useMemo(() => {
     const masseSalariale = enrichedEmployees.reduce((s, e) => s + (e.salaire || 0), 0) * 12;
-    const turnover = 8.4;
-    const absenteisme = 3.2;
-    const engagementScore = 76;
-    const enFormation = 3;
+    const turnover = 0;
+    const absenteisme = 0;
+    const engagementScore = 0;
+    const enFormation = 0;
     const deptDist = Object.entries(
       enrichedEmployees.reduce((acc, e) => ({ ...acc, [e.dept]: (acc[e.dept] || 0) + 1 }), {})
     ).map(([name, value]) => ({ name, value, fill: DEPT_COLORS[name] || '#64748B' }));
@@ -82,12 +82,12 @@ const HR = ({ onOpenDetail }) => {
   }, [enrichedEmployees]);
 
   const headcountTrend = [
-    { mois: 'Oct', effectif: 6, entrees: 0, sorties: 0 },
-    { mois: 'Nov', effectif: 6, entrees: 0, sorties: 0 },
-    { mois: 'Déc', effectif: 7, entrees: 1, sorties: 0 },
-    { mois: 'Jan', effectif: 7, entrees: 0, sorties: 0 },
-    { mois: 'Fév', effectif: 7, entrees: 0, sorties: 0 },
-    { mois: 'Mar', effectif: 8, entrees: 1, sorties: 0 },
+    { mois: 'Oct', effectif: 0, entrees: 0, sorties: 0 },
+    { mois: 'Nov', effectif: 0, entrees: 0, sorties: 0 },
+    { mois: 'Déc', effectif: 0, entrees: 0, sorties: 0 },
+    { mois: 'Jan', effectif: 0, entrees: 0, sorties: 0 },
+    { mois: 'Fév', effectif: 0, entrees: 0, sorties: 0 },
+    { mois: 'Mar', effectif: 0, entrees: 0, sorties: 0 },
     { mois: 'Avr', effectif: enrichedEmployees.length, entrees: 0, sorties: 0 },
   ];
 

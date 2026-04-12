@@ -209,16 +209,14 @@ const Accounting = ({ onOpenDetail }) => {
 
   /* ═══════════ TRÉSORERIE ═══════════ */
   const renderTreasury = () => {
-    const solde = allTreasury.reduce((s, t) => s + t.montant, 0) + 48000000;
+    const solde = allTreasury.reduce((s, t) => s + t.montant, 0);
     const typeColors = { Encaissement: '#10B981', Décaissement: '#EF4444', Virement: '#3B82F6' };
     return (
       <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
           {[
             { l: 'Solde Global', v: formatCurrency(solde, true),  c: '#10B981' },
-            { l: 'BNP 001',      v: formatCurrency(36800000, true), c: '#3B82F6' },
-            { l: 'SG 002',       v: formatCurrency(18200000, true), c: '#8B5CF6' },
-            { l: 'Caisse Siège', v: formatCurrency(1500000, true),  c: '#F59E0B' },
+            { l: 'Compte Principal', v: formatCurrency(solde, true), c: '#3B82F6' },
           ].map((a, i) => (
             <div key={i} className="glass" style={{ padding: '1.25rem', borderRadius: '1.25rem', borderLeft: `4px solid ${a.c}` }}>
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '6px' }}>{a.l}</div>

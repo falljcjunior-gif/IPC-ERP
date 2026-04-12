@@ -22,20 +22,9 @@ const DMS = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
 
-  const folders = [
-    { name: 'Finances', count: 12, size: '45 MB', lastModified: 'Aujourd\'hui' },
-    { name: 'RH & Contrats', count: 45, size: '120 MB', lastModified: 'Il y a 2h' },
-    { name: 'Technique', count: 156, size: '1.2 GB', lastModified: 'Hier' },
-    { name: 'Marketing', count: 8, size: '15 MB', lastModified: 'Il y a 3j' },
-    { name: 'Légal', count: 4, size: '8 MB', lastModified: 'Il y a 10j' },
-  ];
+  const folders = [];
 
-  const files = [
-    { name: 'Bilan_2025_Final.pdf', size: '2.4 MB', type: 'PDF', folder: 'Finances', owner: 'R. Dupont' },
-    { name: 'Plan_Usine_V3.cad', size: '15.2 MB', type: 'CAD', folder: 'Technique', owner: 'M. Leroy' },
-    { name: 'Photo_Produit_HD.png', size: '4.1 MB', type: 'IMAGE', folder: 'Marketing', owner: 'J. Smith' },
-    { name: 'Contrat_IPC_2026.pdf', size: '1.1 MB', type: 'PDF', folder: 'Légal', owner: 'C. Martin' },
-  ];
+  const files = [];
 
   const getFileIcon = (type) => {
     switch (type) {

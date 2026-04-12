@@ -48,7 +48,7 @@ const StaffPortal = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
         <KpiCard 
           title="Solde Congés" 
-          value="18.5 Jours"
+          value="0 Jours"
           trend={2} 
           trendType="up" 
           icon={<Calendar size={24} />} 
@@ -93,16 +93,9 @@ const StaffPortal = () => {
           <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <FileText size={18} /> Documents RH
           </h3>
-          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <li style={{ padding: '0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-               <span>Fiche de paie - Mars 2026</span>
-               <div style={{ color: 'var(--accent)' }}>Télécharger</div>
-            </li>
-            <li style={{ padding: '0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}>
-               <span>Contrat de Travail</span>
-               <div style={{ color: 'var(--accent)' }}>Voir</div>
-            </li>
-          </ul>
+          <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-subtle)', borderRadius: '1rem' }}>
+            Aucun document disponible pour le moment.
+          </div>
         </div>
       </div>
     </div>

@@ -7,13 +7,6 @@ const CalendarView = () => {
   const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
   const getDayEvents = (day) => {
-    // Mocking logic to distribute events across the calendar
-    if (day === 5) return [{ id: 1, type: 'CRM', title: 'Démo Client IPC', time: '10:00' }];
-    if (day === 12) return [{ id: 2, type: 'PROD', title: 'Lancement Batch #4', time: '09:00' }];
-    if (day === 15) return [
-      { id: 3, type: 'RH', title: 'Entretien Annuel', time: '14:30' },
-      { id: 4, type: 'MEET', title: 'Brainstorming Séquences', time: '16:00' }
-    ];
     return [];
   };
 
@@ -32,7 +25,7 @@ const CalendarView = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
           <h3 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Avril 2026</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>12 événements ce mois-ci</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>0 événement ce mois-ci</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className="glass" style={{ p: '0.5rem', borderRadius: '0.5rem' }}><ChevronLeft size={18} /></button>
