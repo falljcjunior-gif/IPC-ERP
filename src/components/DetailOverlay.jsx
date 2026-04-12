@@ -12,8 +12,13 @@ import {
   ArrowRight,
   Download,
   User,
-  Activity as ActivityIcon
+  Activity as ActivityIcon,
+  Target
 } from 'lucide-react';
+import { 
+  ResponsiveContainer, RadarChart, PolarGrid, 
+  PolarAngleAxis, PolarRadiusAxis, Radar 
+} from 'recharts';
 import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { useBusiness } from '../BusinessContext';
@@ -229,7 +234,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                   )}
 
                   {Object.entries(formData).map(([key, value]) => {
-                    if (key === 'id' || key === 'avatar' || key === 'createdAt' || key === 'checklists') return null;
+                    if (key === 'id' || key === 'avatar' || key === 'createdAt' || key === 'checklists' || key === 'skills') return null;
                     
                     return (
                       <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -281,6 +286,23 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                       </div>
                     );
                   })}
+
+                  {/* HR Skills Radar Chart */}
+                  {appId === 'hr' && subModule === 'employees' && record.skills && (
+                    <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', marginTop: '1rem' }}>
+                       <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Target size={16} color="var(--accent)" /> MATRICE DES COMPÉTENCES
+                       </h3>
+                       <ResponsiveContainer width="100%" height={240}>
+                         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={Object.entries(record.skills).map(([subject, value]) => ({ subject, value }))}>
+                            <PolarGrid stroke="var(--border)" />
+                            <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
+                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                            <Radar name={record.nom} dataKey="value" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.5} />
+                         </RadarChart>
+                       </ResponsiveContainer>
+                    </div>
+                  )}
                   {customFields.map(field => (
                     <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>{field.label}</label>

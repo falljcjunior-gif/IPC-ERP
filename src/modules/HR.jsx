@@ -5,7 +5,7 @@ import {
   CheckCircle2, AlertCircle, ChevronRight, BarChart3, TrendingUp,
   TrendingDown, UserCheck, Check, X, Star, Target, Activity,
   Award, BookOpen, AlertTriangle, MapPin, Search, Filter,
-  ArrowUpRight, Zap, Heart, Shield
+  ArrowUpRight, Zap, Heart, Shield, GitBranch, Terminal, Layers
 } from 'lucide-react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -57,10 +57,10 @@ const HR = ({ onOpenDetail }) => {
   /* ─── Enriched employee data ─── */
   const enrichedEmployees = useMemo(() => [
     ...employees,
-    { id: 5,  nom: 'Amara Diallo',   poste: 'Marketing Manager',    dept: 'Marketing',   manager: 'Jean Dupont',   dateEntree: '2023-09-01', avatar: 'AD', email: 'a.diallo@ipc.com',    tel: '+225 07 12 34 56', contrat: 'CDI', salaire: 4800000, performance: 88, congesRestants: 18 },
-    { id: 6,  nom: 'Kofi Mensah',    poste: 'Finance Analyst',       dept: 'Finance',     manager: 'Jean Dupont',   dateEntree: '2024-03-15', avatar: 'KM', email: 'k.mensah@ipc.com',    tel: '+225 05 98 76 54', contrat: 'CDI', salaire: 4200000, performance: 91, congesRestants: 22 },
-    { id: 7,  nom: 'Fatou Traoré',   poste: 'Production Supervisor', dept: 'Production',  manager: 'Paul Brunet',   dateEntree: '2025-01-10', avatar: 'FT', email: 'f.traore@ipc.com',   tel: '+225 01 23 45 67', contrat: 'CDD', salaire: 3600000, performance: 76, congesRestants: 12 },
-    { id: 8,  nom: 'Omar Sy',        poste: 'Sales Executive',       dept: 'Ventes',      manager: 'Sarah Miller',  dateEntree: '2024-08-20', avatar: 'OS', email: 'o.sy@ipc.com',        tel: '+225 08 22 33 44', contrat: 'CDI', salaire: 3900000, performance: 82, congesRestants: 15 },
+    { id: 5,  nom: 'Amara Diallo',   poste: 'Marketing Manager',    dept: 'Marketing',   manager: 'Jean Dupont',   dateEntree: '2023-09-01', avatar: 'AD', email: 'a.diallo@ipc.com',    tel: '+225 07 12 34 56', contrat: 'CDI', salaire: 4800000, performance: 88, congesRestants: 18, skills: { technique: 70, soft: 95, leader: 85, product: 80, agile: 90 } },
+    { id: 6,  nom: 'Kofi Mensah',    poste: 'Finance Analyst',       dept: 'Finance',     manager: 'Jean Dupont',   dateEntree: '2024-03-15', avatar: 'KM', email: 'k.mensah@ipc.com',    tel: '+225 05 98 76 54', contrat: 'CDI', salaire: 4200000, performance: 91, congesRestants: 22, skills: { technique: 95, soft: 70, leader: 60, product: 85, agile: 75 } },
+    { id: 7,  nom: 'Fatou Traoré',   poste: 'Production Supervisor', dept: 'Production',  manager: 'Paul Brunet',   dateEntree: '2025-01-10', avatar: 'FT', email: 'f.traore@ipc.com',   tel: '+225 01 23 45 67', contrat: 'CDD', salaire: 3600000, performance: 76, congesRestants: 12, skills: { technique: 85, soft: 65, leader: 80, product: 70, agile: 60 } },
+    { id: 8,  nom: 'Omar Sy',        poste: 'Sales Executive',       dept: 'Ventes',      manager: 'Sarah Miller',  dateEntree: '2024-08-20', avatar: 'OS', email: 'o.sy@ipc.com',        tel: '+225 08 22 33 44', contrat: 'CDI', salaire: 3900000, performance: 82, congesRestants: 15, skills: { technique: 60, soft: 90, leader: 75, product: 65, agile: 80 } },
   ].map(e => ({
     ...e,
     salaire: e.salaire || 3500000,
@@ -69,6 +69,7 @@ const HR = ({ onOpenDetail }) => {
     contrat: e.contrat || 'CDI',
     email: e.email || `${e.nom.split(' ')[0].toLowerCase()}@ipc.com`,
     tel: e.tel || '+225 00 00 00 00',
+    skills: e.skills || { technique: 75, soft: 75, leader: 50, product: 60, agile: 60 }
   })), [employees]);
 
   /* ─── KPIs ─── */
@@ -114,6 +115,21 @@ const HR = ({ onOpenDetail }) => {
     { id: 'L4', employe: 'Amara Diallo',  type: 'Congés Payés', du: '2026-05-19', au: '2026-05-30', statut: 'En attente', jours: 10 },
     { id: 'L5', employe: 'Kofi Mensah',   type: 'Formation',    du: '2026-05-10', au: '2026-05-14', statut: 'Validé',     jours: 5 },
     { id: 'L6', employe: 'Omar Sy',       type: 'Maladie',      du: '2026-04-11', au: '2026-04-12', statut: 'Validé',     jours: 2 },
+  ];
+
+  /* ─── Recruitment Data ─── */
+  const candidates = [
+    { id: 'C1', nom: 'Sarah Kone', poste: 'FullStack Senior', source: 'LinkedIn', score: 94, status: 'Offre envoyée', color: '#10B981' },
+    { id: 'C2', nom: 'Bakary Sery', poste: 'Analyste Data', source: 'Referral', score: 82, status: 'Entretien Tech', color: '#3B82F6' },
+    { id: 'C3', nom: 'Marie Lambert', poste: 'Comptable', source: 'Website', score: 71, status: 'Top of Funnel', color: '#64748B' },
+    { id: 'C4', nom: 'Idriss Diallo', poste: 'Product Designer', source: 'Behance', score: 88, status: 'Entretien Manager', color: '#8B5CF6' },
+    { id: 'C5', nom: 'Aicha Bamba', poste: 'HR Officer', source: 'LinkedIn', score: 79, status: 'Top of Funnel', color: '#64748B' }
+  ];
+
+  const jobs = [
+    { id: 'J1', titre: 'Ingénieur DevOps', dept: 'IT', candidates: 12, status: 'Urgent', color: '#EF4444' },
+    { id: 'J2', titre: 'DA Senior', dept: 'Marketing', candidates: 8, status: 'Actif', color: '#3B82F6' },
+    { id: 'J3', titre: 'Plant Manager', dept: 'Production', candidates: 15, status: 'Actif', color: '#3B82F6' }
   ];
 
   /* ─── Modal configs ─── */
@@ -378,6 +394,105 @@ const HR = ({ onOpenDetail }) => {
     );
   };
 
+  /* ═══════════ RECRUTEMENT ═══════════ */
+  const renderRecruitment = () => (
+    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
+        {/* Open Jobs */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <SectionTitle icon={<Briefcase size={16} />} label="Postes Ouverts" color="var(--accent)" />
+          {jobs.map((j, i) => (
+            <div key={i} className="glass" style={{ padding: '1rem', borderRadius: '1rem', borderLeft: `4px solid ${j.color}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{j.titre}</span>
+                <Chip label={j.status} color={j.color} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                <span>{j.dept}</span>
+                <span style={{ fontWeight: 600 }}>{j.candidates} candidats</span>
+              </div>
+            </div>
+          ))}
+          <button className="glass" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: '1px dashed var(--border)', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer' }}>
+            + Publier une offre
+          </button>
+        </div>
+
+        {/* Candidate Pipeline */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <SectionTitle icon={<Users size={16} />} label="Pipeline des Talents" color="#8B5CF6" />
+          <div style={{ overflowX: 'auto', display: 'flex', gap: '1rem', paddingBottom: '1rem' }}>
+            {['Top of Funnel', 'Entretien Tech', 'Entretien Manager', 'Offre envoyée'].map(stage => (
+              <div key={stage} style={{ minWidth: '220px', flex: 1, background: 'var(--bg-subtle)', borderRadius: '1rem', padding: '1rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between' }}>
+                  {stage}
+                  <span style={{ opacity: 0.5 }}>{candidates.filter(c => c.status === stage).length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {candidates.filter(c => c.status === stage).map(can => (
+                    <motion.div key={can.id} whileHover={{ scale: 1.02 }} className="glass" style={{ padding: '0.85rem', borderRadius: '0.85rem', cursor: 'grab' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.8rem', marginBottom: '2px' }}>{can.nom}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--accent)', marginBottom: '0.5rem' }}>{can.poste}</div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{can.source}</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: can.score > 85 ? '#10B981' : '#3B82F6' }}>{can.score}%</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  /* ═══════════ ORGANIGRAMME ═══════════ */
+  const renderOrgChart = () => {
+    // Basic implementation: Root -> Managers -> Reports
+    const managers = enrichedEmployees.filter(e => enrichedEmployees.some(r => r.manager === e.nom));
+    const root = enrichedEmployees.find(e => e.dept === 'Direction');
+
+    return (
+      <motion.div variants={fadeIn} className="glass" style={{ padding: '3rem', borderRadius: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3rem' }}>
+        {/* Direction */}
+        {root && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
+             <OrgNode emp={root} isRoot />
+             <div style={{ width: '2px', height: '40px', background: 'var(--accent)', opacity: 0.4 }} />
+             
+             {/* Managers Level */}
+             <div style={{ display: 'flex', gap: '2rem' }}>
+                {managers.filter(m => m.id !== root.id).map(m => (
+                  <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: '100%', height: '2px', background: 'var(--accent)', opacity: 0.2, marginBottom: '-1px' }} />
+                    <OrgNode emp={m} />
+                  </div>
+                ))}
+             </div>
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
+  const SectionTitle = ({ icon, label, color }) => (
+    <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '6px', color }}>
+      {icon} {label}
+    </h3>
+  );
+
+  const OrgNode = ({ emp, isRoot }) => (
+    <div className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '1rem', border: isRoot ? `2px solid var(--accent)` : '1px solid var(--border)', textAlign: 'center', minWidth: '150px' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `${DEPT_COLORS[emp.dept] || '#64748B'}20`, color: DEPT_COLORS[emp.dept] || '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, margin: '0 auto 0.5rem' }}>
+        {emp.avatar}
+      </div>
+      <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{emp.nom}</div>
+      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{emp.poste}</div>
+    </div>
+  );
+
   return (
     <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
@@ -403,14 +518,18 @@ const HR = ({ onOpenDetail }) => {
       <TabBar tabs={[
         { id: 'dashboard',   label: 'Dashboard RH',   icon: <BarChart3 size={14}/> },
         { id: 'employees',   label: 'Collaborateurs',  icon: <Users size={14}/> },
+        { id: 'recruitment', label: 'Recrutement',    icon: <Briefcase size={14}/> },
         { id: 'leaves',      label: 'Congés',          icon: <Calendar size={14}/> },
         { id: 'formations',  label: 'Formations',      icon: <BookOpen size={14}/> },
+        { id: 'orgchart',    label: 'Organigramme',    icon: <GitBranch size={14}/> },
       ]} active={tab} onChange={setTab} />
 
-      {tab === 'dashboard'  && renderDashboard()}
-      {tab === 'employees'  && renderEmployees()}
-      {tab === 'leaves'     && renderLeaves()}
-      {tab === 'formations' && renderFormations()}
+      {tab === 'dashboard'   && renderDashboard()}
+      {tab === 'employees'   && renderEmployees()}
+      {tab === 'recruitment' && renderRecruitment()}
+      {tab === 'leaves'      && renderLeaves()}
+      {tab === 'formations'  && renderFormations()}
+      {tab === 'orgchart'    && renderOrgChart()}
 
       {activeMod && (
         <RecordModal isOpen={true} onClose={() => setModal(null)} title={activeMod.title} fields={activeMod.fields}
