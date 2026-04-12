@@ -3,12 +3,13 @@ import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 
-const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData }) => {
+const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, onDrillDown }) => {
   const isPositive = trendType === 'up';
 
   return (
     <motion.div
-      whileHover={{ y: -5, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
+      onClick={onDrillDown}
+      whileHover={{ y: -5, scale: onDrillDown ? 1.02 : 1, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' }}
       className="glass"
       style={{
         padding: '1.5rem',
@@ -18,7 +19,16 @@ const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData })
         gap: '0.75rem',
         minWidth: '240px',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        cursor: onDrillDown ? 'pointer' : 'default',
+        border: onDrillDown ? '1px solid transparent' : undefined,
+        transition: 'border-color 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        if(onDrillDown) e.currentTarget.style.borderColor = color;
+      }}
+      onMouseLeave={(e) => {
+        if(onDrillDown) e.currentTarget.style.borderColor = 'transparent';
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
