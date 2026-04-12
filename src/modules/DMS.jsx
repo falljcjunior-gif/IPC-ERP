@@ -18,7 +18,7 @@ import {
 import { useBusiness } from '../BusinessContext';
 
 const DMS = () => {
-  useBusiness();
+  const { data } = useBusiness();
   const [viewMode, setViewMode] = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
 

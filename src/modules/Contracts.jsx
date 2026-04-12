@@ -17,7 +17,7 @@ import { useBusiness } from '../BusinessContext';
 import { BarChartComp } from '../components/BusinessCharts';
 
 const Contracts = () => {
-  useBusiness();
+  const { data } = useBusiness();
 
   const contractsData = [];
 

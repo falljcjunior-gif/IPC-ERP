@@ -42,7 +42,7 @@ const TT = ({ active, payload, label }) => {
    BUDGET MODULE — Full Enterprise
 ════════════════════════════════════ */
 const Budget = () => {
-  const { formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useBusiness();
   const [tab, setTab] = useState('overview');
   const [year, setYear] = useState('2026');
   const [modal, setModal] = useState(false);

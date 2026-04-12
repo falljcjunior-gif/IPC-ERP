@@ -17,7 +17,7 @@ import {
 import { useBusiness } from '../BusinessContext';
 
 const Manufacturing = ({ onOpenDetail }) => {
-  useBusiness();
+  const { data, formatCurrency } = useBusiness();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
 
   const workOrders = data.production?.workOrders || [];

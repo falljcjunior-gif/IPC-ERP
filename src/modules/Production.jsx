@@ -17,7 +17,7 @@ const Production = ({ onOpenDetail }) => {
   const { data, addRecord } = useBusiness();
   const [view, setView] = useState('orders'); // 'orders', 'boms'
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { boms, orders } = data.production;
+  const { boms = [], orders = [] } = data?.production || {};
 
   const handleSave = (formData) => {
     const subModule = view === 'orders' ? 'orders' : 'boms';

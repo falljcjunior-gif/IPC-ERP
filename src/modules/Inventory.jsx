@@ -53,8 +53,8 @@ const Inventory = ({ onOpenDetail }) => {
   const [search, setSearch] = useState('');
 
   /* ─── Base Data ─── */
-  const { movements = [] } = data.inventory;
-  const products = (data.base.catalog || []).map((p, i) => ({
+  const { movements = [] } = data?.inventory || {};
+  const products = (data?.base?.catalog || []).map((p, i) => ({
     ...p,
     stock: p.stock ?? 0,
     alerte: p.alerte ?? 0,

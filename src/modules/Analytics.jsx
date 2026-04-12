@@ -17,7 +17,7 @@ import { useBusiness } from '../BusinessContext';
 import { AreaChartComp, DonutChartComp, BarChartComp } from '../components/BusinessCharts';
 
 const Analytics = () => {
-  const { formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useBusiness();
   const [timeRange, setTimeRange] = useState('month');
 
   const performanceData = [];
