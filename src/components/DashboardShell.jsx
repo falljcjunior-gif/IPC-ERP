@@ -644,7 +644,7 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
 
       <NotificationCenter isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
       <WorkflowAssistant />
-      <TeamChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      <TeamChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} theme={theme} />
       <AIAssistant spotlightOpen={spotlightOpen} setSpotlightOpen={setSpotlightOpen} />
     </div>
   );

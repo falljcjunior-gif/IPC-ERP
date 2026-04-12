@@ -24,7 +24,7 @@ import { useBusiness } from '../BusinessContext';
 import { db, auth } from '../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
 
-const TeamChat = ({ isOpen, onClose }) => {
+const TeamChat = ({ isOpen, onClose, theme }) => {
   const { currentUser, data, formatCurrency } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
