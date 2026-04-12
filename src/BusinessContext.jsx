@@ -349,7 +349,7 @@ export const BusinessProvider = ({ children }) => {
 
   useEffect(() => {
     if (!auth.currentUser) return;
-    const unsubscribes = ['crm', 'sales', 'inventory', 'accounting', 'projects', 'audit_logs', 'hr'].map(colName => {
+    const unsubscribes = ['crm', 'sales', 'inventory', 'accounting', 'projects', 'audit_logs', 'hr', 'base', 'workflows'].map(colName => {
       const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(100));
       return onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
