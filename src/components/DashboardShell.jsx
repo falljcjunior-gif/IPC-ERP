@@ -76,9 +76,14 @@ import WorkflowAssistant from './WorkflowAssistant';
 import NotificationCenter from './NotificationCenter';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
+import CallInterface from './CallInterface';
 
 const DashboardShell = ({ toggleTheme, theme, setView }) => {
-  const { globalSearch, searchResults, updateRecord, userRole, config, globalSettings, currentUser, permissions, logout, activeApp, setActiveApp } = useBusiness();
+  const { 
+    globalSearch, searchResults, updateRecord, userRole, config, 
+    globalSettings, currentUser, permissions, logout, activeApp, 
+    setActiveApp, activeCall, setActiveCall 
+  } = useBusiness();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchQuery, setSearchQuery] = useState('');
@@ -646,6 +651,19 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
       <WorkflowAssistant />
       <TeamChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} theme={theme} />
       <AIAssistant spotlightOpen={spotlightOpen} setSpotlightOpen={setSpotlightOpen} />
+
+      {/* Global WebRTC Call Interface */}
+      {activeCall && (
+        <CallInterface 
+          isOpen={!!activeCall}
+          onClose={() => setActiveCall(null)}
+          callId={activeCall.id}
+          role={activeCall.role}
+          callType={activeCall.type}
+          contactName={activeCall.contactName}
+          onHangup={() => setActiveCall(null)}
+        />
+      )}
     </div>
   );
 };

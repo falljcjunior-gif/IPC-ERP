@@ -23,9 +23,10 @@ import {
 import { useBusiness } from '../BusinessContext';
 import { db, auth } from '../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
+import { webrtcService } from '../utils/WebRTCService';
 
 const TeamChat = ({ isOpen, onClose, theme }) => {
-  const { currentUser, data, formatCurrency } = useBusiness();
+  const { currentUser, data, formatCurrency, activeCall, setActiveCall } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
@@ -113,31 +114,34 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
     }
   };
 
-  const renderCallOverlay = () => (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        background: 'rgba(15, 23, 42, 0.95)', zIndex: 3000,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        color: 'white'
-      }}
-    >
-      <div style={{ width: '120px', height: '120px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem', boxShadow: '0 0 50px var(--accent)50' }}>
-        {isCalling === 'video' ? <Video size={60} /> : <Phone size={60} />}
-      </div>
-      <h2 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>{activeRoom.label}</h2>
-      <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '4rem' }}>Appel {isCalling === 'video' ? 'Vidéo' : 'Audio'} en cours...</p>
+  const initiateCall = async (type) => {
+    if (activeRoom.type !== 'direct') return;
+    
+    // Determine receiverId from dm room ID
+    const parts = activeRoom.id.split('_');
+    const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+
+    try {
+      // Create call document and set up PeerConnection
+      const callId = await webrtcService.createCall(
+        currentUser.id, 
+        receiverId, 
+        type, 
+        null // Stream handling is done in CallInterface
+      );
       
-      <div style={{ display: 'flex', gap: '2rem' }}>
-        <button onClick={() => setIsCalling(null)} style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#EF4444', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <X size={32} />
-        </button>
-      </div>
-    </motion.div>
-  );
+      setActiveCall({ 
+        id: callId, 
+        role: 'caller', 
+        type, 
+        contactName: activeRoom.label 
+      });
+    } catch (err) {
+      console.error("Initiate Call Error:", err);
+    }
+  };
+
+  const renderCallOverlay = () => null; // Simulation removed as we use global CallInterface
 
   return (
     <AnimatePresence>
@@ -277,8 +281,8 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <button onClick={() => setIsCalling('audio')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Phone size={20} /></button>
-                  <button onClick={() => setIsCalling('video')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Video size={20} /></button>
+                  <button onClick={() => initiateCall('audio')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Phone size={20} /></button>
+                  <button onClick={() => initiateCall('video')} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><Video size={20} /></button>
                   <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={20} /></button>
                 </div>
               </div>

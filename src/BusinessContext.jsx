@@ -99,6 +99,7 @@ export const BusinessProvider = ({ children }) => {
   const [hints, setHints] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [workflows, setWorkflows] = useState([]);
+  const [activeCall, setActiveCall] = useState(null); // { id, role, type, contactName }
   
   // Derived State
   const userRole = currentUser?.role || 'GUEST';
@@ -317,6 +318,35 @@ export const BusinessProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // WebRTC Call Listener
+  useEffect(() => {
+    if (!currentUser) return; 
+    if (currentUser.id === 'guest') return;
+
+    const q = query(
+      collection(db, 'calls'), 
+      where('receiverId', '==', currentUser.id), 
+      where('status', '==', 'ringing'),
+      limit(1)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const callDoc = snapshot.docs[0];
+        const callData = callDoc.data();
+        // Automatically trigger incoming call UI
+        setActiveCall({ 
+          id: callDoc.id, 
+          role: 'receiver', 
+          type: callData.type, 
+          contactName: callData.callerName || 'Collègue'
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUser]);
+
   useEffect(() => {
     if (!auth.currentUser) return;
     const unsubscribes = ['crm', 'sales', 'inventory', 'accounting', 'projects', 'audit_logs'].map(colName => {
@@ -355,7 +385,7 @@ export const BusinessProvider = ({ children }) => {
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, deleteFullUser, logout, activeApp,
-      setActiveApp, navigateTo, formatCurrency
+      setActiveApp, navigateTo, formatCurrency, activeCall, setActiveCall
     }}>
       {children}
     </BusinessContext.Provider>
