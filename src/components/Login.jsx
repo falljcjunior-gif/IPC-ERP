@@ -26,13 +26,22 @@ const Login = ({ onLogin }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
-      // Check for mustChangePassword in Firestore
+      // Check for account status in Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists() && userDoc.data().profile?.mustChangePassword) {
-        setMustChange(true);
-        setUserId(user.uid);
-        setIsLoading(false);
-        return;
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        if (userData.profile?.active === false) {
+          setError('Votre compte a été désactivé par l\'administrateur.');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (userData.profile?.mustChangePassword) {
+          setMustChange(true);
+          setUserId(user.uid);
+          setIsLoading(false);
+          return;
+        }
       }
 
       onLogin();

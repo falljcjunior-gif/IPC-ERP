@@ -24,7 +24,7 @@ import Timeline from './Timeline';
 import { useBusiness } from '../BusinessContext';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
-  const { config } = useBusiness();
+  const { config, navigateTo } = useBusiness();
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);
@@ -124,12 +124,34 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                 </div>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>{record.titre || record.nom || record.num || "Détails"}</h2>
               </div>
-              <button 
-                onClick={onClose}
-                style={{ background: 'var(--bg-subtle)', border: 'none', padding: '0.5rem', borderRadius: 'var(--radius)', cursor: 'pointer', color: 'var(--text)' }}
-              >
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {/* Contextual Logic Transitions */}
+                {appId === 'hr' && subModule === 'employees' && (
+                  <button 
+                    onClick={() => { navigateTo('user_management'); onClose(); }}
+                    className="glass"
+                    style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--accent)40', color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <Settings size={14} /> Accès Système
+                  </button>
+                )}
+                {appId === 'crm' && subModule === 'opportunities' && record.etape === 'Gagné' && (
+                  <button 
+                    onClick={() => { navigateTo('sales'); onClose(); }}
+                    className="glass"
+                    style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #10B98140', color: '#10B981', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <ArrowRight size={14} /> Créer Devis
+                  </button>
+                )}
+
+                <button 
+                  onClick={onClose}
+                  style={{ background: 'var(--bg-subtle)', border: 'none', padding: '0.5rem', borderRadius: 'var(--radius)', cursor: 'pointer', color: 'var(--text)' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Tabs */}

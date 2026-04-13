@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { mockData } from './utils/data-factory';
 import { auth, db, firebaseConfig } from './firebase/config';
-import { doc, getDoc, setDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where } from 'firebase/firestore';
 import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 
@@ -59,9 +59,11 @@ export const BusinessProvider = ({ children }) => {
       }
 
       if (!merged.dms) merged.dms = { files: [], categories: ['Finances', 'RH', 'Technique', 'Légal'] };
-      if (!merged.contracts) merged.contracts = { subscriptions: [] };
-      if (!merged.manufacturing) merged.manufacturing = { workOrders: [], boms: [] };
       if (!merged.planning) merged.planning = { events: [] };
+      if (!merged.finance.accounts) merged.finance.accounts = mockData.finance.accounts;
+      if (!merged.finance.journals) merged.finance.journals = mockData.finance.journals;
+      if (!merged.finance.entries) merged.finance.entries = [];
+      if (!merged.finance.lines) merged.finance.lines = [];
 
       return merged;
     } catch (e) {
@@ -85,7 +87,8 @@ export const BusinessProvider = ({ children }) => {
 
   const [globalSettings, setGlobalSettings] = useState(() => {
     return safeParse('ipc_erp_global_settings', {
-      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'IPC ERP', website: 'https://ipc-erp.web.app', currency: 'FCFA'
+      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'IPC ERP', website: 'https://ipc-erp.web.app', currency: 'FCFA',
+      pinnedModules: ['home', 'crm', 'hr', 'dms'] // Default pinned modules
     });
   });
 
@@ -99,7 +102,9 @@ export const BusinessProvider = ({ children }) => {
   const [hints, setHints] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [workflows, setWorkflows] = useState([]);
-  const [activeCall, setActiveCall] = useState(null); // { id, role, type, contactName }
+  const [activeCall, setActiveCall] = useState(null); 
+  const [notifications, setNotifications] = useState([]);
+
   
   // Derived State
   const userRole = currentUser?.role || 'GUEST';
@@ -184,6 +189,53 @@ export const BusinessProvider = ({ children }) => {
      5. DATA MUTATION LOGIC (Business Logic)
      ══════════════════════════════════════════════════════════════════════════ */
 
+  const addAccountingEntry = useCallback((entry, lines) => {
+    const totalDebit = lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
+    const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
+    
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      addHint({ title: "Erreur d'équilibre", message: "Le total débit doit être égal au total crédit.", type: 'error' });
+      return false;
+    }
+
+    const entryId = Date.now().toString();
+    const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
+    const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
+
+    setData(prev => ({
+      ...prev,
+      finance: {
+        ...prev.finance,
+        entries: [newEntry, ...(prev.finance.entries || [])],
+        lines: [...newLines, ...(prev.finance.lines || [])]
+      }
+    }));
+
+    if (auth.currentUser) {
+      setDoc(doc(db, 'finance', entryId), { ...newEntry, subModule: 'entries' });
+      newLines.forEach(l => setDoc(doc(db, 'finance', l.id), { ...l, subModule: 'lines' }));
+    }
+
+    logAction('Écriture Comptable', entry.libelle, 'finance');
+    return true;
+  }, [logAction, addHint]);
+
+  const generateInvoiceEntry = useCallback((invoice) => {
+    const entry = {
+      libelle: `Facture Client ${invoice.num}`,
+      date: invoice.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+      journalId: 'J-VT',
+      piece: invoice.num
+    };
+
+    const lines = [
+      { accountId: '411100', label: invoice.client, debit: invoice.montant, credit: 0 },
+      { accountId: '701100', label: 'Vente de marchandises', debit: 0, credit: invoice.montant }
+    ];
+
+    addAccountingEntry(entry, lines);
+  }, [addAccountingEntry]);
+
   const deleteRecord = useCallback((appId, subModule, id) => {
     setData(prev => {
       const moduleData = prev[appId] || {};
@@ -205,18 +257,23 @@ export const BusinessProvider = ({ children }) => {
       logAction(`Mise à jour ${subModule}`, `${record.num || id}`, appId);
       if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
       
+      // Accounting Automation: Invoice -> Ledger
+      if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && record.statut !== 'Payé') {
+        generateInvoiceEntry(record);
+      }
+
       // CRM/Sales specific logic (preserved)
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné') {
         addHint({ title: "Affaire Gagnée !", message: `Opportunité "${record.titre}" gagnée. Générer le devis ?`, appId: 'sales', actionLabel: "Générer", onAction: () => {} });
       }
       return nextState;
     });
-  }, [logAction, addHint]);
+  }, [logAction, addHint, generateInvoiceEntry]);
 
   const addRecord = useCallback((appId, subModule, inputData) => {
     let processedRecord = { ...inputData };
     if (!processedRecord.num || processedRecord.num === "") {
-      const seqKey = `${appId}_${subModule}`;
+      const seqKey = `${appId}__${subModule}`;
       if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
     }
     const newRecord = { ...processedRecord, id: Date.now().toString(), createdAt: new Date().toISOString() };
@@ -228,7 +285,13 @@ export const BusinessProvider = ({ children }) => {
       if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
       return nextState;
     });
+
+    // Handle initial accounting for Purchase/Sales if needed
+    if (appId === 'purchase' && subModule === 'orders') {
+       // Logic for purchase automation could be added here
+    }
   }, [data.base?.sequences, logAction, getNextSequence]);
+
 
   /* ══════════════════════════════════════════════════════════════════════════
      6. GLOBAL LOGIC (Search & Config)
@@ -251,6 +314,34 @@ export const BusinessProvider = ({ children }) => {
     if (auth.currentUser) setDoc(doc(db, 'settings', 'global'), { ...newGlobal }, { merge: true });
   }, [userRole]);
 
+  const togglePinnedModule = useCallback((moduleId) => {
+    if (userRole !== 'SUPER_ADMIN') return;
+    setGlobalSettings(prev => {
+      const currentPinned = prev.pinnedModules || [];
+      const newPinned = currentPinned.includes(moduleId) ? currentPinned.filter(m => m !== moduleId) : [...currentPinned, moduleId];
+      return { ...prev, pinnedModules: newPinned };
+    });
+  }, [userRole]);
+
+  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
+    const notifyDoc = {
+      id: Date.now().toString(),
+      targetRole,
+      title,
+      message,
+      type,
+      actionApp,
+      readBy: [],
+      createdAt: new Date().toISOString()
+    };
+    try {
+      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
+    } catch (e) {
+      console.error("sendNotification Error:", e);
+    }
+  }, []);
+
+
   /* ══════════════════════════════════════════════════════════════════════════
      7. ADMIN LOGIC (User Management)
      ══════════════════════════════════════════════════════════════════════════ */
@@ -267,25 +358,69 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const createFullUser = useCallback(async (userData) => {
+  const createFullUser = useCallback(async (userData, source = 'admin') => {
     let secondaryApp;
     try {
       secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
       const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
       const uid = userCredential.user.uid;
-      const profileData = { nom: userData.nom, email: userData.email, poste: userData.poste, id: uid, createdAt: new Date().toISOString() };
-      await setDoc(doc(db, 'users', uid), { profile: profileData, permissions: { roles: [userData.role || 'STAFF'], allowedModules: ['staff_portal'] }, data: {} });
-      addRecord('hr', 'employees', profileData);
+      
+      const role = userData.role || 'STAFF';
+      const profileData = { 
+        nom: userData.nom, 
+        email: userData.email, 
+        poste: userData.poste, 
+        id: uid, 
+        dept: userData.dept || '',
+        avatar: userData.avatar || userData.nom[0],
+        statut: source === 'admin' ? 'À compléter' : 'Actif',
+        active: true,
+        createdAt: new Date().toISOString() 
+      };
+
+      // 1. Create User Document
+      await setDoc(doc(db, 'users', uid), { 
+        profile: profileData, 
+        permissions: { roles: [role], allowedModules: ['staff_portal'] }, 
+        data: {} 
+      });
+
+      // 2. Create HR Record
+      await setDoc(doc(db, 'hr', uid), { ...profileData, subModule: 'employees' });
+
+      // 3. Send Notification
+      if (source === 'hr') {
+        await sendNotification('SUPER_ADMIN', 'Nouveau Collaborateur RH', `Un nouveau compte pour ${userData.nom} a été créé par les RH. Veuillez configurer ses accès.`, 'user', 'user_management');
+      } else {
+        await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
+      }
+
       return { success: true, uid };
     } finally { if (secondaryApp) deleteApp(secondaryApp); }
-  }, [addRecord]);
+  }, [sendNotification]);
+ 
+  const toggleUserStatus = useCallback(async (userId, newStatus) => {
+    const uid = String(userId);
+    try {
+      if (auth.currentUser) {
+        await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
+        await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
+      }
+      logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
+      return { success: true };
+    } catch (e) {
+      console.error("toggleUserStatus error:", e);
+      throw e;
+    }
+  }, [logAction]);
 
-  const deleteFullUser = useCallback(async (userId) => {
+
+  const permanentlyDeleteUserRecord = useCallback(async (userId) => {
     const uid = String(userId);
     if (auth.currentUser) await deleteDoc(doc(db, 'users', uid));
     setData(prev => ({ ...prev, hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) } }));
     setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
-    logAction('Suppression Utilisateur', `ID: ${uid}`, 'system');
+    logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
   }, [logAction]);
 
   const approveRequest = useCallback((appId, subModule, id) => {
@@ -304,14 +439,32 @@ export const BusinessProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        let userRole = 'STAFF';
-        if (['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com'].includes(user.email)) userRole = 'SUPER_ADMIN';
+        let role = 'STAFF';
+        if (['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com', 'yoman.raphael@gmail.com'].includes(user.email)) role = 'SUPER_ADMIN';
         const docSnap = await getDoc(doc(db, 'users', user.uid));
+        
+        let profile = { id: user.uid, nom: user.email.split('@')[0], email: user.email, role };
+
         if (docSnap.exists()) {
           const userData = docSnap.data();
           if (userData.data) setData(userData.data);
-          setCurrentUser({ id: user.uid, nom: userData.profile?.nom || user.email.split('@')[0], email: user.email, role: userRole });
+          profile = { ...profile, ...userData.profile, role: userData.profile?.role || role };
         }
+        
+        setCurrentUser(profile);
+
+        // Auto landing logic
+        const landingPages = {
+            'SUPER_ADMIN': 'home',
+            'ADMIN': 'home',
+            'SALES': 'crm',
+            'HR': 'hr',
+            'FINANCE': 'accounting',
+            'STAFF': 'staff_portal',
+            'PRODUCTION': 'production'
+        };
+        setActiveApp(landingPages[profile.role] || 'home');
+
       } else {
         setData(mockData);
         setCurrentUser({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
@@ -351,7 +504,7 @@ export const BusinessProvider = ({ children }) => {
 
   useEffect(() => {
     if (!auth.currentUser) return;
-    const unsubscribes = ['crm', 'sales', 'inventory', 'accounting', 'projects', 'audit_logs', 'hr', 'base', 'workflows'].map(colName => {
+    const unsubscribes = ['crm', 'sales', 'inventory', 'accounting', 'projects', 'audit_logs', 'hr', 'base', 'workflows', 'notifications'].map(colName => {
       const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(100));
       return onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
@@ -363,10 +516,12 @@ export const BusinessProvider = ({ children }) => {
             docs.forEach(doc => { const sub = doc.subModule || 'others'; if (!grouped[sub]) grouped[sub] = []; grouped[sub].push(doc); });
             newState[colName] = { ...prev[colName], ...grouped };
           }
+          if (colName === 'notifications') setNotifications(docs);
           return newState;
         });
       });
     });
+
     return () => unsubscribes.forEach(unsub => unsub());
   }, []);
 
@@ -386,9 +541,11 @@ export const BusinessProvider = ({ children }) => {
     <BusinessContext.Provider value={{
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions,
-      updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, deleteFullUser, logout, activeApp,
-      setActiveApp, navigateTo, formatCurrency, activeCall, setActiveCall
+      updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
+      setActiveApp, navigateTo, formatCurrency, activeCall, setActiveCall, sendNotification, notifications, togglePinnedModule,
+      addAccountingEntry, generateInvoiceEntry
     }}>
+
       {children}
     </BusinessContext.Provider>
   );

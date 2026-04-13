@@ -9,20 +9,25 @@ import {
   AlertCircle,
   FileText,
   User,
-  LayoutDashboard
+  LayoutDashboard,
+  Briefcase
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 
 const StaffPortal = () => {
-  const { data, currentUser, addRecord, formatCurrency } = useBusiness();
+  const { data, currentUser, addRecord, formatCurrency, navigateTo } = useBusiness();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'leaves', 'expenses'
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Filter data for the current user
-  const myLeaves = data.hr.leaves.filter(l => l.employe === currentUser.nom);
-  const myExpenses = data.hr.expenses.filter(e => e.employe === currentUser.nom);
+  const myEmployeeRecord = data.hr?.employees?.find(e => e.id === currentUser.id || e.email === currentUser.email);
+  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser.nom);
+  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser.nom);
+  const myProjects = (data.projects?.projects || []).filter(p => 
+    p.team?.some(t => t.nom === currentUser.nom) || p.chefProjet === currentUser.nom
+  );
 
   const handleSave = (formData) => {
     const subModule = activeTab === 'leaves' ? 'leaves' : 'expenses';
@@ -48,17 +53,23 @@ const StaffPortal = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
         <KpiCard 
           title="Solde Congés" 
-          value="0 Jours"
-          trend={2} 
-          trendType="up" 
+          value={`${myEmployeeRecord?.congesRestants || 0} Jours`}
+          trend={0} 
+          trendType="neutral" 
           icon={<Calendar size={24} />} 
           color="var(--accent)"
         />
         <KpiCard 
           title="Frais en attente" 
-          value={formatCurrency(myExpenses.filter(e => e.statut === 'En attente').reduce((sum, e) => sum + e.montant, 0))}
+          value={formatCurrency(myExpenses.filter(e => e.statut === 'En attente').reduce((sum, e) => sum + (e.montant || 0), 0))}
           icon={<Wallet size={24} />} 
           color="#F59E0B"
+        />
+        <KpiCard 
+          title="Missions Actives" 
+          value={myProjects.filter(p => p.statut !== 'Livré').length}
+          icon={<Briefcase size={24} />} 
+          color="#3B82F6"
         />
       </div>
 
@@ -90,11 +101,47 @@ const StaffPortal = () => {
         </div>
 
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem' }}>
-          <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <FileText size={18} /> Documents RH
-          </h3>
-          <div style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', background: 'var(--bg-subtle)', borderRadius: '1rem' }}>
-            Aucun document disponible pour le moment.
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <FileText size={18} /> Documents RH & G.E.D
+            </h3>
+            <button onClick={() => navigateTo('dms')} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+               Tout voir →
+            </button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: '1px dashed var(--border)', textAlign: 'center' }}>
+               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Contrat de travail IPC_2024.pdf</p>
+            </div>
+            <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: '1px dashed var(--border)', textAlign: 'center' }}>
+               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Règlement Intérieur.pdf</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', gridColumn: 'span 2' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Briefcase size={18} /> Mes Missions & Projets
+            </h3>
+            <button onClick={() => navigateTo('projects')} style={{ background: 'none', border: 'none', color: 'var(--accent)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+               Explorer les projets →
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+            {myProjects.length === 0 ? (
+              <div style={{ gridColumn: 'span 3', padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-subtle)', borderRadius: '1rem' }}>
+                Aucune mission assignée.
+              </div>
+            ) : myProjects.map((p, i) => (
+              <div key={i} className="glass" style={{ padding: '1rem', borderRadius: '1rem', borderTop: `4px solid ${p.color || 'var(--accent)'}` }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.25rem' }}>{p.nom}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>{p.client}</div>
+                <div style={{ height: '6px', background: 'var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: p.progression + '%', height: '100%', background: p.color || 'var(--accent)' }} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -109,6 +156,20 @@ const StaffPortal = () => {
           <p style={{ color: 'var(--text-muted)' }}>Votre espace collaborateur I.P.C</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+             onClick={() => navigateTo('timesheets')}
+             className="glass" 
+             style={{ padding: '0.55rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Clock size={16} /> Temps
+          </button>
+          <button 
+             onClick={() => navigateTo('planning')}
+             className="glass" 
+             style={{ padding: '0.55rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Calendar size={16} /> Planning
+          </button>
           <div className="glass" style={{ padding: '0.25rem', borderRadius: '1rem', display: 'flex', gap: '0.25rem' }}>
             <button 
               onClick={() => setActiveTab('dashboard')}

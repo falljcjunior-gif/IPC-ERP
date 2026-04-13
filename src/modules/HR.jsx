@@ -48,16 +48,20 @@ const DEPT_COLORS = { IT: '#3B82F6', Ventes: '#10B981', RH: '#F97316', Finance: 
    HR MODULE — Full Enterprise
 ════════════════════════════════════ */
 const HR = ({ onOpenDetail }) => {
-  const { data, addRecord, approveRequest, rejectRequest, formatCurrency } = useBusiness();
+  const { data, addRecord, approveRequest, rejectRequest, formatCurrency, createFullUser } = useBusiness();
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(null);
   const [search, setSearch] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const { employees, leaves } = data.hr;
 
   /* ─── Enriched employee data ─── */
   const enrichedEmployees = useMemo(() => {
-    return (employees || []).map(e => ({
+    const list = (employees || []).map(e => ({
       ...e,
+      nom: e.nom || 'Sans Nom',
+      poste: e.poste || 'Poste non défini',
+      dept: e.dept || 'Général',
       salaire: e.salaire || 0,
       performance: e.performance || 0,
       congesRestants: e.congesRestants || 0,
@@ -66,7 +70,8 @@ const HR = ({ onOpenDetail }) => {
       tel: e.tel || '',
       skills: e.skills || { technique: 50, soft: 50, leader: 50, product: 50, agile: 50 }
     }));
-  }, [employees]);
+    return showArchived ? list : list.filter(e => e.active !== false);
+  }, [employees, showArchived]);
 
   /* ─── KPIs ─── */
   const kpis = useMemo(() => {
@@ -118,8 +123,10 @@ const HR = ({ onOpenDetail }) => {
         { name: 'salaire',     label: 'Salaire Brut Mensuel (FCFA)', type: 'number' },
         { name: 'email',       label: 'Email Pro', type: 'email', required: true },
         { name: 'avatar',      label: 'Initiales', required: true, placeholder: 'Ex: JD' },
+        { name: 'password',    label: 'Mot de passe initial', type: 'password', required: true },
+        { name: 'role',        label: 'Rôle Système', type: 'select', options: ['STAFF', 'MANAGER', 'ADMIN'], required: true },
       ],
-      save: f => addRecord('hr', 'employees', f),
+      save: f => createFullUser(f, 'hr'),
     },
     leave: {
       title: 'Demande de Congé',
@@ -233,6 +240,13 @@ const HR = ({ onOpenDetail }) => {
             <Search size={15} color="var(--text-muted)" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Chercher un collaborateur..." style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontSize: '0.88rem', color: 'var(--text)' }} />
           </div>
+          <button 
+            onClick={() => setShowArchived(!showArchived)}
+            className="glass"
+            style={{ padding: '0.55rem 1rem', borderRadius: '0.75rem', border: showArchived ? '1px solid var(--accent)' : '1px solid var(--border)', background: showArchived ? 'var(--accent)10' : 'transparent', color: showArchived ? 'var(--accent)' : 'var(--text-muted)', fontSize: '0.84rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <Filter size={14} /> {showArchived ? 'Masquer Archivés' : 'Voir Archivés'}
+          </button>
           <button onClick={() => setModal('employee')} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
             <Plus size={14} /> Nouveau Collaborateur
           </button>
@@ -246,7 +260,19 @@ const HR = ({ onOpenDetail }) => {
                   {emp.avatar}
                 </div>
                 <div style={{ flex: 1, overflow: 'hidden' }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem' }}>{emp.nom}</div>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {emp.nom}
+                    {emp.statut === 'À compléter' && (
+                      <span style={{ fontSize: '0.65rem', background: '#F59E0B20', color: '#F59E0B', padding: '2px 8px', borderRadius: '1rem', border: '1px solid #F59E0B40' }}>
+                        À compléter
+                      </span>
+                    )}
+                    {emp.active === false && (
+                      <span style={{ fontSize: '0.65rem', background: '#EF444420', color: '#EF4444', padding: '2px 8px', borderRadius: '1rem', border: '1px solid #EF444440' }}>
+                        Désactivé
+                      </span>
+                    )}
+                  </div>
                   <div style={{ color: 'var(--accent)', fontSize: '0.78rem', fontWeight: 600 }}>{emp.poste}</div>
                   <Chip label={emp.dept} color={DEPT_COLORS[emp.dept] || '#64748B'} />
                 </div>

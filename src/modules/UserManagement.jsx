@@ -13,14 +13,17 @@ import {
   Eye,
   MoreVertical,
   Tally3,
-  Trash2
+  Trash2,
+  ArrowRight
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 
 const UserManagement = () => {
-  const { data, permissions, updateUserRole, toggleModuleAccess, createFullUser, deleteFullUser, currentUser } = useBusiness();
+  const { data, permissions, updateUserRole, toggleModuleAccess, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, currentUser } = useBusiness();
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showAdvanced, setShowAdvanced] = useState(null); // Track which user row has the advanced menu open
+  const [warningModal, setWarningModal] = useState({ isOpen: false, type: '', userNom: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -65,6 +68,7 @@ const UserManagement = () => {
     { id: 'SUPER_ADMIN', label: 'Super Administrateur', color: '#EF4444' },
     { id: 'ADMIN', label: 'Administrateur', color: '#3B82F6' },
     { id: 'MANAGER', label: 'Manager', color: '#F59E0B' },
+    { id: 'RH', label: 'Intervenant RH', color: '#F97316' },
     { id: 'STAFF', label: 'Collaborateur', color: '#10B981' },
     { id: 'SALES', label: 'Commercial', color: '#8B5CF6' }
   ];
@@ -78,7 +82,7 @@ const UserManagement = () => {
     setIsCreating(true);
     setSaveStatus({ type: 'info', message: 'Création du compte Firebase...' });
     try {
-      await createFullUser(formData);
+      await createFullUser(formData, 'admin');
       setSaveStatus({ type: 'success', message: 'Compte créé avec succès !' });
       setTimeout(() => {
         setIsModalOpen(false);
@@ -91,17 +95,41 @@ const UserManagement = () => {
     }
   };
 
-  const handleDelete = async (userId) => {
+  const handleToggleStatus = async (user) => {
+    if (user.id === currentUser.id) {
+      alert("Vous ne pouvez pas désactiver votre propre compte administrateur.");
+      return;
+    }
+
+    const newStatus = !(user.active !== false);
+    try {
+      await toggleUserStatus(user.id, newStatus);
+      setWarningModal({ 
+        isOpen: true, 
+        type: newStatus ? 'activation' : 'deactivation', 
+        userNom: user.nom 
+      });
+    } catch (e) {
+      alert("Erreur lors du changement de statut : " + e.message);
+    }
+  };
+
+  const handleDelete = async (userId, userNom) => {
     if (userId === currentUser.id) {
       alert("Vous ne pouvez pas supprimer votre propre compte administrateur.");
       return;
     }
 
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ? Cette action est irréversible.")) {
+    if (window.confirm(`Êtes-vous sûr de vouloir supprimer DÉFINITIVEMENT ${userNom} ? Cette action est irréversible et supprimera toutes les données liées.`)) {
       try {
-        await deleteFullUser(userId);
+        await permanentlyDeleteUserRecord(userId);
         setSelectedUser(null);
-        alert("Utilisateur supprimé avec succès.");
+        setShowAdvanced(null);
+        setWarningModal({ 
+          isOpen: true, 
+          type: 'deletion', 
+          userNom: userNom 
+        });
       } catch (error) {
         alert("Erreur lors de la suppression : " + error.message);
       }
@@ -122,6 +150,72 @@ const UserManagement = () => {
   const getPermissions = (userId) => {
     return permissions[userId] || { roles: ['STAFF'], allowedModules: [] };
   };
+
+  const WarningModal = () => (
+    <AnimatePresence>
+      {warningModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="glass" style={{ width: '500px', padding: '2.5rem', borderRadius: '2rem', textAlign: 'center' }}>
+            <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'var(--accent)20', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Shield size={35} />
+            </div>
+            <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '1rem' }}>
+              {warningModal.type === 'deactivation' ? 'Accès Révoqués' : warningModal.type === 'activation' ? 'Accès Rétablis' : 'Compte Supprimé'}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: '1.5' }}>
+              Les permissions de <strong>{warningModal.userNom}</strong> ont été mises à jour dans la base de données. 
+              {warningModal.type !== 'activation' && " L'utilisateur ne pourra plus accéder à l'ERP."}
+            </p>
+            
+            <div style={{ 
+               background: 'var(--bg-subtle)', 
+               padding: '1.5rem', 
+               borderRadius: '1.25rem', 
+               border: '1px solid var(--border)', 
+               marginBottom: '2rem',
+               position: 'relative',
+               overflow: 'hidden'
+            }}>
+              <div style={{ position: 'absolute', top: 0, right: 0, padding: '0.5rem', opacity: 0.05 }}><Settings size={80} /></div>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', marginBottom: '0.75rem' }}>
+                 Nettoyage Manuel Requis
+              </p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+                Pour libérer définitivement l'adresse email ou supprimer les identifiants de connexion, vous devez effectuer une action manuelle dans la console Firebase.
+              </p>
+              <a 
+                href="https://console.firebase.google.com/project/_/authentication/users" 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn"
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  width: '100%',
+                  background: 'var(--primary)', 
+                  color: 'white', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 700, 
+                  textDecoration: 'none',
+                  padding: '0.75rem',
+                  borderRadius: '0.75rem',
+                  boxShadow: 'var(--shadow-md)'
+                }}
+              >
+                Ouvrir Console Firebase <ArrowRight size={16} />
+              </a>
+            </div>
+
+            <button onClick={() => setWarningModal({ ...warningModal, isOpen: false })} className="btn btn-primary" style={{ width: '100%', padding: '1rem', borderRadius: '1rem' }}>
+              J'ai compris
+            </button>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto' }}>
@@ -195,19 +289,28 @@ const UserManagement = () => {
                     {user.avatar || user.nom[0]}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: '1rem' }}>{user.nom}</div>
+                    <div style={{ fontWeight: 700, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      {user.nom}
+                      {user.active === false && (
+                        <div style={{ 
+                          width: '8px', height: '8px', borderRadius: '50%', background: '#EF4444', 
+                          boxShadow: '0 0 8px #EF444460'
+                        }} />
+                      )}
+                    </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user.poste}</div>
                   </div>
                   <div style={{ 
                     fontSize: '0.7rem', 
                     fontWeight: 800, 
-                    padding: '0.25rem 0.5rem', 
-                    borderRadius: '0.5rem',
-                    background: `${roleInfo.color}20`,
-                    color: roleInfo.color,
-                    textTransform: 'uppercase'
+                    padding: '0.25rem 0.6rem', 
+                    borderRadius: '0.6rem',
+                    background: user.active === false ? 'var(--bg-subtle)' : `${roleInfo.color}20`,
+                    color: user.active === false ? 'var(--text-muted)' : roleInfo.color,
+                    textTransform: 'uppercase',
+                    border: user.active === false ? '1px solid var(--border)' : 'none'
                   }}>
-                    {roleInfo.label.split(' ')[0]}
+                    {user.active === false ? 'Inactif' : roleInfo.label.split(' ')[0]}
                   </div>
                 </div>
               );
@@ -239,29 +342,63 @@ const UserManagement = () => {
                       <h2 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>{selectedUser.nom}</h2>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <span style={{ color: 'var(--text-muted)' }}>{selectedUser.dept} • {selectedUser.poste}</span>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} />
-                        <span style={{ color: '#10B981', fontWeight: 700, fontSize: '0.85rem' }}>Actif</span>
+                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: selectedUser.active === false ? '#EF4444' : '#10B981' }} />
+                        <span style={{ color: selectedUser.active === false ? '#EF4444' : '#10B981', fontWeight: 700, fontSize: '0.85rem' }}>
+                          {selectedUser.active === false ? 'Désactivé' : 'Actif'}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                     <button 
-                      onClick={() => handleDelete(selectedUser.id)}
-                      className="btn" 
-                      style={{ 
-                        background: '#EF444415', 
-                        color: '#EF4444', 
-                        padding: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '0.75rem'
-                      }}
-                      title="Supprimer l'utilisateur"
+                      onClick={() => handleToggleStatus(selectedUser)}
+                      className={`btn ${selectedUser.active === false ? 'btn-success' : 'btn-ghost'}`}
+                      style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: selectedUser.active === false ? '' : '#EF4444' }}
                     >
-                      <Trash2 size={20} />
+                      {selectedUser.active === false ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+                      {selectedUser.active === false ? 'Réactiver' : 'Désactiver'}
                     </button>
-                    <button className="btn" style={{ background: 'var(--bg-subtle)', padding: '0.5rem' }}><MoreVertical size={20} /></button>
+
+                    <div style={{ position: 'relative' }}>
+                      <button 
+                        onClick={() => setShowAdvanced(showAdvanced === selectedUser.id ? null : selectedUser.id)}
+                        className="btn btn-ghost" 
+                        style={{ padding: '0.6rem', borderRadius: '0.75rem' }}
+                      >
+                        <MoreVertical size={20} />
+                      </button>
+                      
+                      <AnimatePresence>
+                        {showAdvanced === selectedUser.id && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                            className="glass"
+                            style={{ 
+                              position: 'absolute', top: '100%', right: 0, width: '220px', 
+                              padding: '0.5rem', borderRadius: '1rem', zIndex: 100,
+                              boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)'
+                            }}
+                          >
+                            <div style={{ padding: '0.5rem', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Options Avancées</div>
+                            <button 
+                              onClick={() => handleDelete(selectedUser.id, selectedUser.nom)}
+                              style={{ 
+                                width: '100%', padding: '0.75rem', borderRadius: '0.6rem', border: 'none', 
+                                background: 'transparent', color: '#EF4444', textAlign: 'left', 
+                                cursor: 'pointer', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                fontWeight: 600
+                              }}
+                              onMouseEnter={e => e.target.style.background = '#EF444410'}
+                              onMouseLeave={e => e.target.style.background = 'transparent'}
+                            >
+                              <Trash2 size={15} /> Supprimer Définitivement
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
 
@@ -385,6 +522,7 @@ const UserManagement = () => {
           </div>
         )}
       </RecordModal>
+      <WarningModal />
     </div>
   );
 };

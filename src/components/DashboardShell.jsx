@@ -36,7 +36,9 @@ import {
   Activity as ActivityIcon,
   Zap,
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  Pin,
+  PinOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlobalDashboard from './GlobalDashboard';
@@ -82,7 +84,7 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
   const { 
     globalSearch, searchResults, updateRecord, userRole, config, 
     globalSettings, currentUser, permissions, logout, activeApp, 
-    setActiveApp, activeCall, setActiveCall 
+    setActiveApp, activeCall, setActiveCall, togglePinnedModule 
   } = useBusiness();
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 1024);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -335,6 +337,55 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
         </div>
 
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
+          {/* Pinned Modules Section */}
+          {globalSettings.pinnedModules && globalSettings.pinnedModules.length > 0 && (
+            <div style={{ marginBottom: '1.5rem' }}>
+              {isSidebarOpen && (
+                <div style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  Épinglés
+                </div>
+              )}
+              {categories.flatMap(c => c.items)
+                .filter(item => globalSettings.pinnedModules.includes(item.id))
+                .filter(item => {
+                  if (userRole === 'SUPER_ADMIN') return true;
+                  const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
+                  return userPerms.allowedModules.includes(item.id) || item.roles.includes(userRole);
+                })
+                .map(item => (
+                  <motion.div
+                    key={`pinned-${item.id}`}
+                    whileHover={{ x: 5 }}
+                    onClick={() => setActiveApp(item.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      padding: '0.6rem 1rem',
+                      marginBottom: '0.25rem',
+                      borderRadius: '0.6rem',
+                      cursor: 'pointer',
+                      color: activeApp === item.id ? 'var(--accent)' : 'var(--text-muted)',
+                      background: activeApp === item.id ? 'var(--bg)' : 'transparent',
+                      fontSize: '0.9rem',
+                      position: 'relative'
+                    }}
+                  >
+                    {item.icon}
+                    {isSidebarOpen && <span style={{ fontWeight: activeApp === item.id ? 700 : 500 }}>{item.label}</span>}
+                    {userRole === 'SUPER_ADMIN' && isSidebarOpen && (
+                       <Pin 
+                         size={12} 
+                         onClick={(e) => { e.stopPropagation(); togglePinnedModule(item.id); }}
+                         style={{ marginLeft: 'auto', opacity: 0.4 }} 
+                       />
+                    )}
+                  </motion.div>
+                ))}
+              {isSidebarOpen && <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 1rem' }} />}
+            </div>
+          )}
+
           {currentCategories.map((cat) => {
             const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
             const visibleItems = cat.items.filter(item => {
@@ -403,6 +454,16 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
                         >
                           {item.icon}
                           {isSidebarOpen && <span style={{ fontWeight: activeApp === item.id ? 700 : 500 }}>{item.label}</span>}
+                          {userRole === 'SUPER_ADMIN' && isSidebarOpen && (
+                             <motion.div 
+                               initial={{ opacity: 0 }}
+                               whileHover={{ opacity: 1 }}
+                               onClick={(e) => { e.stopPropagation(); togglePinnedModule(item.id); }}
+                               style={{ marginLeft: 'auto', cursor: 'pointer' }}
+                             >
+                               {globalSettings.pinnedModules?.includes(item.id) ? <PinOff size={12} /> : <Pin size={12} />}
+                             </motion.div>
+                          )}
                         </motion.div>
                       ))}
                     </motion.div>
