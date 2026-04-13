@@ -136,11 +136,7 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
   }, []);
 
   const [expandedCategories, setExpandedCategories] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
-
-
   const currentCategories = dynamicCategories;
-
-  const [expandedCategories, setExpandedCategories] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
 
   const toggleCategory = (label) => {
     setExpandedCategories(prev => 
