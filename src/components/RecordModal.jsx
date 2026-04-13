@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Plus } from 'lucide-react';
+import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History, FileText, Upload, Plus } from 'lucide-react';
+import Chatter from './Chatter';
+import SmartButtons from './SmartButtons';
+import { useBusiness } from '../BusinessContext';
 
-const RecordModal = ({ isOpen, onClose, onSave, title, fields, isLoading = false, children }) => {
-  const [formData, setFormData] = useState({});
+const RecordModal = ({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onDelete, 
+  title, 
+  fields, 
+  initialData = {}, 
+  recordId, 
+  recordType,
+  smartButtons = [],
+  isLoading = false 
+}) => {
+  const { data } = useBusiness();
+  const [formData, setFormData] = useState(initialData || {});
+  const [isEditMode, setIsEditMode] = useState(!recordId); // Default to edit if no ID (new record)
+  const [activeTab, setActiveTab] = useState('data'); // data, chatter, documents
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -13,9 +29,7 @@ const RecordModal = ({ isOpen, onClose, onSave, title, fields, isLoading = false
     e.preventDefault();
     if (isLoading) return;
     onSave(formData);
-    setFormData({});
-    // We don't close immediately here if we want to show a success message in children
-    // The parent component should handle closing
+    if (recordId) setIsEditMode(false);
   };
 
   return (
@@ -31,7 +45,7 @@ const RecordModal = ({ isOpen, onClose, onSave, title, fields, isLoading = false
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 2000,
-          padding: '2rem'
+          padding: '1rem'
         }}>
           {/* Backdrop */}
           <motion.div
@@ -46,142 +60,183 @@ const RecordModal = ({ isOpen, onClose, onSave, title, fields, isLoading = false
               right: 0,
               bottom: 0,
               background: 'rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(8px)'
+              backdropFilter: 'blur(10px)'
             }}
           />
 
           {/* Modal Content */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            initial={{ scale: 0.95, opacity: 0, y: 30 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+            exit={{ scale: 0.95, opacity: 0, y: 30 }}
             className="glass"
             style={{
               width: '100%',
-              maxHeight: '100%',
-              overflowY: 'auto',
-              maxWidth: '600px',
+              maxWidth: '1200px',
+              height: '90vh',
               borderRadius: '2rem',
               position: 'relative',
               background: 'var(--bg)',
               border: '1px solid var(--border)',
-              boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-              padding: '2.5rem'
+              boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{title}</h2>
-              <button 
-                onClick={onClose}
-                disabled={isLoading}
-                style={{ background: 'transparent', border: 'none', cursor: isLoading ? 'default' : 'pointer', color: 'var(--text-muted)', opacity: isLoading ? 0.5 : 1 }}
-              >
-                <X size={24} />
-              </button>
+            {/* Header / Barra de ferramientas */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              padding: '1.5rem 2.5rem', 
+              borderBottom: '1px solid var(--border)',
+              background: 'var(--bg-subtle)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text)' }}>{title}</h2>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {isEditMode ? (
+                     <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Save size={14}/> Enregistrer</button>
+                  ) : (
+                     <button onClick={() => setIsEditMode(true)} className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Edit3 size={14}/> Modifier</button>
+                  )}
+                  <button className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Printer size={14}/> Imprimer</button>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                 <button className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.5rem' }}><MoreHorizontal size={18}/></button>
+                 <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-                {fields.map(field => (
-                  <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                      {field.label}
-                    </label>
-                    {field.type === 'select' ? (
-                      <select
-                        value={formData[field.name] || ''}
-                        required={field.required}
-                        onChange={(e) => handleChange(field.name, e.target.value)}
-                        style={{
-                          padding: '0.75rem 1rem',
-                          borderRadius: '0.75rem',
-                          border: '1px solid var(--border)',
-                          background: 'var(--bg-subtle)',
-                          color: 'var(--text)',
-                          outline: 'none'
-                        }}
-                      >
-                        <option value="">Sélectionner...</option>
-                        {field.options.map(opt => {
-                          const value = typeof opt === 'object' ? opt.value : opt;
-                          const label = typeof opt === 'object' ? opt.label : opt;
-                          return <option key={value} value={value}>{label}</option>;
-                        })}
-                      </select>
-                    ) : (
-                      <input
-                        value={formData[field.name] || ''}
-                        type={field.type || 'text'}
-                        required={field.required}
-                        placeholder={field.placeholder}
-                        onChange={(e) => handleChange(field.name, field.type === 'number' ? Number(e.target.value) : e.target.value)}
-                        style={{
-                          padding: '0.75rem 1rem',
-                          borderRadius: '0.75rem',
-                          border: '1px solid var(--border)',
-                          background: 'var(--bg-subtle)',
-                          color: 'var(--text)',
-                          outline: 'none'
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Main Content Area */}
+            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+               {/* Left Side: Data & Forms */}
+               <div style={{ flex: 1.5, overflowY: 'auto', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  
+                  {/* Smart Buttons Row */}
+                  <SmartButtons buttons={smartButtons} />
 
-              <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1rem' }}>
-                   <button 
-                  type="button" 
-                  onClick={onClose}
-                  disabled={isLoading}
-                  style={{ 
-                    flex: 1, 
-                    padding: '1rem', 
-                    borderRadius: '1rem', 
-                    border: '1px solid var(--border)', 
-                    background: 'transparent', 
-                    color: 'var(--text)', 
-                    fontWeight: 600, 
-                    cursor: isLoading ? 'default' : 'pointer',
-                    opacity: isLoading ? 0.5 : 1
-                  }}
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="submit"
-                  disabled={isLoading}
-                  style={{ 
-                    flex: 2, 
-                    padding: '1rem', 
-                    borderRadius: '1rem', 
-                    border: 'none', 
-                    background: 'var(--accent)', 
-                    color: 'white', 
-                    fontWeight: 700, 
-                    cursor: isLoading ? 'default' : 'pointer',
-                    opacity: isLoading ? 0.7 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  {isLoading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                      style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }}
-                    />
-                  ) : (
-                    <>
-                      <Save size={20} /> Enregistrer
-                    </>
-                  )}
-                </button>
+                  <form onSubmit={handleSubmit}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+                      {fields.map(field => (
+                        <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                          <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {field.label}
+                          </label>
+                          {!isEditMode ? (
+                            <div style={{ padding: '0.75rem 0', fontWeight: 700, fontSize: '1rem', borderBottom: '1px solid var(--border)' }}>
+                              {initialData[field.name]?.toString() || '—'}
+                            </div>
+                          ) : (
+                            field.type === 'select' ? (
+                              <select
+                                value={formData[field.name] || ''}
+                                required={field.required}
+                                onChange={(e) => handleChange(field.name, e.target.value)}
+                                className="glass"
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
+                              >
+                                <option value="">Sélectionner...</option>
+                                {field.options.map(opt => {
+                                  const value = typeof opt === 'object' ? opt.value : opt;
+                                  const label = typeof opt === 'object' ? opt.label : opt;
+                                  return <option key={value} value={value}>{label}</option>;
+                                })}
+                              </select>
+                            ) : (
+                              <input
+                                value={formData[field.name] || ''}
+                                type={field.type || 'text'}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                onChange={(e) => handleChange(field.name, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                                className="glass"
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
+                              />
+                            )
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </form>
+               </div>
+
+               {/* Right Side: Chatter (The Odoo Magic) */}
+               {recordId && (
+                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
+                    <div style={{ display: 'flex', background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
+                       <button 
+                        onClick={() => setActiveTab('data')}
+                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'data' ? '2px solid var(--accent)' : 'none', color: activeTab === 'data' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
+                       >
+                         INFOS
+                       </button>
+                       <button 
+                        onClick={() => setActiveTab('chatter')}
+                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'chatter' ? '2px solid var(--accent)' : 'none', color: activeTab === 'chatter' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                       >
+                         CHATTER <MessageSquare size={14}/>
+                       </button>
+                       <button 
+                        onClick={() => setActiveTab('documents')}
+                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'documents' ? '2px solid var(--accent)' : 'none', color: activeTab === 'documents' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                       >
+                         DOCS <FileText size={14}/>
+                       </button>
+                    </div>
+                    
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+                       {activeTab === 'chatter' ? (
+                          <Chatter targetId={recordId} targetType={recordType} />
+                       ) : activeTab === 'documents' ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Documents liés</h4>
+                                <button className="btn glass" style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Upload size={12}/> Ajouter</button>
+                             </div>
+                             {(data.dms?.files || []).filter(f => f.relatedId === recordId).length > 0 ? (
+                                (data.dms?.files || []).filter(f => f.relatedId === recordId).map(file => (
+                                  <div key={file.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                     <FileText size={16} color="var(--accent)" />
+                                     <div style={{ flex: 1, overflow: 'hidden' }}>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{file.name}</div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{file.size} · {file.type}</div>
+                                     </div>
+                                  </div>
+                                ))
+                             ) : (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.8rem', border: '2px dashed var(--border)', borderRadius: '1rem' }}>
+                                   Aucun document joint.
+                                </div>
+                             )}
+                          </div>
+                       ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                             <div className="glass" style={{ padding: '1rem', borderRadius: '1rem' }}>
+                                <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Identifiant Interne</h4>
+                                <code style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{recordId}</code>
+                             </div>
+                             <div className="glass" style={{ padding: '1rem', borderRadius: '1rem' }}>
+                                <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text_muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Audit Création</h4>
+                                <div style={{ fontSize: '0.8rem' }}>Créé par: <span style={{ fontWeight: 700 }}>{initialData.user || 'Système'}</span></div>
+                                <div style={{ fontSize: '0.8rem' }}>Le: <span style={{ fontWeight: 700 }}>{initialData.createdAt ? new Date(initialData.createdAt).toLocaleString() : '—'}</span></div>
+                             </div>
+                          </div>
+                       )}
+                    </div>
+                 </div>
+               )}
+            </div>
+
+            {/* Footer Actions if needed (New Record only) */}
+            {!recordId && (
+              <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                 <button onClick={onClose} className="btn glass" style={{ border: '1px solid var(--border)' }}>Annuler</button>
+                 <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}><Save size={18}/> Créer {title}</button>
               </div>
-              {children}
-            </form>
+            )}
           </motion.div>
         </div>
       )}

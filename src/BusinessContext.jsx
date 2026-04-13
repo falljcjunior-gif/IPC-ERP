@@ -64,6 +64,7 @@ export const BusinessProvider = ({ children }) => {
       if (!merged.finance.journals) merged.finance.journals = mockData.finance.journals;
       if (!merged.finance.entries) merged.finance.entries = [];
       if (!merged.finance.lines) merged.finance.lines = [];
+      if (!merged.activities) merged.activities = [];
 
       return merged;
     } catch (e) {
@@ -104,6 +105,9 @@ export const BusinessProvider = ({ children }) => {
   const [workflows, setWorkflows] = useState([]);
   const [activeCall, setActiveCall] = useState(null); 
   const [notifications, setNotifications] = useState([]);
+  
+  // Platform Schema Overrides (for Studio)
+  const [schemaOverrides, setSchemaOverrides] = useState(() => safeParse('ipc_erp_schemas', {}));
 
   
   // Derived State
@@ -118,6 +122,7 @@ export const BusinessProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('ipc_erp_permissions', JSON.stringify(permissions)); }, [permissions]);
   useEffect(() => { localStorage.setItem('ipc_erp_config', JSON.stringify(config)); }, [config]);
   useEffect(() => { localStorage.setItem('ipc_erp_global_settings', JSON.stringify(globalSettings)); }, [globalSettings]);
+  useEffect(() => { localStorage.setItem('ipc_erp_schemas', JSON.stringify(schemaOverrides)); }, [schemaOverrides]);
   useEffect(() => { localStorage.setItem('daxcelor_data', JSON.stringify(data)); }, [data]);
 
   useEffect(() => {
@@ -171,19 +176,51 @@ export const BusinessProvider = ({ children }) => {
     setHints(prev => prev.filter(h => h.id !== id));
   }, []);
 
-  const logAction = useCallback(async (action, details, appId = 'system') => {
-    const logEntry = {
-      id: Date.now().toString(),
-      userId: currentUser.id,
-      userName: currentUser.nom,
-      action, details, appId,
-      timestamp: new Date().toISOString()
+  const logAction = useCallback((action, detail, appId = 'system', targetId = null) => {
+    const activity = {
+      id: Math.random().toString(36).substr(2, 9),
+      action,
+      detail,
+      appId,
+      targetId,
+      user: currentUser.nom,
+      timestamp: new Date().toISOString(),
+      type: 'log'
     };
-    setData(prev => ({ ...prev, audit: { ...prev.audit, logs: [logEntry, ...(prev.audit?.logs || [])] } }));
+    
+    setData(prev => ({
+      ...prev,
+      activities: [activity, ...(prev.activities || [])]
+    }));
+
     if (auth.currentUser) {
-      setDoc(doc(db, 'audit_logs', logEntry.id), logEntry).catch(e => console.error("logAction Cloud Error:", e));
+      setDoc(doc(db, 'activities', activity.id), activity);
     }
-  }, [currentUser.id, currentUser.nom]);
+  }, [currentUser.nom]);
+
+  const addNote = useCallback((targetId, targetType, content) => {
+    const note = {
+      id: Math.random().toString(36).substr(2, 9),
+      action: 'Note Interne',
+      detail: content,
+      appId: targetType,
+      targetId: targetId,
+      user: currentUser.nom,
+      timestamp: new Date().toISOString(),
+      type: 'note'
+    };
+
+    setData(prev => ({
+      ...prev,
+      activities: [note, ...(prev.activities || [])]
+    }));
+
+    if (auth.currentUser) {
+      setDoc(doc(db, 'activities', note.id), note);
+    }
+    
+    addHint({ title: "Note ajoutée", type: 'success' });
+  }, [currentUser.nom, addHint]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      5. DATA MUTATION LOGIC (Business Logic)
@@ -251,19 +288,35 @@ export const BusinessProvider = ({ children }) => {
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
+      const oldRecord = prev[appId][subModule].find(i => i.id === id);
+      if (!oldRecord) return prev;
+
+      // Calculate changes for rich audit log
+      const changes = Object.keys(newData)
+        .filter(key => newData[key] !== oldRecord[key])
+        .map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`)
+        .join(', ');
+
       const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
       let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
       const record = updatedList.find(o => o.id === id);
-      logAction(`Mise à jour ${subModule}`, `${record.num || id}`, appId);
+      
+      logAction(
+        `Modification ${subModule}`, 
+        changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, 
+        appId,
+        id
+      );
+
       if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
       
       // Accounting Automation: Invoice -> Ledger
-      if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && record.statut !== 'Payé') {
+      if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);
       }
 
       // CRM/Sales specific logic (preserved)
-      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné') {
+      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
         addHint({ title: "Affaire Gagnée !", message: `Opportunité "${record.titre}" gagnée. Générer le devis ?`, appId: 'sales', actionLabel: "Générer", onAction: () => {} });
       }
       return nextState;
@@ -301,9 +354,36 @@ export const BusinessProvider = ({ children }) => {
     if (!query || query.length < 2) return setSearchResults([]);
     const q = query.toLowerCase();
     const results = [];
+    
+    // 1. Apps/Modules Navigation
+    const apps = [
+      { id: 'crm', label: 'CRM', type: 'Application' },
+      { id: 'hr', label: 'RH', type: 'Application' },
+      { id: 'finance', label: 'Finance', type: 'Application' },
+      { id: 'inventory', label: 'Stocks', type: 'Application' },
+      { id: 'accounting', label: 'Comptabilité', type: 'Application' },
+      { id: 'dms', label: 'G.E.D', type: 'Application' }
+    ];
+    apps.filter(app => app.label.toLowerCase().includes(q)).forEach(app => results.push({ type: 'Module', name: app.label, appId: app.id }));
+
+    // 2. Base Data
     if (data.base?.contacts) data.base.contacts.forEach(c => (c.nom.toLowerCase().includes(q)) && results.push({ type: 'Contact', name: c.nom, appId: 'base' }));
-    if (data.hr?.employees) data.hr.employees.forEach(e => (e.nom.toLowerCase().includes(q)) && results.push({ type: 'Employé', name: e.nom, appId: 'hr' }));
-    setSearchResults(results.slice(0, 10));
+    
+    // 3. HR
+    if (data.hr?.employees) data.hr.employees.forEach(e => (e.nom.toLowerCase().includes(q)) && results.push({ type: 'Collaborateur', name: e.nom, appId: 'hr' }));
+    
+    // 4. CRM
+    if (data.crm?.leads) data.crm.leads.forEach(l => (l.nom.toLowerCase().includes(q) || l.entreprise.toLowerCase().includes(q)) && results.push({ type: 'Lead', name: `${l.nom} (${l.entreprise})`, appId: 'crm' }));
+    if (data.crm?.opportunities) data.crm.opportunities.forEach(o => (o.titre.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Opportunité', name: o.titre, appId: 'crm' }));
+    
+    // 5. Finance/Sales
+    if (data.finance?.invoices) data.finance.invoices.forEach(i => (i.num.toLowerCase().includes(q) || i.client.toLowerCase().includes(q)) && results.push({ type: 'Facture', name: `${i.num} - ${i.client}`, appId: 'finance' }));
+    if (data.sales?.orders) data.sales.orders.forEach(o => (o.num.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Bon de Commande', name: `${o.num} - ${o.client}`, appId: 'sales' }));
+    
+    // 6. Inventory
+    if (data.inventory?.products) data.inventory.products.forEach(p => (p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) && results.push({ type: 'Article', name: p.nom, appId: 'inventory' }));
+
+    setSearchResults(results.slice(0, 12));
   }, [data]);
 
   const updateConfig = useCallback((newConfig) => setConfig(prev => ({ ...prev, ...newConfig })), []);
@@ -543,7 +623,15 @@ export const BusinessProvider = ({ children }) => {
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, navigateTo, formatCurrency, activeCall, setActiveCall, sendNotification, notifications, togglePinnedModule,
-      addAccountingEntry, generateInvoiceEntry
+      addAccountingEntry, generateInvoiceEntry, schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
+        setSchemaOverrides(prev => ({
+           ...prev,
+           [`${moduleId}.${modelId}`]: {
+             ...(prev[`${moduleId}.${modelId}`] || {}),
+             ...newConfig
+           }
+        }));
+     }
     }}>
 
       {children}

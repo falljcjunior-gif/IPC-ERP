@@ -119,14 +119,23 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
       if (!proposedAction) {
         if (lowInput.includes('cherch') || lowInput.includes('trouv')) {
           const searchTerms = lowInput.replace('cherche', '').replace('trouve', '').trim();
-          newResults = globalSearch(searchTerms);
-          response = `J'ai trouvé ${newResults.length} résultats pour "${searchTerms}".`;
+          const found = globalSearch(searchTerms);
+          response = `Résultats pour "${searchTerms}" :`;
+          setResults(searchResults || []);
         } else if (lowInput.includes('vent') || lowInput.includes('ca')) {
           const sales = data.sales?.orders || [];
           const total = sales.reduce((sum, s) => sum + (s.totalTTC || s.total || 0), 0);
           response = `Le chiffre d'affaires total est de **${total.toLocaleString()} FCFA**.`;
+        } else if (lowInput.includes('va vers') || lowInput.includes('aller à') || lowInput.includes('ouvre')) {
+           const appMap = { 'crm': 'crm', 'rh': 'hr', 'finance': 'finance', 'compta': 'accounting', 'stock': 'inventory' };
+           const matched = Object.keys(appMap).find(k => lowInput.includes(k));
+           if (matched) {
+             navigateTo(appMap[matched]);
+             setSpotlightOpen(false);
+             return;
+           }
         } else {
-          response = "Je peux vous aider à rechercher des données, naviguer ou exécuter des tâches. Essayez : 'Crée une facture' ou 'Chiffre d'affaires'.";
+          response = "Je peux vous aider à rechercher des données, naviguer ou exécuter des tâches. Essayez : 'Crée une facture' ou 'Cherche Raphael'.";
         }
       }
 
@@ -135,10 +144,9 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
         { role: 'user', content: input }, 
         { role: 'assistant', content: response, action: proposedAction }
       ]);
-      setResults(newResults);
       setQuery('');
       setIsProcessing(false);
-    }, 800);
+    }, 600);
   };
 
   const handleSend = () => {
@@ -351,20 +359,30 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
                 </div>
               )}
 
-              {results.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {results.slice(0, 8).map((res, i) => (
-                    <div 
+              {searchResults.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', paddingLeft: '0.5rem' }}>Résultats de recherche</div>
+                  {searchResults.slice(0, 10).map((res, i) => (
+                    <motion.div 
                       key={i} 
+                      whileHover={{ x: 4, background: 'var(--bg-subtle)' }}
                       onClick={() => { navigateTo(res.appId); setSpotlightOpen(false); }}
-                      style={{ padding: '1rem', borderRadius: '1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-subtle)' }}
+                      style={{ padding: '0.85rem 1rem', borderRadius: '0.75rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'all 0.2s' }}
                     >
-                      <div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 700 }}>{res.type}</div>
-                        <div style={{ fontWeight: 600 }}>{res.name}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ padding: '6px', borderRadius: '8px', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                           <Layout size={14} color="var(--accent)" />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.65rem', color: 'var(--accent)', fontWeight: 800, textTransform: 'uppercase' }}>{res.type}</div>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{res.name}</div>
+                        </div>
                       </div>
-                      <ArrowRight size={18} color="var(--text-muted)" />
-                    </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{res.appId}</span>
+                        <ArrowRight size={16} color="var(--border)" />
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
               )}

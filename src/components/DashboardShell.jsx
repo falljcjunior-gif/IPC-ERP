@@ -82,6 +82,8 @@ import NotificationCenter from './NotificationCenter';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
+import { registry } from '../services/Registry';
+import { initRegistry } from '../registry_init';
 
 const DashboardShell = ({ toggleTheme, theme, setView }) => {
   const { 
@@ -120,68 +122,23 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
     setDetailContext({ appId, subModule });
   }, []);
 
-  const categories = [
-    {
-      label: 'Cœur de Métier',
-      items: [
-        { id: 'home', icon: <Home size={18} />, label: 'Tableau de bord', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'] },
-        { id: 'crm', icon: <Users size={18} />, label: 'CRM', roles: ['ADMIN', 'SALES'] },
-        { id: 'sales', icon: <ShoppingCart size={18} />, label: 'Ventes', roles: ['ADMIN', 'SALES', 'FINANCE'] },
-        { id: 'marketing', icon: <Mail size={18} />, label: 'Marketing', roles: ['ADMIN', 'HR', 'SALES'] },
-      ]
-    },
-    {
-      label: 'Opérations & Logistique',
-      items: [
-        { id: 'inventory',     icon: <Package size={18} />,     label: 'Stocks',        roles: ['ADMIN', 'SALES', 'FINANCE'] },
-        { id: 'shipping',      icon: <Truck size={18} />,       label: 'Expéditions',   roles: ['ADMIN', 'SALES', 'FINANCE'] },
-        { id: 'purchase',      icon: <ShoppingBag size={18} />, label: 'Achats',        roles: ['ADMIN', 'FINANCE'] },
-        { id: 'production',    icon: <Factory size={18} />,     label: 'Projets Prod',  roles: ['ADMIN', 'HR'] },
-        { id: 'manufacturing', icon: <Layers size={18} />,      label: 'Manufacturing', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'] },
-        { id: 'fleet',         icon: <Truck size={18} />,       label: 'Parc Auto',     roles: ['ADMIN', 'SALES', 'HR'] },
-        { id: 'quality',       icon: <ShieldCheck size={18} />, label: 'Qualité',       roles: ['ADMIN', 'PRODUCTION'] },
-      ]
-    },
-    {
-      label: 'Finance & Stratégie',
-      items: [
-        { id: 'finance', icon: <CreditCard size={18} />, label: 'Finance', roles: ['ADMIN', 'FINANCE'] },
-        { id: 'accounting', icon: <Landmark size={18} />, label: 'Comptabilité', roles: ['ADMIN', 'FINANCE'] },
-        { id: 'expenses', icon: <Wallet size={18} />, label: 'Frais', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'] },
-        { id: 'budget', icon: <PiggyBank size={18} />, label: 'Budget', roles: ['ADMIN', 'FINANCE'] },
-        { id: 'contracts', icon: <FileSignature size={18} />, label: 'Contrats', roles: ['ADMIN', 'FINANCE', 'SALES'] },
-        { id: 'bi', icon: <TrendingUp size={18} />, label: 'Analyses BI', roles: ['ADMIN', 'FINANCE', 'SALES'] },
-        { id: 'analytics', icon: <BarChart3 size={18} />, label: 'Enterprise BI', roles: ['ADMIN', 'FINANCE'] },
-      ]
-    },
-    {
-      label: 'RH & Collaboration',
-      items: [
-        { id: 'hr', icon: <Users2 size={18} />, label: 'RH', roles: ['ADMIN', 'HR'] },
-        { id: 'staff_portal', icon: <Users2 size={18} />, label: 'Mon Espace', roles: ['STAFF', 'ADMIN'] },
-        { id: 'timesheets', icon: <Clock size={18} />, label: 'Temps', roles: ['ADMIN', 'SALES', 'HR', 'STAFF'] },
-        { id: 'projects', icon: <Briefcase size={18} />, label: 'Projets Collab', roles: ['ADMIN', 'HR'] },
-        { id: 'calendar', icon: <CalIcon size={18} />, label: 'Agenda', roles: ['ADMIN', 'SALES', 'HR', 'STAFF'] },
-        { id: 'planning', icon: <CalIcon size={18} />, label: 'Planning Global', roles: ['ADMIN', 'HR', 'PRODUCTION', 'STAFF'] },
-        { id: 'dms', icon: <Folder size={18} />, label: 'G.E.D', roles: ['ADMIN', 'HR', 'FINANCE', 'SALES', 'STAFF'] },
-        { id: 'helpdesk', icon: <LifeBuoy size={18} />, label: 'Helpdesk', roles: ['ADMIN', 'SALES'] },
-      ]
-    },
-    {
-      label: 'Configuration',
-      items: [
-        { id: 'masterdata', icon: <Grid size={18} />, label: 'Données Maîtres', roles: ['ADMIN', 'SALES', 'FINANCE'] },
-        { id: 'studio', icon: <Layers size={18} />, label: 'IPC Studio', roles: ['ADMIN'] },
-        { id: 'history', icon: <ActivityIcon size={18} />, label: 'Historique d\'Audit', roles: ['ADMIN', 'STAFF'] },
-        { id: 'workflows', icon: <Zap size={18} />, label: 'Automatisations', roles: ['ADMIN'] },
-        { id: 'user_management', icon: <ShieldCheck size={18} />, label: 'Gestion Utilisateurs', roles: ['SUPER_ADMIN'] },
-        { id: 'settings', icon: <Settings size={18} />, label: 'Paramètres', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'] },
-      ]
-    }
-  ];
+  // Initialize Registry on Mount
+  useEffect(() => {
+    initRegistry(openDetail);
+  }, [openDetail]);
+
+  const [dynamicCategories, setDynamicCategories] = useState([]);
+
+  useEffect(() => {
+    // Get modules from registry and merge with legacy structure
+    const regCats = registry.getModulesByCategory();
+    setDynamicCategories(regCats);
+  }, []);
+
+  const [expandedCategories, setExpandedCategories] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
 
 
-  const currentCategories = categories;
+  const currentCategories = dynamicCategories;
 
   const [expandedCategories, setExpandedCategories] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
 
@@ -198,11 +155,17 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
   const renderContent = () => {
     const commonProps = { onOpenDetail: openDetail };
     
+    // 1. Try to load from Registry
+    const regModule = registry.getModule(activeApp);
+    if (regModule && regModule.component) {
+      const RegComponent = regModule.component;
+      return <RegComponent />;
+    }
+
+    // 2. Fallback to Legacy Switch
     switch (activeApp) {
       case 'home':
         return <GlobalDashboard />;
-      case 'crm':
-        return <CRM {...commonProps} />;
       case 'sales':
         return <Sales {...commonProps} />;
       case 'inventory':

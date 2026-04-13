@@ -356,10 +356,10 @@ const GlobalDashboard = () => {
               <Target size={18} color="#3B82F6" /> Direction Commerciale
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} />
-              <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} />
-              <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} />
-              <KpiCard title="Valeur Vie Client (LTV)"   value={formatCurrency(metrics.sales.ltv, true)}       trend={0}  trendType="up"   icon={<Users size={22} />} color="#F43F5E" sparklineData={[]}  />
+              <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} onClick={() => navigateTo('sales')} />
+              <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} onClick={() => navigateTo('crm')} />
+              <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} onClick={() => navigateTo('marketing')} />
+              <KpiCard title="Valeur Vie Client (LTV)"   value={formatCurrency(metrics.sales.ltv, true)}       trend={0}  trendType="up"   icon={<Users size={22} />} color="#F43F5E" sparklineData={[]}  onClick={() => navigateTo('crm')} />
             </div>
           </motion.div>
         )}
@@ -399,10 +399,10 @@ const GlobalDashboard = () => {
               <HeartPulse size={18} color="#F43F5E" /> Ressources Humaines
             </h3>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} />
-              <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} />
-              <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} />
-              <KpiCard title="Effectif Total"     value={metrics.hr.effectif}                      trend={0}  trendType="up"   icon={<Users size={22} />}          color="#8B5CF6" sparklineData={[]} />
+              <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} onClick={() => navigateTo('hr')} />
+              <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} onClick={() => navigateTo('hr')} />
+              <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} onClick={() => navigateTo('hr')} />
+              <KpiCard title="Effectif Total"     value={metrics.hr.effectif}                      trend={0}  trendType="up"   icon={<Users size={22} />}          color="#8B5CF6" sparklineData={[]} onClick={() => navigateTo('hr')} />
             </div>
           </motion.div>
         )}
