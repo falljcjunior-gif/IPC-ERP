@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
-import DashboardShell from './components/DashboardShell';
+import PlatformShell from './components/PlatformShell';
 import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import './index.css';
@@ -88,7 +88,7 @@ function App() {
         )}
 
         {view === 'dashboard' && (
-          <DashboardShell 
+          <PlatformShell 
             toggleTheme={toggleTheme} 
             theme={theme} 
             setView={setView} 
