@@ -52,8 +52,7 @@ import { registry } from '../services/Registry';
 import { initRegistry } from '../registry_init';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   PLATFORM SHELL (V1)
-   The central command center for the ICP Enterprise ERP.
+   PLATFORM SHELL (V1.2 - CLEAN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
@@ -62,31 +61,30 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     setActiveApp, activeCall, setActiveCall, togglePinnedModule 
   } = useBusiness();
 
-  const [uiState, setUiState] = useState({
-    isSidebarOpen: window.innerWidth > 1024,
-    isMobile: window.innerWidth < 768,
-    isSearchFocused: false,
-    isProfileOpen: false,
-    spotlightOpen: false,
-    isNotificationsOpen: false,
-    isChatOpen: false
+  // Unified UI Flags
+  const [shellView, setShellView] = useState({
+    sidebar: window.innerWidth > 1024,
+    mobile: window.innerWidth < 768,
+    profile: false,
+    ai: false,
+    notifs: false,
+    chat: false
   });
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [detailContext, setDetailContext] = useState({ appId: '', subModule: '' });
+  const [search, setSearch] = useState({ query: '', focused: false });
+  const [details, setDetails] = useState({ record: null, context: { appId: '', subModule: '' } });
   
-  // Navigation State
-  const [navCategories, setNavCategories] = useState([]);
-  const [expandedNavLabels, setExpandedNavLabels] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
+  // Navigation State (UNQIUE NAMES)
+  const [appsPool, setAppsPool] = useState([]);
+  const [openSections, setOpenSections] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
-      setUiState(prev => ({ 
-        ...prev, 
-        isMobile: mobile, 
-        isSidebarOpen: mobile ? false : window.innerWidth > 1024 
+      const isMobile = window.innerWidth < 768;
+      setShellView(p => ({ 
+        ...p, 
+        mobile: isMobile, 
+        sidebar: isMobile ? false : window.innerWidth > 1024 
       }));
     };
     window.addEventListener('resize', handleResize);
@@ -94,24 +92,23 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, []);
 
   const openDetail = useCallback((record, appId, subModule) => {
-    setSelectedRecord(record);
-    setDetailContext({ appId, subModule });
+    setDetails({ record, context: { appId, subModule } });
   }, []);
 
   useEffect(() => {
     initRegistry(openDetail);
-    setNavCategories(registry.getModulesByCategory());
+    setAppsPool(registry.getModulesByCategory());
   }, [openDetail]);
 
-  const toggleCategory = (label) => {
-    setExpandedNavLabels(prev => 
+  const toggleSection = (label) => {
+    setOpenSections(prev => 
       prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
     );
   };
 
   useEffect(() => {
-    globalSearch(searchQuery);
-  }, [searchQuery, globalSearch]);
+    globalSearch(search.query);
+  }, [search.query, globalSearch]);
 
   const renderContent = () => {
     const commonProps = { onOpenDetail: openDetail };
@@ -169,51 +166,51 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       '--primary': config.theme.primary, '--accent': config.theme.accent,
       '--accent-hover': config.theme.accent + 'dd', '--radius': config.theme.borderRadius
     }}>
-      {uiState.isMobile && uiState.isSidebarOpen && (
-        <div onClick={() => setUiState(p => ({ ...p, isSidebarOpen: false }))} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />
+      {shellView.mobile && shellView.sidebar && (
+        <div onClick={() => setShellView(p => ({ ...p, sidebar: false }))} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />
       )}
 
       <motion.aside
         initial={false}
         animate={{ 
-          width: config.theme.isCompact ? (uiState.isSidebarOpen ? '180px' : '60px') : (uiState.isSidebarOpen ? '260px' : '80px'),
-          x: uiState.isMobile && !uiState.isSidebarOpen ? -280 : 0
+          width: config.theme.isCompact ? (shellView.sidebar ? '180px' : '60px') : (shellView.sidebar ? '260px' : '80px'),
+          x: shellView.mobile && !shellView.sidebar ? -280 : 0
         }}
         className="glass"
-        style={{ height: '100%', display: 'flex', flexDirection: 'column', zIndex: 1000, borderRight: '1px solid var(--border)', position: uiState.isMobile ? 'fixed' : 'relative', background: 'var(--bg)' }}
+        style={{ height: '100%', display: 'flex', flexDirection: 'column', zIndex: 1000, borderRight: '1px solid var(--border)', position: shellView.mobile ? 'fixed' : 'relative', background: 'var(--bg)' }}
       >
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ minWidth: `${globalSettings.logoWidth || 40}px`, height: `${globalSettings.logoHeight || 40}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={globalSettings.logoUrl || "/logo.png"} alt="IPC" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
-          {uiState.isSidebarOpen && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--primary)' }}>{globalSettings.companyName || "IPC ERP"}</motion.span>}
+          {shellView.sidebar && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--primary)' }}>{globalSettings.companyName || "IPC ERP"}</motion.span>}
         </div>
 
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
-          {navCategories.map((cat) => {
+          {appsPool.map((cat) => {
             const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
             const visibleItems = cat.items.filter(item => {
               if (userRole === 'SUPER_ADMIN') return true;
               return userPerms.allowedModules.includes(item.id) || item.roles.includes(userRole);
             });
             if (visibleItems.length === 0) return null;
-            const isExpanded = expandedNavLabels.includes(cat.label);
+            const isExpanded = openSections.includes(cat.label);
 
             return (
               <div key={cat.label} style={{ marginBottom: '0.5rem' }}>
-                {uiState.isSidebarOpen && (
-                  <div onClick={() => toggleCategory(cat.label)} style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                {shellView.sidebar && (
+                  <div onClick={() => toggleSection(cat.label)} style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                     {cat.label}
                     <ChevronDown size={12} style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.2s' }} />
                   </div>
                 )}
                 <AnimatePresence initial={false}>
-                  {(isExpanded || !uiState.isSidebarOpen) && (
-                    <motion.div initial={uiState.isSidebarOpen ? { height: 0, opacity: 0 } : {}} animate={uiState.isSidebarOpen ? { height: 'auto', opacity: 1 } : {}} exit={uiState.isSidebarOpen ? { height: 0, opacity: 0 } : {}} style={{ overflow: 'hidden' }}>
+                  {(isExpanded || !shellView.sidebar) && (
+                    <motion.div initial={shellView.sidebar ? { height: 0, opacity: 0 } : {}} animate={shellView.sidebar ? { height: 'auto', opacity: 1 } : {}} exit={shellView.sidebar ? { height: 0, opacity: 0 } : {}} style={{ overflow: 'hidden' }}>
                       {visibleItems.map((item) => (
                         <motion.div key={item.id} whileHover={{ x: 5 }} onClick={() => setActiveApp(item.id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem 1rem', marginBottom: '0.25rem', borderRadius: '0.6rem', cursor: 'pointer', color: activeApp === item.id ? 'var(--accent)' : 'var(--text-muted)', background: activeApp === item.id ? 'var(--bg)' : 'transparent', fontSize: '0.9rem' }}>
                           {item.icon}
-                          {uiState.isSidebarOpen && <span style={{ fontWeight: activeApp === item.id ? 700 : 500 }}>{item.label}</span>}
+                          {shellView.sidebar && <span style={{ fontWeight: activeApp === item.id ? 700 : 500 }}>{item.label}</span>}
                         </motion.div>
                       ))}
                     </motion.div>
@@ -227,7 +224,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
           <div onClick={() => { logout(); setView('login'); }} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <LogOut size={20} />
-            {uiState.isSidebarOpen && <span>Déconnexion</span>}
+            {shellView.sidebar && <span>Déconnexion</span>}
           </div>
         </div>
       </motion.aside>
@@ -235,27 +232,27 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <header className="glass" style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', borderBottom: '1px solid var(--border)', zIndex: 50 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <button onClick={() => setUiState(p => ({ ...p, isSidebarOpen: !p.isSidebarOpen }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center' }}>
-              {uiState.isSidebarOpen ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
+            <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center' }}>
+              {shellView.sidebar ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
             </button>
-            <div style={{ position: 'relative', flex: 1, minWidth: uiState.isMobile ? '40px' : '300px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '0.75rem', border: uiState.isSearchFocused ? '1px solid var(--accent)' : '1px solid var(--border)', width: '100%' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: shellView.mobile ? '40px' : '300px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '0.75rem', border: search.focused ? '1px solid var(--accent)' : '1px solid var(--border)', width: '100%' }}>
                 <Search size={18} color="var(--text-muted)" />
-                <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onFocus={() => setUiState(p => ({ ...p, isSearchFocused: true }))} onBlur={() => setTimeout(() => setUiState(p => ({ ...p, isSearchFocused: false })), 200)} placeholder="Rechercher..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%' }} />
+                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} onFocus={() => setSearch(p => ({ ...p, focused: true }))} onBlur={() => setTimeout(() => setSearch(p => ({ ...p, focused: false })), 200)} placeholder="Rechercher..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%' }} />
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button onClick={() => setUiState(p => ({ ...p, spotlightOpen: true }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
+            <button onClick={() => setShellView(p => ({ ...p, ai: true }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
               <Sparkles size={20} /> <span className="hide-mobile">IPC Intelligence</span>
             </button>
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>{theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}</button>
             <div style={{ position: 'relative' }}>
-               <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setUiState(p => ({ ...p, isNotificationsOpen: !p.isNotificationsOpen }))} />
-               <NotificationCenter isOpen={uiState.isNotificationsOpen} onClose={() => setUiState(p => ({ ...p, isNotificationsOpen: false }))} />
+               <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
+               <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
             </div>
-            <div onClick={() => setUiState(p => ({ ...p, isChatOpen: true }))} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)20', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}><MessageCircle size={18} /> Chat</div>
-            <div onClick={() => setUiState(p => ({ ...p, isProfileOpen: !p.isProfileOpen }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
+            <div onClick={() => setShellView(p => ({ ...p, chat: true }))} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)20', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}><MessageCircle size={18} /> Chat</div>
+            <div onClick={() => setShellView(p => ({ ...p, profile: !p.profile }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
           </div>
         </header>
 
@@ -266,10 +263,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         </div>
       </main>
 
-      <DetailOverlay isOpen={!!selectedRecord} onClose={() => setSelectedRecord(null)} record={selectedRecord} appId={detailContext.appId} subModule={detailContext.subModule} onUpdate={updateRecord} />
+      <DetailOverlay isOpen={!!details.record} onClose={() => setDetails(p => ({ ...p, record: null }))} record={details.record} appId={details.context.appId} subModule={details.context.subModule} onUpdate={updateRecord} />
       <WorkflowAssistant />
-      <TeamChat isOpen={uiState.isChatOpen} onClose={() => setUiState(p => ({ ...p, isChatOpen: false }))} theme={theme} />
-      <AIAssistant spotlightOpen={uiState.spotlightOpen} setSpotlightOpen={(val) => setUiState(p => ({ ...p, spotlightOpen: val }))} />
+      <TeamChat isOpen={shellView.chat} onClose={() => setShellView(p => ({ ...p, chat: false }))} theme={theme} />
+      <AIAssistant spotlightOpen={shellView.ai} setSpotlightOpen={(val) => setShellView(p => ({ ...p, ai: val }))} />
     </div>
   );
 };

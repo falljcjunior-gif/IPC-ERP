@@ -4,40 +4,31 @@ npm warn Unknown env config "node-linker". This will stop working in the next ma
 > vite build
 
 vite v8.0.8 building client environment for production...
-[2Ktransforming...✓ 2946 modules transformed.
-rendering chunks...
-computing gzip size...
-dist/index.html                          0.61 kB │ gzip:   0.34 kB
-dist/assets/index-Cdc1Xs4V.css           3.04 kB │ gzip:   1.21 kB
-dist/assets/typeof-DmQ5kzpc.js           0.27 kB │ gzip:   0.16 kB
-dist/assets/chunk-BEqpzyXh.js            0.81 kB │ gzip:   0.46 kB
-dist/assets/purify.es-aRXo1NJP.js       21.03 kB │ gzip:   8.47 kB
-dist/assets/index.es-BGKWrpyC.js       151.41 kB │ gzip:  48.88 kB
-dist/assets/html2canvas-4Zt2VKgv.js    199.56 kB │ gzip:  46.78 kB
-dist/assets/index-BSTeopGU.js        2,134.84 kB │ gzip: 592.16 kB
-
-[plugin builtin:vite-reporter] 
-(!) Some chunks are larger than 500 kB after minification. Consider:
-- Using dynamic import() to code-split the application
-- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
-- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✗ Build failed in 741ms
+[2Ktransforming...✓ 2971 modules transformed.
+✗ Build failed in 342ms
 error during build:
-Build failed with 1 error:
+Build failed with 2 errors:
 
-Error: [vite]: Rolldown failed to resolve import "jspdf-autotable" from "/Users/yomanraphael/develop/I.P.C/src/utils/PDFExporter.js".
-This is most likely unintended because it can break your application at runtime.
-If you do want to externalize this module explicitly add it to
-`build.rollupOptions.external`
-    at viteLog (file:///Users/yomanraphael/develop/I.P.C/node_modules/vite/dist/node/chunks/node.js:33047:57)
-    at file:///Users/yomanraphael/develop/I.P.C/node_modules/vite/dist/node/chunks/node.js:33083:71
-    at onwarn (file:///Users/yomanraphael/develop/I.P.C/node_modules/@vitejs/plugin-react/dist/index.js:40:7)
-    at file:///Users/yomanraphael/develop/I.P.C/node_modules/vite/dist/node/chunks/node.js:33083:28
-    at onRollupLog (file:///Users/yomanraphael/develop/I.P.C/node_modules/vite/dist/node/chunks/node.js:33078:63)
-    at onLog (file:///Users/yomanraphael/develop/I.P.C/node_modules/vite/dist/node/chunks/node.js:32847:4)
-    at file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/rolldown-build-DtGk-m96.mjs:50:26
-    at logger (file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/rolldown-build-DtGk-m96.mjs:41:3)
-    at onLog (file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/bindingify-input-options-DYpBf1OG.mjs:2015:32)
+[31m[builtin:vite-transform] Error:[0m Unexpected JSX expression
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/registry_init.js:44:11 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m44 │[0m [38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249mi[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249m:[0m[38;5;249m [0m<Home size={18} />[38;5;249m,[0m
+ [38;5;240m   │[0m           ─────────┬────────  
+ [38;5;240m   │[0m                    ╰────────── 
+ [38;5;240m   │[0m 
+ [38;5;240m   │[0m [38;5;115mHelp[0m: JSX syntax is disabled and should be enabled via the parser options
+[38;5;246m────╯[0m
+
+[31m[builtin:vite-transform] Error:[0m Unexpected JSX expression
+    [38;5;246m╭[0m[38;5;246m─[0m[38;5;246m[[0m src/services/Registry.js:38:28 [38;5;246m][0m
+    [38;5;246m│[0m
+ [38;5;246m38 │[0m [38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249m [0m[38;5;249mi[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249m:[0m[38;5;249m [0m[38;5;249mm[0m[38;5;249mo[0m[38;5;249md[0m[38;5;249mu[0m[38;5;249ml[0m[38;5;249me[0m[38;5;249m.[0m[38;5;249mi[0m[38;5;249mc[0m[38;5;249mo[0m[38;5;249mn[0m[38;5;249m [0m[38;5;249m|[0m[38;5;249m|[0m[38;5;249m [0m<Package size={18} />[38;5;249m,[0m
+ [38;5;240m   │[0m                            ──────────┬──────────  
+ [38;5;240m   │[0m                                      ╰──────────── 
+ [38;5;240m   │[0m 
+ [38;5;240m   │[0m [38;5;115mHelp[0m: JSX syntax is disabled and should be enabled via the parser options
+[38;5;246m────╯[0m
+
     at aggregateBindingErrorsIntoJsError (file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/error-w0u7biK-.mjs:48:18)
     at unwrapBindingResult (file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/error-w0u7biK-.mjs:18:128)
     at #build (file:///Users/yomanraphael/develop/I.P.C/node_modules/rolldown/dist/shared/rolldown-build-DtGk-m96.mjs:3313:34)
