@@ -52,13 +52,13 @@ const SectionHeader = ({ icon, title, subtitle, actions }) => (
    ════════════════════════════════════ */
 const Accounting = ({ onOpenDetail }) => {
   const { data, addRecord, updateRecord, formatCurrency, addAccountingEntry } = useBusiness();
-  const [tab, setTab] = useState('dashboard');
+  const [tab, setTab] = useState('plan');
   const [activeJournal, setActiveJournal] = useState('J-VT');
   const [modal, setModal] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { finance = {} } = data;
-  const { accounts = [], journals = [], entries = [], lines = [], invoices = [] } = finance;
+  const { accounts = [], journals = [], entries = [], lines = [] } = finance;
 
   /* ─── Saisie Grille State ─── */
   const [saisieLines, setSaisieLines] = useState([
@@ -87,9 +87,8 @@ const Accounting = ({ onOpenDetail }) => {
     const totalVentes = lines.filter(l => l.accountId.startsWith('7')).reduce((s, l) => s + parseFloat(l.credit), 0);
     const totalCharges = lines.filter(l => l.accountId.startsWith('6')).reduce((s, l) => s + parseFloat(l.debit), 0);
     const result = totalVentes - totalCharges;
-    const treasury = balance.filter(a => a.code.startsWith('5')).reduce((s, a) => s + a.solde, 0);
-    return { result, totalVentes, totalCharges, treasury };
-  }, [balance, lines]);
+    return { result, totalVentes, totalCharges };
+  }, [lines]);
 
   /* ─── Action Handlers ─── */
   const handleSaveSaisie = () => {
@@ -101,53 +100,16 @@ const Accounting = ({ onOpenDetail }) => {
     if (success) {
       setSaisieLines([{ accountId: '', label: '', debit: 0, credit: 0 }, { accountId: '', label: '', debit: 0, credit: 0 }]);
       setSaisieHeader({ libelle: '', date: new Date().toISOString().split('T')[0], piece: '' });
+      setTab('ledger');
     }
   };
 
   /* ═══════════ RENDERERS ═══════════ */
 
-  // 1. DASHBOARD
-  const renderDashboard = () => (
-    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <SectionHeader icon={<TrendingUp size={16}/>} title="Pilotage Financier" subtitle="Performance en temps réel" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Résultat Net" value={formatCurrency(kpis.result, true)} icon={<Target size={20}/>} color={kpis.result >= 0 ? "#10B981" : "#EF4444"} trend={0} trendType="up" sparklineData={[]} />
-        <KpiCard title="Chiffre d'Affaires" value={formatCurrency(kpis.totalVentes, true)} icon={<TrendingUp size={20}/>} color="#6366F1" trend={0} trendType="up" sparklineData={[]} />
-        <KpiCard title="Trésorerie Disponible" value={formatCurrency(kpis.treasury, true)} icon={<Landmark size={20}/>} color="#F59E0B" trend={0} trendType="up" sparklineData={[]} />
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
-           <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Calculator size={18} color="var(--accent)"/> Structure des Charges</h3>
-           <ResponsiveContainer width="100%" height={260}>
-              <RechartsPie>
-                <Pie 
-                  data={balance.filter(a => a.code.startsWith('6') && a.debit > 0)} 
-                  dataKey="debit" nameKey="label" cx="50%" cy="50%" outerRadius={80} label
-                >
-                  {balance.filter(a => a.code.startsWith('6')).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`hsl(${index * 45}, 70%, 50%)`} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </RechartsPie>
-           </ResponsiveContainer>
-        </div>
-        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
-           <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Radar Flux Bancaires</h3>
-           {/* Placeholder for complex banking charting */}
-           <div style={{ height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', border: '1px dashed var(--border)', borderRadius: '1rem' }}>
-              Interface bancaire connectée ... 
-           </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  // 2. PLAN COMPTABLE
+  // 1. PLAN COMPTABLE
   const renderPlanComptable = () => (
     <motion.div variants={fadeIn} initial="hidden" animate="show">
-      <SectionHeader icon={<ListFilter size={16}/>} title="Plan Comptable" subtitle="SYSCOHADA / PCG Standard" actions={[
+      <SectionHeader icon={<ListFilter size={16}/>} title="Plan de Comptes" subtitle="SYSCOHADA / PCG Standard" actions={[
         <button key="add" className="btn btn-primary" style={{ padding: '0.55rem 1rem' }}><Plus size={16}/> Ajouter un compte</button>
       ]} />
       
@@ -174,10 +136,10 @@ const Accounting = ({ onOpenDetail }) => {
     </motion.div>
   );
 
-  // 3. SAISIE JOURNAL (Sage-Style Grid)
+  // 2. SAISIE JOURNAL (Sage-Style Grid)
   const renderSaisie = () => (
     <motion.div variants={fadeIn} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <SectionHeader icon={<BookCopy size={16}/>} title="Saisie de Journal" subtitle="Écritures en partie double" />
+      <SectionHeader icon={<BookCopy size={16}/>} title="Nouvelle Écriture" subtitle="Saisie en partie double" />
       
       <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'var(--bg-subtle)' }}>
          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1.5fr', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -201,7 +163,6 @@ const Accounting = ({ onOpenDetail }) => {
             </div>
          </div>
 
-         {/* Grid Saisie */}
          <div style={{ background: 'var(--bg)', borderRadius: '1rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                <thead style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
@@ -271,14 +232,14 @@ const Accounting = ({ onOpenDetail }) => {
                </div>
             </div>
             <button onClick={handleSaveSaisie} className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>
-               Valider et Valider l'Écriture
+               Valider l'Écriture
             </button>
          </div>
       </div>
     </motion.div>
   );
 
-  // 4. BALANCE
+  // 3. BALANCE
   const renderBalance = () => (
     <motion.div variants={fadeIn} initial="hidden" animate="show">
       <SectionHeader icon={<Scale size={16}/>} title="Balance de Vérification" subtitle="Équilibre général des comptes" actions={[
@@ -326,9 +287,9 @@ const Accounting = ({ onOpenDetail }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2.5rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 900, letterSpacing: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Landmark size={32} color="var(--accent)"/> Comptabilité Sage Edition
+            <Landmark size={32} color="var(--accent)"/> Comptabilité Générale
           </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem', fontWeight: 500 }}>Gestion financière, lettrage et rapports certifiés</p>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.25rem', fontWeight: 500 }}>Plan de comptes, écritures et états financiers</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
            <button onClick={() => setTab('saisie')} className="btn btn-primary" style={{ padding: '0.75rem 1.5rem' }}><BookOpen size={18}/> Nouvelle Écriture</button>
@@ -336,18 +297,15 @@ const Accounting = ({ onOpenDetail }) => {
       </div>
 
       <TabBar tabs={[
-        { id: 'dashboard', label: 'Espace Pilotage', icon: <TrendingUp size={16}/> },
-        { id: 'saisie', label: 'Saisie Journal', icon: <BookCopy size={16}/> },
         { id: 'plan', label: 'Plan de Comptes', icon: <ListFilter size={16}/> },
-        { id: 'balance', label: 'Balance Générale', icon: <Scale size={16}/> },
+        { id: 'saisie', label: 'Saisie Journal', icon: <BookCopy size={16}/> },
+        { id: 'balance', label: 'Balance des Comptes', icon: <Scale size={16}/> },
         { id: 'ledger', label: 'Grand Livre', icon: <BookOpen size={16}/> },
         { id: 'reporting', label: 'Bilan & P&L', icon: <PieChart size={16}/> },
-        { id: 'invoices', label: 'Factures Clients', icon: <FileText size={16}/> },
       ]} active={tab} onChange={setTab} />
 
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-          {tab === 'dashboard' && renderDashboard()}
           {tab === 'plan' && renderPlanComptable()}
           {tab === 'saisie' && renderSaisie()}
           {tab === 'balance' && renderBalance()}
@@ -388,7 +346,6 @@ const Accounting = ({ onOpenDetail }) => {
              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
                    <SectionHeader icon={<FileCheck size={16}/>} title="Bilan (Actif/Passif)" subtitle="État du Patrimoine" />
-                   {/* Table Simplifiée pour le Bilan */}
                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1.5px solid var(--border)', fontWeight: 800 }}><span>Actif Immobilisé</span><span>{formatCurrency(balance.filter(b=>b.code.startsWith('2')).reduce((s,b)=>s+b.solde,0))}</span></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px solid var(--border)' }}><span>Stocks</span><span>{formatCurrency(balance.filter(b=>b.code.startsWith('3')).reduce((s,b)=>s+b.solde,0))}</span></div>
@@ -409,31 +366,6 @@ const Accounting = ({ onOpenDetail }) => {
                    </div>
                 </div>
              </div>
-          )}
-
-          {tab === 'invoices' && (
-            <div className="glass" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead style={{ background: 'var(--bg-subtle)' }}>
-                  <tr>{['Numéro', 'Client', 'Montant TTC', 'Statut', 'Actions'].map(h => <th key={h} style={{ padding: '1rem', textAlign: 'left' }}>{h}</th>)}</tr>
-                </thead>
-                <tbody>
-                  {invoices.map((inv, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '1rem', fontWeight: 800 }}>{inv.num}</td>
-                      <td style={{ padding: '1rem' }}>{inv.client}</td>
-                      <td style={{ padding: '1rem', fontWeight: 700 }}>{formatCurrency(inv.montant)}</td>
-                      <td style={{ padding: '1rem' }}><Chip label={inv.statut} color={inv.statut === 'Payé' ? '#10B981' : '#F59E0B'} /></td>
-                      <td style={{ padding: '1rem' }}>
-                        {inv.statut !== 'Payé' && (
-                          <button onClick={() => updateRecord('finance', 'invoices', inv.id, { statut: 'Payé' })} className="btn" style={{ fontSize: '0.7rem', padding: '0.3rem 0.6rem', border: '1px solid var(--accent)', color: 'var(--accent)' }}>Marquer Payé</button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
           )}
         </motion.div>
       </AnimatePresence>

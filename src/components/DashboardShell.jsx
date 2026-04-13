@@ -38,7 +38,9 @@ import {
   Sparkles,
   MessageCircle,
   Pin,
-  PinOff
+  PinOff,
+  CreditCard,
+  Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlobalDashboard from './GlobalDashboard';
@@ -46,6 +48,7 @@ import CRM from '../modules/CRM';
 import Sales from '../modules/Sales';
 import Inventory from '../modules/Inventory';
 import Accounting from '../modules/Accounting';
+import Finance from '../modules/Finance';
 import HR from '../modules/HR';
 import Production from '../modules/Production';
 import Project from '../modules/Project';
@@ -142,7 +145,8 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
     {
       label: 'Finance & Stratégie',
       items: [
-        { id: 'accounting', icon: <FileText size={18} />, label: 'Comptabilité', roles: ['ADMIN', 'FINANCE'] },
+        { id: 'finance', icon: <CreditCard size={18} />, label: 'Finance', roles: ['ADMIN', 'FINANCE'] },
+        { id: 'accounting', icon: <Landmark size={18} />, label: 'Comptabilité', roles: ['ADMIN', 'FINANCE'] },
         { id: 'expenses', icon: <Wallet size={18} />, label: 'Frais', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'] },
         { id: 'budget', icon: <PiggyBank size={18} />, label: 'Budget', roles: ['ADMIN', 'FINANCE'] },
         { id: 'contracts', icon: <FileSignature size={18} />, label: 'Contrats', roles: ['ADMIN', 'FINANCE', 'SALES'] },
@@ -203,6 +207,8 @@ const DashboardShell = ({ toggleTheme, theme, setView }) => {
         return <Sales {...commonProps} />;
       case 'inventory':
         return <Inventory {...commonProps} />;
+      case 'finance':
+        return <Finance {...commonProps} />;
       case 'accounting':
         return <Accounting {...commonProps} />;
       case 'hr':
