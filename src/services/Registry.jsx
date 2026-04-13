@@ -25,6 +25,16 @@ class ModuleRegistry {
     this.schemas = new Map();
   }
 
+  registerSchema(schema) {
+    if (!schema || !schema.id) return;
+    this.schemas.set(schema.id, schema);
+    return this;
+  }
+
+  getSchema(id) {
+    return this.schemas.get(id);
+  }
+
   /**
    * Register a new module/addon
    */
