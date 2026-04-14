@@ -36,7 +36,7 @@ import Manufacturing from './modules/production/Production';
 import Planning from './modules/Planning';
 import Analytics from './modules/Analytics';
 import StaffPortal from './modules/StaffPortal';
-import Connect from './modules/Connect';
+import Connect from './modules/connect/ConnectHub';
 import UserManagement from './modules/UserManagement';
 import History from './modules/History';
 import Workflows from './modules/Workflows';

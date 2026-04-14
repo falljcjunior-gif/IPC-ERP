@@ -136,6 +136,15 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
           const sales = data.sales?.orders || [];
           const total = sales.reduce((sum, s) => sum + (s.totalTTC || s.total || 0), 0);
           response = `Le chiffre d'affaires total est de **${total.toLocaleString()} FCFA**. Les performances du Hub Growth sont excellentes.`;
+        } else if (lowInput.includes('collègue') || lowInput.includes('annuaire') || lowInput.includes('equipe')) {
+           response = "Je peux vous aider à trouver un expert. Ouvrez l'**Annuaire Staff** pour voir le répertoire complet de l'entreprise.";
+           navigateTo('connect');
+        } else if (lowInput.includes('événement') || lowInput.includes('vie') || lowInput.includes('fête')) {
+           response = "Le pôle **IPC Life** regroupe tous les town halls et afterworks à venir. Une session stratégique est prévue le 24 Avril.";
+           navigateTo('connect');
+        } else if (lowInput.includes('mur') || lowInput.includes('succès') || lowInput.includes('annonce')) {
+           response = "Consultez le **Mur de l'Entreprise** pour voir les dernières victoires et annonces officielles.";
+           navigateTo('connect');
         } else if (lowInput.includes('va vers') || lowInput.includes('aller à') || lowInput.includes('ouvre')) {
            const appMap = { 
              'crm': 'crm', 'vente': 'sales', 
@@ -144,7 +153,8 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
              'finance': 'finance', 'compta': 'accounting', 'accounting': 'accounting', 'budget': 'budget',
              'stock': 'inventory', 'logistique': 'inventory', 'achat': 'purchase', 'supply': 'inventory',
              'projet': 'projects', 'delivery': 'projects',
-             'production': 'production', 'usine': 'production', 'industrial': 'production'
+             'production': 'production', 'usine': 'production', 'industrial': 'production',
+             'connect': 'connect', 'social': 'connect', 'message': 'connect'
            };
            const matched = Object.keys(appMap).find(k => lowInput.includes(k));
            if (matched) {

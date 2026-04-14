@@ -1,0 +1,194 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Send, MessageSquare, Search, User, Users, Paperclip, 
+  Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
+  Plus, Settings, ImageIcon, Clock, Hash, Shield
+} from 'lucide-react';
+import { useBusiness } from '../../../BusinessContext';
+import { db, auth } from '../../../firebase/config';
+import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
+import { webrtcService } from '../../../utils/WebRTCService';
+
+const MessengerTab = ({ onOpenDetail }) => {
+  const { currentUser, data, setActiveCall } = useBusiness();
+  const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
+  const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const scrollRef = useRef();
+  const inputRef = useRef();
+
+  // Mocked Workgroups (upgraded for high-fidelity)
+  const groups = [
+    { id: 'team_it', label: 'Équipe IT', type: 'team', lastMsg: 'Serveur déployé.', time: '10:45', members: 12 },
+    { id: 'team_sales', label: 'Équipe Ventes', type: 'team', lastMsg: 'Nouveau lead entrant.', time: '09:30', members: 8 },
+    { id: 'project_ipc', label: 'Projet IPC ERP', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier', members: 5 },
+  ];
+
+  const employees = data.hr?.employees || [];
+  const filteredContacts = useMemo(() => {
+    return employees
+      .filter(e => e.id !== currentUser.id)
+      .filter(e => e.nom.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [employees, currentUser.id, searchQuery]);
+
+  const getDmRoomId = (userId) => {
+    const ids = [currentUser.id, userId].sort();
+    return `dm_${ids[0]}_${ids[1]}`;
+  };
+
+  useEffect(() => {
+    if (!auth.currentUser || !activeRoom.id) return;
+    const q = query(
+      collection(db, 'messages'),
+      where('roomId', '==', activeRoom.id),
+      orderBy('createdAt', 'asc'),
+      limit(100)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+      setMessages(msgs);
+      setTimeout(() => {
+        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }, 100);
+    });
+    return () => unsubscribe();
+  }, [activeRoom.id]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !auth.currentUser) return;
+    try {
+      await addDoc(collection(db, 'messages'), {
+        text: newMessage,
+        roomId: activeRoom.id,
+        userId: currentUser.id,
+        userName: currentUser.nom,
+        createdAt: serverTimestamp()
+      });
+      setNewMessage('');
+      inputRef.current?.focus();
+    } catch (err) { console.error("Send Error:", err); }
+  };
+
+  const initiateCall = async (type) => {
+    if (activeRoom.type !== 'direct') return;
+    const parts = activeRoom.id.split('_');
+    const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+    try {
+      const callId = await webrtcService.createCall(currentUser.id, currentUser.nom, receiverId, type);
+      setActiveCall({ id: callId, role: 'caller', type, contactName: activeRoom.label });
+    } catch (err) { console.error("Call Error:", err); }
+  };
+
+  return (
+    <div style={{ display: 'flex', height: '100%', borderRadius: '2.5rem', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+      {/* Sidebar Area */}
+      <div style={{ width: '300px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-subtle)' }}>
+        <div style={{ padding: '2rem', borderBottom: '1px solid var(--border)' }}>
+          <h3 style={{ margin: '0 0 1rem 0', fontWeight: 900, fontSize: '1.25rem' }}>Messenger</h3>
+          <div style={{ display: 'flex', gap: '0.6rem', background: 'var(--bg)', padding: '0.6rem 1rem', borderRadius: '1rem', border: '1px solid var(--border)', alignItems: 'center' }}>
+            <Search size={16} color="var(--text-muted)" />
+            <input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Chercher..." style={{ background: 'none', border: 'none', outline: 'none', fontSize: '0.85rem', color: 'var(--text)', width: '100%' }} />
+          </div>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
+           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              {[
+                { id: 'chats', icon: <MessageSquare size={16} /> },
+                { id: 'contacts', icon: <User size={16} /> },
+                { id: 'groups', icon: <Users size={16} /> }
+              ].map(t => (
+                <button key={t.id} onClick={() => setActiveTab(t.id)} style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', background: activeTab === t.id ? '#8B5CF6' : 'white', color: activeTab === t.id ? 'white' : 'var(--text-muted)', cursor: 'pointer', transition: '0.2s' }}>
+                   {t.icon}
+                </button>
+              ))}
+           </div>
+
+           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {activeTab === 'chats' && groups.map(g => (
+                <div key={g.id} onClick={() => setActiveRoom(g)} style={{ padding: '1rem', borderRadius: '1.25rem', cursor: 'pointer', background: activeRoom.id === g.id ? 'white' : 'transparent', boxShadow: activeRoom.id === g.id ? 'var(--shadow-sm)' : 'none', transition: '0.2s' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.9rem' }}>{g.label}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>{g.time}</span>
+                   </div>
+                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{g.lastMsg}</div>
+                </div>
+              ))}
+
+              {activeTab === 'contacts' && filteredContacts.map(emp => (
+                <div key={emp.id} onClick={() => setActiveRoom({ id: getDmRoomId(emp.id), label: emp.nom, type: 'direct' })} style={{ padding: '0.75rem 1rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', background: activeRoom.id === getDmRoomId(emp.id) ? 'white' : 'transparent', borderBottom: '1px solid var(--border-subtle)' }}>
+                   <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.8rem' }}>{emp.nom[0]}</div>
+                   <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{emp.nom}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>{emp.poste}</div>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+      </div>
+
+      {/* Main Chat Area */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+         {/* Room Header */}
+         <div style={{ padding: '1.25rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+               <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem' }}>
+                  {activeRoom.label[0]}
+               </div>
+               <div>
+                  <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}>{activeRoom.label}</h4>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                     <Circle size={8} fill="#10B981" color="#10B981" />
+                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Actif</span>
+                  </div>
+               </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+               <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
+                  <button onClick={() => initiateCall('audio')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Phone size={20} /></button>
+                  <button onClick={() => initiateCall('video')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Video size={20} /></button>
+               </div>
+               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Settings size={20} /></button>
+            </div>
+         </div>
+
+         {/* Chat Messages */}
+         <div ref={scrollRef} style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'linear-gradient(to bottom, transparent, var(--bg-subtle))' }}>
+            {messages.map((msg, i) => {
+              const isMe = msg.userId === currentUser.id;
+              return (
+                <div key={msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                   <div style={{ padding: '1rem 1.25rem', borderRadius: '1.75rem', background: isMe ? '#8B5CF6' : 'white', color: isMe ? 'white' : 'var(--text)', border: isMe ? 'none' : '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.5, position: 'relative' }}>
+                      {msg.text}
+                      <div style={{ marginTop: '6px', fontSize: '0.65rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', opacity: 0.7 }}>
+                         {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Maintenant'} 
+                         {isMe && <CheckCheck size={12} />}
+                      </div>
+                   </div>
+                </div>
+              );
+            })}
+         </div>
+
+         {/* Message Input */}
+         <form onSubmit={sendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-subtle)', padding: '0.8rem 1.5rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
+               <Smile size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} />
+               <Paperclip size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} />
+               <input ref={inputRef} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Écrivez votre message..." style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '1rem', color: 'var(--text)', fontWeight: 500 }} />
+               <button type="submit" style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#8B5CF6', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }}>
+                  <Send size={20} />
+               </button>
+            </div>
+         </form>
+      </div>
+    </div>
+  );
+};
+
+export default MessengerTab;
