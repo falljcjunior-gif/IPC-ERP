@@ -11,8 +11,8 @@ import {
 
 // Core Components & Modules
 import GlobalDashboard from './components/GlobalDashboard';
-import CRM from './modules/CRM';
-import Sales from './modules/Sales';
+import CRM from './modules/crm/CRM';
+import Sales from './modules/sales/Sales';
 import Inventory from './modules/Inventory';
 import Accounting from './modules/Accounting';
 import Finance from './modules/Finance';
