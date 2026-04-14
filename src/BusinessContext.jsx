@@ -52,6 +52,16 @@ export const BusinessProvider = ({ children }) => {
       if (!merged.base.sequences) merged.base.sequences = mockData.base.sequences;
 
       if (merged.inventory) {
+        if (!merged.inventory.products || merged.inventory.products.length === 0) {
+          merged.inventory.products = merged.base.catalog.map(p => ({
+            ...p,
+            id: p.id || p.code,
+            code: p.code || p.sku,
+            stock: p.stock || 0,
+            alerte: p.alerte || 5,
+            coutUnit: p.prixAch || p.prix || 0
+          }));
+        }
         if (merged.inventory.moves && (!merged.inventory.movements || merged.inventory.movements.length === 0)) {
           merged.inventory.movements = merged.inventory.moves;
         }
@@ -323,6 +333,67 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction, addHint, generateInvoiceEntry]);
 
+  const applyStockMove = useCallback((movementData) => {
+    const { productId, qte, type, ref, source, dest } = movementData;
+    const qteNum = parseFloat(qte);
+    
+    setData(prev => {
+      // 1. Update Product Quantity
+      const products = prev.inventory?.products || [];
+      const product = products.find(p => p.id === productId || p.code === productId);
+      
+      if (!product) {
+        addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
+        return prev;
+      }
+
+      const isOut = ['Expédition', 'Consommation', 'Ajustement Sortie'].includes(type);
+      const newStock = isOut ? (product.stock || 0) - qteNum : (product.stock || 0) + qteNum;
+
+      const updatedProducts = products.map(p => 
+        (p.id === productId || p.code === productId) ? { ...p, stock: newStock } : p
+      );
+
+      // 2. Log Movement
+      const seqKey = 'inventory_movements';
+      const mvtNum = getNextSequence(seqKey);
+      const newMove = {
+        id: Date.now().toString(),
+        num: mvtNum,
+        date: new Date().toISOString(),
+        produit: product.nom,
+        produitId: product.id,
+        type,
+        qte: qteNum,
+        ref: ref || 'Interne',
+        source: source || 'Entrepôt Principal',
+        dest: dest || 'Client/Transit',
+        createdAt: new Date().toISOString()
+      };
+
+      // 3. Alerts Check
+      if (newStock <= (product.alerte || 0)) {
+        addHint({ 
+          title: "Alerte Stock Bas", 
+          message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, 
+          type: 'warning', 
+          appId: 'inventory' 
+        });
+      }
+
+      logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
+
+      return {
+        ...prev,
+        inventory: {
+          ...prev.inventory,
+          products: updatedProducts,
+          movements: [newMove, ...(prev.inventory?.movements || [])]
+        }
+      };
+    });
+  }, [getNextSequence, addHint, logAction]);
+
   const addRecord = useCallback((appId, subModule, inputData) => {
     let processedRecord = { ...inputData };
     if (!processedRecord.num || processedRecord.num === "") {
@@ -330,6 +401,7 @@ export const BusinessProvider = ({ children }) => {
       if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
     }
     const newRecord = { ...processedRecord, id: Date.now().toString(), createdAt: new Date().toISOString() };
+    
     setData(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
@@ -339,11 +411,18 @@ export const BusinessProvider = ({ children }) => {
       return nextState;
     });
 
-    // Handle initial accounting for Purchase/Sales if needed
-    if (appId === 'purchase' && subModule === 'orders') {
-       // Logic for purchase automation could be added here
+    // Integrated Stock Hook: If creating a movement directly, apply it
+    if (appId === 'inventory' && subModule === 'movements') {
+       applyStockMove({
+         productId: processedRecord.produitId || processedRecord.produit,
+         qte: processedRecord.qte,
+         type: processedRecord.type,
+         ref: processedRecord.ref,
+         source: processedRecord.source,
+         dest: processedRecord.dest
+       });
     }
-  }, [data.base?.sequences, logAction, getNextSequence]);
+  }, [data.base?.sequences, logAction, getNextSequence, applyStockMove]);
 
 
   /* ══════════════════════════════════════════════════════════════════════════

@@ -14,13 +14,13 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
-  const products = data?.base?.catalog || [];
+  const products = data?.inventory?.products || [];
   const warehouses = data?.inventory?.warehouses || [];
   
   const stats = useMemo(() => {
-    const alerts = products.filter(p => p.stock <= (p.alerte || 0)).length;
-    const valuation = products.reduce((s, p) => s + (p.stock || 0) * ((p.prixMoyen || 0) * 0.6), 0);
-    const rotation = 8.5; // Mock rotation index
+    const alerts = products.filter(p => (p.stock || 0) <= (p.alerte || 0)).length;
+    const valuation = products.reduce((s, p) => s + (p.stock || 0) * (p.coutUnit || 0), 0);
+    const rotation = 8.5; // Case index
     return { alerts, valuation, rotation };
   }, [products]);
 

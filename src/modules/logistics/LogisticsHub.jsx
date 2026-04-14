@@ -84,8 +84,14 @@ const LogisticsHub = ({ onOpenDetail }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Nouvelle Opération Logistique"
-        fields={[]} 
+        fields={[
+          { name: 'produitId', label: 'Article', type: 'selection', options: data.inventory?.products?.map(p => ({ value: p.id, label: p.nom })) || [] },
+          { name: 'type', label: 'Type de Mouvement', type: 'selection', options: ['Réception', 'Expédition', 'Consommation', 'Ajustement Entrée', 'Ajustement Sortie'] },
+          { name: 'qte', label: 'Quantité', type: 'number' },
+          { name: 'ref', label: 'Document Source (ex: BL-001)', type: 'text' }
+        ]} 
         onSave={(f) => {
+          addRecord('inventory', 'movements', f);
           setIsModalOpen(false);
         }}
       />
