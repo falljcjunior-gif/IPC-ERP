@@ -391,6 +391,49 @@ const Marketing = ({ onOpenDetail }) => {
     </motion.div>
   );
 
+  const renderConnect = () => (
+    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      {[
+        { id: 'fb', net: 'Facebook', icon: <Square size={24} />, color: '#1877F2', desc: 'Pages & Groupes' },
+        { id: 'ig', net: 'Instagram', icon: <Camera size={24} />, color: '#E4405F', desc: 'Profils Business' },
+        { id: 'li', net: 'LinkedIn', icon: <Briefcase size={24} />, color: '#0A66C2', desc: 'Profil & Pages' },
+        { id: 'tk', net: 'TikTok', icon: <Smartphone size={24} />, color: '#000000', desc: 'Comptes Créateurs' },
+        { id: 'ga', net: 'Google Ads', icon: <Globe size={24} />, color: '#4285F4', desc: 'Campagnes SEM' },
+        { id: 'wb', net: 'Site Web', icon: <Globe size={24} />, color: '#10B981', desc: 'Tracker Analytics' },
+      ].map(platform => {
+        const connected = accounts.find(a => a.reseau === platform.net && a.statut === 'Connecté');
+        return (
+          <motion.div key={platform.id} variants={fadeIn} whileHover={{ y: -5 }} className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: platform.color }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ background: `${platform.color}15`, padding: '0.75rem', borderRadius: '1rem', color: platform.color }}>
+                {platform.icon}
+              </div>
+              <Chip label={connected ? 'Actif' : 'Déconnecté'} color={connected ? '#10B981' : '#64748B'} />
+            </div>
+            <h5 style={{ margin: '0 0 0.25rem 0', fontWeight: 800 }}>{platform.net}</h5>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{platform.desc}</p>
+            
+            {connected ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>IPC</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{connected.nom}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Synchro il y a 5 min</div>
+                </div>
+                <button className="btn-icon" style={{ padding: '4px' }}><RefreshCcw size={14} /></button>
+              </div>
+            ) : (
+              <button className="btn-primary" style={{ width: '100%', background: platform.color, border: 'none' }}>
+                Connecter {platform.net}
+              </button>
+            )}
+          </motion.div>
+        );
+      })}
+    </motion.div>
+  );
+
   /* ═══ Main Render ═══ */
   const tabs = [
     { id: 'analytics', label: 'Dashboard', icon: <BarChart3 size={16} /> },
