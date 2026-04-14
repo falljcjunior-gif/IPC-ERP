@@ -4,11 +4,17 @@ import { auth } from './firebase/config';
 import PlatformShell from './components/PlatformShell';
 import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
+import { initRegistry } from './registry_init';
 import './index.css';
 
 function App() {
   const [view, setView] = useState('login'); // 'login', 'dashboard'
   const [isInitializing, setIsInitializing] = useState(true);
+
+  // Initialize Global Registry once at boot
+  useEffect(() => {
+    initRegistry();
+  }, []);
   
   const [theme, setTheme] = useState(() => {
     try {

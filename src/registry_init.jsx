@@ -61,10 +61,9 @@ import { adminSchema } from './schemas/admin.schema';
 /**
  * Initialize the Platform Registry with Enterprise Modules
  * This follows Odoo's 'manifest' pattern.
+ * Components are registered as types, Shell injects common props.
  */
-export const initRegistry = (onOpenDetail) => {
-  const common = { onOpenDetail };
-
+export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
@@ -74,142 +73,142 @@ export const initRegistry = (onOpenDetail) => {
   registry.register({
     id: 'home', label: 'Tableau de bord', icon: <Home size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'],
-    component: () => <GlobalDashboard />, priority: 1
+    component: GlobalDashboard, priority: 1
   });
 
   registry.register({
     id: 'crm', label: 'CRM', icon: <Users size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES'],
-    component: () => <CRM {...common} />, priority: 2
+    component: CRM, priority: 2
   });
 
   registry.register({
     id: 'sales', label: 'Ventes', icon: <ShoppingCart size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: () => <Sales {...common} />, priority: 3
+    component: Sales, priority: 3
   });
 
   registry.register({
     id: 'marketing', label: 'Marketing', icon: <Mail size={18} />,
     category: 'core', roles: ['ADMIN', 'HR', 'SALES'],
-    component: () => <Marketing {...common} />, priority: 4
+    component: Marketing, priority: 4
   });
 
   // --- Opérations & Logistique ---
   registry.register({
     id: 'inventory', label: 'Stocks', icon: <Package size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: () => <Inventory {...common} />, priority: 10
+    component: Inventory, priority: 10
   });
 
   registry.register({
     id: 'shipping', label: 'Expéditions', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: () => <Shipping {...common} />, priority: 11
+    component: Shipping, priority: 11
   });
 
   registry.register({
     id: 'purchase', label: 'Achats', icon: <ShoppingBag size={18} />,
     category: 'operations', roles: ['ADMIN', 'FINANCE'],
-    component: () => <Purchase {...common} />, priority: 12
+    component: Purchase, priority: 12
   });
 
   registry.register({
     id: 'production', label: 'Production', icon: <Factory size={18} />,
     category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'],
-    component: () => <Production {...common} />, priority: 13
+    component: Production, priority: 13
   });
 
   registry.register({
     id: 'projects', label: 'Projets', icon: <Briefcase size={18} />,
     category: 'operations', roles: ['ADMIN', 'FINANCE', 'SALES'],
-    component: () => <Project {...common} />, priority: 14
+    component: Project, priority: 14
   });
 
   // --- Finance & Stratégie ---
   registry.register({
     id: 'finance', label: 'Finance', icon: <CreditCard size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: () => <Finance {...common} />, priority: 20
+    component: Finance, priority: 20
   });
 
   registry.register({
     id: 'accounting', label: 'Comptabilité', icon: <LandmarkIcon size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: () => <Accounting {...common} />, priority: 21
+    component: Accounting, priority: 21
   });
 
   registry.register({
     id: 'budget', label: 'Budget', icon: <PiggyBank size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: () => <Budget {...common} />, priority: 22
+    component: Budget, priority: 22
   });
 
   registry.register({
     id: 'expenses', label: 'Notes de Frais', icon: <Wallet size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE', 'HR', 'STAFF'],
-    component: () => <Expenses {...common} />, priority: 23
+    component: Expenses, priority: 23
   });
 
   registry.register({
     id: 'bi', label: 'Business Intelligence', icon: <PieChart size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE', 'SALES'],
-    component: () => <BI />, priority: 24
+    component: BI, priority: 24
   });
 
   registry.register({
     id: 'analytics', label: 'Analyses IP', icon: <BarChart3 size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: () => <Analytics />, priority: 25
+    component: Analytics, priority: 25
   });
 
   // --- RH & Collaboration ---
   registry.register({
     id: 'hr', label: 'RH', icon: <Users2 size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
-    component: () => <HR {...common} />, priority: 30
+    component: HR, priority: 30
   });
 
   registry.register({
     id: 'dms', label: 'G.E.D', icon: <Folder size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR', 'FINANCE', 'SALES', 'STAFF'],
-    component: () => <DMS />, priority: 35
+    component: DMS, priority: 35
   });
 
   registry.register({
     id: 'staff_portal', label: 'Portail Employé', icon: <UserCircle size={18} />,
     category: 'hr', roles: ['STAFF', 'ADMIN', 'HR'],
-    component: () => <StaffPortal />, priority: 36
+    component: StaffPortal, priority: 36
   });
 
   // --- Configuration & Admin ---
   registry.register({
     id: 'masterdata', label: 'Données Maîtres', icon: <Layout size={18} />,
     category: 'admin', roles: ['ADMIN'],
-    component: () => <MasterData {...common} />, priority: 90
+    component: MasterData, priority: 90
   });
 
   registry.register({
     id: 'history', label: 'Historique & Audit', icon: <HistoryIcon size={18} />,
     category: 'admin', roles: ['SUPER_ADMIN'],
-    component: () => <History />, priority: 91
+    component: History, priority: 91
   });
 
   registry.register({
     id: 'studio', label: 'IPC Studio', icon: <Zap size={18} />,
     category: 'admin', roles: ['SUPER_ADMIN'],
-    component: () => <Studio />, priority: 95
+    component: Studio, priority: 95
   });
 
   registry.register({
     id: 'user_management', label: 'Gestion Utilisateurs', icon: <ShieldCheck size={18} />,
     category: 'admin', roles: ['SUPER_ADMIN'],
-    component: () => <UserManagement {...common} />, priority: 100
+    component: UserManagement, priority: 100
   });
 
   registry.register({
     id: 'settings', label: 'Paramètres', icon: <Settings size={18} />,
     category: 'admin', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'],
-    component: () => <SettingsModule {...common} />, priority: 101
+    component: SettingsModule, priority: 101
   });
 };

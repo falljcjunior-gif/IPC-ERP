@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Calendar, Wallet, Plus, Mail, Phone, Briefcase, Clock,
-  CheckCircle2, AlertCircle, ChevronRight, BarChart3, TrendingUp,
+  CheckCircle2, AlertCircle, ChevronRight, BarChart3, TrendingUp, TrendingDown,
   Award, BookOpen, Search, Filter, Activity, BarChart2, Layers
 } from 'lucide-react';
 import {

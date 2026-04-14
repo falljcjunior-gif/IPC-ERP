@@ -4,7 +4,7 @@ import {
   Factory, Layers, CreditCard, Landmark, Wallet, PiggyBank, 
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
-  Settings, MessageCircle, Pin, PinOff, Terminal
+  Settings, MessageCircle, Pin, PinOff
 } from 'lucide-react';
 
 /**

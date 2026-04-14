@@ -96,9 +96,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, []);
 
   useEffect(() => {
-    initRegistry(openDetail);
+    // Registry is now initialized at App level. 
+    // We just need to sync the appsPool here.
     setAppsPool(registry.getModulesByCategory());
-  }, [openDetail]);
+  }, []);
 
   const toggleSection = (label) => {
     setOpenSections(prev => 
@@ -111,53 +112,36 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, [search.query, globalSearch]);
 
   const renderContent = () => {
-    const commonProps = { onOpenDetail: openDetail };
+    // 1. Check Registry First (Primary)
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
       const RegComponent = regModule.component;
-      return <RegComponent />;
+      return <RegComponent {...commonProps} />;
     }
 
-    switch (activeApp) {
-      case 'home': return <GlobalDashboard />;
-      case 'sales': return <Sales {...commonProps} />;
-      case 'inventory': return <Inventory {...commonProps} />;
-      case 'finance': return <Finance {...commonProps} />;
-      case 'accounting': return <Accounting {...commonProps} />;
-      case 'hr': return <HR {...commonProps} />;
-      case 'production': return <Production {...commonProps} />;
-      case 'projects': return <Project {...commonProps} />;
-      case 'purchase': return <Purchase {...commonProps} />;
-      case 'shipping': return <Shipping {...commonProps} />;
-      case 'marketing': return <Marketing {...commonProps} />;
-      case 'bi': return <BI />;
-      case 'masterdata': return <MasterData {...commonProps} />;
-      case 'calendar': return <Calendar />;
-      case 'helpdesk': return <Helpdesk {...commonProps} />;
-      case 'timesheets': return <Timesheets />;
-      case 'fleet': return <Fleet {...commonProps} />;
-      case 'quality': return <Quality {...commonProps} />;
-      case 'expenses': return <Expenses {...commonProps} />;
-      case 'budget': return <Budget />;
-      case 'dms': return <DMS />;
-      case 'contracts': return <Contracts {...commonProps} />;
-      case 'manufacturing': return <Manufacturing {...commonProps} />;
-      case 'planning': return <Planning />;
-      case 'analytics': return <Analytics />;
-      case 'settings': return <SettingsModule />;
-      case 'studio': return <Studio />;
-      case 'user_management': return <UserManagement />;
-      case 'history': return <History />;
-      case 'workflows': return <Workflows />;
-      case 'staff_portal': return <StaffPortal />;
-      default:
-        return (
-          <div style={{ padding: '2.5rem' }}>
-            <h1 style={{ fontSize: '2rem' }}>Module {activeApp}</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Moteur de plateforme en cours de chargement...</p>
-          </div>
-        );
+    // 2. Handle specific internal states (if any)
+    if (activeApp === 'home') {
+      return <GlobalDashboard />;
     }
+
+    // 3. Fallback / Loading
+    return (
+      <div style={{ 
+        height: '100%', display: 'flex', flexDirection: 'column', 
+        alignItems: 'center', justifyContent: 'center', gap: '1.5rem',
+        opacity: 0.6
+      }}>
+        <div className="spinner" style={{ 
+          width: '40px', height: '40px', border: '3px solid var(--border)', 
+          borderTop: '3px solid var(--accent)', borderRadius: '50%' 
+        }} />
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Initialisation du Module {activeApp}</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Moteur de plateforme IPC Intelligence en cours de chargement...</p>
+        </div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spinner { animation: spin 0.8s linear infinite; }`}</style>
+      </div>
+    );
   };
 
   return (
