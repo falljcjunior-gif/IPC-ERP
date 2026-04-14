@@ -16,7 +16,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const AnalyticsTab = ({ data, formatCurrency }) => {
-  const orders = data?.production?.orders || [];
+  const orders = data?.production?.workOrders || [];
   
   const industrialKPIs = {
     oee: 84, // Overall Equipment Effectiveness

@@ -32,7 +32,7 @@ const Production = ({ onOpenDetail }) => {
   ];
 
   const modalConfig = {
-    workOrders: { title: 'Nouvel Ordre de Fab.', schema: productionSchema.models.orders },
+    workOrders: { title: 'Nouvel Ordre de Fab.', schema: productionSchema.models.workOrders },
     boms: { title: 'Nouvelle Nomenclature', schema: productionSchema.models.boms }
   };
 

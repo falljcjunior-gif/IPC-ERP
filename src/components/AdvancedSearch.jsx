@@ -31,7 +31,7 @@ const AdvancedSearch = ({
 
         // Try to match filters
         filters.forEach(f => {
-          if (searchValue.toLowerCase().includes(f.label.toLowerCase()) && !activeFilters.includes(f.id)) {
+          if (f?.label && searchValue?.toLowerCase().includes(f.label.toLowerCase()) && !activeFilters.includes(f.id)) {
             toggleFilter(f);
             newSearchValue = newSearchValue.replace(new RegExp(f.label, 'gi'), '').trim();
             found = true;
@@ -40,7 +40,7 @@ const AdvancedSearch = ({
 
         // Try to match groups
         groups.forEach(g => {
-          if (searchValue.toLowerCase().includes(g.label.toLowerCase()) && activeGroup !== g.id) {
+          if (g?.label && searchValue?.toLowerCase().includes(g.label.toLowerCase()) && activeGroup !== g.id) {
             selectGroup(g);
             newSearchValue = newSearchValue.replace(new RegExp(g.label, 'gi'), '').trim();
             found = true;
