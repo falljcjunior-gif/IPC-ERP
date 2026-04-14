@@ -62,6 +62,16 @@ export const marketingSchema = {
         slug: { label: 'Code unique', type: 'text', required: true },
         clicks: { label: 'Clics totaux', type: 'number', default: 0 }
       }
+    },
+    messages: {
+      label: 'Interactions Sociales',
+      fields: {
+        sender: { label: 'Expéditeur', type: 'text', required: true },
+        source: { label: 'Plateforme', type: 'selection', options: ['Facebook', 'Instagram', 'WhatsApp', 'LinkedIn'] },
+        content: { label: 'Message', type: 'textarea', required: true },
+        timestamp: { label: 'Date/Heure', type: 'datetime', default: 'now' },
+        statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Répondu', 'Archivé'], default: 'Nouveau' }
+      }
     }
   }
 };
