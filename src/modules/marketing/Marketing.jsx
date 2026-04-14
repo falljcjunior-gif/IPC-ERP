@@ -168,6 +168,7 @@ const Marketing = () => {
           {mainTab === 'inbox' && <InboxTab messages={messages} />}
           {mainTab === 'strategy' && <StrategyTab predictionData={predictionData} formatCurrency={formatCurrency} />}
           {mainTab === 'planning' && <PlanningTab posts={posts} setModalMode={setModalMode} setIsModalOpen={setIsModalOpen} />}
+          {mainTab === 'ads' && <AdsTab campaigns={campaigns} formatCurrency={formatCurrency} />}
           {mainTab === 'connect' && <ConnectTab accounts={accounts} apiKeys={apiKeys} />}
         </motion.div>
       </AnimatePresence>
