@@ -9,38 +9,6 @@ import {
   Pin, PinOff, CreditCard, Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlobalDashboard from './GlobalDashboard';
-import CRM from '../modules/CRM';
-import Sales from '../modules/Sales';
-import Inventory from '../modules/Inventory';
-import Accounting from '../modules/Accounting';
-import Finance from '../modules/Finance';
-import HR from '../modules/HR';
-import Production from '../modules/Production';
-import Project from '../modules/Project';
-import Purchase from '../modules/Purchase';
-import Marketing from '../modules/Marketing';
-import BI from '../modules/BI';
-import MasterData from '../modules/MasterData';
-import Calendar from '../modules/Calendar';
-import Helpdesk from '../modules/Helpdesk';
-import Timesheets from '../modules/Timesheets';
-import Fleet from '../modules/Fleet';
-import Quality from '../modules/Quality';
-import Expenses from '../modules/Expenses';
-import Budget from '../modules/Budget';
-import DMS from '../modules/DMS';
-import Contracts from '../modules/Contracts';
-import Manufacturing from '../modules/Manufacturing';
-import Planning from '../modules/Planning';
-import Analytics from '../modules/Analytics';
-import StaffPortal from '../modules/StaffPortal';
-import UserManagement from '../modules/UserManagement';
-import History from '../modules/History';
-import Workflows from '../modules/Workflows';
-import SettingsModule from '../modules/Settings';
-import Shipping from '../modules/Shipping';
-import Studio from '../modules/Studio';
 import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
 import { initRegistry } from '../registry_init';
@@ -51,6 +19,7 @@ import NotificationCenter from './NotificationCenter';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
+import MobileNavbar from './MobileNavbar';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (V1.2 - CLEAN)
@@ -128,12 +97,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       return <RegComponent {...commonProps} />;
     }
 
-    // 2. Handle specific internal states (if any)
-    if (activeApp === 'home') {
-      return <GlobalDashboard />;
-    }
-
-    // 3. Fallback / Loading
+    // 2. Fallback / Loading
     return (
       <div style={{ 
         height: '100%', display: 'flex', flexDirection: 'column', 
@@ -286,6 +250,15 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <WorkflowAssistant />
       <TeamChat isOpen={shellView.chat} onClose={() => setShellView(p => ({ ...p, chat: false }))} theme={theme} />
       <AIAssistant spotlightOpen={shellView.ai} setSpotlightOpen={(val) => setShellView(p => ({ ...p, ai: val }))} />
+      
+      {shellView.mobile && (
+        <MobileNavbar 
+          activeApp={activeApp} 
+          setActiveApp={setActiveApp} 
+          onOpenAI={() => setShellView(p => ({ ...p, ai: true }))}
+          onOpenSearch={() => setSearch(p => ({ ...p, focused: true }))}
+        />
+      )}
     </div>
   );
 };

@@ -228,4 +228,19 @@ a {
   .hide-mobile { display: none !important; }
   h1 { font-size: 1.75rem !important; }
   .container { padding: 0 1rem; }
+  
+  /* Mobile Hub Optimizations */
+  main {
+    padding-bottom: 100px !important; /* Spacing for Mobile Navbar */
+  }
+  
+  .glass {
+    border-radius: 1.25rem;
+  }
+  
+  /* Horizontal Scroll for high-density tables on mobile */
+  .enterprise-view-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
