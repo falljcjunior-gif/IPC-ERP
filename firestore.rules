@@ -37,6 +37,7 @@ service cloud.firestore {
         collectionName == 'messages' ||
         collectionName == 'base' ||
         collectionName == 'workflows' ||
+        collectionName == 'marketing' ||
         collectionName == 'hr'
       );
     }
