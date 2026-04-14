@@ -1,435 +1,335 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Megaphone, BarChart3, Plus, Eye, MousePointer2, TrendingUp, TrendingDown,
   ChevronRight, MoreVertical, Zap, Users, DollarSign, Target, Share2,
   Mail, Globe, Smartphone, Monitor, Activity, ArrowUpRight, Star,
-  CheckCircle2, AlertTriangle, RefreshCcw, BarChart2, CreditCard
+  CheckCircle2, AlertTriangle, RefreshCcw, BarChart2, CreditCard,
+  Calendar as CalendarIcon, MessageSquare, Link as LinkIcon, Camera,
+  Square, Briefcase, Send, Clock, Filter, Search, MoreHorizontal, Grid
 } from 'lucide-react';
 
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, CartesianGrid, LineChart, Line, Legend, Cell, ComposedChart,
-  PieChart, Pie, FunnelChart, Funnel, LabelList
+  PieChart, Pie, ScatterChart, Scatter, ZAxis
 } from 'recharts';
 import { useBusiness } from '../BusinessContext';
+import { marketingSchema } from '../schemas/marketing.schema';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 
-/* ─── Shared helpers ─── */
+/* ─── Shared UI Helpers ─── */
 const fadeIn = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } };
-const container = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } };
 
 const Chip = ({ label, color = '#64748B' }) => (
   <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 10px', borderRadius: '999px', background: `${color}18`, color, fontSize: '0.72rem', fontWeight: 700 }}>{label}</span>
 );
 
 const TabBar = ({ tabs, active, onChange }) => (
-  <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.9rem', border: '1px solid var(--border)', gap: '0.2rem', width: 'fit-content', flexWrap: 'wrap' }}>
+  <div className="glass" style={{ display: 'flex', padding: '0.4rem', borderRadius: '1rem', gap: '0.4rem', width: 'fit-content', border: '1px solid var(--border)' }}>
     {tabs.map(t => (
       <button key={t.id} onClick={() => onChange(t.id)}
-        style={{ padding: '0.5rem 1.1rem', borderRadius: '0.7rem', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem',
-          background: active === t.id ? 'var(--bg)' : 'transparent',
-          color: active === t.id ? 'var(--accent)' : 'var(--text-muted)',
-          display: 'flex', alignItems: 'center', gap: '0.4rem',
-          boxShadow: active === t.id ? '0 1px 4px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+        style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+          background: active === t.id ? 'var(--accent)' : 'transparent',
+          color: active === t.id ? 'white' : 'var(--text-muted)',
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
         {t.icon} {t.label}
       </button>
     ))}
   </div>
 );
 
-const ChartTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', fontSize: '0.8rem' }}>
-      <p style={{ fontWeight: 700, marginBottom: '4px' }}>{label}</p>
-      {payload.map((p, i) => <p key={i} style={{ color: p.color, margin: '2px 0' }}>{p.name}: {p.value?.toLocaleString?.('fr-FR') ?? p.value}</p>)}
-    </div>
-  );
-};
-
 /* ════════════════════════════════
-   MARKETING MODULE
-════════════════════════════════ */
+   MARKETING MODULE (IPC GROWTH)
+   Inspiré par Metricool
+   ════════════════════════════════ */
 const Marketing = ({ onOpenDetail }) => {
   const { data, addRecord, formatCurrency } = useBusiness();
-  const [mainTab, setMainTab] = useState('leadgen');
-  const [campaignModal, setCampaignModal] = useState(false);
+  const [mainTab, setMainTab] = useState('analytics');
+  const [subNetwork, setSubNetwork] = useState('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('posts'); // 'posts' | 'campaigns' | 'smartlinks'
 
+  // Data Selectors
   const campaigns = useMemo(() => data?.marketing?.campaigns || [], [data?.marketing?.campaigns]);
-  const opportunities = useMemo(() => data?.crm?.opportunities || [], [data?.crm?.opportunities]);
+  const posts = useMemo(() => data?.marketing?.posts || [], [data?.marketing?.posts]);
   const leads = useMemo(() => data?.crm?.leads || [], [data?.crm?.leads]);
+  const accounts = useMemo(() => data?.marketing?.accounts || [
+    { id: '1', nom: 'IPC Facebook', reseau: 'Facebook', statut: 'Connecté' },
+    { id: '2', nom: 'IPC Instagram', reseau: 'Instagram', statut: 'Connecté' },
+    { id: '3', nom: 'IPC LinkedIn', reseau: 'LinkedIn', statut: 'Déconnecté' },
+    { id: '4', nom: 'IPC TikTok', reseau: 'TikTok', statut: 'Connecté' }
+  ], [data?.marketing?.accounts]);
 
-  /* ─── Computed ─── */
-  const mktStats = useMemo(() => {
-    const mql = leads.filter(l => l.statut === 'En cours').length;
-    const sql = leads.filter(l => l.statut === 'Assigné').length;
-    const clients = leads.filter(l => l.statut === 'Terminé' || l.statut === 'Converti').length;
-    
-    const totalBudget = campaigns.reduce((s, c) => s + (Number(c.budget) || 0), 0);
-    const budgetAlloc = data?.budget?.marketingAlloc || 10000000; // Baseline 10M
-    const budgetPct   = totalBudget > 0 ? Math.round((totalBudget / budgetAlloc) * 100) : 0;
-    
-    // Global Revenue from Marketing attribution
-    const mktRevenue = opportunities
-      .filter(o => o.etape === 'Gagné' && o.campagne_id)
-      .reduce((s, o) => s + (Number(o.montant) || 0), 0);
-    
-    const roiGlobal = totalBudget > 0 ? Number(((mktRevenue - totalBudget) / totalBudget).toFixed(1)) : 0;
-    const cac = clients > 0 ? Math.round(totalBudget / clients) : 0;
-    const cpl = mql > 0 ? Math.round(totalBudget / mql) : 0;
-    const convVisiteur = leads.length > 0 ? Math.round((mql / leads.length) * 100) : 0;
+  /* ─── Metricool Analytics Mock Data ─── */
+  const evolutionData = [
+    { date: '01/04', followers: 12400, engagement: 4.2 },
+    { date: '05/04', followers: 12850, engagement: 4.5 },
+    { date: '10/04', followers: 13100, engagement: 4.1 },
+    { date: '15/04', followers: 13600, engagement: 4.8 },
+    { date: '20/04', followers: 14200, engagement: 5.2 },
+  ];
 
-    return { mql, sql, clients, convVisiteur, cac, cpl, totalBudget, budgetAlloc, budgetPct, roiGlobal, mktRevenue };
-  }, [leads, campaigns, opportunities, data?.budget?.marketingAlloc]);
-
-  /* ─── Channel ROI Data ─── */
-  const channelROI = [];
-
-  /* ─── Lead Funnel Monthly ─── */
-  const leadFunnel = [];
-
-  /* ─── Digital Engagement ─── */
-  const webTrend = [];
-
-  const emailStats = [];
-
-  const socialData = [];
-
-  /* ─── Modal Fields ─── */
-  const modalFields = [
-    { name: 'nom',    label: 'Nom de la Campagne', required: true, placeholder: 'Ex: Lancement Été 2026' },
-    { name: 'type',   label: 'Type de Canal', type: 'selection', options: ['LinkedIn Ads', 'Facebook Ads', 'Google Ads', 'Instagram', 'TikTok', 'E-mailing', 'SEO', 'Partenaire'], required: true },
-    { name: 'budget', label: 'Budget Publicitaire (FCFA)', type: 'money', required: true },
-    { name: 'url_source', label: 'Lien de la Pub (Base URL)', type: 'text', placeholder: 'https://votresite.com/produit' },
-    { name: 'statut', label: 'Statut', type: 'selection', options: ['Planifié', 'En cours', 'Terminé', 'En pause'], required: true },
-    { name: 'objectifMql', label: 'Objectif MQL', type: 'number' },
-    { name: 'vues',   label: 'Objectif Vues', type: 'number' },
+  const heatmapData = [
+    { hour: '0h', mon: 10, tue: 15, wed: 8, thu: 12, fri: 20, sat: 40, sun: 35 },
+    { hour: '8h', mon: 50, tue: 60, wed: 55, thu: 70, fri: 65, sat: 30, sun: 25 },
+    { hour: '12h', mon: 80, tue: 85, wed: 90, thu: 88, fri: 92, sat: 60, sun: 55 },
+    { hour: '18h', mon: 95, tue: 98, wed: 96, thu: 99, fri: 100, sat: 80, sun: 75 },
+    { hour: '21h', mon: 70, tue: 65, wed: 75, thu: 72, fri: 85, sat: 90, sun: 95 },
   ];
 
   /* ════════════════════════════
-     SUB-VIEW: LEAD GEN
-  ════════════════════════════ */
-  const renderLeadGen = () => (
+     TAB: ANALYTICS (DASHBOARD)
+     ════════════════════════════ */
+  const renderAnalytics = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Visiteurs Mensuels"    value="0"                                        trend={0} trendType="up"   icon={<Globe size={20} />}    color="#3B82F6" sparklineData={[]} />
-        <KpiCard title="MQL (Leads Marketing)" value={mktStats.mql}                             trend={0} trendType="up"   icon={<Users size={20} />}    color="#8B5CF6" sparklineData={[]} />
-        <KpiCard title="SQL (Acceptés Ventes)" value={mktStats.sql}                             trend={0} trendType="up"   icon={<Target size={20} />}   color="#10B981" sparklineData={[]} />
-        <KpiCard title="Taux Conv. Visiteur→MQL" value={`${mktStats.convVisiteur}%`}            trend={0}  trendType="up"   icon={<Activity size={20} />} color="#F59E0B" sparklineData={[]} />
-        <KpiCard title="Coût par Lead (CPL)"   value={formatCurrency(mktStats.cpl)}             trend={0} trendType="down" icon={<Zap size={20} />}      color="#EF4444" sparklineData={[]} />
-        <KpiCard title="Clients Signés"          value={mktStats.clients}                       trend={0}  trendType="up"   icon={<CheckCircle2 size={20}/>}color="#EC4899" sparklineData={[]} />
-      </motion.div>
-
-      {/* Funnel Chart */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Évolution MQL → SQL → Clients (7 Mois)</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <ComposedChart data={leadFunnel}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-              <YAxis yAxisId="left"  axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
-              <Bar     yAxisId="left"  dataKey="mql"     name="MQL"     fill="#8B5CF630" radius={[4,4,0,0]} barSize={20} />
-              <Bar     yAxisId="left"  dataKey="sql"     name="SQL"     fill="#3B82F6"   radius={[4,4,0,0]} barSize={20} />
-              <Line    yAxisId="right" dataKey="clients" name="Clients" stroke="#10B981" strokeWidth={2.5} dot={{ r: 4, fill: '#10B981' }} />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Conversion Funnel */}
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Entonnoir de Conversion</h4>
-          {[
-            { label: 'Visiteurs', val: 0, pct: 0, color: '#3B82F6' },
-            { label: 'MQL',       val: mktStats.mql, pct: 0, color: '#8B5CF6' },
-            { label: 'SQL',       val: mktStats.sql, pct: 0, color: '#F59E0B' },
-            { label: 'Clients',   val: mktStats.clients, pct: 0, color: '#10B981' },
-          ].map((step, i, arr) => (
-            <div key={i} style={{ marginBottom: '0.85rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '4px' }}>
-                <span style={{ fontWeight: 600 }}>{step.label}</span>
-                <span style={{ color: step.color, fontWeight: 700 }}>{step.val.toLocaleString('fr-FR')}</span>
-              </div>
-              <div style={{ height: '10px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${step.pct}%` }} transition={{ duration: 1, delay: i * 0.15 }}
-                  style={{ height: '100%', background: step.color, borderRadius: '999px' }} />
-              </div>
-              {i < arr.length - 1 && (
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'right', marginTop: '2px' }}>
-                  → {step.pct}% conv.
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Campaigns Table */}
-      <motion.div variants={fadeIn}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h4 style={{ fontWeight: 700, fontSize: '0.95rem' }}>Campagnes Actives</h4>
-          <button onClick={() => setCampaignModal(true)} className="glass" style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.4rem 0.9rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}>
-            <Plus size={14} /> Nouvelle Campagne
+      {/* Network Filter */}
+      <div style={{ display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {[
+          { id: 'all', label: 'Vue Globale', icon: <Grid size={16} /> },
+          { id: 'facebook', label: 'Facebook', icon: <Square size={16} color="#1877F2" /> },
+          { id: 'instagram', label: 'Instagram', icon: <Camera size={16} color="#E4405F" /> },
+          { id: 'linkedin', label: 'LinkedIn', icon: <Briefcase size={16} color="#0A66C2" /> },
+          { id: 'tiktok', label: 'TikTok', icon: <Smartphone size={16} color="#000000" /> },
+          { id: 'web', label: 'Site Web', icon: <Globe size={16} color="#3B82F6" /> },
+        ].map(net => (
+          <button key={net.id} onClick={() => setSubNetwork(net.id)}
+            style={{ 
+              display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1.2rem', 
+              borderRadius: '2rem', border: '1px solid var(--border)', cursor: 'pointer',
+              background: subNetwork === net.id ? 'var(--bg-subtle)' : 'transparent',
+              fontWeight: 700, fontSize: '0.82rem', transition: '0.2s', whiteSpace: 'nowrap',
+              boxShadow: subNetwork === net.id ? 'inset 0 2px 4px rgba(0,0,0,0.05)' : 'none'
+            }}>
+            {net.icon} {net.label}
           </button>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: '1rem' }}>
-          {[...campaigns, ...Array(Math.max(0, 3 - campaigns.length)).fill(null)].filter(Boolean).map((camp, i) => (
-            <motion.div key={i} variants={fadeIn} whileHover={{ y: -3 }} onClick={() => onOpenDetail?.(camp, 'marketing', 'campaigns')} className="glass"
-              style={{ padding: '1.25rem', borderRadius: '1.25rem', cursor: 'pointer' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <Chip label={camp.type} color="#8B5CF6" />
-                <Chip label={camp.statut} color={camp.statut === 'En cours' ? '#10B981' : camp.statut === 'Terminé' ? '#64748B' : '#F59E0B'} />
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.75rem' }}>{camp.nom}</div>
-              {camp.url_source && (
-                <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.6rem', fontSize: '0.7rem', marginBottom: '1rem', border: '1px solid var(--border)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>Lien de tracking IPC :</span><br/>
-                  <code style={{ color: 'var(--accent)', fontWeight: 700 }}>{`${camp.url_source}?ipc_cid=${camp.id?.substring(0, 8)}`}</code>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.83rem' }}>
-                <div><span style={{ color: 'var(--text-muted)' }}>Investissement: </span><strong>{formatCurrency(camp.budget, true)}</strong></div>
-                <div style={{ color: '#10B981', fontWeight: 700 }}>
-                  ROI: {totalBudget > 0 ? (((opportunities.filter(o => o.campagne_id === camp.id && o.etape === 'Gagné').reduce((s, o) => s + (Number(o.montant) || 0), 0) - camp.budget) / camp.budget).toFixed(1)) : '0'}x
-                </div>
-              </div>
-            </motion.div>
-          ))}
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => setCampaignModal(true)} className="glass"
-            style={{ padding: '1.25rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-muted)', minHeight: '120px' }}>
-            <Plus size={24} /><span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Nouvelle Campagne</span>
-          </motion.div>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+        ))}
+      </div>
 
-  /* ════════════════════════════
-     SUB-VIEW: ROI & CAMPAGNES
-  ════════════════════════════ */
-  const renderROI = () => (
-    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Budget Overview */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Budget Total Consommé" value={formatCurrency(mktStats.totalBudget, true)} trend={-8.4} trendType="up" icon={<CreditCard size={20} />} color="#F43F5E" sparklineData={[]} />
-        <KpiCard title="ROI Global Marketing" value={`${mktStats.roiGlobal}x`} trend={12.5} trendType="up" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[]} />
-        <KpiCard title="CAC Moyen"             value={formatCurrency(mktStats.cac)} trend={0} trendType="up" icon={<DollarSign size={20} />} color="#F59E0B" sparklineData={[]} />
-        <KpiCard title="Budget Restant"       value={formatCurrency(mktStats.budgetAlloc - mktStats.totalBudget, true)} trend={0} trendType="up" icon={<Activity size={20} />} color="#8B5CF6" sparklineData={[]} />
-      </motion.div>
+      {/* Main KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        <KpiCard title="Portée Totale (Reach)" value="452.8K" trend={12.5} trendType="up" icon={<Eye size={22} />} color="#3B82F6" sparklineData={[30, 45, 32, 60, 55, 80, 75]} />
+        <KpiCard title="Engagement Moyen" value="4.82%" trend={0.5} trendType="up" icon={<Activity size={22} />} color="#8B5CF6" sparklineData={[4, 5, 4.2, 4.8, 4.5, 5.2]} />
+        <KpiCard title="Nouveaux Abonnés" value="+2,450" trend={8.2} trendType="up" icon={<Users size={22} />} color="#10B981" sparklineData={[100, 150, 120, 300, 250, 400]} />
+        <KpiCard title="Clics sur Liens" value="12,840" trend={-2.4} trendType="down" icon={<MousePointer2 size={22} />} color="#EC4899" sparklineData={[2000, 1800, 2500, 2200, 2100]} />
+      </div>
 
-      {/* Budget Bar */}
-      <motion.div variants={fadeIn} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', fontSize: '0.85rem' }}>
-          <span style={{ fontWeight: 700 }}>Consommation Budget Trimestriel</span>
-          <span style={{ fontWeight: 700, color: mktStats.budgetPct > 90 ? '#EF4444' : '#10B981' }}>{mktStats.budgetPct}%</span>
-        </div>
-        <div style={{ height: '14px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-          <motion.div initial={{ width: 0 }} animate={{ width: `${mktStats.budgetPct}%` }} transition={{ duration: 1.2 }}
-            style={{ height: '100%', background: `linear-gradient(90deg, #10B981, ${mktStats.budgetPct > 90 ? '#EF4444' : '#3B82F6'})`, borderRadius: '999px' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-          <span>0</span>
-          <span>{formatCurrency(mktStats.totalBudget, true)} dépensés</span>
-          <span>{formatCurrency(mktStats.budgetAlloc, true)} alloués</span>
-        </div>
-      </motion.div>
-
-      {/* ROI par Canal */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>ROI par Canal Marketing</h4>
-          <ResponsiveContainer width="100%" height={250}>
-            <ComposedChart data={channelROI} layout="vertical" margin={{ left: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
-              <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <YAxis type="category" dataKey="canal" axisLine={false} tickLine={false} tick={{ fill: 'var(--text)', fontSize: 11 }} width={100} />
-              <Tooltip content={<ChartTooltip />} />
-              <Bar dataKey="roi" name="ROI (%)" radius={[0, 6, 6, 0]} barSize={16}>
-                {channelROI.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Bar>
+      {/* Main Evolution Chart */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h4 style={{ fontWeight: 800, fontSize: '1rem' }}>Évolution de l'Audience & Engagement</h4>
+            <select className="glass" style={{ border: 'none', fontSize: '0.75rem', padding: '0.4rem', fontWeight: 700 }}>
+              <option>30 derniers jours</option>
+              <option>7 derniers jours</option>
+            </select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <ComposedChart data={evolutionData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+              <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
+              <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
+              <Area yAxisId="left" type="monotone" dataKey="followers" name="Abonnés" fill="#3B82F615" stroke="#3B82F6" strokeWidth={3} />
+              <Line yAxisId="right" type="monotone" dataKey="engagement" name="Engagement %" stroke="#10B981" strokeWidth={3} dot={{ r: 6, fill: '#10B981' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Revenus vs Dépenses / Canal</h4>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {channelROI.map((c, i) => (
-              <div key={i}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '3px' }}>
-                  <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: c.color, display: 'inline-block' }} />
-                    {c.canal}
-                  </span>
-                  <span style={{ color: '#10B981', fontWeight: 700 }}>+{c.roi}%</span>
-                </div>
-                <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((c.roi / 700) * 100, 100)}%` }} transition={{ duration: 1, delay: i * 0.1 }}
-                    style={{ height: '100%', background: c.color, borderRadius: '999px' }} />
+        {/* Best Time to Post (Metricool Signature) */}
+        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem' }}>
+          <h4 style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Clock size={18} color="#F59E0B" /> Heures de Forte Activité
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {heatmapData.map((row, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', width: '30px', fontWeight: 700 }}>{row.hour}</span>
+                <div style={{ flex: 1, display: 'flex', gap: '3px' }}>
+                  {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
+                    <div key={day} style={{ 
+                      flex: 1, height: '18px', borderRadius: '3px',
+                      background: row[day] > 90 ? '#8B5CF6' : row[day] > 70 ? '#8B5CF680' : row[day] > 40 ? '#8B5CF640' : '#8B5CF610',
+                      transition: '0.3s'
+                    }} title={`${day} ${row.hour}: ${row[day]}%`} />
+                  ))}
                 </div>
               </div>
             ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', paddingLeft: '35px' }}>
+              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <span key={i} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800 }}>{d}</span>)}
+            </div>
+            <div style={{ marginTop: '1rem', background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.75rem', fontSize: '0.8rem' }}>
+              <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent)' }}>💡 Conseil Pro :</p>
+              <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)' }}>Publiez ce vendredi à 18:30 pour maximiser votre portée.</p>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 
   /* ════════════════════════════
-     SUB-VIEW: ENGAGEMENT & TRAFIC
-  ════════════════════════════ */
-  const renderEngagement = () => (
+     TAB: PLANNING (CONTENU)
+     ════════════════════════════ */
+  const renderPlanning = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Web KPIs */}
-      <motion.div variants={fadeIn}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Globe size={16} color="#3B82F6" /> Trafic Web — 4 Dernières Semaines
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-          <KpiCard title="Sessions Mensuelles"  value="0" trend={0} trendType="up"   icon={<Monitor size={20} />}       color="#3B82F6" sparklineData={[]} />
-          <KpiCard title="Pages Vues"            value="0" trend={0}  trendType="up"   icon={<Eye size={20} />}           color="#8B5CF6" sparklineData={[]} />
-          <KpiCard title="Taux de Rebond"        value="0%"                          trend={0}  trendType="up"   icon={<RefreshCcw size={20} />}    color="#10B981" sparklineData={[]} />
-          <KpiCard title="Durée Moy. Session"   value="0s"                         trend={0}  trendType="up"   icon={<Activity size={20} />}      color="#F59E0B" sparklineData={[]} />
-        </div>
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={webTrend}>
-              <defs>
-                <linearGradient id="sessGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#3B82F6" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="sem" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
-              <Area type="monotone" dataKey="sessions"  name="Sessions"   stroke="#3B82F6" strokeWidth={2.5} fill="url(#sessGrad)" />
-              <Area type="monotone" dataKey="pageVues"  name="Pages Vues" stroke="#8B5CF6" strokeWidth={2}   fill={false} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </motion.div>
-
-      {/* Email Performance */}
-      <motion.div variants={fadeIn}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Mail size={16} color="#8B5CF6" /> Performance Email Marketing
-        </h4>
-        <div className="glass" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.83rem', textAlign: 'left' }}>
-            <thead style={{ background: 'var(--bg-subtle)' }}>
-              <tr>
-                {['Campagne Email', 'Envoyés', 'Taux Ouverture', 'Taux Clic', 'Désinscrits'].map((h, i) => (
-                  <th key={i} style={{ padding: '0.85rem 1.25rem', fontWeight: 600, color: 'var(--text-muted)', fontSize: '0.73rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border)' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {emailStats.map((e, i) => (
-                <motion.tr key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.05 }}
-                  style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '0.9rem 1.25rem', fontWeight: 700 }}>{e.campagne}</td>
-                  <td style={{ padding: '0.9rem 1.25rem', color: 'var(--text-muted)' }}>{e.envoye.toLocaleString('fr-FR')}</td>
-                  <td style={{ padding: '0.9rem 1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 700, color: e.ouverture > 35 ? '#10B981' : e.ouverture > 25 ? '#F59E0B' : '#EF4444' }}>{e.ouverture}%</span>
-                      <div style={{ width: '50px', height: '5px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                        <div style={{ width: `${e.ouverture}%`, height: '100%', background: e.ouverture > 35 ? '#10B981' : '#F59E0B', borderRadius: '999px' }} />
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '0.9rem 1.25rem' }}>
-                    <span style={{ fontWeight: 700, color: e.clic > 8 ? '#10B981' : '#F59E0B' }}>{e.clic}%</span>
-                  </td>
-                  <td style={{ padding: '0.9rem 1.25rem' }}>
-                    <span style={{ color: e.desinscrit > 0.5 ? '#EF4444' : 'var(--text-muted)' }}>{e.desinscrit}%</span>
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </motion.div>
-
-      {/* Social Media */}
-      <motion.div variants={fadeIn}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Share2 size={16} color="#EC4899" /> Réseaux Sociaux & Engagement
-        </h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1rem' }}>
-          {socialData.map((s, i) => (
-            <motion.div key={i} variants={fadeIn} whileHover={{ y: -3 }} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                <div style={{ fontSize: '1.8rem' }}>{s.icon}</div>
-                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: s.color }}>
-                  {s.engagement}% <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>eng.</span>
-                </span>
-              </div>
-              <div style={{ fontWeight: 700, marginBottom: '0.25rem' }}>{s.reseau}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.75rem' }}>
-                <div style={{ background: 'var(--bg-subtle)', borderRadius: '0.6rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Abonnés</div>
-                  <div style={{ fontWeight: 700 }}>{(s.followers / 1000).toFixed(1)}K</div>
-                </div>
-                <div style={{ background: 'var(--bg-subtle)', borderRadius: '0.6rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Reach</div>
-                  <div style={{ fontWeight: 700 }}>{(s.reach / 1000).toFixed(0)}K</div>
-                </div>
-              </div>
-              <div style={{ height: '4px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden', marginTop: '0.75rem' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((s.engagement / 10) * 100, 100)}%` }} transition={{ duration: 1, delay: i * 0.1 }}
-                  style={{ height: '100%', background: s.color, borderRadius: '999px' }} />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-
-  /* ─── MAIN TABS ─── */
-  const tabs = [
-    { id: 'leadgen',    label: 'Génération de Leads', icon: <Target size={15} /> },
-    { id: 'roi',        label: 'ROI & Campagnes',      icon: <BarChart3 size={15} /> },
-    { id: 'engagement', label: 'Engagement & Trafic',  icon: <Share2 size={15} /> },
-  ];
-
-  return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#EC4899', marginBottom: '0.4rem' }}>
-            <Megaphone size={16} />
-            <span style={{ fontWeight: 800, fontSize: '0.73rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Marketing — Growth Intelligence</span>
-          </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>Marketing & Croissance</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>
-            Lead Gen · ROI Campagnes · Engagement Digital
-          </p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setCampaignModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Plus size={17} /> Nouvelle Campagne
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h4 style={{ fontWeight: 800, fontSize: '1rem', margin: 0 }}>Calendrier de Publication</h4>
+        <button className="btn-primary" onClick={() => { setModalMode('posts'); setIsModalOpen(true); }} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.2rem', borderRadius: '0.75rem' }}>
+          <Plus size={18} /> Créer un Post
         </button>
       </div>
 
-      <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
+      <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', minHeight: '500px' }}>
+        {/* Simplified Calendar Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '1rem', overflow: 'hidden', border: '1px solid var(--border)' }}>
+          {['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'].map(d => (
+            <div key={d} style={{ background: 'var(--bg-subtle)', padding: '0.75rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)' }}>{d}</div>
+          ))}
+          {Array(35).fill(null).map((_, i) => {
+            const day = i - 2 + 1; // Arbitrary offset
+            const hasPost = posts.some(p => new Date(p.date_publication).getDate() === day);
+            return (
+              <div key={i} style={{ background: 'var(--bg)', minHeight: '120px', padding: '0.5rem', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)', position: 'relative' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 800, color: day > 0 && day <= 30 ? 'var(--text)' : 'var(--text-muted)', opacity: day > 0 && day <= 30 ? 1 : 0.3 }}>{day > 0 && day <= 31 ? day : ''}</span>
+                {day > 0 && day <= 31 && posts.filter(p => new Date(p.date_publication).getDate() === day).map((post, pi) => (
+                  <div key={pi} className="glass" style={{ marginTop: '0.5rem', padding: '0.4rem', borderRadius: '0.5rem', fontSize: '0.72rem', borderLeft: '3px solid var(--accent)' }}>
+                    <div style={{ fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{post.titre}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px', opacity: 0.7 }}>
+                      <Clock size={10} /> {new Date(post.date_publication).getHours()}h00
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </motion.div>
+  );
 
-      {mainTab === 'leadgen'    && renderLeadGen()}
-      {mainTab === 'roi'        && renderROI()}
-      {mainTab === 'engagement' && renderEngagement()}
+  /* ════════════════════════════
+     TAB: ACCOUNT CONNECTION (Metricool Style)
+     ════════════════════════════ */
+  const renderConnect = () => (
+    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      {[
+        { id: 'fb', net: 'Facebook', icon: <Square size={24} />, color: '#1877F2', desc: 'Pages & Groupes' },
+        { id: 'ig', net: 'Instagram', icon: <Camera size={24} />, color: '#E4405F', desc: 'Profils Business' },
+        { id: 'li', net: 'LinkedIn', icon: <Briefcase size={24} />, color: '#0A66C2', desc: 'Profil & Pages' },
+        { id: 'tk', net: 'TikTok', icon: <Smartphone size={24} />, color: '#000000', desc: 'Comptes Créateurs' },
+        { id: 'ga', net: 'Google Ads', icon: <Globe size={24} />, color: '#4285F4', desc: 'Campagnes SEM' },
+        { id: 'wb', net: 'Site Web', icon: <Globe size={24} />, color: '#10B981', desc: 'Tracker Analytics' },
+      ].map(platform => {
+        const connected = accounts.find(a => a.reseau === platform.net && a.statut === 'Connecté');
+        return (
+          <motion.div key={platform.id} variants={fadeIn} whileHover={{ y: -5 }} className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: platform.color }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <div style={{ background: `${platform.color}15`, padding: '0.75rem', borderRadius: '1rem', color: platform.color }}>
+                {platform.icon}
+              </div>
+              <Chip label={connected ? 'Actif' : 'Déconnecté'} color={connected ? '#10B981' : '#64748B'} />
+            </div>
+            <h5 style={{ margin: '0 0 0.25rem 0', fontWeight: 800 }}>{platform.net}</h5>
+            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{platform.desc}</p>
+            
+            {connected ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>IPC</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{connected.nom}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Synchro il y a 5 min</div>
+                </div>
+                <button className="btn-icon" style={{ padding: '4px' }}><RefreshCcw size={14} /></button>
+              </div>
+            ) : (
+              <button className="btn-primary" style={{ width: '100%', background: platform.color, border: 'none' }}>
+                Connecter {platform.net}
+              </button>
+            )}
+          </motion.div>
+        );
+      })}
+    </motion.div>
+  );
 
-      <RecordModal isOpen={campaignModal} onClose={() => setCampaignModal(false)}
-        onSave={f => { addRecord('marketing', 'campaigns', f); setCampaignModal(false); }}
-        title="Paramètres de Campagne Marketing" fields={modalFields} />
+  /* ═══ Main Render ═══ */
+  const tabs = [
+    { id: 'analytics', label: 'Dashboard', icon: <BarChart3 size={16} /> },
+    { id: 'planning', label: 'Planning', icon: <CalendarIcon size={16} /> },
+    { id: 'ads', label: 'Campagnes Ads', icon: <Target size={16} /> },
+    { id: 'smartlinks', label: 'SmartLinks', icon: <LinkIcon size={16} /> },
+    { id: 'connect', label: 'Connexions', icon: <Zap size={16} /> },
+  ];
+
+  const modalConfig = {
+    posts: { title: 'Programmer un Post Social', schema: marketingSchema.models.posts },
+    campaigns: { title: 'Nouvelle Campagne Ads', schema: marketingSchema.models.campaigns },
+    smartlinks: { title: 'Créer un SmartLink', schema: marketingSchema.models.smartlinks }
+  };
+
+  return (
+    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      {/* Header Metricool Style */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '2rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#EC4899', marginBottom: '0.5rem' }}>
+            <div style={{ background: '#EC489915', padding: '6px', borderRadius: '8px' }}><Activity size={18} /></div>
+            <span style={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2px' }}>IPC Growth Command Center</span>
+          </div>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-1px' }}>Intelligence Marketing</h1>
+          <p style={{ color: 'var(--text-muted)', margin: '0.4rem 0 0 0', fontSize: '0.95rem', fontWeight: 500 }}>
+            Analysez, Planifiez et Boostez votre présence digitale sur 5 réseaux.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+           <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+             <Share2 size={16} /> Partager Rapport
+           </button>
+           <button className="btn-primary" onClick={() => { setModalMode('posts'); setIsModalOpen(true); }} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+             <Plus size={18} /> Nouvelle Action
+           </button>
+        </div>
+      </div>
+
+      {/* Main Tab Bar */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={mainTab}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+        >
+          {mainTab === 'analytics' && renderAnalytics()}
+          {mainTab === 'planning' && renderPlanning()}
+          {mainTab === 'connect' && renderConnect()}
+          {mainTab === 'ads' && <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Moteur publicitaire en cours de chargement...</div>}
+          {mainTab === 'smartlinks' && <div style={{ textAlign: 'center', padding: '5rem', color: 'var(--text-muted)' }}>Générateur SmartLink en cours de chargement...</div>}
+        </motion.div>
+      </AnimatePresence>
+
+      <RecordModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title={modalConfig[modalMode].title}
+        fields={Object.entries(modalConfig[modalMode].schema.fields).map(([name, f]) => ({ ...f, name }))}
+        onSave={(f) => {
+          addRecord('marketing', modalMode, f);
+          setIsModalOpen(false);
+        }}
+      />
     </div>
   );
 };
