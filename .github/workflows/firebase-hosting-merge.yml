@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
       - name: Install dependencies (Client)
         run: npm ci
       - name: Build Client
@@ -18,9 +23,7 @@ jobs:
       - name: Install dependencies (Functions)
         run: cd functions && npm ci
       - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy
+        run: npx firebase-tools deploy --project ipc-erp --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
