@@ -17,21 +17,52 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const AnalyticsTab = ({ data, formatCurrency }) => {
   const finance = data?.finance || {};
+  const ledgerLines = useMemo(() => finance.lines || [], [finance.lines]);
   
-  const financialKPIs = {
-    netResult: 12450000,
-    revenue: 45000000,
-    expenses: 32550000,
-    cashOnHand: 154200000,
-    dso: 38, // Days Sales Outstanding
-  };
+  const financialKPIs = useMemo(() => {
+    let rev = 0;
+    let exp = 0;
+    let cash = 0;
 
-  const cashFlowData = [
-    { name: 'Jan', in: 40000000, out: 24000000 },
-    { name: 'Fév', in: 30000000, out: 28000000 },
-    { name: 'Mar', in: 55000000, out: 12000000 },
-    { name: 'Avr', in: 48000000, out: 30000000 },
-  ];
+    ledgerLines.forEach(line => {
+      const code = String(line.accountId);
+      const debit = Number(line.debit || 0);
+      const credit = Number(line.credit || 0);
+
+      if (code.startsWith('7')) rev += credit;
+      if (code.startsWith('6')) exp += debit;
+      if (code.startsWith('5')) cash += (debit - credit);
+    });
+
+    return {
+      netResult: rev - exp,
+      revenue: rev,
+      expenses: exp,
+      cashOnHand: cash,
+      dso: 35, // Remains estimated or could be calculated if we have sales/payments link
+    };
+  }, [ledgerLines]);
+
+  const cashFlowData = useMemo(() => {
+    // Group entries by month
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const currentYear = new Date().getFullYear();
+    const grouped = months.slice(0, new Date().getMonth() + 1).map(m => ({ name: m, in: 0, out: 0 }));
+
+    ledgerLines.forEach(line => {
+      const date = new Date(line.date);
+      if (date.getFullYear() === currentYear) {
+        const monthIdx = date.getMonth();
+        if (monthIdx < grouped.length) {
+          const debit = Number(line.debit || 0);
+          const credit = Number(line.credit || 0);
+          if (debit > 0) grouped[monthIdx].in += debit;
+          if (credit > 0) grouped[monthIdx].out += credit;
+        }
+      }
+    });
+    return grouped.length > 0 ? grouped : [{ name: 'Jan', in: 0, out: 0 }];
+  }, [ledgerLines]);
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>

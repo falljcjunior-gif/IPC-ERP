@@ -39,10 +39,12 @@ export const accountingSchema = {
         piece: { label: 'Pièce', type: 'text', search: true },
         journalCode: { label: 'Journal', type: 'text', search: true },
         debit: { label: 'Débit', type: 'money', currency: 'FCFA' },
-        credit: { label: 'Crédit', type: 'money', currency: 'FCFA' }
+        credit: { label: 'Crédit', type: 'money', currency: 'FCFA' },
+        analyticAccount: { label: 'Compte Analytique', type: 'text', search: true },
+        profitCenter: { label: 'Centre de Profit', type: 'selection', options: ['Usine', 'Logistique', 'Ventes', 'Administration'], search: true }
       },
       views: {
-        list: ['date', 'piece', 'libelle', 'debit', 'credit'],
+        list: ['date', 'piece', 'libelle', 'debit', 'credit', 'profitCenter'],
         search: {
           groups: [
             { id: 'date', label: 'Par Date' },

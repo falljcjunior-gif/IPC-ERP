@@ -83,7 +83,18 @@ export const BusinessProvider = ({ children }) => {
 
       if (!merged.dms) merged.dms = { files: [], categories: ['Finances', 'RH', 'Technique', 'Légal'] };
       if (!merged.planning) merged.planning = { events: [] };
-      if (!merged.finance.accounts) merged.finance.accounts = mockData.finance.accounts;
+      const ohadaAccounts = [
+        { code: '411100', label: 'Clients Locaux', type: 'Actif', nature: 'Bilan' },
+        { code: '401100', label: 'Fournisseurs', type: 'Passif', nature: 'Bilan' },
+        { code: '701100', label: 'Vente de Produits Finis', type: 'Produit', nature: 'Gestion' },
+        { code: '601100', label: 'Achat de Matières Premières', type: 'Charge', nature: 'Gestion' },
+        { code: '603100', label: 'Variations des stocks de MP', type: 'Charge', nature: 'Gestion' },
+        { code: '713100', label: 'Variations des stocks de PF', type: 'Produit', nature: 'Gestion' },
+        { code: '521100', label: 'Banques', type: 'Actif', nature: 'Bilan' },
+        { code: '571100', label: 'Caisse', type: 'Actif', nature: 'Bilan' }
+      ];
+
+      if (!merged.finance.accounts || merged.finance.accounts.length === 0) merged.finance.accounts = ohadaAccounts;
       if (!merged.finance.journals) merged.finance.journals = mockData.finance.journals;
       if (!merged.finance.entries) merged.finance.entries = [];
       if (!merged.finance.lines) merged.finance.lines = [];
@@ -221,34 +232,11 @@ export const BusinessProvider = ({ children }) => {
     }
   }, [currentUser.nom]);
 
-  const addNote = useCallback((targetId, targetType, content) => {
-    const note = {
-      id: Math.random().toString(36).substr(2, 9),
-      action: 'Note Interne',
-      detail: content,
-      appId: targetType,
-      targetId: targetId,
-      user: currentUser.nom,
-      timestamp: new Date().toISOString(),
-      type: 'note'
-    };
-
-    setData(prev => ({
-      ...prev,
-      activities: [note, ...(prev.activities || [])]
-    }));
-
-    if (auth.currentUser) {
-      setDoc(doc(db, 'activities', note.id), note);
-    }
-    
-    addHint({ title: "Note ajoutée", type: 'success' });
-  }, [currentUser.nom, addHint]);
-
   /* ══════════════════════════════════════════════════════════════════════════
-     5. DATA MUTATION LOGIC (Business Logic)
+     5. DATA MUTATION LOGIC (Topological Order)
      ══════════════════════════════════════════════════════════════════════════ */
 
+  // A. Accounting Basics
   const addAccountingEntry = useCallback((entry, lines) => {
     const totalDebit = lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
     const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
@@ -280,11 +268,12 @@ export const BusinessProvider = ({ children }) => {
     return true;
   }, [logAction, addHint]);
 
+  // B. Specialized Generators
   const generateInvoiceEntry = useCallback((invoice) => {
     const entry = {
       libelle: `Facture Client ${invoice.num}`,
       date: invoice.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-      journalId: 'J-VT',
+      journalCode: 'J-VT',
       piece: invoice.num
     };
 
@@ -295,6 +284,150 @@ export const BusinessProvider = ({ children }) => {
 
     addAccountingEntry(entry, lines);
   }, [addAccountingEntry]);
+
+  const generateProductionEntry = useCallback((mo) => {
+    const bom = data.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+    if (!bom) return;
+    const totalCost = (bom.coutEstime || 500) * (mo.qte || 0);
+    const entry = {
+      libelle: `Production OF ${mo.num || mo.id}`,
+      date: new Date().toISOString().split('T')[0],
+      journalCode: 'J-PROD',
+      piece: mo.num || mo.id
+    };
+    const lines = [
+      { accountId: '713100', label: 'Entrée Stock PF', debit: totalCost, credit: 0, profitCenter: 'Usine' },
+      { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
+    ];
+    addAccountingEntry(entry, lines);
+  }, [data.production?.boms, addAccountingEntry]);
+
+  const generateExpenseEntry = useCallback((expense) => {
+    const entry = {
+      libelle: `Règlement Achat: ${expense.libelle || expense.fournisseur}`,
+      date: expense.date || new Date().toISOString().split('T')[0],
+      journalCode: 'J-ACH',
+      piece: expense.num || expense.id
+    };
+    const lines = [
+      { accountId: '601100', label: expense.libelle, debit: expense.montant, credit: 0, profitCenter: expense.dept || 'Logistique' },
+      { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.montant, profitCenter: 'Administration' }
+    ];
+    addAccountingEntry(entry, lines);
+  }, [addAccountingEntry]);
+
+  // C. Physical Moves
+  const applyStockMove = useCallback((movementData) => {
+    const { productId, qte, type, ref, source, dest } = movementData;
+    const qteNum = parseFloat(qte);
+    setData(prev => {
+      const products = prev.inventory?.products || [];
+      const product = products.find(p => p.id === productId || p.code === productId);
+      if (!product) {
+        addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
+        return prev;
+      }
+      const isOut = ['Expédition', 'Consommation', 'Ajustement Sortie'].includes(type);
+      const newStock = isOut ? (product.stock || 0) - qteNum : (product.stock || 0) + qteNum;
+      const updatedProducts = products.map(p => (p.id === productId || p.code === productId) ? { ...p, stock: newStock } : p);
+      const seqKey = 'inventory_movements';
+      const mvtNum = getNextSequence(seqKey);
+      const newMove = { id: Date.now().toString(), num: mvtNum, date: new Date().toISOString(), produit: product.nom, produitId: product.id, type, qte: qteNum, ref: ref || 'Interne', source: source || 'Entrepôt Principal', dest: dest || 'Client/Transit', createdAt: new Date().toISOString() };
+      if (newStock <= (product.alerte || 0)) addHint({ title: "Alerte Stock Bas", message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, type: 'warning', appId: 'inventory' });
+      logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
+      return { ...prev, inventory: { ...prev.inventory, products: updatedProducts, movements: [newMove, ...(prev.inventory?.movements || [])] } };
+    });
+  }, [getNextSequence, addHint, logAction]);
+
+  const applyMOTransformation = useCallback((moId) => {
+    setData(prev => {
+      const mo = prev.production?.workOrders?.find(o => o.id === moId);
+      if (!mo) return prev;
+      const bom = prev.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+      if (!bom) {
+        addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
+        return prev;
+      }
+      let componentsList = [];
+      try { componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); } catch (e) { componentsList = []; }
+      componentsList.forEach(comp => applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
+      applyStockMove({ productId: bom.productId || mo.produitId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
+      addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
+      return prev;
+    });
+  }, [addHint, applyStockMove]);
+
+  // D. Higher-level Workflows
+  const processOrderValidation = useCallback((order) => {
+    const invoiceNum = getNextSequence('finance_invoices');
+    const newInvoice = { id: Date.now().toString(), num: invoiceNum, client: order.client, montant: order.montant, statut: 'À Payer', orderId: order.id, createdAt: new Date().toISOString() };
+    setData(prev => ({ ...prev, finance: { ...prev.finance, invoices: [newInvoice, ...(prev.finance?.invoices || [])] } }));
+    addHint({ title: "Flux Cascade Activé", message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, type: 'info', appId: 'finance' });
+    logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
+  }, [getNextSequence, addHint, logAction]);
+
+  const convertOppToSalesOrder = useCallback((oppId) => {
+    setData(prev => {
+      const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
+      if (!opp) return prev;
+      const orderNum = getNextSequence('sales_orders');
+      const newOrder = { id: Date.now().toString(), num: orderNum, client: opp.client, clientContact: opp.nom || opp.titre, montant: opp.montant, statut: 'Brouillon', oppId: opp.id, createdAt: new Date().toISOString() };
+      addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
+      logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
+      return { ...prev, sales: { ...prev.sales, orders: [newOrder, ...(prev.sales?.orders || [])] } };
+    });
+  }, [getNextSequence, addHint, logAction]);
+
+  // E. Record Operations (Final Handlers)
+  const addRecord = useCallback((appId, subModule, inputData) => {
+    let processedRecord = { ...inputData };
+    if (!processedRecord.num || processedRecord.num === "") {
+      const seqKey = `${appId}__${subModule}`;
+      if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
+    }
+    const newRecord = { ...processedRecord, id: Date.now().toString(), createdAt: new Date().toISOString() };
+    setData(prev => {
+      const moduleData = prev[appId] || {};
+      const subModuleData = moduleData[subModule] || [];
+      const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
+      logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
+      if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
+      return nextState;
+    });
+    if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
+  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction]);
+
+  const updateRecord = useCallback((appId, subModule, id, newData) => {
+    setData(prev => {
+      if (!prev[appId] || !prev[appId][subModule]) return prev;
+      const oldRecord = prev[appId][subModule].find(i => i.id === id);
+      if (!oldRecord) return prev;
+      const changes = Object.keys(newData).filter(key => newData[key] !== oldRecord[key]).map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`).join(', ');
+      const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
+      let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
+      const record = updatedList.find(o => o.id === id);
+      logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
+      if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
+      
+      if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
+        applyMOTransformation(id);
+        generateProductionEntry(record);
+      }
+      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
+        addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => convertOppToSalesOrder(id) });
+      }
+      if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
+        processOrderValidation(record);
+      }
+      if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
+        generateInvoiceEntry(record);
+      }
+      if (appId === 'finance' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
+        generateExpenseEntry(record);
+      }
+      return nextState;
+    });
+  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation]);
 
   const deleteRecord = useCallback((appId, subModule, id) => {
     setData(prev => {
@@ -307,265 +440,6 @@ export const BusinessProvider = ({ children }) => {
       return nextState;
     });
   }, [logAction]);
-
-  const convertOppToSalesOrder = useCallback((oppId) => {
-    setData(prev => {
-      const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
-      if (!opp) return prev;
-
-      const orderNum = getNextSequence('sales_orders');
-      const newOrder = {
-        id: Date.now().toString(),
-        num: orderNum,
-        client: opp.client,
-        clientContact: opp.nom || opp.titre,
-        montant: opp.montant,
-        statut: 'Brouillon',
-        oppId: opp.id,
-        createdAt: new Date().toISOString()
-      };
-
-      addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
-      logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
-
-      return {
-        ...prev,
-        sales: {
-          ...prev.sales,
-          orders: [newOrder, ...(prev.sales?.orders || [])]
-        }
-      };
-    });
-  }, [getNextSequence, addHint, logAction]);
-
-  const processOrderValidation = useCallback((order) => {
-    // 1. Generate Finance Invoice
-    const invoiceNum = getNextSequence('finance_invoices');
-    const newInvoice = {
-      id: Date.now().toString(),
-      num: invoiceNum,
-      client: order.client,
-      montant: order.montant,
-      statut: 'À Payer',
-      orderId: order.id,
-      createdAt: new Date().toISOString()
-    };
-
-    // 2. Generate Logistics Picking (Simulated Movement)
-    // In a real ERP, we'd add lines here, but we'll use the record reference
-    const mvtRef = `LIV-${order.num}`;
-    
-    setData(prev => ({
-      ...prev,
-      finance: {
-        ...prev.finance,
-        invoices: [newInvoice, ...(prev.finance?.invoices || [])]
-      }
-    }));
-
-    addHint({ 
-      title: "Flux Cascade Activé", 
-      message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, 
-      type: 'info', 
-      appId: 'finance' 
-    });
-
-    logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
-  }, [getNextSequence, addHint, logAction]);
-
-  const applyMOTransformation = useCallback((moId) => {
-    setData(prev => {
-      const mo = prev.production?.workOrders?.find(o => o.id === moId);
-      if (!mo) return prev;
-
-      const bom = prev.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
-      if (!bom) {
-        addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
-        return prev;
-      }
-
-      let componentsList = [];
-      try { 
-        componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); 
-      } catch (e) { componentsList = []; }
-
-      // 1. Consume Raw Materials
-      componentsList.forEach(comp => {
-        applyStockMove({
-          productId: comp.productId,
-          qte: comp.qte * (mo.qte || 0),
-          type: 'Consommation',
-          ref: `OF-${mo.num || mo.id}`
-        });
-      });
-
-      // 2. Produce Finished Good
-      applyStockMove({
-        productId: bom.productId || mo.produitId,
-        qte: mo.qte,
-        type: 'Réception',
-        ref: `OF-${mo.num || mo.id}`
-      });
-
-      addHint({ 
-        title: "Production Terminée", 
-        message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, 
-        type: 'success', 
-        appId: 'production' 
-      });
-
-      return prev;
-    });
-  }, [addHint, applyStockMove]);
-
-  const updateRecord = useCallback((appId, subModule, id, newData) => {
-    setData(prev => {
-      if (!prev[appId] || !prev[appId][subModule]) return prev;
-      const oldRecord = prev[appId][subModule].find(i => i.id === id);
-      if (!oldRecord) return prev;
-
-      // Calculate changes for rich audit log
-      const changes = Object.keys(newData)
-        .filter(key => newData[key] !== oldRecord[key])
-        .map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`)
-        .join(', ');
-
-      const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
-      let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
-      const record = updatedList.find(o => o.id === id);
-      
-      logAction(
-        `Modification ${subModule}`, 
-        changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, 
-        appId,
-        id
-      );
-
-      if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
-      
-      // --- Functional Triggers ---
-
-      // Production: MO Completed
-      if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
-        applyMOTransformation(id);
-      }
-
-      // AI/Hint: Won Opportunity
-      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
-        addHint({ 
-          title: "Affaire Gagnée !", 
-          message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, 
-          type: 'success', 
-          appId: 'sales', 
-          actionLabel: "Générer Commande", 
-          onAction: () => convertOppToSalesOrder(id) 
-        });
-      }
-
-      // Automation: Confirmed Order -> Invoice & Picking
-      if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
-        processOrderValidation(record);
-      }
-
-      // Accounting Automation: Invoice -> Ledger
-      if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
-        generateInvoiceEntry(record);
-      }
-
-      return nextState;
-    });
-  }, [logAction, addHint, generateInvoiceEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation]);
-
-  const applyStockMove = useCallback((movementData) => {
-    const { productId, qte, type, ref, source, dest } = movementData;
-    const qteNum = parseFloat(qte);
-    
-    setData(prev => {
-      // 1. Update Product Quantity
-      const products = prev.inventory?.products || [];
-      const product = products.find(p => p.id === productId || p.code === productId);
-      
-      if (!product) {
-        addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
-        return prev;
-      }
-
-      const isOut = ['Expédition', 'Consommation', 'Ajustement Sortie'].includes(type);
-      const newStock = isOut ? (product.stock || 0) - qteNum : (product.stock || 0) + qteNum;
-
-      const updatedProducts = products.map(p => 
-        (p.id === productId || p.code === productId) ? { ...p, stock: newStock } : p
-      );
-
-      // 2. Log Movement
-      const seqKey = 'inventory_movements';
-      const mvtNum = getNextSequence(seqKey);
-      const newMove = {
-        id: Date.now().toString(),
-        num: mvtNum,
-        date: new Date().toISOString(),
-        produit: product.nom,
-        produitId: product.id,
-        type,
-        qte: qteNum,
-        ref: ref || 'Interne',
-        source: source || 'Entrepôt Principal',
-        dest: dest || 'Client/Transit',
-        createdAt: new Date().toISOString()
-      };
-
-      // 3. Alerts Check
-      if (newStock <= (product.alerte || 0)) {
-        addHint({ 
-          title: "Alerte Stock Bas", 
-          message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, 
-          type: 'warning', 
-          appId: 'inventory' 
-        });
-      }
-
-      logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
-
-      return {
-        ...prev,
-        inventory: {
-          ...prev.inventory,
-          products: updatedProducts,
-          movements: [newMove, ...(prev.inventory?.movements || [])]
-        }
-      };
-    });
-  }, [getNextSequence, addHint, logAction]);
-
-  const addRecord = useCallback((appId, subModule, inputData) => {
-    let processedRecord = { ...inputData };
-    if (!processedRecord.num || processedRecord.num === "") {
-      const seqKey = `${appId}__${subModule}`;
-      if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
-    }
-    const newRecord = { ...processedRecord, id: Date.now().toString(), createdAt: new Date().toISOString() };
-    
-    setData(prev => {
-      const moduleData = prev[appId] || {};
-      const subModuleData = moduleData[subModule] || [];
-      const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
-      logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-      if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
-      return nextState;
-    });
-
-    // Integrated Stock Hook: If creating a movement directly, apply it
-    if (appId === 'inventory' && subModule === 'movements') {
-       applyStockMove({
-         productId: processedRecord.produitId || processedRecord.produit,
-         qte: processedRecord.qte,
-         type: processedRecord.type,
-         ref: processedRecord.ref,
-         source: processedRecord.source,
-         dest: processedRecord.dest
-       });
-    }
-  }, [data.base?.sequences, logAction, getNextSequence, applyStockMove]);
 
 
   /* ══════════════════════════════════════════════════════════════════════════
