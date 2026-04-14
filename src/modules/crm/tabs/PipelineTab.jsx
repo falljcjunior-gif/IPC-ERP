@@ -60,7 +60,7 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
                 <Briefcase size={22} />
               </div>
               <div>
-                <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--text)' }}>{opp.nom}</div>
+                <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--text)' }}>{opp.titre}</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                   <User size={12} /> {opp.client || 'Client Inconnu'}
                 </div>
@@ -89,7 +89,7 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
             <div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.4rem', letterSpacing: '0.5px' }}>Date de Clôture</div>
               <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Clock size={14} color="var(--text-muted)" /> {opp.date_fin ? new Date(opp.date_fin).toLocaleDateString() : 'Non planifié'}
+                <Clock size={14} color="var(--text-muted)" /> {opp.dateFermeture ? new Date(opp.dateFermeture).toLocaleDateString() : 'Non planifié'}
               </div>
             </div>
 

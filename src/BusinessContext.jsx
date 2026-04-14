@@ -305,7 +305,7 @@ export const BusinessProvider = ({ children }) => {
         id: Date.now().toString(),
         num: orderNum,
         client: opp.client,
-        clientContact: opp.nom,
+        clientContact: opp.nom || opp.titre,
         montant: opp.montant,
         statut: 'Brouillon',
         oppId: opp.id,
@@ -391,7 +391,7 @@ export const BusinessProvider = ({ children }) => {
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
         addHint({ 
           title: "Affaire Gagnée !", 
-          message: `L'opportunité "${record.nom}" est gagnée. Prêt à lancer la vente ?`, 
+          message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, 
           type: 'success', 
           appId: 'sales', 
           actionLabel: "Générer Commande", 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  UserPlus, Mail, Phone, Calendar, Search, Filter,
+  UserPlus, Mail, Phone, Calendar, Search, Filter, Plus,
   MoreVertical, CheckCircle2, User, Building2, Zap,
   ArrowRight, ShieldAlert, Star
 } from 'lucide-react';

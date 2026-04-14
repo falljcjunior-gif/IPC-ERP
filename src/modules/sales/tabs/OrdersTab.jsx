@@ -48,6 +48,7 @@ const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
             key={order.id} 
             variants={item}
             whileHover={{ x: 10, background: 'var(--bg-subtle)' }}
+            onClick={() => onOpenDetail && onOpenDetail('sales', 'orders', order)}
             className="glass" 
             style={{ 
               padding: '1.5rem 2.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', 
