@@ -57,7 +57,7 @@ import CallInterface from './CallInterface';
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
-    globalSearch, searchResults, updateRecord, addRecord, userRole, config, 
+    globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
     globalSettings, currentUser, permissions, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, togglePinnedModule 
   } = useBusiness();
@@ -91,6 +91,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Auto-derived Campaigns for CRM attribution
+  const activeCampaigns = useMemo(() => {
+    const defaultSources = ['Prospection Directe', 'Bouche à oreille', 'Appel Entrant', 'Email', 'Autre'];
+    const dynamicCampaigns = (data?.marketing?.campaigns || []).map(c => c.nom);
+    return [...dynamicCampaigns, ...defaultSources];
+  }, [data?.marketing?.campaigns]);
 
   const openDetail = useCallback((record, appId, subModule) => {
     setDetails({ record, context: { appId, subModule } });
@@ -263,7 +270,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })}
         title={registry.getSchema(details.context.appId)?.models[details.context.subModule]?.label || 'Nouvel Enregistrement'}
         recordType={details.context.subModule}
-        fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => ({ ...f, name }))}
+        fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => {
+          // Dynamic Injection for Campaign Source
+          if (name === 'campagne_id') {
+            return { ...f, name, type: 'selection', options: activeCampaigns };
+          }
+          return { ...f, name };
+        })}
         onSave={(formData) => {
           addRecord(details.context.appId, details.context.subModule, formData);
           setDetails({ record: null, context: { appId: '', subModule: '' } });
