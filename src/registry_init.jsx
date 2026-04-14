@@ -13,14 +13,14 @@ import {
 import GlobalDashboard from './components/GlobalDashboard';
 import CRM from './modules/crm/CRM';
 import Sales from './modules/sales/Sales';
-import Inventory from './modules/Inventory';
+import Inventory from './modules/logistics/LogisticsHub';
 import Accounting from './modules/finance/FinanceControlCenter';
 import Finance from './modules/finance/FinanceControlCenter';
 import Budget from './modules/finance/FinanceControlCenter';
 import HR from './modules/enterprise/EnterpriseHub';
 import Production from './modules/production/Production';
-import Project from './modules/Project';
-import Purchase from './modules/Purchase';
+import Project from './modules/logistics/LogisticsHub';
+import Purchase from './modules/logistics/LogisticsHub';
 import Marketing from './modules/marketing/Marketing';
 import BI from './modules/BI';
 import MasterData from './modules/MasterData';
