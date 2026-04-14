@@ -295,6 +295,71 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction]);
 
+  const convertOppToSalesOrder = useCallback((oppId) => {
+    setData(prev => {
+      const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
+      if (!opp) return prev;
+
+      const orderNum = getNextSequence('sales_orders');
+      const newOrder = {
+        id: Date.now().toString(),
+        num: orderNum,
+        client: opp.client,
+        clientContact: opp.nom,
+        montant: opp.montant,
+        statut: 'Brouillon',
+        oppId: opp.id,
+        createdAt: new Date().toISOString()
+      };
+
+      addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
+      logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
+
+      return {
+        ...prev,
+        sales: {
+          ...prev.sales,
+          orders: [newOrder, ...(prev.sales?.orders || [])]
+        }
+      };
+    });
+  }, [getNextSequence, addHint, logAction]);
+
+  const processOrderValidation = useCallback((order) => {
+    // 1. Generate Finance Invoice
+    const invoiceNum = getNextSequence('finance_invoices');
+    const newInvoice = {
+      id: Date.now().toString(),
+      num: invoiceNum,
+      client: order.client,
+      montant: order.montant,
+      statut: 'À Payer',
+      orderId: order.id,
+      createdAt: new Date().toISOString()
+    };
+
+    // 2. Generate Logistics Picking (Simulated Movement)
+    // In a real ERP, we'd add lines here, but we'll use the record reference
+    const mvtRef = `LIV-${order.num}`;
+    
+    setData(prev => ({
+      ...prev,
+      finance: {
+        ...prev.finance,
+        invoices: [newInvoice, ...(prev.finance?.invoices || [])]
+      }
+    }));
+
+    addHint({ 
+      title: "Flux Cascade Activé", 
+      message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, 
+      type: 'info', 
+      appId: 'finance' 
+    });
+
+    logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
+  }, [getNextSequence, addHint, logAction]);
+
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
@@ -320,18 +385,33 @@ export const BusinessProvider = ({ children }) => {
 
       if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
       
+      // --- Functional Triggers ---
+
+      // AI/Hint: Won Opportunity
+      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
+        addHint({ 
+          title: "Affaire Gagnée !", 
+          message: `L'opportunité "${record.nom}" est gagnée. Prêt à lancer la vente ?`, 
+          type: 'success', 
+          appId: 'sales', 
+          actionLabel: "Générer Commande", 
+          onAction: () => convertOppToSalesOrder(id) 
+        });
+      }
+
+      // Automation: Confirmed Order -> Invoice & Picking
+      if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
+        processOrderValidation(record);
+      }
+
       // Accounting Automation: Invoice -> Ledger
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);
       }
 
-      // CRM/Sales specific logic (preserved)
-      if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
-        addHint({ title: "Affaire Gagnée !", message: `Opportunité "${record.titre}" gagnée. Générer le devis ?`, appId: 'sales', actionLabel: "Générer", onAction: () => {} });
-      }
       return nextState;
     });
-  }, [logAction, addHint, generateInvoiceEntry]);
+  }, [logAction, addHint, generateInvoiceEntry, convertOppToSalesOrder, processOrderValidation]);
 
   const applyStockMove = useCallback((movementData) => {
     const { productId, qte, type, ref, source, dest } = movementData;
