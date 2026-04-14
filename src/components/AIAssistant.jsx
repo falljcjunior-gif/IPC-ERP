@@ -142,9 +142,12 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen }) => {
         } else if (lowInput.includes('événement') || lowInput.includes('vie') || lowInput.includes('fête')) {
            response = "Le pôle **IPC Life** regroupe tous les town halls et afterworks à venir. Une session stratégique est prévue le 24 Avril.";
            navigateTo('connect');
-        } else if (lowInput.includes('mur') || lowInput.includes('succès') || lowInput.includes('annonce')) {
-           response = "Consultez le **Mur de l'Entreprise** pour voir les dernières victoires et annonces officielles.";
-           navigateTo('connect');
+        } else if (lowInput.includes('audit') || lowInput.includes('santé') || lowInput.includes('stratégie')) {
+           response = "Le pôle **Strategic Intelligence** a compilé les données consolidées. La santé globale est excellente (92.4/100).";
+           navigateTo('bi');
+        } else if (lowInput.includes('analyse') || lowInput.includes('statistique') || lowInput.includes('chiffre')) {
+           response = "Je vous redirige vers le **Décision Core**. Souhaitez-vous une analyse Industrielle, Financière ou de Croissance ?";
+           navigateTo('bi');
         } else if (lowInput.includes('va vers') || lowInput.includes('aller à') || lowInput.includes('ouvre')) {
            const appMap = { 
              'crm': 'crm', 'vente': 'sales', 

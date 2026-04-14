@@ -22,7 +22,7 @@ import Production from './modules/production/Production';
 import Project from './modules/logistics/LogisticsHub';
 import Purchase from './modules/logistics/LogisticsHub';
 import Marketing from './modules/marketing/Marketing';
-import BI from './modules/BI';
+import BI from './modules/bi/BIHub';
 import MasterData from './modules/MasterData';
 import CalendarModule from './modules/Calendar';
 import Helpdesk from './modules/enterprise/EnterpriseHub';
