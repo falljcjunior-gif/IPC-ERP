@@ -42,21 +42,22 @@ import SettingsModule from '../modules/Settings';
 import Shipping from '../modules/Shipping';
 import Studio from '../modules/Studio';
 import { useBusiness } from '../BusinessContext';
+import { registry } from '../services/Registry';
+import { initRegistry } from '../registry_init';
 import DetailOverlay from './DetailOverlay';
+import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import NotificationCenter from './NotificationCenter';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
-import { registry } from '../services/Registry';
-import { initRegistry } from '../registry_init';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (V1.2 - CLEAN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
-    globalSearch, searchResults, updateRecord, userRole, config, 
+    globalSearch, searchResults, updateRecord, addRecord, userRole, config, 
     globalSettings, currentUser, permissions, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, togglePinnedModule 
   } = useBusiness();
@@ -248,7 +249,27 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         </div>
       </main>
 
-      <DetailOverlay isOpen={!!details.record} onClose={() => setDetails(p => ({ ...p, record: null }))} record={details.record} appId={details.context.appId} subModule={details.context.subModule} onUpdate={updateRecord} />
+      <DetailOverlay 
+        isOpen={!!details.record} 
+        onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })} 
+        record={details.record} 
+        appId={details.context.appId} 
+        subModule={details.context.subModule} 
+        onUpdate={updateRecord} 
+      />
+
+      <RecordModal 
+        isOpen={!!details.context.appId && !details.record}
+        onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })}
+        title={registry.getSchema(details.context.appId)?.models[details.context.subModule]?.label || 'Nouvel Enregistrement'}
+        recordType={details.context.subModule}
+        fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => ({ ...f, name }))}
+        onSave={(formData) => {
+          addRecord(details.context.appId, details.context.subModule, formData);
+          setDetails({ record: null, context: { appId: '', subModule: '' } });
+        }}
+      />
+
       <WorkflowAssistant />
       <TeamChat isOpen={shellView.chat} onClose={() => setShellView(p => ({ ...p, chat: false }))} theme={theme} />
       <AIAssistant spotlightOpen={shellView.ai} setSpotlightOpen={(val) => setShellView(p => ({ ...p, ai: val }))} />
