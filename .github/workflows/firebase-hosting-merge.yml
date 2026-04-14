@@ -22,8 +22,9 @@ jobs:
         run: npm run build
       - name: Install dependencies (Functions)
         run: cd functions && npm ci
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
       - name: Deploy to Firebase
         run: npx firebase-tools deploy --project ipc-erp --non-interactive
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
