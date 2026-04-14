@@ -20,7 +20,7 @@ import HR from './modules/HR';
 import Production from './modules/Production';
 import Project from './modules/Project';
 import Purchase from './modules/Purchase';
-import Marketing from './modules/Marketing';
+import Marketing from './modules/marketing/Marketing';
 import BI from './modules/BI';
 import MasterData from './modules/MasterData';
 import CalendarModule from './modules/Calendar';
