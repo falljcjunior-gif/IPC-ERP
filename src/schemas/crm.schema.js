@@ -39,6 +39,7 @@ export const crmSchema = {
           default: '⭐'
         },
         statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
+        campagne_id: { label: 'Campagne Source', type: 'text', search: true },
         description: { label: 'Notes internes', type: 'textarea' }
       },
       views: {
@@ -87,6 +88,7 @@ export const crmSchema = {
         next_step: { label: 'Prochaine Étape', type: 'text' },
         etape: { label: 'Étape', type: 'selection', options: ['Nouveau', 'Qualification', 'Proposition', 'Négociation', 'Gagné', 'Perdu'], default: 'Nouveau' },
         dateFermeture: { label: 'Date de clôture', type: 'date' },
+        campagne_id: { label: 'Campagne Source', type: 'text', search: true },
         description: { label: 'Notes internes', type: 'textarea' }
       },
       views: {

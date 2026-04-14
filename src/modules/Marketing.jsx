@@ -58,21 +58,31 @@ const Marketing = ({ onOpenDetail }) => {
   const [campaignModal, setCampaignModal] = useState(false);
 
   const campaigns = useMemo(() => data?.marketing?.campaigns || [], [data?.marketing?.campaigns]);
+  const opportunities = useMemo(() => data?.crm?.opportunities || [], [data?.crm?.opportunities]);
   const leads = useMemo(() => data?.crm?.leads || [], [data?.crm?.leads]);
 
   /* ─── Computed ─── */
   const mktStats = useMemo(() => {
     const mql = leads.filter(l => l.statut === 'En cours').length;
     const sql = leads.filter(l => l.statut === 'Assigné').length;
-    const clients = leads.filter(l => l.statut === 'Terminé').length;
-    const convVisiteur = 0;
-    const cac         = 0;
-    const totalBudget = campaigns.reduce((s, c) => s + (c.budget || 0), 0);
-    const budgetAlloc = 0;
-    const budgetPct   = 0;
-    const roiGlobal   = 0;
-    return { mql, sql, clients, convVisiteur, cac, totalBudget, budgetAlloc, budgetPct, roiGlobal };
-  }, [leads, campaigns]);
+    const clients = leads.filter(l => l.statut === 'Terminé' || l.statut === 'Converti').length;
+    
+    const totalBudget = campaigns.reduce((s, c) => s + (Number(c.budget) || 0), 0);
+    const budgetAlloc = data?.budget?.marketingAlloc || 10000000; // Baseline 10M
+    const budgetPct   = totalBudget > 0 ? Math.round((totalBudget / budgetAlloc) * 100) : 0;
+    
+    // Global Revenue from Marketing attribution
+    const mktRevenue = opportunities
+      .filter(o => o.etape === 'Gagné' && o.campagne_id)
+      .reduce((s, o) => s + (Number(o.montant) || 0), 0);
+    
+    const roiGlobal = totalBudget > 0 ? Number(((mktRevenue - totalBudget) / totalBudget).toFixed(1)) : 0;
+    const cac = clients > 0 ? Math.round(totalBudget / clients) : 0;
+    const cpl = mql > 0 ? Math.round(totalBudget / mql) : 0;
+    const convVisiteur = leads.length > 0 ? Math.round((mql / leads.length) * 100) : 0;
+
+    return { mql, sql, clients, convVisiteur, cac, cpl, totalBudget, budgetAlloc, budgetPct, roiGlobal, mktRevenue };
+  }, [leads, campaigns, opportunities, data?.budget?.marketingAlloc]);
 
   /* ─── Channel ROI Data ─── */
   const channelROI = [];
@@ -90,9 +100,10 @@ const Marketing = ({ onOpenDetail }) => {
   /* ─── Modal Fields ─── */
   const modalFields = [
     { name: 'nom',    label: 'Nom de la Campagne', required: true, placeholder: 'Ex: Lancement Été 2026' },
-    { name: 'type',   label: 'Type', type: 'select', options: ['E-mailing', 'LinkedIn Ads', 'Google Ads', 'Webinaire', 'SEO', 'Événement', 'Social Organic'], required: true },
-    { name: 'budget', label: 'Budget Alloué (FCFA)', type: 'number', required: true },
-    { name: 'statut', label: 'Statut', type: 'select', options: ['Planifié', 'En cours', 'Terminé', 'En pause'], required: true },
+    { name: 'type',   label: 'Type de Canal', type: 'selection', options: ['LinkedIn Ads', 'Facebook Ads', 'Google Ads', 'Instagram', 'TikTok', 'E-mailing', 'SEO', 'Partenaire'], required: true },
+    { name: 'budget', label: 'Budget Publicitaire (FCFA)', type: 'money', required: true },
+    { name: 'url_source', label: 'Lien de la Pub (Base URL)', type: 'text', placeholder: 'https://votresite.com/produit' },
+    { name: 'statut', label: 'Statut', type: 'selection', options: ['Planifié', 'En cours', 'Terminé', 'En pause'], required: true },
     { name: 'objectifMql', label: 'Objectif MQL', type: 'number' },
     { name: 'vues',   label: 'Objectif Vues', type: 'number' },
   ];
@@ -176,9 +187,17 @@ const Marketing = ({ onOpenDetail }) => {
                 <Chip label={camp.statut} color={camp.statut === 'En cours' ? '#10B981' : camp.statut === 'Terminé' ? '#64748B' : '#F59E0B'} />
               </div>
               <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.75rem' }}>{camp.nom}</div>
+              {camp.url_source && (
+                <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem', borderRadius: '0.6rem', fontSize: '0.7rem', marginBottom: '1rem', border: '1px solid var(--border)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Lien de tracking IPC :</span><br/>
+                  <code style={{ color: 'var(--accent)', fontWeight: 700 }}>{`${camp.url_source}?ipc_cid=${camp.id?.substring(0, 8)}`}</code>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.83rem' }}>
-                <div><span style={{ color: 'var(--text-muted)' }}>Budget: </span><strong>{formatCurrency(camp.budget, true)}</strong></div>
-                <div style={{ color: '#10B981', fontWeight: 700 }}>ROI: {camp.roi || '—'}x</div>
+                <div><span style={{ color: 'var(--text-muted)' }}>Investissement: </span><strong>{formatCurrency(camp.budget, true)}</strong></div>
+                <div style={{ color: '#10B981', fontWeight: 700 }}>
+                  ROI: {totalBudget > 0 ? (((opportunities.filter(o => o.campagne_id === camp.id && o.etape === 'Gagné').reduce((s, o) => s + (Number(o.montant) || 0), 0) - camp.budget) / camp.budget).toFixed(1)) : '0'}x
+                </div>
               </div>
             </motion.div>
           ))}
