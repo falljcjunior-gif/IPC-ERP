@@ -425,9 +425,38 @@ export const BusinessProvider = ({ children }) => {
       if (appId === 'finance' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateExpenseEntry(record);
       }
+      if (appId === 'purchase' && subModule === 'orders') {
+        if (newData.statut === 'Réceptionné' && oldRecord.statut !== 'Réceptionné') {
+          applyStockMove({ 
+            productId: record.produitId, 
+            qte: record.qte, 
+            type: 'Réception', 
+            ref: `ACHAT-${record.num || record.id}`,
+            source: record.fournisseur,
+            dest: 'Entrepôt Principal'
+          });
+          addHint({ title: "Marchandise Réceptionnée", message: `La commande ${record.num || record.id} a été réceptionnée dans le stock.`, type: 'success', appId: 'inventory' });
+        }
+        if (newData.statut === 'Facturé' && oldRecord.statut !== 'Facturé') {
+           const billNum = getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
+           const newBill = {
+             id: Date.now().toString(),
+             num: billNum,
+             fournisseur: record.fournisseur,
+             date: new Date().toISOString().split('T')[0],
+             montant: record.total,
+             statut: 'À payer',
+             orderId: record.id,
+             createdAt: new Date().toISOString()
+           };
+           nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
+           addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est désormais à régler en finance.`, type: 'info', appId: 'finance' });
+           logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
+        }
+      }
       return nextState;
     });
-  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation]);
+  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence]);
 
   const deleteRecord = useCallback((appId, subModule, id) => {
     setData(prev => {

@@ -6,7 +6,10 @@ const generateInvoices = () => [];
 export const mockData = {
   // MASTER DATA (Core of the ERP)
   base: {
-    contacts: [],
+    contacts: [
+      { id: 'C-001', nom: 'Cimentafric SA', email: 'contact@cimentafric.com', pays: 'Maroc', ville: 'Casablanca', type: 'Fournisseur', categories: 'Matières Premières' },
+      { id: 'C-002', nom: 'GravierPro', email: 'achats@gravierpro.com', pays: 'Maroc', ville: 'Tanger', type: 'Fournisseur', categories: 'Matières Premières' }
+    ],
     catalog: [],
     taxes: [
       { id: 'VAT-20', label: 'TVA 20%', rate: 0.20, default: true },
@@ -84,7 +87,10 @@ export const mockData = {
     tasks: []
   },
   purchase: {
-    orders: []
+    orders: [
+      { id: 'PO-001', num: 'CMD-ACH-2026-01', fournisseur: 'Cimentafric SA', produitId: 'MAT-CIMENT', qte: 50, date: '2026-04-10', echeance: '2026-04-15', total: 2500000, statut: 'Commandé' },
+      { id: 'PO-002', num: 'CMD-ACH-2026-02', fournisseur: 'GravierPro', produitId: 'MAT-GRAVIER', qte: 200, date: '2026-04-12', echeance: '2026-04-14', total: 1200000, statut: 'Brouillon' }
+    ]
   },
   marketing: {
     campaigns: []

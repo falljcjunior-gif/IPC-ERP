@@ -11,6 +11,8 @@ export const purchaseSchema = {
       fields: {
         num: { label: 'Référence', type: 'text', required: true, search: true },
         fournisseur: { label: 'Fournisseur', type: 'text', required: true, search: true },
+        produitId: { label: 'Article Lié', type: 'text', search: true },
+        qte: { label: 'Quantité', type: 'number' },
         date: { label: 'Date', type: 'date', required: true },
         echeance: { label: 'Livraison Prévue', type: 'date' },
         total: { label: 'Montant HT', type: 'money', currency: 'FCFA', search: true },
