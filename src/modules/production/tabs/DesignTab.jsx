@@ -10,11 +10,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const DesignTab = ({ data }) => {
-  const boms = data?.production?.boms || [
-    { id: 'BOM-BLK-15', product: 'Bloc Béton 15x20x40', version: '2.1', components: 4, type: 'Direct', status: 'Actif' },
-    { id: 'BOM-PAV-GR', product: 'Pavé Autobloquant Gris', version: '1.0', components: 6, type: 'Composé', status: 'En Révision' },
-    { id: 'BOM-BRD-T2', product: 'Bordure T2 Standard', version: '3.4', components: 3, type: 'Direct', status: 'Actif' },
-  ];
+  const boms = data?.production?.boms || [];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

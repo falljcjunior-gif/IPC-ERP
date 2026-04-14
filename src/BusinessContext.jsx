@@ -68,6 +68,19 @@ export const BusinessProvider = ({ children }) => {
         if (!merged.inventory.movements) merged.inventory.movements = [];
       }
 
+      if (merged.production) {
+        if (!merged.production.boms || merged.production.boms.length === 0) {
+          merged.production.boms = [
+            { id: 'BOM-BRICK-01', product: 'Bloc Béton 15x20x40', productId: 'PRD-001', components: JSON.stringify([
+              { productId: 'MAT-CIMENT', qte: 0.5 },
+              { productId: 'MAT-SABLE', qte: 1.2 },
+              { productId: 'MAT-GRAVIER', qte: 2.0 }
+            ]), coutEstime: 450 }
+          ];
+        }
+        if (!merged.production.workOrders) merged.production.workOrders = [];
+      }
+
       if (!merged.dms) merged.dms = { files: [], categories: ['Finances', 'RH', 'Technique', 'Légal'] };
       if (!merged.planning) merged.planning = { events: [] };
       if (!merged.finance.accounts) merged.finance.accounts = mockData.finance.accounts;
@@ -360,6 +373,51 @@ export const BusinessProvider = ({ children }) => {
     logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
   }, [getNextSequence, addHint, logAction]);
 
+  const applyMOTransformation = useCallback((moId) => {
+    setData(prev => {
+      const mo = prev.production?.workOrders?.find(o => o.id === moId);
+      if (!mo) return prev;
+
+      const bom = prev.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+      if (!bom) {
+        addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
+        return prev;
+      }
+
+      let componentsList = [];
+      try { 
+        componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); 
+      } catch (e) { componentsList = []; }
+
+      // 1. Consume Raw Materials
+      componentsList.forEach(comp => {
+        applyStockMove({
+          productId: comp.productId,
+          qte: comp.qte * (mo.qte || 0),
+          type: 'Consommation',
+          ref: `OF-${mo.num || mo.id}`
+        });
+      });
+
+      // 2. Produce Finished Good
+      applyStockMove({
+        productId: bom.productId || mo.produitId,
+        qte: mo.qte,
+        type: 'Réception',
+        ref: `OF-${mo.num || mo.id}`
+      });
+
+      addHint({ 
+        title: "Production Terminée", 
+        message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, 
+        type: 'success', 
+        appId: 'production' 
+      });
+
+      return prev;
+    });
+  }, [addHint, applyStockMove]);
+
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
@@ -387,6 +445,11 @@ export const BusinessProvider = ({ children }) => {
       
       // --- Functional Triggers ---
 
+      // Production: MO Completed
+      if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
+        applyMOTransformation(id);
+      }
+
       // AI/Hint: Won Opportunity
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
         addHint({ 
@@ -411,7 +474,7 @@ export const BusinessProvider = ({ children }) => {
 
       return nextState;
     });
-  }, [logAction, addHint, generateInvoiceEntry, convertOppToSalesOrder, processOrderValidation]);
+  }, [logAction, addHint, generateInvoiceEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation]);
 
   const applyStockMove = useCallback((movementData) => {
     const { productId, qte, type, ref, source, dest } = movementData;

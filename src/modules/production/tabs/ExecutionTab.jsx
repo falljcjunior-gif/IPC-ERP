@@ -11,11 +11,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const ExecutionTab = ({ data, onOpenDetail }) => {
-  const workOrders = data?.production?.workOrders || [
-    { id: 'OF-2026-042', produit: 'Bloc Béton 15x20x40', qte: 5000, progress: 65, due: '2026-04-15', status: 'En cours', priority: 'Haute' },
-    { id: 'OF-2026-043', produit: 'Pavé Autobloquant Gris', qte: 1200, progress: 100, due: '2026-04-12', status: 'Terminé', priority: 'Normale' },
-    { id: 'OF-2026-044', produit: 'Bordure T2', qte: 800, progress: 15, due: '2026-04-18', status: 'Planifié', priority: 'Urgente' },
-  ];
+  const workOrders = data?.production?.workOrders || [];
 
   const getPriorityColor = (p) => {
     if (p === 'Urgente') return '#EF4444';
@@ -49,6 +45,7 @@ const ExecutionTab = ({ data, onOpenDetail }) => {
             key={of.id} 
             variants={item}
             whileHover={{ x: 10, background: 'rgba(6, 182, 212, 0.02)' }}
+            onClick={() => onOpenDetail && onOpenDetail('production', 'workOrders', of)}
             className="glass" 
             style={{ 
               padding: '1.5rem 2.5rem', borderRadius: '1.75rem', border: '1px solid var(--border)', 

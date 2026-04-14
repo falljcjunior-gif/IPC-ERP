@@ -6,11 +6,12 @@ export const productionSchema = {
   id: 'production',
   label: 'Production',
   models: {
-    orders: {
+    workOrders: {
       label: 'Ordres de Fabrication',
       fields: {
         num: { label: 'N° OF', type: 'text', required: true, search: true },
         produit: { label: 'Produit', type: 'text', required: true, search: true },
+        produitId: { label: 'Article ID', type: 'text' },
         qte: { label: 'Quantité', type: 'number', required: true },
         echeance: { label: 'Échéance', type: 'date', required: true },
         statut: { 
@@ -19,10 +20,11 @@ export const productionSchema = {
           options: ['Planifié', 'En cours', 'Terminé', 'Annulé'],
           default: 'Planifié'
         },
-        progression: { label: 'Progression (%)', type: 'number' }
+        priority: { label: 'Priorité', type: 'selection', options: ['Basse', 'Normale', 'Haute', 'Urgente'], default: 'Normale' },
+        progression: { label: 'Progression (%)', type: 'number', default: 0 }
       },
       views: {
-        list: ['num', 'produit', 'qte', 'echeance', 'statut', 'progression'],
+        list: ['num', 'produit', 'qte', 'echeance', 'statut', 'priority', 'progression'],
         kanban: {
           groupField: 'statut',
           titleField: 'produit',
