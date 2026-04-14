@@ -11,18 +11,47 @@ export const crmSchema = {
       fields: {
         nom: { label: 'Nom Complet', type: 'text', required: true, search: true },
         entreprise: { label: 'Entreprise', type: 'text', required: true, search: true },
+        poste: { label: 'Poste / Titre', type: 'text', search: true },
         email: { label: 'Email', type: 'email', search: true },
-        source: { label: 'Source', type: 'selection', options: ['Site Web', 'E-mail', 'Appel entrant', 'Partenaire', 'Conférence'] },
-        statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' }
+        telephone: { label: 'Téléphone', type: 'text', search: true },
+        site_web: { label: 'Site Web', type: 'text' },
+        ville: { label: 'Ville', type: 'text', search: true },
+        pays: { label: 'Pays', type: 'text', default: 'Sénégal' },
+        secteur: { 
+          label: 'Secteur d\'activité', 
+          type: 'selection', 
+          options: ['Industrie', 'Services', 'Tech', 'BTP', 'Commerce', 'Santé', 'Éducation', 'Banque & Assurance', 'Transport', 'Autre'] 
+        },
+        taille_entreprise: { 
+          label: 'Taille Entreprise', 
+          type: 'selection', 
+          options: ['1-10 employés', '11-50 employés', '51-200 employés', '201-500 employés', '500+ employés'] 
+        },
+        source: { label: 'Source', type: 'selection', options: ['Site Web', 'E-mail', 'Appel entrant', 'Partenaire', 'Conférence', 'Autre'] },
+        priorite: { 
+          label: 'Priorité', 
+          type: 'selection', 
+          options: [
+            { label: '⭐ (Basse)', value: '⭐' },
+            { label: '⭐⭐ (Moyenne)', value: '⭐⭐' },
+            { label: '⭐⭐⭐ (Haute)', value: '⭐⭐⭐' }
+          ],
+          default: '⭐'
+        },
+        statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
+        description: { label: 'Notes internes', type: 'textarea' }
       },
       views: {
-        list: ['nom', 'entreprise', 'email', 'source', 'statut'],
+        list: ['nom', 'entreprise', 'poste', 'email', 'telephone', 'priorite', 'statut'],
         search: {
           filters: [
-            { id: 'active', label: 'Prospects Actifs', domain: [['statut', '!=', 'Perdu']] }
+            { id: 'active', label: 'Prospects Actifs', domain: [['statut', '!=', 'Perdu']] },
+            { id: 'hot', label: 'Priorité Haute', domain: [['priorite', '==', '⭐⭐⭐']] }
           ],
           groups: [
-            { id: 'source', label: 'Par Source' }
+            { id: 'source', label: 'Par Source' },
+            { id: 'secteur', label: 'Par Secteur' },
+            { id: 'ville', label: 'Par Ville' }
           ]
         }
       }

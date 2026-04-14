@@ -132,7 +132,7 @@ const RecordModal = ({
                               {initialData[field.name]?.toString() || '—'}
                             </div>
                           ) : (
-                            field.type === 'select' ? (
+                            (field.type === 'selection' || field.type === 'select') ? (
                               <select
                                 value={formData[field.name] || ''}
                                 required={field.required}
@@ -141,19 +141,28 @@ const RecordModal = ({
                                 style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
                               >
                                 <option value="">Sélectionner...</option>
-                                {field.options.map(opt => {
+                                {field.options && field.options.map(opt => {
                                   const value = typeof opt === 'object' ? opt.value : opt;
                                   const label = typeof opt === 'object' ? opt.label : opt;
                                   return <option key={value} value={value}>{label}</option>;
                                 })}
                               </select>
+                            ) : field.type === 'textarea' ? (
+                              <textarea
+                                value={formData[field.name] || ''}
+                                required={field.required}
+                                placeholder={field.placeholder}
+                                onChange={(e) => handleChange(field.name, e.target.value)}
+                                className="glass"
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical' }}
+                              />
                             ) : (
                               <input
                                 value={formData[field.name] || ''}
-                                type={field.type || 'text'}
+                                type={field.type === 'money' ? 'number' : (field.type || 'text')}
                                 required={field.required}
                                 placeholder={field.placeholder}
-                                onChange={(e) => handleChange(field.name, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                                onChange={(e) => handleChange(field.name, (field.type === 'number' || field.type === 'money') ? Number(e.target.value) : e.target.value)}
                                 className="glass"
                                 style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
                               />
