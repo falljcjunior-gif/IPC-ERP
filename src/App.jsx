@@ -5,6 +5,9 @@ import PlatformShell from './components/PlatformShell';
 import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import { initRegistry } from './registry_init';
+import { httpsCallable, getFunctions } from 'firebase/functions';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase/config';
 import './index.css';
 
 function App() {
@@ -38,6 +41,48 @@ function App() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  /* ─── OAuth Callback Detection ─── */
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    
+    if (code) {
+      const handleCallback = async () => {
+        try {
+          // 1. Appeler la Cloud Function pour l'échange de token
+          const functions = getFunctions();
+          const exchangeFunc = httpsCallable(functions, 'exchangeSocialToken');
+          
+          const result = await exchangeFunc({
+            provider: 'facebook', // On commence par FB/IG
+            code: code,
+            redirectUri: window.location.origin + '/'
+          });
+
+          const { accessToken } = result.data;
+
+          // 2. Enregistrer le compte connecté
+          await setDoc(doc(db, 'marketing', 'accounts_live'), {
+            facebook: {
+              accessToken,
+              statut: 'Connecté',
+              derniereSynchro: serverTimestamp()
+            }
+          }, { merge: true });
+
+          // 3. Nettoyer l'URL et alerter
+          window.history.replaceState({}, document.title, "/");
+          alert("Compte connecté avec succès !");
+        } catch (error) {
+          console.error("Erreur exchange token:", error);
+          alert("Échec de la connexion. Vérifiez vos identifiants API.");
+        }
+      };
+      
+      handleCallback();
+    }
   }, []);
 
   useEffect(() => {

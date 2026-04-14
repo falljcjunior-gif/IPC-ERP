@@ -12,7 +12,11 @@ service cloud.firestore {
         request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
       );
       allow read, write: if request.auth != null && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']);
+    }
+    
+    match /system_config/{docId} {
+      allow read, write: if request.auth != null && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']);
     }
     
@@ -37,7 +41,6 @@ service cloud.firestore {
         collectionName == 'messages' ||
         collectionName == 'base' ||
         collectionName == 'workflows' ||
-        collectionName == 'marketing' ||
         collectionName == 'hr'
       );
     }

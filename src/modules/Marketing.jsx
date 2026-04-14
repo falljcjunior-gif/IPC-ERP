@@ -20,6 +20,8 @@ import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
 
 /* ─── Shared UI Helpers ─── */
 const fadeIn = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } } };
@@ -33,11 +35,13 @@ const TabBar = ({ tabs, active, onChange }) => (
   <div className="glass" style={{ display: 'flex', padding: '0.4rem', borderRadius: '1rem', gap: '0.4rem', width: 'fit-content', border: '1px solid var(--border)' }}>
     {tabs.map(t => (
       <button key={t.id} onClick={() => onChange(t.id)}
-        style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
+        style={{
+          padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem',
           background: active === t.id ? 'var(--accent)' : 'transparent',
           color: active === t.id ? 'white' : 'var(--text-muted)',
           display: 'flex', alignItems: 'center', gap: '0.6rem',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}>
         {t.icon} {t.label}
       </button>
     ))}
@@ -49,11 +53,21 @@ const TabBar = ({ tabs, active, onChange }) => (
    Inspiré par Metricool
    ════════════════════════════════ */
 const Marketing = ({ onOpenDetail }) => {
-  const { data, addRecord, formatCurrency } = useBusiness();
+  const { data, addRecord, formatCurrency, permissions, userRole } = useBusiness();
   const [mainTab, setMainTab] = useState('analytics');
-  const [subNetwork, setSubNetwork] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('posts'); // 'posts' | 'campaigns' | 'smartlinks'
+  const [modalMode, setModalMode] = useState('posts');
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [apiKeys, setApiKeys] = useState({ facebook: { clientId: '', clientSecret: '' } });
+  const [subNetwork, setSubNetwork] = useState('all');
+
+  useEffect(() => {
+    const fetchKeys = async () => {
+      const snap = await getDoc(doc(db, 'system_config', 'marketing_apis'));
+      if (snap.exists()) setApiKeys(snap.data());
+    };
+    fetchKeys();
+  }, []);
 
   // Data Selectors
   const campaigns = useMemo(() => data?.marketing?.campaigns || [], [data?.marketing?.campaigns]);
@@ -78,13 +92,13 @@ const Marketing = ({ onOpenDetail }) => {
     const totalSpent = campaigns.reduce((s, c) => s + (Number(c.budget) || 0), 0);
     const wonDeals = opportunities.filter(o => o.etape === 'Gagné');
     const totalWon = wonDeals.reduce((s, o) => s + (Number(o.montant) || 0), 0);
-    
+
     // Realistic Projection Logic
     const avgOrderValue = wonDeals.length > 0 ? totalWon / wonDeals.length : 1500000;
     const conversionRate = leads.length > 0 ? (wonDeals.length / leads.length) : 0.05;
     const predictedNewLeads = 150; // Based on current ad trends
     const predictedRevenue = Math.round(predictedNewLeads * conversionRate * avgOrderValue);
-    
+
     return { predictedRevenue, totalWon, totalSpent, avgOrderValue, confidence: 85 };
   }, [campaigns, leads, opportunities]);
 
@@ -92,7 +106,7 @@ const Marketing = ({ onOpenDetail }) => {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    
+
     // Header
     doc.setFillColor(31, 54, 61);
     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -124,7 +138,7 @@ const Marketing = ({ onOpenDetail }) => {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Stratégie Hebdomadaire", 15, finalY);
-    
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text("- Publication optimale : Vendredi 18:30", 15, finalY + 10);
@@ -167,8 +181,8 @@ const Marketing = ({ onOpenDetail }) => {
           { id: 'web', label: 'Site Web', icon: <Globe size={16} color="#3B82F6" /> },
         ].map(net => (
           <button key={net.id} onClick={() => setSubNetwork(net.id)}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1.2rem', 
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.6rem 1.2rem',
               borderRadius: '2rem', border: '1px solid var(--border)', cursor: 'pointer',
               background: subNetwork === net.id ? 'var(--bg-subtle)' : 'transparent',
               fontWeight: 700, fontSize: '0.82rem', transition: '0.2s', whiteSpace: 'nowrap',
@@ -221,7 +235,7 @@ const Marketing = ({ onOpenDetail }) => {
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', width: '30px', fontWeight: 700 }}>{row.hour}</span>
                 <div style={{ flex: 1, display: 'flex', gap: '3px' }}>
                   {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => (
-                    <div key={day} style={{ 
+                    <div key={day} style={{
                       flex: 1, height: '18px', borderRadius: '3px',
                       background: row[day] > 90 ? '#8B5CF6' : row[day] > 70 ? '#8B5CF680' : row[day] > 40 ? '#8B5CF640' : '#8B5CF610',
                       transition: '0.3s'
@@ -323,12 +337,12 @@ const Marketing = ({ onOpenDetail }) => {
           <button className="btn-secondary" style={{ fontSize: '0.75rem' }}>Convertir en Opportunité</button>
         </div>
         <div style={{ flex: 1, padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-           <div style={{ alignSelf: 'flex-start', background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '1.25rem', maxWidth: '70%', fontSize: '0.85rem' }}>
-             {messages[0].content}
-           </div>
-           <div style={{ alignSelf: 'flex-end', background: 'var(--accent)', color: 'white', padding: '1rem', borderRadius: '1.25rem', maxWidth: '70%', fontSize: '0.85rem' }}>
-             Bonjour M. Diakité, bien sûr. Je vous prépare cela tout de suite.
-           </div>
+          <div style={{ alignSelf: 'flex-start', background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '1.25rem', maxWidth: '70%', fontSize: '0.85rem' }}>
+            {messages[0].content}
+          </div>
+          <div style={{ alignSelf: 'flex-end', background: 'var(--accent)', color: 'white', padding: '1rem', borderRadius: '1.25rem', maxWidth: '70%', fontSize: '0.85rem' }}>
+            Bonjour M. Diakité, bien sûr. Je vous prépare cela tout de suite.
+          </div>
         </div>
         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem' }}>
           <input className="glass" placeholder="Écrire votre réponse..." style={{ flex: 1, border: 'none', padding: '0.8rem 1.25rem', borderRadius: '1rem' }} />
@@ -343,94 +357,51 @@ const Marketing = ({ onOpenDetail }) => {
      ════════════════════════════ */
   const renderStrategy = () => (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'linear-gradient(135deg, var(--accent) 0%, #1D4ED8 100%)', color: 'white', border: 'none' }}>
-            <h4 style={{ margin: '0 0 1rem 0', opacity: 0.9, fontSize: '0.9rem' }}>Chiffre d'Affaires Prédictif (J+30)</h4>
-            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>{formatCurrency(predictionData.predictedRevenue, true)}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-              <CheckCircle2 size={16} /> Indice de confiance : {predictionData.confidence}% (Réaliste)
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: 'linear-gradient(135deg, var(--accent) 0%, #1D4ED8 100%)', color: 'white', border: 'none' }}>
+          <h4 style={{ margin: '0 0 1rem 0', opacity: 0.9, fontSize: '0.9rem' }}>Chiffre d'Affaires Prédictif (J+30)</h4>
+          <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>{formatCurrency(predictionData.predictedRevenue, true)}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+            <CheckCircle2 size={16} /> Indice de confiance : {predictionData.confidence}% (Réaliste)
           </div>
-          <KpiCard title="Valeur Moyenne de Deal" value={formatCurrency(predictionData.avgOrderValue, true)} trend={5.2} trendType="up" icon={<DollarSign size={22} />} color="#10B981" sparklineData={[1.2, 1.4, 1.3, 1.5, 1.6]} />
-          <KpiCard title="Coût par Conversion IA" value="12,500 FCFA" trend={-12} trendType="down" icon={<Zap size={22} />} color="#8B5CF6" sparklineData={[15, 14, 13, 12.5]} />
-       </div>
+        </div>
+        <KpiCard title="Valeur Moyenne de Deal" value={formatCurrency(predictionData.avgOrderValue, true)} trend={5.2} trendType="up" icon={<DollarSign size={22} />} color="#10B981" sparklineData={[1.2, 1.4, 1.3, 1.5, 1.6]} />
+        <KpiCard title="Coût par Conversion IA" value="12,500 FCFA" trend={-12} trendType="down" icon={<Zap size={22} />} color="#8B5CF6" sparklineData={[15, 14, 13, 12.5]} />
+      </div>
 
-       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
-         <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
-            <h4 style={{ fontWeight: 800, marginBottom: '1.5rem' }}>Analyse de Rentabilité par Canal (Radar)</h4>
-            <ResponsiveContainer width="100%" height={350}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
-                { subject: 'FB Ads', A: 120, fullMark: 150 },
-                { subject: 'Google Ads', A: 98, fullMark: 150 },
-                { subject: 'Instagram', A: 86, fullMark: 150 },
-                { subject: 'LinkedIn', A: 99, fullMark: 150 },
-                { subject: 'Direct', A: 85, fullMark: 150 },
-              ]}>
-                <PolarGrid stroke="var(--border)" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-                <Radar name="Rentabilité" dataKey="A" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.4} />
-              </RadarChart>
-            </ResponsiveContainer>
-         </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
+        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
+          <h4 style={{ fontWeight: 800, marginBottom: '1.5rem' }}>Analyse de Rentabilité par Canal (Radar)</h4>
+          <ResponsiveContainer width="100%" height={350}>
+            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+              { subject: 'FB Ads', A: 120, fullMark: 150 },
+              { subject: 'Google Ads', A: 98, fullMark: 150 },
+              { subject: 'Instagram', A: 86, fullMark: 150 },
+              { subject: 'LinkedIn', A: 99, fullMark: 150 },
+              { subject: 'Direct', A: 85, fullMark: 150 },
+            ]}>
+              <PolarGrid stroke="var(--border)" />
+              <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
+              <Radar name="Rentabilité" dataKey="A" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.4} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
 
-         <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: '#F9FAFB' }}>
-            <h4 style={{ fontWeight: 800, marginBottom: '1rem', color: '#111827' }}>Recommendations IA</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {[
-                { title: 'Optimiser Facebook', text: 'Vendez vos blocs vers 18h le vendredi, l\'engagement est 20% plus élevé.', type: 'opt' },
-                { title: 'Urgence Lead', text: 'Moussa Diakité a 92% de probabilité de signature immédiate.', type: 'lead' }
-              ].map((rec, i) => (
-                <div key={i} style={{ padding: '1.25rem', borderRadius: '1rem', background: 'white', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem', color: rec.type === 'lead' ? '#EF4444' : 'var(--accent)' }}>{rec.title}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#4B5563' }}>{rec.text}</div>
-                </div>
-              ))}
-            </div>
-         </div>
-       </div>
-    </motion.div>
-  );
-
-  const renderConnect = () => (
-    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-      {[
-        { id: 'fb', net: 'Facebook', icon: <Square size={24} />, color: '#1877F2', desc: 'Pages & Groupes' },
-        { id: 'ig', net: 'Instagram', icon: <Camera size={24} />, color: '#E4405F', desc: 'Profils Business' },
-        { id: 'li', net: 'LinkedIn', icon: <Briefcase size={24} />, color: '#0A66C2', desc: 'Profil & Pages' },
-        { id: 'tk', net: 'TikTok', icon: <Smartphone size={24} />, color: '#000000', desc: 'Comptes Créateurs' },
-        { id: 'ga', net: 'Google Ads', icon: <Globe size={24} />, color: '#4285F4', desc: 'Campagnes SEM' },
-        { id: 'wb', net: 'Site Web', icon: <Globe size={24} />, color: '#10B981', desc: 'Tracker Analytics' },
-      ].map(platform => {
-        const connected = accounts.find(a => a.reseau === platform.net && a.statut === 'Connecté');
-        return (
-          <motion.div key={platform.id} variants={fadeIn} whileHover={{ y: -5 }} className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: platform.color }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-              <div style={{ background: `${platform.color}15`, padding: '0.75rem', borderRadius: '1rem', color: platform.color }}>
-                {platform.icon}
+        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: '#F9FAFB' }}>
+          <h4 style={{ fontWeight: 800, marginBottom: '1rem', color: '#111827' }}>Recommendations IA</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {[
+              { title: 'Optimiser Facebook', text: 'Vendez vos blocs vers 18h le vendredi, l\'engagement est 20% plus élevé.', type: 'opt' },
+              { title: 'Urgence Lead', text: 'Moussa Diakité a 92% de probabilité de signature immédiate.', type: 'lead' }
+            ].map((rec, i) => (
+              <div key={i} style={{ padding: '1.25rem', borderRadius: '1rem', background: 'white', border: '1px solid var(--border)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: '0.25rem', color: rec.type === 'lead' ? '#EF4444' : 'var(--accent)' }}>{rec.title}</div>
+                <div style={{ fontSize: '0.8rem', color: '#4B5563' }}>{rec.text}</div>
               </div>
-              <Chip label={connected ? 'Actif' : 'Déconnecté'} color={connected ? '#10B981' : '#64748B'} />
-            </div>
-            <h5 style={{ margin: '0 0 0.25rem 0', fontWeight: 800 }}>{platform.net}</h5>
-            <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{platform.desc}</p>
-            
-            {connected ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: '0.75rem' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>IPC</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>{connected.nom}</div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Synchro il y a 5 min</div>
-                </div>
-                <button className="btn-icon" style={{ padding: '4px' }}><RefreshCcw size={14} /></button>
-              </div>
-            ) : (
-              <button className="btn-primary" style={{ width: '100%', background: platform.color, border: 'none' }}>
-                Connecter {platform.net}
-              </button>
-            )}
-          </motion.div>
-        );
-      })}
+            ))}
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 
@@ -466,12 +437,17 @@ const Marketing = ({ onOpenDetail }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem' }}>
+           {userRole === 'SUPER_ADMIN' && (
+             <button onClick={() => setIsConfigOpen(true)} className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.9rem', color: '#8B5CF6' }}>
+               <Settings size={18} />
+             </button>
+           )}
            <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
-             <Share2 size={16} /> Partager Rapport
-           </button>
-           <button className="btn-primary" onClick={() => { setModalMode('posts'); setIsModalOpen(true); }} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-             <Plus size={18} /> Nouvelle Action
-           </button>
+            <Share2 size={16} /> Partager Rapport
+          </button>
+          <button className="btn-primary" onClick={() => { setModalMode('posts'); setIsModalOpen(true); }} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <Plus size={18} /> Nouvelle Action
+          </button>
         </div>
       </div>
 
@@ -499,10 +475,42 @@ const Marketing = ({ onOpenDetail }) => {
         </motion.div>
       </AnimatePresence>
 
-      <RecordModal 
-        isOpen={isModalOpen} 
+      {/* API Config Modal */}
+      <AnimatePresence>
+        {isConfigOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="glass" style={{ width: '450px', padding: '2.5rem', borderRadius: '2rem' }}>
+              <h2 style={{ fontWeight: 900, marginBottom: '0.5rem' }}>Configuration API</h2>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Entrez les identifiants de votre application Meta for Developers.</p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Facebook App ID</label>
+                  <input className="glass" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.8rem', border: 'none' }} value={apiKeys.facebook?.clientId} onChange={e => setApiKeys(p => ({ ...p, facebook: { ...p.facebook, clientId: e.target.value } }))} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, marginBottom: '0.5rem', textTransform: 'uppercase' }}>Facebook App Secret</label>
+                  <input type="password" className="glass" style={{ width: '100%', padding: '0.75rem', borderRadius: '0.8rem', border: 'none' }} value={apiKeys.facebook?.clientSecret} onChange={e => setApiKeys(p => ({ ...p, facebook: { ...p.facebook, clientSecret: e.target.value } }))} />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <button onClick={() => setIsConfigOpen(false)} className="btn-secondary" style={{ flex: 1 }}>Annuler</button>
+                  <button onClick={async () => {
+                    await setDoc(doc(db, 'system_config', 'marketing_apis'), apiKeys);
+                    setIsConfigOpen(false);
+                    alert("Configuration sauvegardée !");
+                  }} className="btn-primary" style={{ flex: 1 }}>Enregistrer</button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <RecordModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={modalConfig[modalMode].title}
+        title={modalConfig[modalMode]?.title}
         fields={Object.entries(modalConfig[modalMode].schema.fields).map(([name, f]) => ({ ...f, name }))}
         onSave={(f) => {
           addRecord('marketing', modalMode, f);
