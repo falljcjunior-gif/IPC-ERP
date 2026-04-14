@@ -31,6 +31,7 @@ const EnterpriseView = ({
 
   // Merge base schema with potential Studio overrides
   const modelSchema = useMemo(() => {
+    if (!schema || !schema.models || !schema.models[modelId]) return null;
     const base = schema.models[modelId];
     const overrides = schemaOverrides[`${moduleId}.${modelId}`];
     if (!overrides) return base;
@@ -41,6 +42,10 @@ const EnterpriseView = ({
   const getNestedValue = (obj, path) => {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
   };
+
+  if (!modelSchema) {
+    return <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444', fontWeight: 600 }}>Vue indisponible : le modèle {modelId} n'existe pas dans le schéma {moduleId}.</div>;
+  }
 
   const dataPath = modelSchema.dataPath || `${moduleId}.${modelId}`;
   const rawData = getNestedValue(data, dataPath) || [];
