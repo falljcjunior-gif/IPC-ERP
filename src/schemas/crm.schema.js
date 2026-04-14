@@ -63,25 +63,52 @@ export const crmSchema = {
         client: { label: 'Client', type: 'text', required: true, search: true },
         montant: { label: 'Montant', type: 'money', currency: 'FCFA', search: true },
         probabilite: { label: 'Probabilité (%)', type: 'number', min: 0, max: 100 },
+        type: { 
+          label: 'Type de deal', 
+          type: 'selection', 
+          options: ['Nouveau Business', 'Renouvellement', 'Up-sell'] 
+        },
+        priorite: { 
+          label: 'Priorité', 
+          type: 'selection', 
+          options: [
+            { label: '⭐ (Basse)', value: '⭐' },
+            { label: '⭐⭐ (Moyenne)', value: '⭐⭐' },
+            { label: '⭐⭐⭐ (Haute)', value: '⭐⭐⭐' }
+          ],
+          default: '⭐'
+        },
+        responsable: { label: 'Commercial Assingné', type: 'text' },
+        tag: { 
+          label: 'Étiquettes', 
+          type: 'selection', 
+          options: ['Très Urgent', 'Grand Compte', 'Récurrent', 'Stratégique', 'En attente'] 
+        },
+        next_step: { label: 'Prochaine Étape', type: 'text' },
         etape: { label: 'Étape', type: 'selection', options: ['Nouveau', 'Qualification', 'Proposition', 'Négociation', 'Gagné', 'Perdu'], default: 'Nouveau' },
-        dateFermeture: { label: 'Date de clôture', type: 'date' }
+        dateFermeture: { label: 'Date de clôture', type: 'date' },
+        description: { label: 'Notes internes', type: 'textarea' }
       },
       views: {
-        list: ['titre', 'client', 'montant', 'etape', 'probabilite'],
+        list: ['titre', 'client', 'montant', 'priorite', 'etape', 'responsable'],
         kanban: {
           groupField: 'etape',
           titleField: 'titre',
           subtitleField: 'client',
-          valueField: 'montant'
+          valueField: 'montant',
+          priorityField: 'priorite',
+          tagField: 'tag'
         },
         search: {
           filters: [
             { id: 'won', label: 'Gagnées', domain: [['etape', '==', 'Gagné']] },
-            { id: 'hot', label: 'Fort Montant', domain: [['montant', '>', 1000000]] }
+            { id: 'hot', label: 'Fort Montant', domain: [['montant', '>', 1000000]] },
+            { id: 'strategic', label: 'Stratégique', domain: [['priorite', '==', '⭐⭐⭐']] }
           ],
           groups: [
             { id: 'etape', label: 'Par Étape' },
-            { id: 'client', label: 'Par Client' }
+            { id: 'client', label: 'Par Client' },
+            { id: 'responsable', label: 'Par Commercial' }
           ]
         }
       }

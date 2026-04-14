@@ -173,14 +173,19 @@ const EnterpriseView = ({
     if (!modelSchema.views.kanban) return <div>Vue Kanban non configurée pour ce modèle.</div>;
     const config = modelSchema.views.kanban;
     
+    // Dynamically get columns from the group field options
+    const groupField = modelSchema.fields[config.groupField];
+    const columns = groupField ? groupField.options : ['Nouveau', 'En cours', 'Fait'];
+
     return (
       <KanbanBoard 
         items={processedData}
-        groupField={config.groupField}
-        titleField={config.titleField}
-        subtitleField={config.subtitleField}
-        valueField={config.valueField}
+        columns={columns}
+        columnMapping={config.groupField}
         onItemClick={(item) => onOpenDetail(item, moduleId, modelId)}
+        onMove={(item, newColumn) => {
+          updateRecord(moduleId, modelId, item.id, { [config.groupField]: newColumn });
+        }}
       />
     );
   };

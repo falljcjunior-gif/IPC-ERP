@@ -95,7 +95,9 @@ const KanbanBoard = ({
                     borderRadius: '1rem', 
                     cursor: 'pointer',
                     position: 'relative',
-                    userSelect: 'none'
+                    userSelect: 'none',
+                    border: item.priorite === '⭐⭐⭐' ? '1px solid #F59E0B' : (item.priorite === '⭐⭐' ? '1px solid #3B82F6' : '1px solid var(--border)'),
+                    background: item.priorite === '⭐⭐⭐' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)' : 'var(--bg)'
                   }}
                 >
                   <div style={{ 
@@ -109,13 +111,35 @@ const KanbanBoard = ({
                   </div>
                   
                   {renderCardContent ? renderCardContent(item) : (
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.5rem', paddingRight: '1rem' }}>
-                        {item.nom || item.titre}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text)' }}>
+                          {item.nom || item.titre}
+                        </div>
+                        {item.priorite && (
+                          <div style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>{item.priorite}</div>
+                        )}
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                        {item.entreprise || item.projet}
+                      
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                        {item.entreprise || item.client || item.projet}
                       </div>
+
+                      {item.tag && (
+                        <div style={{ 
+                          display: 'inline-flex', 
+                          padding: '2px 8px', 
+                          borderRadius: '6px', 
+                          background: 'var(--accent)15', 
+                          color: 'var(--accent)', 
+                          fontSize: '0.7rem', 
+                          fontWeight: 700,
+                          alignSelf: 'flex-start',
+                          marginTop: '4px'
+                        }}>
+                          {item.tag}
+                        </div>
+                      )}
                     </div>
                   )}
 
