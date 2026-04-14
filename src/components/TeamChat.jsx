@@ -25,7 +25,7 @@ import { db, auth } from '../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
 import { webrtcService } from '../utils/WebRTCService';
 
-const TeamChat = ({ isOpen, onClose, theme }) => {
+const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   const { currentUser, data, formatCurrency, activeCall, setActiveCall } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
@@ -152,14 +152,16 @@ const TeamChat = ({ isOpen, onClose, theme }) => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
           style={{ 
-            position: 'fixed', right: 0, top: 0, bottom: 0, 
-            width: isMobile ? '100%' : '850px', 
+            position: mode === 'module' ? 'relative' : 'fixed', 
+            right: 0, top: 0, bottom: 0, 
+            width: isMobile ? '100%' : (mode === 'module' ? '100%' : '850px'), 
+            height: '100%',
             background: 'var(--bg)', 
-            boxShadow: '-20px 0 50px rgba(0,0,0,0.15)', 
-            zIndex: 3000, 
+            boxShadow: mode === 'module' ? 'none' : '-20px 0 50px rgba(0,0,0,0.15)', 
+            zIndex: mode === 'module' ? 1 : 3000, 
             display: 'flex', 
             flexDirection: 'column',
-            borderLeft: '1px solid var(--border)',
+            borderLeft: mode === 'module' ? 'none' : '1px solid var(--border)',
             overflow: 'hidden'
           }}
         >

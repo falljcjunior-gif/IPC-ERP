@@ -36,6 +36,7 @@ import Manufacturing from './modules/Manufacturing';
 import Planning from './modules/Planning';
 import Analytics from './modules/Analytics';
 import StaffPortal from './modules/StaffPortal';
+import Connect from './modules/Connect';
 import UserManagement from './modules/UserManagement';
 import History from './modules/History';
 import Workflows from './modules/Workflows';
@@ -74,6 +75,12 @@ export const initRegistry = () => {
     id: 'home', label: 'Tableau de bord', icon: <Home size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'],
     component: GlobalDashboard, priority: 1
+  });
+
+  registry.register({
+    id: 'connect', label: 'IPC CONNECT', icon: <Zap size={18} />,
+    category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
+    component: Connect, priority: 2
   });
 
   registry.register({
