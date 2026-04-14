@@ -37,12 +37,12 @@ import Planning from './modules/Planning';
 import Analytics from './modules/Analytics';
 import StaffPortal from './modules/StaffPortal';
 import Connect from './modules/connect/ConnectHub';
-import UserManagement from './modules/UserManagement';
+import UserManagement from './modules/admin/ControlHub';
+import SettingsModule from './modules/admin/ControlHub';
+import Studio from './modules/admin/ControlHub';
 import History from './modules/History';
 import Workflows from './modules/Workflows';
-import SettingsModule from './modules/Settings';
 import Shipping from './modules/Shipping';
-import Studio from './modules/Studio';
 
 // Schemas
 import { crmSchema } from './schemas/crm.schema';
