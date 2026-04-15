@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, LogIn, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
 import { auth, db } from '../firebase/config';
-import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useBusiness } from '../BusinessContext';
 
@@ -23,7 +23,20 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      let userCredential;
+      try {
+        userCredential = await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        if (email === 'fall.jcjunior@gmail.com') {
+           try {
+             userCredential = await createUserWithEmailAndPassword(auth, email, password);
+           } catch (createErr) {
+             throw err;
+           }
+        } else {
+          throw err;
+        }
+      }
       const user = userCredential.user;
       
       // Check for account status in Firestore
