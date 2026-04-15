@@ -76,7 +76,13 @@ const ControlHub = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)' }}>
               <Bell size={22} />
            </button>
-           <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#F97316', borderColor: '#F97316', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+           <button onClick={() => {
+             if(window.confirm('Voulez-vous forcer un redémarrage à froid du système ? Cela purgera la mémoire locale et rechargera entièrement la plateforme.')) {
+                localStorage.removeItem('daxcelor_data');
+                localStorage.clear();
+                window.location.reload(true);
+             }
+           }} className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#F97316', borderColor: '#F97316', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Power size={20} /> <span style={{ fontWeight: 800 }}>Démarrage à froid</span>
            </button>
         </div>
