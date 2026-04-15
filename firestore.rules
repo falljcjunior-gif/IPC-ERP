@@ -16,11 +16,11 @@ service cloud.firestore {
     }
     
     function hasRole(role) {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]);
+      return isSuperAdmin() || (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]));
     }
 
     function hasAnyRole(roles) {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles);
+      return isSuperAdmin() || (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles));
     }
     
     // ── Users ────────────────────────────────────────────────────────────────
