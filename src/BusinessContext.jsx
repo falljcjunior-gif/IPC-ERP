@@ -848,6 +848,52 @@ export const BusinessProvider = ({ children }) => {
     addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
   }, [addHint]);
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     7. CALLING & REALTIME NOTIFICATIONS
+     ══════════════════════════════════════════════════════════════════════════ */
+  
+  const playRingtone = () => {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const startTime = audioCtx.currentTime;
+    
+    const playNote = (freq, time, duration) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine'; // Soft classic sound
+      osc.frequency.setValueAtTime(freq, time);
+      gain.gain.setValueAtTime(0.3, time);
+      gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(time);
+      osc.stop(time + duration);
+    };
+
+    // "Classic but soft" sequence
+    for (let i = 0; i < 4; i++) {
+        const offset = i * 2;
+        playNote(660, startTime + offset, 0.4);      
+        playNote(660, startTime + offset + 0.5, 0.4); 
+        playNote(660, startTime + offset + 1.2, 0.6); 
+    }
+  };
+
+  const acceptCall = async () => {
+    if (!activeCall) return;
+    try {
+      setActiveCall(prev => ({ ...prev, accepted: true }));
+      await updateDoc(doc(db, 'calls', activeCall.id), { status: 'accepted' });
+    } catch (err) { console.error("Accept Error:", err); }
+  };
+
+  const rejectCall = async () => {
+    if (!activeCall) return;
+    try {
+      await updateDoc(doc(db, 'calls', activeCall.id), { status: 'rejected' });
+      setActiveCall(null);
+    } catch (err) { console.error("Reject Error:", err); }
+  };
+
 
   /* ══════════════════════════════════════════════════════════════════════════
      8. CLOUD LISTENERS
@@ -908,13 +954,21 @@ export const BusinessProvider = ({ children }) => {
       if (!snapshot.empty) {
         const callDoc = snapshot.docs[0];
         const callData = callDoc.data();
+        
+        // Prevent re-triggering if we already have an active call for this ID
+        if (activeCall?.id === callDoc.id) return;
+
         // Automatically trigger incoming call UI
         setActiveCall({ 
           id: callDoc.id, 
           role: 'receiver', 
           type: callData.type, 
-          contactName: callData.callerName || 'Collègue'
+          contactName: callData.callerName || 'Collègue',
+          status: 'ringing'
         });
+
+        // "Classique mais douce" Ringtone
+        playRingtone();
       }
     });
 
@@ -992,7 +1046,7 @@ export const BusinessProvider = ({ children }) => {
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
-      setActiveApp, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, sendNotification, notifications, togglePinnedModule,
+      setActiveApp, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule,
       addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({

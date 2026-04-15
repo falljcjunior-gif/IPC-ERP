@@ -31,7 +31,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
     globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
     globalSettings, currentUser, permissions, logout, activeApp, 
-    setActiveApp, activeCall, setActiveCall, togglePinnedModule 
+    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule 
   } = useBusiness();
 
   // Unified UI Flags
@@ -350,6 +350,58 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* --- CALL SYSTEM --- */}
+      <AnimatePresence>
+        {activeCall && activeCall.status === 'ringing' && !activeCall.accepted && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }} 
+            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+            style={{ 
+              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 5000, 
+              width: '320px', padding: '1.5rem', borderRadius: '1.5rem',
+              background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255,255,255,0.1)', color: 'white',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.5)', textAlign: 'center'
+            }}
+          >
+            {/* Animated Pulse Ring */}
+            <div className="call-pulse" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+               <MessageCircle size={40} />
+            </div>
+            
+            <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, fontSize: '1.1rem' }}>{activeCall.contactName}</h4>
+            <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontWeight: 600 }}>Appel {activeCall.type === 'video' ? 'Vidéo' : 'Audio'} Entrant...</p>
+
+            <div style={{ display: 'flex', gap: '1rem' }}>
+               <button onClick={rejectCall} style={{ flex: 1, padding: '0.8rem', borderRadius: '1rem', border: 'none', background: '#EF4444', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Refuser</button>
+               <button onClick={acceptCall} style={{ flex: 1, padding: '0.8rem', borderRadius: '1rem', border: 'none', background: '#10B981', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Répondre</button>
+            </div>
+
+            <style>{`
+              @keyframes callPulse {
+                0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); transform: scale(0.95); }
+                70% { box-shadow: 0 0 0 20px rgba(139, 92, 246, 0); transform: scale(1); }
+                100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); transform: scale(0.95); }
+              }
+              .call-pulse { animation: callPulse 1.5s infinite; }
+            `}</style>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <CallInterface 
+        isOpen={activeCall && activeCall.accepted} 
+        onClose={() => setActiveCall(null)}
+        callId={activeCall?.id}
+        role={activeCall?.role}
+        callType={activeCall?.type}
+        contactName={activeCall?.contactName}
+        onHangup={() => {
+          setActiveCall(null);
+        }}
+      />
     </div>
   );
 };
