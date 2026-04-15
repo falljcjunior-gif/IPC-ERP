@@ -4,7 +4,7 @@ import {
   ShieldCheck, ShieldAlert, Shield, Lock, 
   Key, Eye, History, Bell, Smartphone,
   Database, AlertTriangle, CheckCircle2,
-  Users, LogIn, Activity
+  Users, LogIn, Activity, ChevronRight
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 
