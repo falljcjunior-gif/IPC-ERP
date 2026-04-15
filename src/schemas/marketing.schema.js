@@ -1,76 +1,189 @@
 /**
- * Marketing Module Schema (Metricool Logic)
- * Defines structures for Ads, Social Planning, Analytics and SmartLinks
+ * Marketing Module Schema — Inspiré Axelor ERP
+ * Campagnes, E-mailing, Événements, Leads entrants, Budget
  */
 export const marketingSchema = {
   id: 'marketing',
-  label: 'Marketing & Croissance',
+  label: 'Marketing',
   models: {
     campaigns: {
-      label: 'Campagnes Ads',
+      label: 'Campagnes Marketing',
       fields: {
         nom: { label: 'Nom de la Campagne', type: 'text', required: true, search: true },
-        type: { label: 'Canal', type: 'selection', options: ['Google Ads', 'Facebook Ads', 'LinkedIn Ads', 'Instagram Ads', 'TikTok Ads'] },
-        budget: { label: 'Budget (FCFA)', type: 'money' },
-        url_source: { label: 'Lien Publicité', type: 'text' },
-        statut: { label: 'Statut', type: 'selection', options: ['Planifié', 'En cours', 'Terminé', 'En pause'], default: 'Planifié' },
-        date_debut: { label: 'Début', type: 'date' },
-        date_fin: { label: 'Fin', type: 'date' }
+        type: {
+          label: 'Type',
+          type: 'selection',
+          options: ['E-mailing', 'Événement', 'Réseaux Sociaux', 'Presse / Affichage', 'Digital Ads', 'Phoning', 'Partenariat', 'Autre'],
+          required: true
+        },
+        canal: {
+          label: 'Canal Principal',
+          type: 'selection',
+          options: ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Google Ads', 'Email', 'WhatsApp', 'Terrain', 'Autre']
+        },
+        objectif: {
+          label: 'Objectif',
+          type: 'selection',
+          options: ['Notoriété', 'Génération de Leads', 'Conversion', 'Fidélisation', 'Lancement Produit', 'Recrutement']
+        },
+        responsable: { label: 'Responsable', type: 'text', search: true },
+        dateDebut: { label: 'Date de Début', type: 'date', required: true },
+        dateFin: { label: 'Date de Fin', type: 'date' },
+        budget: { label: 'Budget Alloué (FCFA)', type: 'money', currency: 'FCFA' },
+        depense: { label: 'Dépenses Réelles (FCFA)', type: 'money', currency: 'FCFA' },
+        cible: { label: 'Cible / Audience', type: 'text', search: true },
+        statut: {
+          label: 'Statut',
+          type: 'selection',
+          options: ['Brouillon', 'Planifiée', 'Active', 'En Pause', 'Clôturée', 'Annulée'],
+          default: 'Brouillon'
+        },
+        reach: { label: 'Portée (Reach)', type: 'number' },
+        clics: { label: 'Clics', type: 'number' },
+        conversions: { label: 'Conversions / Leads', type: 'number' },
+        description: { label: 'Notes / Brief', type: 'textarea' }
       },
       views: {
-        list: ['nom', 'type', 'budget', 'statut'],
+        list: ['nom', 'type', 'objectif', 'responsable', 'dateDebut', 'statut', 'budget'],
+        kanban: { groupField: 'statut', titleField: 'nom', subtitleField: 'objectif', valueField: 'budget' },
         search: {
           filters: [
-            { id: 'active', label: 'Campagnes Actives', domain: [['statut', '==', 'En cours']] }
+            { id: 'active', label: 'Actives', domain: [['statut', '==', 'Active']] },
+            { id: 'planned', label: 'Planifiées', domain: [['statut', '==', 'Planifiée']] },
+            { id: 'draft', label: 'Brouillons', domain: [['statut', '==', 'Brouillon']] },
+            { id: 'closed', label: 'Clôturées', domain: [['statut', '==', 'Clôturée']] }
+          ],
+          groups: [
+            { id: 'type', label: 'Par Type' },
+            { id: 'canal', label: 'Par Canal' },
+            { id: 'objectif', label: 'Par Objectif' }
           ]
         }
       }
     },
-    posts: {
-      label: 'Planning Social',
+
+    emailings: {
+      label: 'Campagnes E-mailing',
       fields: {
-        titre: { label: 'Titre du Post', type: 'text', required: true, search: true },
-        plateforme: { label: 'Réseau', type: 'selection', options: ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Twitter/X'] },
-        date_publication: { label: 'Date de Publication', type: 'datetime', required: true },
-        statut: { label: 'État', type: 'selection', options: ['Brouillon', 'Programmé', 'Publié', 'Erreur'], default: 'Brouillon' },
-        contenu: { label: 'Contenu (Texte)', type: 'textarea' },
-        media_url: { label: 'URL Média (Image/Video)', type: 'text' }
+        titre: { label: 'Objet de l\'E-mail', type: 'text', required: true, search: true },
+        template: {
+          label: 'Template',
+          type: 'selection',
+          options: ['Promotionnel', 'Newsletter', 'Invitation', 'Relance', 'Transactionnel', 'Bienvenue']
+        },
+        campagne: { label: 'Campagne Parente', type: 'text', search: true },
+        expediteur: { label: 'Nom Expéditeur', type: 'text' },
+        emailExpediteur: { label: 'Email Expéditeur', type: 'email' },
+        liste: {
+          label: 'Liste de Contacts',
+          type: 'selection',
+          options: ['Tous les Clients', 'Prospects Qualifiés', 'Leads Froids', 'Partenaires', 'Newsletter', 'Personnalisée']
+        },
+        dateEnvoi: { label: 'Date d\'Envoi Programmé', type: 'date' },
+        nbEnvoyes: { label: 'Envoyés', type: 'number' },
+        nbOuvertures: { label: 'Ouvertures', type: 'number' },
+        nbClics: { label: 'Clics', type: 'number' },
+        nbDesabonnements: { label: 'Désabonnements', type: 'number' },
+        statut: {
+          label: 'Statut',
+          type: 'selection',
+          options: ['Brouillon', 'Planifié', 'Envoyé', 'Partiel', 'Annulé'],
+          default: 'Brouillon'
+        }
       },
       views: {
-        list: ['titre', 'plateforme', 'date_publication', 'statut'],
-        calendar: {
-          dateField: 'date_publication',
-          titleField: 'titre'
+        list: ['titre', 'template', 'dateEnvoi', 'nbEnvoyes', 'nbOuvertures', 'statut'],
+        search: {
+          filters: [
+            { id: 'sent', label: 'Envoyés', domain: [['statut', '==', 'Envoyé']] },
+            { id: 'planned', label: 'Planifiés', domain: [['statut', '==', 'Planifié']] }
+          ]
         }
       }
     },
-    accounts: {
-      label: 'Comptes Connectés',
+
+    events: {
+      label: 'Événements Marketing',
       fields: {
-        nom: { label: 'Nom du compte', type: 'text', required: true },
-        reseau: { label: 'Réseau', type: 'selection', options: ['Facebook', 'Instagram', 'LinkedIn', 'TikTok', 'Google', 'Website'] },
-        email: { label: 'Email de connexion', type: 'email' },
-        statut: { label: 'Connexion', type: 'selection', options: ['Connecté', 'Déconnecté', 'Erreur de Token'], default: 'Connecté' },
-        derniere_sync: { label: 'Dernière Synchro', type: 'datetime' }
+        nom: { label: 'Nom de l\'Événement', type: 'text', required: true, search: true },
+        type: {
+          label: 'Type',
+          type: 'selection',
+          options: ['Salon / Foire', 'Webinaire', 'Conférence', 'Lancement Produit', 'Formation Client', 'Portes Ouvertes', 'Networking', 'Autre']
+        },
+        lieu: { label: 'Lieu / Plateforme', type: 'text', search: true },
+        dateDebut: { label: 'Date de Début', type: 'date', required: true },
+        dateFin: { label: 'Date de Fin', type: 'date' },
+        responsable: { label: 'Responsable', type: 'text', search: true },
+        budget: { label: 'Budget (FCFA)', type: 'money', currency: 'FCFA' },
+        nbInscrits: { label: 'Inscrits', type: 'number' },
+        nbPresents: { label: 'Présents', type: 'number' },
+        nbLeads: { label: 'Leads Générés', type: 'number' },
+        statut: {
+          label: 'Statut',
+          type: 'selection',
+          options: ['Planifié', 'Confirmé', 'En cours', 'Terminé', 'Annulé'],
+          default: 'Planifié'
+        },
+        description: { label: 'Notes', type: 'textarea' }
+      },
+      views: {
+        list: ['nom', 'type', 'lieu', 'dateDebut', 'nbInscrits', 'nbLeads', 'statut'],
+        search: {
+          filters: [
+            { id: 'upcoming', label: 'À venir', domain: [['statut', '==', 'Planifié']] },
+            { id: 'done', label: 'Terminés', domain: [['statut', '==', 'Terminé']] }
+          ],
+          groups: [
+            { id: 'type', label: 'Par Type' }
+          ]
+        }
       }
     },
-    smartlinks: {
-      label: 'SmartLinks (Bio & Tracking)',
+
+    leads_entrants: {
+      label: 'Leads Entrants',
+      dataPath: 'crm.leads',
       fields: {
-        label: { label: 'Label', type: 'text', required: true, search: true },
-        url_destination: { label: 'URL Destination', type: 'text', required: true },
-        slug: { label: 'Code unique', type: 'text', required: true },
-        clicks: { label: 'Clics totaux', type: 'number', default: 0 }
-      }
-    },
-    messages: {
-      label: 'Interactions Sociales',
-      fields: {
-        sender: { label: 'Expéditeur', type: 'text', required: true },
-        source: { label: 'Plateforme', type: 'selection', options: ['Facebook', 'Instagram', 'WhatsApp', 'LinkedIn'] },
-        content: { label: 'Message', type: 'textarea', required: true },
-        timestamp: { label: 'Date/Heure', type: 'datetime', default: 'now' },
-        statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Répondu', 'Archivé'], default: 'Nouveau' }
+        prenom: { label: 'Prénom', type: 'text', required: true, search: true },
+        nom: { label: 'Nom', type: 'text', required: true, search: true },
+        entreprise: { label: 'Entreprise', type: 'text', search: true },
+        email: { label: 'Email', type: 'email', search: true },
+        telephone: { label: 'Téléphone', type: 'text' },
+        source: {
+          label: 'Source Marketing',
+          type: 'selection',
+          options: ['Facebook', 'Instagram', 'LinkedIn', 'Google Ads', 'E-mailing', 'Événement', 'Formulaire Web', 'Bouche à Oreille', 'Appel Entrant', 'Autre']
+        },
+        campagne: { label: 'Campagne Associée', type: 'text', search: true },
+        statut: {
+          label: 'Statut',
+          type: 'selection',
+          options: ['Nouveau', 'Qualifié', 'En Cours de Traitement', 'Transféré CRM', 'Non Qualifié'],
+          default: 'Nouveau'
+        },
+        interet: {
+          label: 'Niveau d\'Intérêt',
+          type: 'selection',
+          options: ['Froid', 'Tiède', 'Chaud', 'Très Chaud'],
+          default: 'Tiède'
+        },
+        message: { label: 'Message / Besoin Exprimé', type: 'textarea' }
+      },
+      views: {
+        list: ['prenom', 'nom', 'entreprise', 'source', 'campagne', 'interet', 'statut'],
+        kanban: { groupField: 'statut', titleField: 'nom', subtitleField: 'source', valueField: 'interet' },
+        search: {
+          filters: [
+            { id: 'new', label: 'Nouveaux', domain: [['statut', '==', 'Nouveau']] },
+            { id: 'hot', label: 'Chauds', domain: [['interet', '==', 'Chaud']] },
+            { id: 'very_hot', label: 'Très Chauds', domain: [['interet', '==', 'Très Chaud']] }
+          ],
+          groups: [
+            { id: 'source', label: 'Par Source' },
+            { id: 'campagne', label: 'Par Campagne' }
+          ]
+        }
       }
     }
   }

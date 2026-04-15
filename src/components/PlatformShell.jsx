@@ -89,7 +89,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, [search.query, globalSearch]);
 
   const renderContent = () => {
-    const commonProps = { onOpenDetail: openDetail };
+    const commonProps = { onOpenDetail: openDetail, navigateTo };
     // 1. Check Registry First (Primary)
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
