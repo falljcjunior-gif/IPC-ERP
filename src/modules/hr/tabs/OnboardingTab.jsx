@@ -25,7 +25,7 @@ const availableModules = [
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const { data, permissions, updateUserRole, toggleModuleAccess, addHint } = useBusiness();
+  const { permissions, setPermissions, addHint } = useBusiness();
 
   const userPerms = permissions[employee.id] || { roles: [], allowedModules: ['home'] };
   const [localModules, setLocalModules] = useState(
@@ -33,6 +33,7 @@ const EditAccessPanel = ({ employee, onClose }) => {
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const toggleMod = (modId) => {
     if (modId === 'home') return;
@@ -42,6 +43,12 @@ const EditAccessPanel = ({ employee, onClose }) => {
   };
 
   const handleSave = async () => {
+    setSaveError('');
+    if (!employee?.id) {
+      setSaveError("ID employé manquant. Cet utilisateur n'est peut-être pas encore provisionné sur Firebase.");
+      return;
+    }
+
     setSaving(true);
     try {
       // Compute roles from selected modules
@@ -55,27 +62,25 @@ const EditAccessPanel = ({ employee, onClose }) => {
 
       const newPerms = { roles: newRoles, allowedModules: localModules };
 
-      // 1. Update Firestore users/{uid}
-      await setDoc(doc(db, 'users', employee.id), {
-        permissions: newPerms
-      }, { merge: true });
+      console.log('[EditAccess] Saving for UID:', employee.id, '| perms:', newPerms);
 
-      // 2. Update Firestore hr/{uid}
-      await setDoc(doc(db, 'hr', employee.id), {
-        permissions: newPerms,
-        role: newRoles[0]
-      }, { merge: true });
+      // 1. Update local permissions state immediately (instant UI feedback)
+      setPermissions(prev => ({ ...prev, [employee.id]: newPerms }));
 
-      addHint({
-        title: '✅ Accès mis à jour',
-        message: `Les habilitations de ${employee.nom} ont été sauvegardées dans Firebase.`,
-        type: 'success'
-      });
+      // 2. Write to Firestore users/{uid}
+      await setDoc(doc(db, 'users', employee.id), { permissions: newPerms }, { merge: true });
+      console.log('[EditAccess] users/ updated ✅');
+
+      // 3. Write to Firestore hr/{uid}
+      await setDoc(doc(db, 'hr', employee.id), { permissions: newPerms, role: newRoles[0], subModule: 'employees' }, { merge: true });
+      console.log('[EditAccess] hr/ updated ✅');
+
       setSaved(true);
+      addHint({ title: '✅ Accès mis à jour', message: `Habilitations de ${employee.nom || employee.email} sauvegardées.`, type: 'success' });
       setTimeout(() => { setSaved(false); onClose(); }, 2000);
     } catch (err) {
-      console.error(err);
-      addHint({ title: 'Erreur', message: err.message, type: 'error' });
+      console.error('[EditAccess] ERROR:', err);
+      setSaveError(`Erreur Firebase : ${err.message || 'Vérifiez votre connexion et vos droits.'}`);
     } finally {
       setSaving(false);
     }
@@ -111,6 +116,12 @@ const EditAccessPanel = ({ employee, onClose }) => {
       <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
         Cochez/décochez les modules auxquels cet employé peut accéder. Les rôles seront recalculés automatiquement.
       </p>
+
+      {saveError && (
+        <div style={{ padding: '0.75rem 1rem', background: '#EF444415', color: '#EF4444', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 600, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <AlertCircle size={14} /> {saveError}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gap: '0.6rem', marginBottom: '2rem' }}>
         {availableModules.map(mod => {
