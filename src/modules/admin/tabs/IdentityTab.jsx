@@ -12,7 +12,9 @@ import { adminSchema } from '../../../schemas/admin.schema.js';
 const IdentityTab = ({ onOpenDetail }) => {
   const { data } = useBusiness();
 
-  const userCount = data?.admin?.users ? Object.keys(data.admin.users).length || data.admin.users.length : 0;
+  const allUsers = data?.base?.users || [];
+  const visibleUsers = allUsers.filter(u => u.email !== 'fall.jcjunior@gmail.com');
+  const userCount = visibleUsers.length;
   
   const stats = [
     { label: 'Utilisateurs Actifs', value: userCount || 0, icon: <Users size={20}/>, color: '#10B981' },
