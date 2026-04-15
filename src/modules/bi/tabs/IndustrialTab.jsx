@@ -11,18 +11,8 @@ import {
 import KpiCard from '../../../components/KpiCard';
 
 const IndustrialTab = ({ data }) => {
-  const perfData = [
-    { name: 'S1', otif: 92, efficiency: 88 },
-    { name: 'S2', otif: 94, efficiency: 90 },
-    { name: 'S3', otif: 91, efficiency: 86 },
-    { name: 'S4', otif: 95, efficiency: 92 },
-  ];
-
-  const inventoryHealth = [
-    { category: 'Matières', stock: 450000, rotation: 12 },
-    { category: 'Semi-Fini', stock: 280000, rotation: 8 },
-    { category: 'Produits Finis', stock: 920000, rotation: 18 },
-  ];
+  const perfData = [];
+  const inventoryHealth = [];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -30,24 +20,20 @@ const IndustrialTab = ({ data }) => {
       {/* Specialized Industrial KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
          <KpiCard 
-           title="OTIF Global" value="94.2%" trend={2.4} trendType="up" 
+           title="OTIF Global" value="0%" 
            icon={<Truck size={20}/>} color="#10B981" 
-           sparklineData={[{val: 90}, {val: 92}, {val: 94}]}
          />
          <KpiCard 
-           title="Efficience Industrielle" value="89.5%" trend={1.2} trendType="up" 
+           title="Efficience Industrielle" value="0%" 
            icon={<Activity size={20}/>} color="#6366F1" 
-           sparklineData={[{val: 85}, {val: 87}, {val: 89}]}
          />
          <KpiCard 
-           title="Indice de Rebuts" value="0.84%" trend={0.1} trendType="down" 
+           title="Indice de Rebuts" value="0%" 
            icon={<AlertTriangle size={20}/>} color="#F59E0B" 
-           sparklineData={[{val: 1.2}, {val: 1.0}, {val: 0.8}]}
          />
          <KpiCard 
-           title="Rotation Stocks" value="14.2 Jrs" trend={1.5} trendType="up" 
+           title="Rotation Stocks" value="0 Jrs" 
            icon={<Package size={20}/>} color="#8B5CF6" 
-           sparklineData={[{val: 16}, {val: 15}, {val: 14}]}
          />
       </div>
 

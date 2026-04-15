@@ -13,19 +13,8 @@ import {
 import KpiCard from '../../../components/KpiCard';
 
 const GrowthTab = ({ data, formatCurrency }) => {
-  const funnelData = [
-    { value: 1000, name: 'Leads', fill: '#8B5CF6' },
-    { value: 400, name: 'Oppertunités', fill: '#6366F1' },
-    { value: 150, name: 'Devis', fill: '#D946EF' },
-    { value: 60, name: 'Ventes', fill: '#10B981' },
-  ];
-
-  const channelROI = [
-    { name: 'Direct', roi: 4.5, budget: 12000000 },
-    { name: 'Email', roi: 6.8, budget: 3500000 },
-    { name: 'Ads', roi: 3.2, budget: 18000000 },
-    { name: 'Social', roi: 5.1, budget: 8900000 },
-  ];
+  const funnelData = [];
+  const channelROI = [];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -33,24 +22,20 @@ const GrowthTab = ({ data, formatCurrency }) => {
       {/* Growth & Velocity KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
          <KpiCard 
-           title="Vitesse de Vente" value="18 Jrs" trend={2.5} trendType="up" 
+           title="Vitesse de Vente" value="0 Jrs" 
            icon={<Rocket size={20}/>} color="#D946EF" 
-           sparklineData={[{val: 22}, {val: 20}, {val: 18}]}
          />
          <KpiCard 
-           title="CAC Global" value="24.5k FCFA" trend={4.2} trendType="down" 
+           title="CAC Global" value="0 FCFA" 
            icon={<Target size={20}/>} color="#F59E0B" 
-           sparklineData={[{val: 28}, {val: 26}, {val: 24}]}
          />
          <KpiCard 
-           title="Taux de Conversion" value="12.4%" trend={1.5} trendType="up" 
+           title="Taux de Conversion" value="0%" 
            icon={<MousePointer2 size={20}/>} color="#10B981" 
-           sparklineData={[{val: 10}, {val: 11}, {val: 12}]}
          />
          <KpiCard 
-           title="LTV (Valeur Client)" value={formatCurrency(1200000)} trend={8.2} trendType="up" 
+           title="LTV (Valeur Client)" value={formatCurrency(0)} 
            icon={<Star size={20}/>} color="#8B5CF6" 
-           sparklineData={[{val: 1.0}, {val: 1.1}, {val: 1.2}]}
          />
       </div>
 

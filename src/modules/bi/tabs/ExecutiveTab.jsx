@@ -12,19 +12,8 @@ import {
 import KpiCard from '../../../components/KpiCard';
 
 const ExecutiveTab = ({ data, formatCurrency }) => {
-  const orgHealth = [
-    { subject: 'Finance', val: 92, fullMark: 100 },
-    { subject: 'Industrie', val: 85, fullMark: 100 },
-    { subject: 'Ventes', val: 78, fullMark: 100 },
-    { subject: 'People', val: 94, fullMark: 100 },
-    { subject: 'Social', val: 88, fullMark: 100 },
-  ];
-
-  const trends = [
-    { name: 'Jan', ca: 850, margin: 32 },
-    { name: 'Fév', ca: 920, margin: 34 },
-    { name: 'Mar', ca: 1100, margin: 38 },
-  ];
+  const orgHealth = [];
+  const trends = [];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -32,24 +21,20 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
       {/* Top Level Board KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
          <KpiCard 
-           title="Index de Santé Global" value="92.4/100" trend={3.2} trendType="up" 
+           title="Index de Santé Global" value="0/100" 
            icon={<ShieldCheck size={20}/>} color="#8B5CF6" 
-           sparklineData={[{val: 88}, {val: 90}, {val: 92}]}
          />
          <KpiCard 
-           title="Croissance Mensuelle" value="+18.5%" trend={5.1} trendType="up" 
+           title="Croissance Mensuelle" value="0%" 
            icon={<TrendingUp size={20}/>} color="#D946EF" 
-           sparklineData={[{val: 12}, {val: 15}, {val: 18}]}
          />
          <KpiCard 
-           title="EBITDA Consolidé" value="22.1%" trend={1.4} trendType="up" 
+           title="EBITDA Consolidé" value="0%" 
            icon={<DollarSign size={20}/>} color="#6366F1" 
-           sparklineData={[{val: 20}, {val: 21}, {val: 22}]}
          />
          <KpiCard 
-           title="NPS Client" value="86" trend={2.0} trendType="up" 
+           title="NPS Client" value="0" 
            icon={<Star size={20}/>} color="#F59E0B" 
-           sparklineData={[{val: 82}, {val: 84}, {val: 86}]}
          />
       </div>
 

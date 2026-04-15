@@ -19,20 +19,13 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
   const orders = data?.production?.workOrders || [];
   
   const industrialKPIs = {
-    oee: 84, // Overall Equipment Effectiveness
-    trs: 78, // Taux de Rendement Synthétique
-    quality: 98.5,
-    downTime: '2h 15m'
+    oee: 0,
+    trs: 0,
+    quality: 0,
+    downTime: '0h 0m'
   };
 
-  const performanceData = [
-    { name: 'Lun', qty: 4500 },
-    { name: 'Mar', qty: 5200 },
-    { name: 'Mer', qty: 4800 },
-    { name: 'Jeu', qty: 6100 },
-    { name: 'Ven', qty: 5800 },
-    { name: 'Sam', qty: 3200 },
-  ];
+  const performanceData = [];
 
   const qualityColors = ['#10B981', '#F59E0B', '#EF4444'];
 
@@ -40,10 +33,10 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Industrial Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="OEE (Rendement Global)" value={`${industrialKPIs.oee}%`} trend={2.4} trendType="up" icon={<Activity size={22} />} color="#06B6D4" sparklineData={[75, 78, 80, 84, 82, 84]} />
-        <KpiCard title="TRS (Efficacité OF)" value={`${industrialKPIs.trs}%`} trend={-1.5} trendType="down" icon={<Zap size={22} />} color="#3B82F6" sparklineData={[80, 78, 75, 78, 76, 78]} />
-        <KpiCard title="Qualité (Conformité)" value={`${industrialKPIs.quality}%`} trend={0.5} trendType="up" icon={<ShieldCheck size={22} />} color="#10B981" sparklineData={[97, 98, 98.2, 98.5]} />
-        <KpiCard title="Arrêts Machines" value={industrialKPIs.downTime} trend={-15} trendType="down" icon={<AlertTriangle size={22} />} color="#F59E0B" sparklineData={[5, 4, 3, 2, 2]} />
+        <KpiCard title="OEE (Rendement Global)" value={`${industrialKPIs.oee}%`} icon={<Activity size={22} />} color="#06B6D4" />
+        <KpiCard title="TRS (Efficacité OF)" value={`${industrialKPIs.trs}%`} icon={<Zap size={22} />} color="#3B82F6" />
+        <KpiCard title="Qualité (Conformité)" value={`${industrialKPIs.quality}%`} icon={<ShieldCheck size={22} />} color="#10B981" />
+        <KpiCard title="Arrêts Machines" value={industrialKPIs.downTime} icon={<AlertTriangle size={22} />} color="#F59E0B" />
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '1.5rem' }}>
@@ -80,9 +73,9 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
              {[
-               { name: 'Ligne Presse A', status: 'Actif', util: 92, color: '#10B981' },
-               { name: 'Ligne Presse B', status: 'Actif', util: 78, color: '#06B6D4' },
-               { name: 'Robot Palettiseur', status: 'Alerte', util: 45, color: '#F59E0B' },
+               { name: 'Ligne Presse A', status: 'Inactif', util: 0, color: '#10B981' },
+               { name: 'Ligne Presse B', status: 'Inactif', util: 0, color: '#06B6D4' },
+               { name: 'Robot Palettiseur', status: 'Inactif', util: 0, color: '#F59E0B' },
              ].map((m, i) => (
                 <div key={i}>
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>

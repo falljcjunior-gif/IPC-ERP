@@ -20,7 +20,7 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
   const stats = useMemo(() => {
     const alerts = products.filter(p => (p.stock || 0) <= (p.alerte || 0)).length;
     const valuation = products.reduce((s, p) => s + (p.stock || 0) * (p.coutUnit || 0), 0);
-    const rotation = 8.5; // Case index
+    const rotation = 0; // Case index
     return { alerts, valuation, rotation };
   }, [products]);
 
@@ -28,10 +28,10 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Stock Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Valeur du Stock" value={formatCurrency(stats.valuation, true)} trend={3.2} trendType="up" icon={<Database size={22} />} color="#4F46E5" sparklineData={[42000000, 44000000, 43500000, 45000000]} />
-        <KpiCard title="Alerte Ruptures" value={stats.alerts} trend={-12} trendType="down" icon={<AlertTriangle size={22} />} color="#F59E0B" sparklineData={[15, 12, 10, 8]} />
-        <KpiCard title="Rotation Stock" value={stats.rotation} trend={0.5} trendType="up" icon={<RefreshCcw size={22} />} color="#0D9488" sparklineData={[7.8, 8.0, 8.2, 8.5]} />
-        <KpiCard title="OTIF (Logistique)" value="94.2%" trend={1.4} trendType="up" icon={<Activity size={22} />} color="#6366F1" sparklineData={[92, 93, 93.5, 94.2]} />
+        <KpiCard title="Valeur du Stock" value={formatCurrency(stats.valuation, true)} icon={<Database size={22} />} color="#4F46E5" />
+        <KpiCard title="Alerte Ruptures" value={stats.alerts} icon={<AlertTriangle size={22} />} color="#F59E0B" />
+        <KpiCard title="Rotation Stock" value={stats.rotation} icon={<RefreshCcw size={22} />} color="#0D9488" />
+        <KpiCard title="OTIF (Logistique)" value="0%" icon={<Activity size={22} />} color="#6366F1" />
       </motion.div>
 
       {/* Warehouses Grid */}

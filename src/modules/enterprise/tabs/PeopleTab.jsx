@@ -20,8 +20,8 @@ const PeopleTab = ({ data, onOpenDetail }) => {
   
   const stats = useMemo(() => {
     const active = employees.filter(e => e.active !== false).length;
-    const formations = 14; 
-    const satisfaction = 8.5;
+    const formations = 0; 
+    const satisfaction = 0;
     return { active, formations, satisfaction };
   }, [employees]);
 
@@ -29,10 +29,10 @@ const PeopleTab = ({ data, onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Human Capital KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Effectif Actif" value={stats.active} trend={2.4} trendType="up" icon={<Users size={22} />} color="#0D9488" sparklineData={[42, 44, 45, 46]} />
-        <KpiCard title="Satisfaction Coll." value={`${stats.satisfaction}/10`} trend={5.1} trendType="up" icon={<Heart size={22} />} color="#EC4899" sparklineData={[7.8, 8.1, 8.3, 8.5]} />
-        <KpiCard title="Formations YTD" value={stats.formations} trend={12} trendType="up" icon={<Award size={22} />} color="#6366F1" sparklineData={[8, 10, 12, 14]} />
-        <KpiCard title="Taux d'Absence" value="2.1%" trend={-4} trendType="down" icon={<Clock size={22} />} color="#F59E0B" sparklineData={[2.5, 2.4, 2.3, 2.1]} />
+        <KpiCard title="Effectif Actif" value={stats.active} icon={<Users size={22} />} color="#0D9488" />
+        <KpiCard title="Satisfaction Coll." value={`${stats.satisfaction}/10`} icon={<Heart size={22} />} color="#EC4899" />
+        <KpiCard title="Formations YTD" value={stats.formations} icon={<Award size={22} />} color="#6366F1" />
+        <KpiCard title="Taux d'Absence" value="0%" icon={<Clock size={22} />} color="#F59E0B" />
       </motion.div>
 
       {/* Directory & Management */}

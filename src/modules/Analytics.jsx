@@ -8,10 +8,7 @@ import KpiCard from '../components/KpiCard';
 const Analytics = () => {
   const { data } = useBusiness();
 
-  const mockTrend = [
-     { m: 'Jan', val: 400 }, { m: 'Feb', val: 300 }, { m: 'Mar', val: 600 },
-     { m: 'Apr', val: 800 }, { m: 'May', val: 500 }, { m: 'Jun', val: 900 },
-  ];
+  const mockTrend = [];
 
   return (
     <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -26,9 +23,9 @@ const Analytics = () => {
        </div>
 
        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          <KpiCard title="Utilisation Plateforme" value="94%" trend={2.5} icon={<Zap size={20}/>} color="#EC4899" />
-          <KpiCard title="Intégrité Données" value="99.8%" trend={0.1} icon={<Target size={20}/>} color="#10B981" />
-          <KpiCard title="Requêtes / sec" value="2.4k" trend={12.4} icon={<TrendingUp size={20}/>} color="#3B82F6" />
+          <KpiCard title="Utilisation Plateforme" value="0%" icon={<Zap size={20}/>} color="#EC4899" />
+          <KpiCard title="Intégrité Données" value="0%" icon={<Target size={20}/>} color="#10B981" />
+          <KpiCard title="Requêtes / sec" value="0" icon={<TrendingUp size={20}/>} color="#3B82F6" />
        </div>
 
        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>

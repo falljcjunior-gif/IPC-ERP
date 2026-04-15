@@ -20,19 +20,18 @@ const PurchaseTab = ({ data, formatCurrency, onOpenDetail }) => {
   const stats = useMemo(() => {
     const totalSpent = orders.reduce((s, o) => s + (o.total || 0), 0);
     const pendingOrders = orders.filter(o => o.statut === 'Commandé').length;
-    const vendorScore = 88; // Mock average scorecard
-    const procurementDelay = 4.2; // Days
+    const vendorScore = 0; // Mock average scorecard
+    const procurementDelay = 0; // Days
     return { totalSpent, pendingOrders, vendorScore, procurementDelay };
   }, [orders]);
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      {/* Procurement Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Dépenses Totales" value={formatCurrency(stats.totalSpent, true)} trend={5.2} trendType="up" icon={<DollarSign size={22} />} color="#4F46E5" sparklineData={[2.5e7, 2.8e7, 3.1e7, 3.5e7]} />
-        <KpiCard title="Performance Fourn." value={`${stats.vendorScore}%`} trend={2.1} trendType="up" icon={<Star size={22} />} color="#F59E0B" sparklineData={[82, 85, 86, 88]} />
-        <KpiCard title="Commandes en cours" value={stats.pendingOrders} trend={-2} trendType="down" icon={<ShoppingBag size={22} />} color="#6366F1" sparklineData={[15, 12, 11, 10]} />
-        <KpiCard title="Délai Procurement" value={`${stats.procurementDelay} Jrs`} trend={-15} trendType="down" icon={<Zap size={22} />} color="#EF4444" sparklineData={[5.5, 5, 4.8, 4.2]} />
+        <KpiCard title="Dépenses Totales" value={formatCurrency(stats.totalSpent, true)} icon={<DollarSign size={22} />} color="#4F46E5" />
+        <KpiCard title="Performance Fourn." value={`${stats.vendorScore}%`} icon={<Star size={22} />} color="#F59E0B" />
+        <KpiCard title="Commandes en cours" value={stats.pendingOrders} icon={<ShoppingBag size={22} />} color="#6366F1" />
+        <KpiCard title="Délai Procurement" value={`${stats.procurementDelay} Jrs`} icon={<Zap size={22} />} color="#EF4444" />
       </motion.div>
 
       {/* Vendors & Scorecards */}
@@ -55,7 +54,7 @@ const PurchaseTab = ({ data, formatCurrency, onOpenDetail }) => {
                        </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                       <div style={{ fontWeight: 900, fontSize: '0.9rem', color: '#F59E0B' }}>94%</div>
+                       <div style={{ fontWeight: 900, fontSize: '0.9rem', color: '#F59E0B' }}>0%</div>
                        <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase' }}>Fiabilité</div>
                     </div>
                  </div>

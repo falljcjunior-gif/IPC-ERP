@@ -27,10 +27,10 @@ const ProjectTab = ({ data, onOpenDetail, updateRecord }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Project Execution KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Projets Actifs" value={projects.length} trend={2} trendType="up" icon={<Briefcase size={22} />} color="#4F46E5" sparklineData={[4, 5, 5, 6]} />
-        <KpiCard title="Burn-Rate (Tâches)" value="84%" trend={5.2} trendType="up" icon={<Zap size={22} />} color="#F59E0B" sparklineData={[70, 75, 80, 84]} />
-        <KpiCard title="OTIF Livraison" value="97.5%" trend={1.2} trendType="up" icon={<ShieldCheck size={22} />} color="#0D9488" sparklineData={[94, 95, 96, 97.5]} />
-        <KpiCard title="Risque Dérive" value="Basse" trend={-10} trendType="down" icon={<Flag size={22} />} color="#6366F1" sparklineData={[20, 15, 12, 8]} />
+        <KpiCard title="Projets Actifs" value={projects.length} icon={<Briefcase size={22} />} color="#4F46E5" />
+        <KpiCard title="Burn-Rate (Tâches)" value="0%" icon={<Zap size={22} />} color="#F59E0B" />
+        <KpiCard title="OTIF Livraison" value="0%" icon={<ShieldCheck size={22} />} color="#0D9488" />
+        <KpiCard title="Risque Dérive" value="Basse" icon={<Flag size={22} />} color="#6366F1" />
       </motion.div>
 
       {/* Toolbar & View Switcher */}

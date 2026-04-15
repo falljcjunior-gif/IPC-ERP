@@ -12,18 +12,8 @@ import {
 import KpiCard from '../../../components/KpiCard';
 
 const FinancialTab = ({ data, formatCurrency }) => {
-  const plData = [
-    { m: 'Jan', ca: 85, exp: 62, profit: 23 },
-    { m: 'Fév', ca: 92, exp: 68, profit: 24 },
-    { m: 'Mar', ca: 110, exp: 78, profit: 32 },
-    { m: 'Avr', ca: 105, exp: 74, profit: 31 },
-  ];
-
-  const cashFlow = [
-    { name: 'Entrées', val: 125000000, color: '#10B981' },
-    { name: 'Sorties', val: 98000000, color: '#EF4444' },
-    { name: 'Net', val: 27000000, color: '#6366F1' },
-  ];
+  const plData = [];
+  const cashFlow = [];
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -31,24 +21,20 @@ const FinancialTab = ({ data, formatCurrency }) => {
       {/* Financial KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
          <KpiCard 
-           title="Marge EBITDA" value="23.4%" trend={1.8} trendType="up" 
+           title="Marge EBITDA" value="0%" 
            icon={<TrendingUp size={20}/>} color="#6366F1" 
-           sparklineData={[{val: 21}, {val: 22}, {val: 23}]}
          />
          <KpiCard 
-           title="Trésorerie Nette" value={formatCurrency(450000000)} trend={12} trendType="up" 
+           title="Trésorerie Nette" value={formatCurrency(0)} 
            icon={<Landmark size={20}/>} color="#10B981" 
-           sparklineData={[{val: 400}, {val: 420}, {val: 450}]}
          />
          <KpiCard 
-           title="DSO (Délai Client)" value="42 Jrs" trend={5} trendType="down" 
+           title="DSO (Délai Client)" value="0 Jrs" 
            icon={<History size={20}/>} color="#F59E0B" 
-           sparklineData={[{val: 48}, {val: 45}, {val: 42}]}
          />
          <KpiCard 
-           title="Burn Rate (OpEx)" value="78.5 M/Mois" trend={0.5} trendType="up" 
+           title="Burn Rate (OpEx)" value="0/Mois" 
            icon={<Activity size={20}/>} color="#D946EF" 
-           sparklineData={[{val: 75}, {val: 77}, {val: 78}]}
          />
       </div>
 
