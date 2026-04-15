@@ -27,4 +27,4 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
       - name: Deploy to Firebase
-        run: npx firebase-tools deploy --project ipc-erp --non-interactive
+        run: npx firebase-tools deploy --project ipc-erp --non-interactive --force
