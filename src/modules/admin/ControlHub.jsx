@@ -14,6 +14,8 @@ import StudioTab from './tabs/StudioTab';
 import ConfigTab from './tabs/ConfigTab';
 import SecurityTab from './tabs/SecurityTab';
 import HealthTab from './tabs/HealthTab';
+import MasterData from '../MasterData';
+import History from '../History';
 
 const ControlHub = ({ onOpenDetail }) => {
   const { userRole, config, currentUser } = useBusiness();
@@ -43,6 +45,8 @@ const ControlHub = ({ onOpenDetail }) => {
     { id: 'config', label: 'Global Config', icon: <Settings size={16} /> },
     { id: 'security', label: 'Guard Center', icon: <ShieldCheck size={16} /> },
     { id: 'health', label: 'Health Hub', icon: <Activity size={16} /> },
+    { id: 'masterdata', label: 'Données Maîtres', icon: <Layout size={16} /> },
+    { id: 'history', label: 'Historique & Audit', icon: <Database size={16} /> }
   ];
 
   return (
@@ -98,6 +102,16 @@ const ControlHub = ({ onOpenDetail }) => {
           {activeTab === 'config' && <ConfigTab />}
           {activeTab === 'security' && <SecurityTab />}
           {activeTab === 'health' && <HealthTab />}
+          {activeTab === 'masterdata' && (
+            <div style={{ background: 'var(--bg)', borderRadius: '1.5rem', overflow: 'hidden' }}>
+              <MasterData onOpenDetail={onOpenDetail} />
+            </div>
+          )}
+          {activeTab === 'history' && (
+            <div style={{ background: 'var(--bg)', borderRadius: '1.5rem', overflow: 'hidden' }}>
+              <History onOpenDetail={onOpenDetail} />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
 

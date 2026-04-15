@@ -38,9 +38,7 @@ import Planning from './modules/Planning';
 import Analytics from './modules/Analytics';
 import StaffPortal from './modules/StaffPortal';
 import Connect from './modules/connect/ConnectHub';
-import UserManagement from './modules/admin/ControlHub';
-import SettingsModule from './modules/admin/ControlHub';
-import Studio from './modules/admin/ControlHub';
+import ControlHub from './modules/admin/ControlHub';
 import History from './modules/History';
 import Workflows from './modules/Workflows';
 import Shipping from './modules/Shipping';
@@ -198,32 +196,8 @@ export const initRegistry = () => {
 
   // --- Configuration & Admin ---
   registry.register({
-    id: 'masterdata', label: 'Données Maîtres', icon: <Layout size={18} />,
-    category: 'admin', roles: ['ADMIN'],
-    component: MasterData, priority: 90
-  });
-
-  registry.register({
-    id: 'history', label: 'Historique & Audit', icon: <HistoryIcon size={18} />,
-    category: 'admin', roles: ['SUPER_ADMIN'],
-    component: History, priority: 91
-  });
-
-  registry.register({
-    id: 'studio', label: 'IPC Studio', icon: <Zap size={18} />,
-    category: 'admin', roles: ['SUPER_ADMIN'],
-    component: Studio, priority: 95
-  });
-
-  registry.register({
-    id: 'user_management', label: 'Gestion Utilisateurs', icon: <ShieldCheck size={18} />,
-    category: 'admin', roles: ['SUPER_ADMIN'],
-    component: UserManagement, priority: 100
-  });
-
-  registry.register({
-    id: 'settings', label: 'Paramètres', icon: <Settings size={18} />,
-    category: 'admin', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'],
-    component: SettingsModule, priority: 101
+    id: 'control_hub', label: 'Administration', icon: <Settings size={18} />,
+    category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN'],
+    component: ControlHub, priority: 90
   });
 };
