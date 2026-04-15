@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { auth } from '../firebase/config';
+import { updatePassword } from 'firebase/auth';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
   Moon, Sun, Grid, Home, ShoppingCart, Package, FileText, Users2,
@@ -6,7 +8,7 @@ import {
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
   Folder, Activity as ActivityIcon, Zap, Sparkles, MessageCircle,
-  Pin, PinOff, CreditCard, Landmark
+  Pin, PinOff, CreditCard, Landmark, Key
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
@@ -44,6 +46,9 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const [search, setSearch] = useState({ query: '', focused: false });
   const [details, setDetails] = useState({ record: null, context: { appId: '', subModule: '' } });
   
+  // Password Change State
+  const [pwdModal, setPwdModal] = useState({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false });
+
   // Navigation State (UNQIUE NAMES)
   const [appsPool, setAppsPool] = useState([]);
   const [openSections, setOpenSections] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
@@ -211,7 +216,31 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
             </div>
             <div onClick={() => setShellView(p => ({ ...p, chat: true }))} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)20', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}><MessageCircle size={18} /> Chat</div>
-            <div onClick={() => setShellView(p => ({ ...p, profile: !p.profile }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
+            <div style={{ position: 'relative' }}>
+              <div onClick={() => setShellView(p => ({ ...p, profile: !p.profile }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
+              <AnimatePresence>
+                {shellView.profile && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="glass"
+                    style={{ position: 'absolute', top: '120%', right: 0, minWidth: '220px', padding: '1rem', borderRadius: '1.25rem', border: '1px solid var(--border)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', zIndex: 100 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{currentUser.nom[0]}</div>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{currentUser.nom}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{userRole}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => { setShellView(p => ({...p, profile: false})); setPwdModal(p => ({...p, open: true})) }}
+                      style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, borderRadius: '0.5rem' }}>
+                      <Key size={16} /> Changer le mot de passe
+                    </button>
+                    <button onClick={() => { logout(); setView('login'); }}
+                      style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, borderRadius: '0.5rem', marginTop: '4px' }}>
+                      <LogOut size={16} /> Déconnexion
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
@@ -261,6 +290,57 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           onOpenSearch={() => setSearch(p => ({ ...p, focused: true }))}
         />
       )}
+
+      {/* Password Change Modal */}
+      <AnimatePresence>
+        {pwdModal.open && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass" style={{ width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+              <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={20} color="var(--accent)" /> Changer de mot de passe</h3>
+              
+              {pwdModal.error && <div style={{ padding: '0.75rem', background: '#EF444415', color: '#EF4444', borderRadius: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>{pwdModal.error}</div>}
+              {pwdModal.success && <div style={{ padding: '0.75rem', background: '#10B98115', color: '#10B981', borderRadius: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>{pwdModal.success}</div>}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Nouveau mot de passe</label>
+                  <input type="password" value={pwdModal.newPwd} onChange={e => setPwdModal(p => ({ ...p, newPwd: e.target.value, error: '', success: '' }))}
+                    style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Confirmer le mot de passe</label>
+                  <input type="password" value={pwdModal.confirmPwd} onChange={e => setPwdModal(p => ({ ...p, confirmPwd: e.target.value, error: '', success: '' }))}
+                    style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none' }} />
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
+                <button onClick={() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false })}
+                  style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}>
+                  Fermer
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (pwdModal.newPwd !== pwdModal.confirmPwd) { setPwdModal(p => ({ ...p, error: 'Les mots de passe ne correspondent pas.' })); return; }
+                    if (pwdModal.newPwd.length < 6) { setPwdModal(p => ({ ...p, error: 'Le mot de passe doit faire au moins 6 caractères.' })); return; }
+                    setPwdModal(p => ({ ...p, loading: true, error: '' }));
+                    try {
+                      await updatePassword(auth.currentUser, pwdModal.newPwd);
+                      setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
+                      setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
+                    } catch (err) {
+                      setPwdModal(p => ({ ...p, error: 'Erreur: Veuillez vous reconnecter puis réessayer. (' + err.message + ')', loading: false }));
+                    }
+                  }}
+                  disabled={pwdModal.loading || pwdModal.newPwd === ''}
+                  style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', fontWeight: 700, cursor: pwdModal.loading ? 'wait' : 'pointer', opacity: pwdModal.loading || pwdModal.newPwd === '' ? 0.7 : 1 }}>
+                  {pwdModal.loading ? 'En cours...' : 'Enregistrer'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
