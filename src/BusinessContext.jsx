@@ -800,42 +800,43 @@ export const BusinessProvider = ({ children }) => {
   const rejectRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
   }, [updateRecord, currentUser.nom]);
-2: 
-3:   // --- IPC CONNECT SOCIAL HELPERS ---
-4:   const addConnectPost = useCallback((post) => {
-5:     const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
-6:     setData(prev => ({
-7:       ...prev,
-8:       connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
-9:     }));
-10:     logAction('Publication Sociale', post.title, 'connect');
-11:   }, [logAction]);
-12: 
-13:   const likeConnectPost = useCallback((postId) => {
-14:     setData(prev => {
-15:       const posts = prev?.connect?.posts || [];
-16:       const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
-17:       return { ...prev, connect: { ...prev.connect, posts: updated } };
-18:     });
-19:   }, []);
-20: 
-21:   const addConnectComment = useCallback((postId, comment) => {
-22:     setData(prev => {
-23:       const posts = prev?.connect?.posts || [];
-24:       const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
-25:       return { ...prev, connect: { ...prev.connect, posts: updated } };
-26:     });
-27:   }, []);
-28: 
-29:   const participateInEvent = useCallback((eventId) => {
-30:     setData(prev => {
-31:       const events = prev?.connect?.events || [];
-32:       const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
-33:       return { ...prev, connect: { ...prev.connect, events: updated } };
-34:     });
-35:     addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
-36:   }, [addHint]);
-37: 
+
+
+  // --- IPC CONNECT SOCIAL HELPERS ---
+  const addConnectPost = useCallback((post) => {
+    const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
+    setData(prev => ({
+      ...prev,
+      connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
+    }));
+    logAction('Publication Sociale', post.title, 'connect');
+  }, [logAction]);
+
+  const likeConnectPost = useCallback((postId) => {
+    setData(prev => {
+      const posts = prev?.connect?.posts || [];
+      const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
+      return { ...prev, connect: { ...prev.connect, posts: updated } };
+    });
+  }, []);
+
+  const addConnectComment = useCallback((postId, comment) => {
+    setData(prev => {
+      const posts = prev?.connect?.posts || [];
+      const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
+      return { ...prev, connect: { ...prev.connect, posts: updated } };
+    });
+  }, []);
+
+  const participateInEvent = useCallback((eventId) => {
+    setData(prev => {
+      const events = prev?.connect?.events || [];
+      const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
+      return { ...prev, connect: { ...prev.connect, events: updated } };
+    });
+    addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
+  }, [addHint]);
+
 
   /* ══════════════════════════════════════════════════════════════════════════
      8. CLOUD LISTENERS
