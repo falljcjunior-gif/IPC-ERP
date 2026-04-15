@@ -154,9 +154,11 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
           {appsPool.map((cat) => {
             const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
-            const visibleItems = cat.items.filter(item => {
+            const allowedMods = Array.isArray(userPerms.allowedModules) ? userPerms.allowedModules : [];
+            const visibleItems = (cat.items || []).filter(item => {
               if (userRole === 'SUPER_ADMIN') return true;
-              return userPerms.allowedModules.includes(item.id) || item.roles.includes(userRole);
+              const itemRoles = Array.isArray(item.roles) ? item.roles : [];
+              return allowedMods.includes(item.id) || itemRoles.includes(userRole);
             });
             if (visibleItems.length === 0) return null;
             const isExpanded = openSections.includes(cat.label);
