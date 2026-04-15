@@ -9,16 +9,18 @@ service cloud.firestore {
     function isSuperAdmin() {
       return isAuthenticated() && (
         request.auth.token.email == 'ra.yoman@ipcgreenblocks.com' ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN'])
+        request.auth.token.email == 'fall.jcjunior@gmail.com' ||
+        request.auth.token.email == 'yoman.raphael@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']))
       );
     }
     
     function hasRole(role) {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]);
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]);
     }
 
     function hasAnyRole(roles) {
-      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles);
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles);
     }
     
     // ── Users ────────────────────────────────────────────────────────────────
@@ -109,6 +111,9 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
     match /workflows/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /notifications/{docId} {
       allow read, write: if isAuthenticated();
     }
   }
