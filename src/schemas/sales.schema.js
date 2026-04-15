@@ -46,7 +46,7 @@ export const salesSchema = {
       fields: {
         code: { label: 'Code', type: 'text', search: true },
         nom: { label: 'Désignation', type: 'text', required: true, search: true },
-        categorie: { label: 'Catégorie', type: 'selection', options: ['Logiciel', 'Matériel', 'Service', 'Consommable'], search: true },
+        categorie: { label: 'Catégorie', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Ciment & Granulats', 'Bétons', 'Service', 'Consommable'], search: true },
         prixMoyen: { label: 'Prix de Vente', type: 'money', currency: 'FCFA' },
         type: { label: 'Type', type: 'selection', options: ['Stockable', 'Service', 'Consommable'] }
       },

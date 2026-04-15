@@ -35,7 +35,9 @@ const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
              <Download size={18} /> Export PDF
            </button>
-           <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
+           <button 
+             onClick={() => onOpenDetail && onOpenDetail(null, 'sales', 'orders')}
+             className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
              <ShoppingCart size={20} /> Nouvelle Commande
            </button>
         </div>

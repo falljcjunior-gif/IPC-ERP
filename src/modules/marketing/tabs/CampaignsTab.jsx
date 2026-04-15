@@ -15,7 +15,7 @@ const CANAL_COLORS = {
   Google: '#4285F4'
 };
 
-const CampaignsTab = ({ formatCurrency, setModalMode, setIsModalOpen }) => {
+const CampaignsTab = ({ formatCurrency, setModalMode, setIsModalOpen, onOpenDetail }) => {
   const { data } = useBusiness();
   const campaigns = data?.marketing?.campaigns || [];
   const [selected, setSelected] = useState(campaigns[0]?.id || null);
@@ -73,7 +73,7 @@ const CampaignsTab = ({ formatCurrency, setModalMode, setIsModalOpen }) => {
         <motion.div variants={item} className="glass" style={{ padding: '1.5rem', borderRadius: '1.75rem', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ margin: 0, fontWeight: 900 }}>Campagnes Publicitaires</h3>
-            <button onClick={() => { setModalMode('campaigns'); setIsModalOpen(true); }} className="btn btn-primary" style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button onClick={() => { if(onOpenDetail) onOpenDetail(null, 'marketing', 'campaigns'); else if(setModalMode) { setModalMode('campaigns'); setIsModalOpen(true); } }} className="btn btn-primary" style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Plus size={14} /> Nouvelle
             </button>
           </div>

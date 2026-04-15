@@ -74,7 +74,9 @@ const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
            <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
              <Download size={18} /> Export Journal
            </button>
-           <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#6366F1', borderColor: '#6366F1' }}>
+           <button 
+             onClick={() => onOpenDetail && onOpenDetail(null, 'finance', 'invoices')}
+             className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#6366F1', borderColor: '#6366F1' }}>
              <Plus size={20} /> Nouvelle Facture
            </button>
         </div>

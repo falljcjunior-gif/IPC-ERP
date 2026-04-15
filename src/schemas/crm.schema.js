@@ -39,6 +39,8 @@ export const crmSchema = {
           default: '⭐'
         },
         statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
+        budget_estime: { label: 'Budget Estimé', type: 'money', currency: 'FCFA' },
+        date_rappel: { label: 'Date de Rappel', type: 'date' },
         campagne_id: { label: 'Campagne Source', type: 'text', search: true },
         description: { label: 'Notes internes', type: 'textarea' }
       },

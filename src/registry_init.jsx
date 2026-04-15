@@ -11,6 +11,7 @@ import {
 
 // Core Components & Modules
 import GlobalDashboard from './components/GlobalDashboard';
+import PersonalWorkspace from './components/PersonalWorkspace';
 import CRM from './modules/crm/CRM';
 import Sales from './modules/sales/Sales';
 import Inventory from './modules/logistics/LogisticsHub';
@@ -73,9 +74,15 @@ export const initRegistry = () => {
 
   // --- Cœur de Métier ---
   registry.register({
-    id: 'home', label: 'Tableau de bord', icon: <Home size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE'],
-    component: GlobalDashboard, priority: 1
+    id: 'home', label: 'Espace Personnel', icon: <UserCircle size={18} />,
+    category: 'core', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF', 'PRODUCTION'],
+    component: PersonalWorkspace, priority: 1
+  });
+
+  registry.register({
+    id: 'command_center', label: 'Vue 360°', icon: <Activity size={18} />,
+    category: 'core', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
+    component: GlobalDashboard, priority: 2
   });
 
   registry.register({

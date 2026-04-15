@@ -859,17 +859,8 @@ export const BusinessProvider = ({ children }) => {
         
         setCurrentUser(profile);
 
-        // Auto landing logic
-        const landingPages = {
-            'SUPER_ADMIN': 'home',
-            'ADMIN': 'home',
-            'SALES': 'crm',
-            'HR': 'hr',
-            'FINANCE': 'accounting',
-            'STAFF': 'staff_portal',
-            'PRODUCTION': 'production'
-        };
-        setActiveApp(landingPages[profile.role] || 'home');
+        // Auto landing logic: Everybody lands on their intelligent Personal Workspace ('home')
+        setActiveApp('home');
 
       } else {
         setData(mockData);

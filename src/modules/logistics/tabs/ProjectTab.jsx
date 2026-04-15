@@ -63,7 +63,9 @@ const ProjectTab = ({ data, onOpenDetail, updateRecord }) => {
             <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
               <Activity size={18} /> Rapports
             </button>
-            <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
+            <button 
+               onClick={() => onOpenDetail && onOpenDetail(null, 'projects', 'tasks')}
+               className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
                <Plus size={20} /> Nouvelle Tâche
             </button>
          </div>

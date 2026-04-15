@@ -34,7 +34,9 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
             <Filter size={18} /> Filtres
           </button>
         </div>
-        <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
+        <button 
+          onClick={() => onOpenDetail && onOpenDetail(null, 'crm', 'opportunities')}
+          className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
           <Plus size={20} /> Nouvelle Opportunité
         </button>
       </div>

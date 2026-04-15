@@ -50,6 +50,11 @@ const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
            <button className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>
               Exporter
            </button>
+           <button 
+             onClick={() => onOpenDetail && onOpenDetail(null, 'crm', 'clients')}
+             className="btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>
+              Nouveau Client
+           </button>
         </div>
       </div>
 

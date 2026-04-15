@@ -28,7 +28,9 @@ const CatalogTab = ({ data, formatCurrency }) => {
               style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.8rem', borderRadius: '1rem', border: 'none', fontSize: '0.85rem' }} />
           </div>
         </div>
-        <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
+        <button 
+          onClick={() => onOpenDetail && onOpenDetail(null, 'base', 'catalog')}
+          className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900 }}>
           <Plus size={20} /> Nouveau Produit
         </button>
       </div>

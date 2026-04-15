@@ -41,7 +41,9 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
               <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Cartographie des Entrepôts</h3>
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Visualisez la capacité et l'occupation de vos zones de stockage.</p>
            </div>
-           <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
+           <button 
+              onClick={() => onOpenDetail && onOpenDetail(null, 'inventory', 'warehouses')}
+              className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
               <Plus size={20} /> Nouvel Entrepôt
            </button>
         </div>
@@ -105,7 +107,9 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
                <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
                  <History size={18} /> Journal des Mouvements
                </button>
-               <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
+               <button 
+                 onClick={() => onOpenDetail && onOpenDetail(null, 'inventory', 'movements')}
+                 className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
                  <ArrowUpRight size={20} /> Entrée de Stock
                </button>
             </div>
