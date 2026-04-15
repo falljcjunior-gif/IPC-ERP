@@ -6,8 +6,9 @@ import {
   Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
-import { db, auth } from '../../../firebase/config';
+import { db, auth, storage } from '../../../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
@@ -19,8 +20,13 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showRoomSettings, setShowRoomSettings] = useState(false);
   const [roomSettings, setRoomSettings] = useState({ muteNotifs: false, pinned: false });
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollRef = useRef();
   const inputRef = useRef();
+  const fileInputRef = useRef();
+
+  const commonEmojis = ['😊', '😂', '👍', '🙏', '🔥', '🚀', '❤️', '👏', '🤔', '😎', '💡', '✅', '⏳', '📌', '📁', '🤝', '⭐', '✨', '💪', '🎯'];
 
   // Mocked Workgroups (upgraded for high-fidelity)
   const groups = [
@@ -88,13 +94,60 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   };
 
   const initiateCall = async (type) => {
-    if (activeRoom.type !== 'direct') return;
+    if (activeRoom.type !== 'direct') {
+      alert("Les appels groupés ne sont pas encore supportés. Passez par un chat direct pour appeler un collaborateur.");
+      return;
+    }
     const parts = activeRoom.id.split('_');
     const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+    
     try {
+      // 1. Démarrer le flux local (caméra/micro) avant de créer l'offre WebRTC
+      await webrtcService.startLocalStream(type);
+      
+      // 2. Créer l'appel au niveau de la couche WebRTC et Firestore
       const callId = await webrtcService.createCall(currentUser.id, currentUser.nom, receiverId, type);
+      
+      // 3. Activer l'interface d'appel (PlatformShell réagira via BusinessContext)
       setActiveCall({ id: callId, role: 'caller', type, contactName: activeRoom.label });
-    } catch (err) { console.error("Call Error:", err); }
+    } catch (err) { 
+      console.error("Call Error:", err); 
+      alert("Impossible de démarrer l'appel. Veuillez vérifier vos permissions caméra/micro.");
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !auth.currentUser) return;
+
+    setIsUploading(true);
+    try {
+      const storageRef = ref(storage, `messenger/${activeRoom.id}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+
+      await addDoc(collection(db, 'messages'), {
+        text: `Pièce jointe : ${file.name}`,
+        fileUrl: url,
+        fileName: file.name,
+        fileType: file.type,
+        roomId: activeRoom.id,
+        userId: currentUser.id,
+        userName: currentUser.nom,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error("Upload Error:", err);
+      alert("Erreur lors de l'envoi du fichier.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const addEmoji = (emoji) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmojis(false);
+    inputRef.current?.focus();
   };
 
   return (
@@ -162,13 +215,25 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                   </div>
                </div>
             </div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
-                   <button onClick={() => initiateCall('audio')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Phone size={20} /></button>
-                   <button onClick={() => initiateCall('video')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Video size={20} /></button>
-                </div>
-                <button onClick={() => setShowRoomSettings(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Settings size={20} /></button>
-             </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                 <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
+                    <button 
+                      onClick={() => initiateCall('audio')} 
+                      title={activeRoom.type !== 'direct' ? "Appels directs uniquement" : "Appel Audio"}
+                      style={{ background: 'none', border: 'none', padding: '8px', cursor: activeRoom.type === 'direct' ? 'pointer' : 'not-allowed', color: activeRoom.type === 'direct' ? '#8B5CF6' : 'var(--text-muted)', opacity: activeRoom.type === 'direct' ? 1 : 0.5 }}
+                    >
+                      <Phone size={20} />
+                    </button>
+                    <button 
+                      onClick={() => initiateCall('video')} 
+                      title={activeRoom.type !== 'direct' ? "Appels directs uniquement" : "Appel Vidéo"}
+                      style={{ background: 'none', border: 'none', padding: '8px', cursor: activeRoom.type === 'direct' ? 'pointer' : 'not-allowed', color: activeRoom.type === 'direct' ? '#8B5CF6' : 'var(--text-muted)', opacity: activeRoom.type === 'direct' ? 1 : 0.5 }}
+                    >
+                      <Video size={20} />
+                    </button>
+                 </div>
+                 <button onClick={() => setShowRoomSettings(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Settings size={20} /></button>
+              </div>
           </div>
 
           {/* Room Settings Modal */}
@@ -211,7 +276,21 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
               return (
                 <div key={msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                    <div style={{ padding: '1rem 1.25rem', borderRadius: '1.75rem', background: isMe ? '#8B5CF6' : 'white', color: isMe ? 'white' : 'var(--text)', border: isMe ? 'none' : '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.5, position: 'relative' }}>
-                      {msg.text}
+                      {msg.fileUrl ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {msg.fileType?.startsWith('image/') ? (
+                            <img src={msg.fileUrl} alt={msg.fileName} style={{ maxWidth: '100%', borderRadius: '12px', maxHeight: '300px', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: isMe ? 'rgba(255,255,255,0.1)' : 'var(--bg-subtle)', padding: '10px', borderRadius: '12px' }}>
+                              <Paperclip size={18} />
+                              <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>{msg.fileName}</a>
+                            </div>
+                          )}
+                          <div style={{ opacity: 0.9 }}>{msg.text}</div>
+                        </div>
+                      ) : (
+                        msg.text
+                      )}
                       <div style={{ marginTop: '6px', fontSize: '0.65rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', opacity: 0.7 }}>
                          {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Maintenant'} 
                          {isMe && <CheckCheck size={12} />}
@@ -223,13 +302,51 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
          </div>
 
          {/* Message Input */}
-         <form onSubmit={sendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)' }}>
+         <form onSubmit={sendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', position: 'relative' }}>
+            <AnimatePresence>
+              {showEmojis && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                  style={{ position: 'absolute', bottom: '100%', left: '2rem', background: 'white', border: '1px solid var(--border)', borderRadius: '1.5rem', padding: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', zIndex: 100 }}
+                >
+                  {commonEmojis.map(emoji => (
+                    <button key={emoji} type="button" onClick={() => addEmoji(emoji)} style={{ fontSize: '1.5rem', padding: '8px', background: 'none', border: 'none', cursor: 'pointer', borderRadius: '10px', transition: '0.2s' }} onMouseEnter={e => e.target.style.background = 'var(--bg-subtle)'} onMouseLeave={e => e.target.style.background = 'none'}>
+                      {emoji}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-subtle)', padding: '0.8rem 1.5rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
-               <Smile size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} />
-               <Paperclip size={20} color="var(--text-muted)" style={{ cursor: 'pointer' }} />
-               <input ref={inputRef} value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Écrivez votre message..." style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '1rem', color: 'var(--text)', fontWeight: 500 }} />
-               <button type="submit" style={{ width: '42px', height: '42px', borderRadius: '50%', background: '#8B5CF6', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }}>
-                  <Send size={20} />
+               <input 
+                 type="file" 
+                 ref={fileInputRef} 
+                 onChange={handleFileUpload} 
+                 style={{ display: 'none' }} 
+               />
+               <Smile 
+                 size={20} 
+                 color={showEmojis ? '#8B5CF6' : "var(--text-muted)"} 
+                 style={{ cursor: 'pointer' }} 
+                 onClick={() => setShowEmojis(!showEmojis)} 
+               />
+               <Paperclip 
+                 size={20} 
+                 color={isUploading ? '#8B5CF6' : "var(--text-muted)"} 
+                 style={{ cursor: 'pointer' }} 
+                 onClick={() => fileInputRef.current?.click()} 
+               />
+               <input 
+                 ref={inputRef} 
+                 value={newMessage} 
+                 onChange={(e) => setNewMessage(e.target.value)} 
+                 placeholder={isUploading ? "Envoi du fichier..." : "Écrivez votre message..."} 
+                 disabled={isUploading}
+                 style={{ flex: 1, background: 'none', border: 'none', outline: 'none', fontSize: '1rem', color: 'var(--text)', fontWeight: 500 }} 
+               />
+               <button type="submit" disabled={isUploading} style={{ width: '42px', height: '42px', borderRadius: '50%', background: isUploading ? 'var(--text-muted)' : '#8B5CF6', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isUploading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }}>
+                  {isUploading ? <Loader size={20} className="spin" /> : <Send size={20} />}
                </button>
             </div>
          </form>
