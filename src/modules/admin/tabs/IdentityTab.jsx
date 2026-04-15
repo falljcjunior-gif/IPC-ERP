@@ -12,10 +12,12 @@ import { adminSchema } from '../../../schemas/admin.schema.js';
 const IdentityTab = ({ onOpenDetail }) => {
   const { data } = useBusiness();
 
+  const userCount = data?.admin?.users ? Object.keys(data.admin.users).length || data.admin.users.length : 0;
+  
   const stats = [
-    { label: 'Utilisateurs Actifs', value: 42, icon: <Users size={20}/>, color: '#10B981' },
-    { label: 'Rôles Définis', value: 5, icon: <ShieldCheck size={20}/>, color: '#6366F1' },
-    { label: 'Sessions Actuelles', value: 12, icon: <LogIn size={20}/>, color: '#F59E0B' },
+    { label: 'Utilisateurs Actifs', value: userCount || 0, icon: <Users size={20}/>, color: '#10B981' },
+    { label: 'Rôles Définis', value: 0, icon: <ShieldCheck size={20}/>, color: '#6366F1' },
+    { label: 'Sessions Actuelles', value: 0, icon: <LogIn size={20}/>, color: '#F59E0B' },
     { label: 'Alertes Accès', value: 0, icon: <ShieldAlert size={20}/>, color: '#EF4444' }
   ];
 
