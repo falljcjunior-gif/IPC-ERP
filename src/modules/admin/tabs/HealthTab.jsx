@@ -46,7 +46,12 @@ const HealthTab = () => {
                       <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>Cache Système</span>
                    </div>
                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Optimisez les performances en réinitialisant les métadonnées locales.</p>
-                   <button className="btn-secondary" style={{ padding: '0.8rem', borderRadius: '1rem', fontWeight: 800, width: '100%' }}>Purger le Cache</button>
+                   <button onClick={() => {
+                     if(window.confirm('Voulez-vous purger le cache local ? Cela rechargera la page avec les dernières données du serveur (ou locales).')) {
+                        localStorage.removeItem('daxcelor_data');
+                        window.location.reload();
+                     }
+                   }} className="btn-secondary" style={{ padding: '0.8rem', borderRadius: '1rem', fontWeight: 800, width: '100%' }}>Purger le Cache</button>
                 </div>
                 <div style={{ padding: '2rem', borderRadius: '2rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -54,7 +59,20 @@ const HealthTab = () => {
                       <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>Export Global</span>
                    </div>
                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sauvegardez l'intégralité de la configuration au format JSON.</p>
-                   <button className="btn-secondary" style={{ padding: '0.8rem', borderRadius: '1rem', fontWeight: 800, width: '100%' }}>Générer Export</button>
+                   <button onClick={() => {
+                     try {
+                        const dataBlob = localStorage.getItem('daxcelor_data') || '{}';
+                        const blob = new Blob([dataBlob], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `IPC_ERP_BACKUP_${new Date().toISOString().slice(0,10)}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                     } catch(e) {
+                        alert('Erreur lors de la génération de l\'export.');
+                     }
+                   }} className="btn-secondary" style={{ padding: '0.8rem', borderRadius: '1rem', fontWeight: 800, width: '100%' }}>Générer Export</button>
                 </div>
              </div>
           </div>
@@ -80,7 +98,14 @@ const HealthTab = () => {
                    <Trash2 size={24} color="#EF4444" />
                    <div>
                       <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#EF4444' }}>Danger Zone</div>
-                      <button style={{ background: 'none', border: 'none', color: '#EF4444', fontWeight: 800, padding: 0, cursor: 'pointer', fontSize: '0.75rem', textDecoration: 'underline' }}>Réinitialisation Totale</button>
+                      <button onClick={() => {
+                        const confirmCode = prompt('DANGER : Tapez "RESET" pour effacer toutes les données locales et repartir à zéro.');
+                        if (confirmCode === 'RESET') {
+                           localStorage.removeItem('daxcelor_data');
+                           localStorage.clear(); // Clear all other potential local states
+                           window.location.reload();
+                        }
+                      }} style={{ background: 'none', border: 'none', color: '#EF4444', fontWeight: 800, padding: 0, cursor: 'pointer', fontSize: '0.75rem', textDecoration: 'underline' }}>Réinitialisation Totale</button>
                    </div>
                 </div>
              </div>
