@@ -4,16 +4,18 @@ import {
   Users, UserPlus, Mail, Phone, Briefcase, 
   Search, Filter, Activity, TrendingUp, Award,
   Clock, CheckCircle2, MoreVertical, MapPin,
-  Building2, Heart, Plus
+  Building2, Heart, Plus, Wallet
 } from 'lucide-react';
 import KpiCard from '../../../components/KpiCard';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { hrSchema } from '../../../schemas/hr.schema';
+import { useBusiness } from '../../../BusinessContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const PeopleTab = ({ data, onOpenDetail }) => {
+  const { generatePayrollEntry } = useBusiness();
   const employees = data?.hr?.employees || [];
   
   const stats = useMemo(() => {
@@ -41,7 +43,10 @@ const PeopleTab = ({ data, onOpenDetail }) => {
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Gérez les profils, les contrats et les compétences de vos équipes.</p>
            </div>
            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+              <button onClick={() => generatePayrollEntry()} className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 800, fontSize: '0.85rem', color: '#8B5CF6', border: '1px solid #8B5CF650' }}>
+                <Wallet size={18} /> Exécuter la Paie
+              </button>
+              <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
                 <Building2 size={18} /> Organigramme
               </button>
               <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>

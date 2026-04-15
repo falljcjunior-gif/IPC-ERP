@@ -53,6 +53,48 @@ export const hrSchema = {
           valueField: 'score'
         }
       }
+    },
+    timesheets: {
+      label: 'Pointages',
+      fields: {
+        date: { label: 'Date', type: 'date', required: true, search: true },
+        collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
+        projet: { label: 'Projet / Centre Coût', type: 'text', search: true },
+        tache: { label: 'Tâche', type: 'text', search: true },
+        heures: { label: 'Durée (heures)', type: 'number', required: true },
+        facturable: { label: 'Facturable', type: 'boolean', default: false },
+        statut: { label: 'Statut', type: 'selection', options: ['En attente', 'Validé', 'Refusé'], default: 'En attente' }
+      },
+      views: {
+        list: ['date', 'collaborateur', 'projet', 'heures', 'facturable', 'statut'],
+        search: {
+          filters: [
+            { id: 'pending', label: 'En attente', domain: [['statut', '==', 'En attente']] }
+          ],
+          groups: [
+            { id: 'collaborateur', label: 'Par Collaborateur' },
+            { id: 'projet', label: 'Par Projet' }
+          ]
+        }
+      }
+    },
+    leaves: {
+      label: 'Congés & Absences',
+      fields: {
+        collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
+        type: { label: 'Type', type: 'selection', options: ['Congé Payé', 'Maladie', 'Maternité', 'Sans Solde'], required: true, search: true },
+        date_debut: { label: 'Date Début', type: 'date', required: true },
+        date_fin: { label: 'Date Fin', type: 'date', required: true },
+        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Soumis', 'Approuvé', 'Refusé'], default: 'Brouillon' }
+      },
+      views: {
+        list: ['collaborateur', 'type', 'date_debut', 'date_fin', 'statut'],
+        kanban: {
+          groupField: 'statut',
+          titleField: 'collaborateur',
+          subtitleField: 'type'
+        }
+      }
     }
   }
 };

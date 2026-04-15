@@ -46,7 +46,6 @@ const EnterpriseView = ({
   if (!modelSchema) {
     return <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444', fontWeight: 600 }}>Vue indisponible : le modèle {modelId} n'existe pas dans le schéma {moduleId}.</div>;
   }
-
   const dataPath = modelSchema.dataPath || `${moduleId}.${modelId}`;
   const rawData = getNestedValue(data, dataPath) || [];
 
@@ -189,7 +188,7 @@ const EnterpriseView = ({
         columnMapping={config.groupField}
         onItemClick={(item) => onOpenDetail(item, moduleId, modelId)}
         onMove={(item, newColumn) => {
-          updateRecord(moduleId, modelId, item.id, { [config.groupField]: newColumn });
+          updateRecord(modelSchema.dataPath ? modelSchema.dataPath.split('.')[0] : moduleId, modelSchema.dataPath ? modelSchema.dataPath.split('.')[1] : modelId, item.id, { [config.groupField]: newColumn });
         }}
       />
     );

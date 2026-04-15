@@ -15,10 +15,11 @@ import {
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
+import { generatePDF } from '../utils/PDFExporter';
 
 const StaffPortal = () => {
   const { data, currentUser, addRecord, formatCurrency, navigateTo } = useBusiness();
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'leaves', 'expenses'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'leaves', 'expenses', 'payslips'
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Filter data for the current user
@@ -28,6 +29,7 @@ const StaffPortal = () => {
   const myProjects = (data.projects?.projects || []).filter(p => 
     p.team?.some(t => t.nom === currentUser.nom) || p.chefProjet === currentUser.nom
   );
+  const myPayslips = (data.dms?.files || []).filter(f => f.owner === currentUser.nom && f.metadata?._subModule === 'payslip');
 
   const handleSave = (formData) => {
     const subModule = activeTab === 'leaves' ? 'leaves' : 'expenses';
@@ -113,9 +115,11 @@ const StaffPortal = () => {
             <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: '1px dashed var(--border)', textAlign: 'center' }}>
                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Contrat de travail IPC_2024.pdf</p>
             </div>
-            <div style={{ padding: '1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: '1px dashed var(--border)', textAlign: 'center' }}>
-               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Règlement Intérieur.pdf</p>
-            </div>
+            {myPayslips.slice(0, 1).map((f, i) => (
+              <div key={i} style={{ padding: '1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: '1px dashed var(--accent)', textAlign: 'center', cursor: 'pointer' }} onClick={() => generatePDF(f.metadata, 'hr', 'payslip')}>
+                 <p style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600 }}>Dernière Fiche de Paie {f.metadata.salariesMois}</p>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -200,8 +204,14 @@ const StaffPortal = () => {
             >
               Frais
             </button>
+            <button 
+              onClick={() => setActiveTab('payslips')}
+              style={{ padding: '0.5rem 1.25rem', borderRadius: '0.75rem', border: 'none', background: activeTab === 'payslips' ? 'var(--accent)' : 'transparent', color: activeTab === 'payslips' ? 'white' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}
+            >
+              Fiches Paie
+            </button>
           </div>
-          {activeTab !== 'dashboard' && (
+          {(activeTab === 'leaves' || activeTab === 'expenses') && (
             <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
               <Plus size={18} /> Nouvelle Demande
             </button>
@@ -250,6 +260,54 @@ const StaffPortal = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {activeTab === 'payslips' && (
+        <div className="glass" style={{ borderRadius: '1.5rem', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead style={{ background: 'var(--bg-subtle)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              <tr>
+                <th style={{ padding: '1.25rem' }}>Mois</th>
+                <th style={{ padding: '1.25rem' }}>Net à Payer</th>
+                <th style={{ padding: '1.25rem' }}>Nom du Doc</th>
+                <th style={{ padding: '1.25rem' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {myPayslips.map((f, i) => (
+                <tr key={i} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td style={{ padding: '1.25rem', fontWeight: 600 }}>
+                    {f.metadata.salariesMois}
+                  </td>
+                  <td style={{ padding: '1.25rem', color: '#10B981', fontWeight: 700 }}>
+                    {formatCurrency(f.metadata.netAPayer)}
+                  </td>
+                  <td style={{ padding: '1.25rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    {f.name}
+                  </td>
+                  <td style={{ padding: '1.25rem' }}>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        generatePDF(f.metadata, 'hr', 'payslip');
+                      }}
+                      className="btn" 
+                      style={{ background: 'transparent', border: '1px solid var(--border)', fontSize: '0.85rem' }}
+                    >
+                      <FileText size={16} /> Télécharger
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {myPayslips.length === 0 && (
+            <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+              Aucune fiche de paie générée pour le moment.
+            </div>
+          )}
         </div>
       )}
 

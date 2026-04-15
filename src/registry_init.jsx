@@ -17,7 +17,7 @@ import Inventory from './modules/logistics/LogisticsHub';
 import Accounting from './modules/finance/FinanceControlCenter';
 import Finance from './modules/finance/FinanceControlCenter';
 import Budget from './modules/finance/FinanceControlCenter';
-import HR from './modules/enterprise/EnterpriseHub';
+import HR from './modules/HR';
 import Production from './modules/production/Production';
 import Project from './modules/logistics/LogisticsHub';
 import Purchase from './modules/logistics/LogisticsHub';

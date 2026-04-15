@@ -10,7 +10,7 @@ import { db, auth } from '../../../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
 import { webrtcService } from '../../../utils/WebRTCService';
 
-const MessengerTab = ({ onOpenDetail }) => {
+const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const { currentUser, data, setActiveCall } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
@@ -38,6 +38,18 @@ const MessengerTab = ({ onOpenDetail }) => {
     const ids = [currentUser.id, userId].sort();
     return `dm_${ids[0]}_${ids[1]}`;
   };
+
+  useEffect(() => {
+    if (navigationIntent?.roomId) {
+      setActiveRoom({
+        id: navigationIntent.roomId,
+        label: navigationIntent.label || 'Discussion',
+        type: navigationIntent.roomId.startsWith('dm_') ? 'direct' : 'team'
+      });
+      // Clear intent ? It's better not to mutate context here unless we have setter, 
+      // but the intent has done its job. We just react to it.
+    }
+  }, [navigationIntent]);
 
   useEffect(() => {
     if (!auth.currentUser || !activeRoom.id) return;

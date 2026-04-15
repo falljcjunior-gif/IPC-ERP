@@ -16,15 +16,15 @@ import {
   FolderPlus
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
+import { generatePDF } from '../utils/PDFExporter';
 
 const DMS = () => {
   const { data } = useBusiness();
   const [viewMode, setViewMode] = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
 
-  const folders = [];
-
-  const files = [];
+  const folders = data.dms?.folders || [];
+  const files = (data.dms?.files || []).filter(f => f.folder === currentFolder || (currentFolder === 'Racine' && !f.folder));
 
   const getFileIcon = (type) => {
     switch (type) {
@@ -61,24 +61,29 @@ const DMS = () => {
 
       {/* Folders Summary */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        {folders.map(folder => (
-          <motion.div
-            key={folder.name}
-            whileHover={{ y: -5 }}
-            className="glass"
-            style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer' }}
-            onClick={() => setCurrentFolder(folder.name)}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-               <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)15', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Folder size={24} />
-               </div>
-               <MoreHorizontal size={18} color="var(--text-muted)" />
-            </div>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>{folder.name}</h3>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{folder.count} éléments • {folder.size}</p>
-          </motion.div>
-        ))}
+        {folders.map(folder => {
+          const folderFiles = (data.dms?.files || []).filter(f => f.folder === folder.name || (folder.name === 'Racine' && !f.folder));
+          const numFiles = folderFiles.length;
+          
+          return (
+            <motion.div
+              key={folder.name}
+              whileHover={{ y: -5 }}
+              className="glass"
+              style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer' }}
+              onClick={() => setCurrentFolder(folder.name)}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)15', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Folder size={24} />
+                 </div>
+                 <MoreHorizontal size={18} color="var(--text-muted)" />
+              </div>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>{folder.name}</h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{numFiles} éléments</p>
+            </motion.div>
+          );
+        })}
         <motion.div
             whileHover={{ scale: 1.02 }}
             className="glass"
@@ -117,7 +122,22 @@ const DMS = () => {
                       <Shield size={12} /> Chiffré AES
                    </div>
                 </td>
-                <td style={{ padding: '1rem' }}><MoreHorizontal size={18} cursor="pointer" /></td>
+                <td style={{ padding: '1rem' }}>
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (file.type === 'PDF' && file.metadata) {
+                          generatePDF(file.metadata, file.metadata._appId || 'hr', file.metadata._subModule || 'payslip');
+                        }
+                      }}
+                      className="btn" 
+                      style={{ background: 'transparent', border: '1px solid var(--border)', fontSize: '0.8rem' }}
+                    >
+                      Télécharger
+                    </button>
+                    <MoreHorizontal size={18} cursor="pointer" style={{ marginLeft: '1rem' }} />
+                </td>
               </tr>
             ))}
           </tbody>

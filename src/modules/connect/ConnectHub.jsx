@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, LayoutGrid, Users, Calendar, 
@@ -14,8 +14,15 @@ import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
-  const { data, currentUser } = useBusiness();
+  const { data, currentUser, navigationIntent, setNavigationIntent } = useBusiness();
   const [activeTab, setActiveTab] = useState('wall');
+
+  // Deep Link Handling
+  useEffect(() => {
+    if (navigationIntent && navigationIntent.module === 'connect') {
+      if (navigationIntent.tab) setActiveTab(navigationIntent.tab);
+    }
+  }, [navigationIntent]);
 
   const tabs = [
     { id: 'wall', label: 'Mur Enterprise', icon: <LayoutGrid size={16} /> },
@@ -59,7 +66,7 @@ const ConnectHub = ({ onOpenDetail }) => {
 
       {/* Connectivity Navigation */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
+        <TabBar tabs={tabs} active={activeTab} onChange={(t) => { setActiveTab(t); setNavigationIntent(null); }} />
       </div>
 
       {/* Social Experience Frame */}
@@ -73,7 +80,7 @@ const ConnectHub = ({ onOpenDetail }) => {
           style={{ position: 'relative' }}
         >
           {activeTab === 'wall' && <WallTab data={data} currentUser={currentUser} />}
-          {activeTab === 'messenger' && <MessengerTab onOpenDetail={onOpenDetail} />}
+          {activeTab === 'messenger' && <MessengerTab onOpenDetail={onOpenDetail} navigationIntent={navigationIntent} />}
           {activeTab === 'directory' && <DirectoryTab data={data} onOpenDetail={onOpenDetail} />}
           {activeTab === 'events' && <EventsTab data={data} />}
         </motion.div>

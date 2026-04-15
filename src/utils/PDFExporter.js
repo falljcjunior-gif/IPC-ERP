@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // Using autotable for professional look
+import autoTable from "jspdf-autotable"; // Using explicit import for autotable
 
 export const generatePDF = (record, appId, subModule) => {
   const doc = new jsPDF();
@@ -30,7 +30,8 @@ export const generatePDF = (record, appId, subModule) => {
     'crm_leads': 'FICHE PROSPECT',
     'finance_invoices': 'FACTURE',
     'inventory_movements': 'BON DE MOUVEMENT',
-    'hr_employees': 'FICHE EMPLOYÉ'
+    'hr_employees': 'FICHE EMPLOYÉ',
+    'hr_payslip': 'BULLETIN DE PAIE'
   }[`${appId}_${subModule}`] || 'DOCUMENT INTERNE';
 
   doc.setFontSize(16);
@@ -38,7 +39,8 @@ export const generatePDF = (record, appId, subModule) => {
   doc.text(docTypeName, pageWidth - 15, 25, { align: "right" });
   
   doc.setFontSize(12);
-  doc.text(record.num || `#${record.id.slice(-6)}`, pageWidth - 15, 33, { align: "right" });
+  const docRef = record.num || (record.id ? String(record.id).slice(-6) : 'N/A');
+  doc.text(String(docRef), pageWidth - 15, 33, { align: "right" });
 
   // 3. ADDRESSES SECTION (Sender vs Receiver)
   doc.setTextColor(...primaryColor);
@@ -59,16 +61,30 @@ export const generatePDF = (record, appId, subModule) => {
   }
 
   // 4. MAIN CONTENT TABLE
-  const tableData = Object.entries(record)
-    .filter(([key]) => !['id', 'avatar', 'subModule', 'ownerId', 'updatedAt'].includes(key))
-    .map(([key, value]) => [
-       key.replace(/([A-Z])/g, ' $1').toUpperCase(),
-       typeof value === 'object' ? JSON.stringify(value) : String(value)
-    ]);
+  let tableData = [];
+  let tableHeaders = [['DÉSIGNATION', 'VALEUR']];
 
-  doc.autoTable({
+  if (appId === 'hr' && subModule === 'payslip') {
+    tableHeaders = [['RUBRIQUE', 'BASE', 'PART SALARIALE', 'PART PATRONALE']];
+    tableData = [
+      ['Salaire de base', `${Number(record.totalBrut || 0).toLocaleString()} FCFA`, '', ''],
+      ['Indemnité de Transport', 'Exonéré', '', ''],
+      ['Cotisations Sociales (CNPS)', '', '- 22%', '+ 18%'],
+      ['Impôts sur le Revenu (ITS)', '', 'Déduit', ''],
+      ['Avances & Acomptes', '', '0 FCFA', '']
+    ];
+  } else {
+    tableData = Object.entries(record)
+      .filter(([key]) => !['id', 'avatar', 'subModule', 'ownerId', 'updatedAt', '_appId', '_subModule'].includes(key))
+      .map(([key, value]) => [
+         key.replace(/([A-Z])/g, ' $1').toUpperCase(),
+         typeof value === 'object' ? JSON.stringify(value) : String(value)
+      ]);
+  }
+
+  autoTable(doc, {
     startY: 90,
-    head: [['DÉSIGNATION', 'VALEUR']],
+    head: tableHeaders,
     body: tableData,
     theme: 'striped',
     headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
@@ -76,9 +92,24 @@ export const generatePDF = (record, appId, subModule) => {
     margin: { left: 15, right: 15 }
   });
 
-  // 5. TOTALS (If Sales/Invoice)
+  // 5. TOTALS
   let finalY = doc.lastAutoTable.finalY + 10;
-  if (record.totalHT || record.montant) {
+  if (appId === 'hr' && subModule === 'payslip') {
+    doc.setDrawColor(...accentColor);
+    doc.setLineWidth(0.5);
+    doc.line(pageWidth - 80, finalY, pageWidth - 15, finalY);
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.text("NET À PAYER:", pageWidth - 80, finalY + 10);
+    doc.text(`${Number(record.netAPayer || 0).toLocaleString()} FCFA`, pageWidth - 15, finalY + 10, { align: "right" });
+    finalY += 20;
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Validé pour la période de : ${record.salariesMois || ''}`, 15, finalY);
+    doc.text(`Date de paiement : ${record.datePaiement || ''}`, 15, finalY + 5);
+  } else if (record.totalHT || record.montant) {
     const total = record.totalTTC || record.montant || record.totalHT;
     doc.setDrawColor(...accentColor);
     doc.setLineWidth(0.5);

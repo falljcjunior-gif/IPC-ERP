@@ -141,6 +141,7 @@ export const BusinessProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   
   // Platform Schema Overrides (for Studio)
+  const [navigationIntent, setNavigationIntent] = useState(null);
   const [schemaOverrides, setSchemaOverrides] = useState(() => safeParse('ipc_erp_schemas', {}));
 
   
@@ -303,18 +304,20 @@ export const BusinessProvider = ({ children }) => {
   }, [data.production?.boms, addAccountingEntry]);
 
   const generateExpenseEntry = useCallback((expense) => {
+    const isPaie = expense.type === 'Salaires';
     const entry = {
-      libelle: `Règlement Achat: ${expense.libelle || expense.fournisseur}`,
+      libelle: isPaie ? `Décaissement Salaires: ${expense.title || expense.libelle}` : `Règlement Achat: ${expense.title || expense.libelle || expense.fournisseur}`,
       date: expense.date || new Date().toISOString().split('T')[0],
-      journalCode: 'J-ACH',
+      journalCode: isPaie ? 'J-BQ' : 'J-ACH',
       piece: expense.num || expense.id
     };
     const lines = [
-      { accountId: '601100', label: expense.libelle, debit: expense.montant, credit: 0, profitCenter: expense.dept || 'Logistique' },
-      { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.montant, profitCenter: 'Administration' }
+      { accountId: isPaie ? '421000' : '601100', label: expense.title || expense.libelle, debit: expense.amount || expense.montant, credit: 0, profitCenter: expense.dept || 'Administration' },
+      { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.amount || expense.montant, profitCenter: 'Administration' }
     ];
     addAccountingEntry(entry, lines);
   }, [addAccountingEntry]);
+
 
   // C. Physical Moves
   const applyStockMove = useCallback((movementData) => {
@@ -422,7 +425,7 @@ export const BusinessProvider = ({ children }) => {
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);
       }
-      if (appId === 'finance' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
+      if (appId === 'hr' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateExpenseEntry(record);
       }
       if (appId === 'purchase' && subModule === 'orders') {
@@ -470,10 +473,171 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction]);
 
+  const generatePayrollEntry = useCallback(() => {
+    const activeEmployees = (data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
+    if (activeEmployees.length === 0) {
+      addHint({ title: "Masse Salariale Nulle", message: "Aucun salaire à générer pour les collaborateurs actifs.", type: 'warning' });
+      return;
+    }
+
+    const { leaves = [] } = data.hr || {};
+    
+    // First, let's process each employee to find unpaid leave deductions
+    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-04"
+    let massTotal = 0;
+    
+    const processedEmployees = activeEmployees.map(emp => {
+      // Find valid Sans Solde leaves for this month
+      const unpaidLeaves = leaves.filter(l => 
+         (l.employe === emp.nom || l.collaborateur === emp.nom) && 
+         (l.type === 'Sans Solde' || l.type === 'Congé Sans Solde') &&
+         l.statut === 'Validé' &&
+         l.du && l.du.startsWith(currentMonthPrefix)
+      );
+      
+      let deductionSansSolde = 0;
+      if (unpaidLeaves.length > 0) {
+        // Simple calculation: each day is roughly salaire / 30
+        const dailyRate = emp.salaire / 30;
+        let unpaidDays = 0;
+        unpaidLeaves.forEach(lv => {
+           let d1 = new Date(lv.du);
+           let d2 = new Date(lv.au);
+           let diffTime = Math.abs(d2 - d1);
+           let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+           unpaidDays += diffDays;
+        });
+        deductionSansSolde = dailyRate * unpaidDays;
+      }
+      
+      const salaireFinale = Math.max(0, emp.salaire - deductionSansSolde);
+      massTotal += salaireFinale;
+      
+      return {
+        ...emp,
+        salaireBaseBrut: emp.salaire,
+        deductionSansSolde,
+        salaireAjuste: salaireFinale
+      };
+    });
+
+    const mois = new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+    
+    const entry = {
+      id: Date.now().toString(),
+      libelle: `Masse Salariale - ${mois}`,
+      date: new Date().toISOString().split('T')[0],
+      journalCode: 'J-OD',
+      piece: `PAIE-${mois.replace(' ', '-').toUpperCase()}`
+    };
+    
+    const lines = [
+      { accountId: '641100', label: `Salaires Bruts - ${mois}`, debit: massTotal, credit: 0, profitCenter: 'Administration' },
+      { accountId: '421000', label: `Rémunérations Dues au Personnel`, debit: 0, credit: massTotal, profitCenter: 'Administration' }
+    ];
+    
+    addAccountingEntry(entry, lines);
+
+    const payrollExpense = {
+      id: `EXP-PAYROLL-${Date.now()}`,
+      title: `Paiement Mensuel: Salaires ${mois}`,
+      amount: massTotal,
+      date: new Date().toISOString().split('T')[0],
+      type: 'Salaires',
+      employee: 'Masse Salariale',
+      statut: 'En attente'
+    };
+
+    addRecord('hr', 'expenses', payrollExpense);
+
+    processedEmployees.forEach(emp => {
+      const payslipRecord = {
+        ...emp,
+        salariesMois: mois,
+        totalBrut: emp.salaireAjuste,
+        absencesDeduites: emp.deductionSansSolde,
+        netAPayer: emp.salaireAjuste * 0.78, // Simplified deduction roughly 22% social charges
+        datePaiement: new Date().toISOString().split('T')[0]
+      };
+
+      const dmsFile = {
+        id: `FP-${emp.id}-${Date.now()}`,
+        name: `Fiche_Paie_${mois.replace(' ', '_')}_${emp.nom.replace(' ', '_')}.pdf`,
+        type: 'PDF',
+        owner: emp.nom,
+        folder: 'Paies',
+        size: '150 KB',
+        metadata: {
+           _appId: 'hr',
+           _subModule: 'payslip',
+           ...payslipRecord
+        }
+      };
+      addRecord('dms', 'files', dmsFile);
+    });
+
+    addHint({ title: "Paie Exécutée", message: `La masse salariale de ${massTotal.toLocaleString('fr-FR')} a été comptabilisée et les fiches de paie ont été archivées.`, type: 'success', appId: 'hr' });
+    logAction('Génération Paie', `Calcul de ${activeEmployees.length} salaires et fiches de paie pour ${mois}`, 'hr');
+  }, [data.hr?.employees, data.hr?.leaves, addAccountingEntry, addRecord, addHint, logAction]);
+
+  const launchProductionOrder = useCallback((order) => {
+    const bom = (data.production?.boms || []).find(b => b.id === order.bomId || b.produitId === order.produitId);
+    if (!bom) {
+      addHint({ title: "Nomenclature Manquante", message: `Aucune BOM trouvée pour ${order.produit}. Créez d'abord la nomenclature.`, type: 'warning' });
+      return;
+    }
+
+    const composants = bom.composants || [];
+    const shortages = [];
+
+    // Deduct components from stock
+    setData(prev => {
+      const nextProducts = (prev.inventory?.products || []).map(p => {
+        const comp = composants.find(c => c.articleId === p.id);
+        if (!comp) return p;
+        const consumed = comp.qte * order.qte;
+        const newQty = (p.qteStock || 0) - consumed;
+        if (newQty < (p.seuilAlerte || 0)) {
+          shortages.push({ article: p.designation, articleId: p.id, remaining: newQty, seuil: p.seuilAlerte });
+        }
+        return { ...p, qteStock: Math.max(0, newQty) };
+      });
+      return { ...prev, inventory: { ...prev.inventory, products: nextProducts } };
+    });
+
+    // Update OF status to En cours
+    updateRecord('production', 'workOrders', order.id, { ...order, statut: 'En cours' });
+
+    // Create draft purchase orders for shortages
+    shortages.forEach(s => {
+      const po = {
+        id: `PO-AUTO-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        num: `CMD-AUTO-${new Date().toISOString().split('T')[0]}-${s.articleId}`,
+        fournisseur: 'À définir (Auto)',
+        produitId: s.articleId,
+        qte: Math.ceil(s.seuil * 2),
+        date: new Date().toISOString().split('T')[0],
+        echeance: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+        total: 0,
+        statut: 'Brouillon',
+        origine: `Auto-réappro OF ${order.num}`
+      };
+      addRecord('purchase', 'orders', po);
+    });
+
+    if (shortages.length > 0) {
+      addHint({ title: "⚠️ Rupture détectée", message: `${shortages.length} article(s) en dessous du seuil. Commandes brouillon créées dans les Achats.`, type: 'warning', appId: 'production' });
+    } else {
+      addHint({ title: "✅ OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
+    }
+    logAction('Production', `Lancement OF ${order.num} — ${order.qte} × ${order.produit}`, 'production');
+  }, [data.production?.boms, data.inventory?.products, updateRecord, addRecord, addHint, logAction]);
+
 
   /* ══════════════════════════════════════════════════════════════════════════
      6. GLOBAL LOGIC (Search & Config)
      ══════════════════════════════════════════════════════════════════════════ */
+
 
   const globalSearch = useCallback((query) => {
     if (!query || query.length < 2) return setSearchResults([]);
@@ -636,6 +800,42 @@ export const BusinessProvider = ({ children }) => {
   const rejectRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
   }, [updateRecord, currentUser.nom]);
+2: 
+3:   // --- IPC CONNECT SOCIAL HELPERS ---
+4:   const addConnectPost = useCallback((post) => {
+5:     const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
+6:     setData(prev => ({
+7:       ...prev,
+8:       connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
+9:     }));
+10:     logAction('Publication Sociale', post.title, 'connect');
+11:   }, [logAction]);
+12: 
+13:   const likeConnectPost = useCallback((postId) => {
+14:     setData(prev => {
+15:       const posts = prev?.connect?.posts || [];
+16:       const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
+17:       return { ...prev, connect: { ...prev.connect, posts: updated } };
+18:     });
+19:   }, []);
+20: 
+21:   const addConnectComment = useCallback((postId, comment) => {
+22:     setData(prev => {
+23:       const posts = prev?.connect?.posts || [];
+24:       const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
+25:       return { ...prev, connect: { ...prev.connect, posts: updated } };
+26:     });
+27:   }, []);
+28: 
+29:   const participateInEvent = useCallback((eventId) => {
+30:     setData(prev => {
+31:       const events = prev?.connect?.events || [];
+32:       const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
+33:       return { ...prev, connect: { ...prev.connect, events: updated } };
+34:     });
+35:     addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
+36:   }, [addHint]);
+37: 
 
   /* ══════════════════════════════════════════════════════════════════════════
      8. CLOUD LISTENERS
@@ -747,8 +947,9 @@ export const BusinessProvider = ({ children }) => {
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
-      setActiveApp, navigateTo, formatCurrency, activeCall, setActiveCall, sendNotification, notifications, togglePinnedModule,
-      addAccountingEntry, generateInvoiceEntry, schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
+      setActiveApp, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, sendNotification, notifications, togglePinnedModule,
+      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent,
+      schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({
            ...prev,
            [`${moduleId}.${modelId}`]: {

@@ -65,21 +65,21 @@ export const financeSchema = {
         title: { label: 'Libellé', type: 'text', required: true, search: true },
         amount: { label: 'Montant TTC', type: 'money', currency: 'FCFA', search: true },
         date: { label: 'Date', type: 'date', required: true },
-        type: { label: 'Catégorie', type: 'selection', options: ['Transport', 'Repas', 'Hébergement', 'Déplacement', 'Fournitures', 'Autre'], search: true },
+        type: { label: 'Catégorie', type: 'selection', options: ['Salaires', 'Transport', 'Repas', 'Hébergement', 'Déplacement', 'Fournitures', 'Autre'], search: true },
         employee: { label: 'Collaborateur', type: 'text', search: true },
-        status: { label: 'Statut', type: 'selection', options: ['En attente', 'Approuvé', 'Rejeté', 'Remboursé'], default: 'En attente' }
+        statut: { label: 'Statut', type: 'selection', options: ['En attente', 'Approuvé', 'Rejeté', 'Payé'], default: 'En attente' }
       },
       views: {
-        list: ['date', 'employee', 'title', 'amount', 'type', 'status'],
+        list: ['date', 'employee', 'title', 'amount', 'type', 'statut'],
         kanban: {
-          groupField: 'status',
+          groupField: 'statut',
           titleField: 'title',
           subtitleField: 'employee',
           valueField: 'amount'
         },
         search: {
           filters: [
-            { id: 'pending', label: 'En attente', domain: [['status', '==', 'En attente']] }
+            { id: 'pending', label: 'En attente', domain: [['statut', '==', 'En attente']] }
           ],
           groups: [
             { id: 'employee', label: 'Par Collaborateur' },

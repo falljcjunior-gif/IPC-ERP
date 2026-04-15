@@ -16,6 +16,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import AccountingTab from './tabs/AccountingTab';
 import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
+import BankReconTab from './tabs/BankReconTab';
 
 const FinanceControlCenter = ({ onOpenDetail }) => {
   const { data, addRecord, formatCurrency, addAccountingEntry, userRole } = useBusiness();
@@ -28,6 +29,7 @@ const FinanceControlCenter = ({ onOpenDetail }) => {
     { id: 'accounting', label: 'Comptabilité', icon: <Calculator size={16} /> },
     { id: 'invoicing', label: 'Facturation', icon: <FileText size={16} /> },
     { id: 'budget', label: 'Budgets', icon: <PiggyBank size={16} /> },
+    { id: 'banque', label: 'Banque', icon: <Wallet size={16} /> },
   ];
 
   return (
@@ -81,6 +83,7 @@ const FinanceControlCenter = ({ onOpenDetail }) => {
           {mainTab === 'accounting' && <AccountingTab onOpenDetail={onOpenDetail} addAccountingEntry={addAccountingEntry} />}
           {mainTab === 'invoicing' && <InvoicingTab onOpenDetail={onOpenDetail} formatCurrency={formatCurrency} />}
           {mainTab === 'budget' && <BudgetTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
+          {mainTab === 'banque' && <BankReconTab />}
         </motion.div>
       </AnimatePresence>
 

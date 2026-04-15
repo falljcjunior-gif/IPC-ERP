@@ -4,31 +4,35 @@ import {
   Calendar, Clock, MapPin, Users, Star, 
   Video, Coffee, PartyPopper, Zap, LayoutGrid
 } from 'lucide-react';
+import { useBusiness } from '../../../BusinessContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const EventsTab = ({ data }) => {
-  const events = [
+  const { participateInEvent } = useBusiness();
+  const defaultEvents = [
     {
       id: 1, title: "Town Hall : Vision 2026",
       date: "24 Avril", time: "10:00 - 11:30", type: "Remote",
       category: "Stratégie", attendees: 120, color: "#8B5CF6",
-      icon: <Video size={20} />
+      icon: <Video size={20} />, participated: false
     },
     {
       id: 2, title: "Afterwork : Équipe Industrial",
       date: "18 Avril", time: "18:30 - 20:30", type: "On-site",
       category: "Détente", attendees: 25, color: "#F59E0B",
-      icon: <Coffee size={20} />
+      icon: <Coffee size={20} />, participated: false
     },
     {
       id: 3, title: "Lancement Hub Supply Chain",
       date: "20 Avril", time: "09:00 - 10:00", type: "Hybrid",
       category: "Opérations", attendees: 45, color: "#10B981",
-      icon: <PartyPopper size={20} />
+      icon: <PartyPopper size={20} />, participated: false
     }
   ];
+
+  const events = data?.connect?.events?.length > 0 ? data.connect.events : defaultEvents;
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -83,7 +87,12 @@ const EventsTab = ({ data }) => {
                      </div>
                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>+{event.attendees} participants</span>
                   </div>
-                  <button className="btn-primary" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', background: '#8B5CF6', borderColor: '#8B5CF6', fontSize: '0.8rem', fontWeight: 900 }}>Participer</button>
+                  <button 
+                    onClick={() => !event.participated && participateInEvent(event.id)}
+                    className="btn-primary" 
+                    style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', background: event.participated ? '#10B981' : '#8B5CF6', borderColor: event.participated ? '#10B981' : '#8B5CF6', fontSize: '0.8rem', fontWeight: 900, cursor: event.participated ? 'default' : 'pointer' }}>
+                    {event.participated ? "Inscrit" : "Participer"}
+                  </button>
                </div>
             </motion.div>
           ))}

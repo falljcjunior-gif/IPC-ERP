@@ -22,6 +22,7 @@ import {
 import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { useBusiness } from '../BusinessContext';
+import { registry } from '../services/Registry';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { config, navigateTo } = useBusiness();
@@ -45,7 +46,12 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
   };
 
   const handleSave = () => {
-    onUpdate(appId, subModule, record.id, formData);
+    const schema = registry.getSchema(appId);
+    const model = schema?.models?.[subModule];
+    const targetAppId = model?.dataPath ? model.dataPath.split('.')[0] : appId;
+    const targetSubModule = model?.dataPath ? model.dataPath.split('.')[1] : subModule;
+    
+    onUpdate(targetAppId, targetSubModule, record.id, formData);
     onClose();
   };
 
@@ -264,7 +270,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                           {key.replace(/([A-Z])/g, ' $1')}
                         </label>
                         
-                        {key === 'statut' || key === 'etape' || key === 'type' ? (
+                        {(key === 'statut' || key === 'etape' || key === 'type' || (registry.getSchema(appId)?.models?.[subModule]?.fields?.[key]?.type === 'selection')) ? (
                           <select 
                             value={value}
                             onChange={(e) => handleChange(key, e.target.value)}
@@ -272,11 +278,11 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                             style={{ padding: '0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)' }}
                           >
                             <option value={value}>{value}</option>
-                            <option value="Qualifié">Qualifié</option>
-                            <option value="Validé">Validé</option>
-                            <option value="Terminé">Terminé</option>
-                            <option value="Gagné">Gagné</option>
-                            <option value="Perdu">Perdu</option>
+                            {(registry.getSchema(appId)?.models?.[subModule]?.fields?.[key]?.options || 
+                              ['Qualifié', 'Validé', 'Terminé', 'Gagné', 'Perdu']
+                            ).map(opt => (
+                              <option key={opt} value={opt}>{opt}</option>
+                            ))}
                           </select>
                         ) : typeof value === 'number' && key === 'progression' ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

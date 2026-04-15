@@ -2,47 +2,114 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    function hasRole(role) {
-      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]);
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    match /users/{userId} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == userId || 
-        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
+
+    function isSuperAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com' ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN'])
       );
-      allow read, write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']);
     }
     
+    function hasRole(role) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]);
+    }
+
+    function hasAnyRole(roles) {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles);
+    }
+    
+    // ── Users ────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+    }
+    
+    // ── System Config ────────────────────────────────────────────────────────
     match /system_config/{docId} {
-      allow read, write: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']);
+      allow read, write: if isSuperAdmin();
     }
-    
+
+    // ── WebRTC Calls ─────────────────────────────────────────────────────────
     match /calls/{callId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isAuthenticated();
       match /offerCandidates/{candId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
       match /answerCandidates/{candId} {
-        allow read, write: if request.auth != null;
+        allow read, write: if isAuthenticated();
       }
     }
 
-    match /{collectionName}/{docId} {
-      allow read, write: if request.auth != null && (
-        collectionName == 'crm' || 
-        collectionName == 'sales' || 
-        collectionName == 'inventory' || 
-        collectionName == 'accounting' || 
-        collectionName == 'projects' || 
-        collectionName == 'audit_logs' || 
-        collectionName == 'messages' ||
-        collectionName == 'base' ||
-        collectionName == 'workflows' ||
-        collectionName == 'hr'
-      );
+    // ── Audit Logs ───────────────────────────────────────────────────────────
+    match /audit_logs/{docId} {
+      allow read: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE']);
+      allow write: if isAuthenticated();
+    }
+
+    // ── HR (Restricted - HR & Admin only) ────────────────────────────────────
+    match /hr/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR']);
+    }
+
+    // ── Finance & Accounting ─────────────────────────────────────────────────
+    match /finance/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE']);
+    }
+    match /accounting/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE']);
+    }
+
+    // ── Production ───────────────────────────────────────────────────────────
+    match /production/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'PRODUCTION']);
+    }
+
+    // ── Inventory / Stock ────────────────────────────────────────────────────
+    match /inventory/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'PRODUCTION', 'LOGISTICS']);
+    }
+
+    // ── Purchases ────────────────────────────────────────────────────────────
+    match /purchase/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE', 'LOGISTICS']);
+    }
+
+    // ── CRM & Sales ──────────────────────────────────────────────────────────
+    match /crm/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'SALES']);
+    }
+    match /sales/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'SALES', 'FINANCE']);
+    }
+
+    // ── Projects & Marketing ─────────────────────────────────────────────────
+    match /projects/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /marketing/{docId} {
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'SALES']);
+    }
+
+    // ── DMS (G.E.D) ──────────────────────────────────────────────────────────
+    match /dms/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR', 'FINANCE']);
+    }
+
+    // ── Shared / Base ────────────────────────────────────────────────────────
+    match /base/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN']);
+    }
+    match /messages/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+    match /workflows/{docId} {
+      allow read, write: if isAuthenticated();
     }
   }
 }
