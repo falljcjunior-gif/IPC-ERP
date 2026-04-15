@@ -23,8 +23,8 @@ service cloud.firestore {
     
     // ── Users ────────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin());
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || hasAnyRole(['ADMIN', 'HR']));
+      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || hasAnyRole(['ADMIN', 'HR']));
     }
     
     // ── System Config ────────────────────────────────────────────────────────
