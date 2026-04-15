@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Zap, Clock, Briefcase, CheckCircle2, AlertCircle, 
-  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon 
+  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check 
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 
@@ -13,6 +13,14 @@ const PersonalWorkspace = () => {
   const { data, currentUser, navigateTo } = useBusiness();
   const [activeTab, setActiveTab] = useState('overview');
 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nickname, setNickname] = useState(() => localStorage.getItem('ipc_erp_nickname_' + currentUser?.id) || currentUser?.nom || 'Utilisateur');
+
+  const handleNicknameSave = () => {
+    setIsEditingName(false);
+    localStorage.setItem('ipc_erp_nickname_' + currentUser?.id, nickname);
+  };
+  
   // --- 1. Compute User Specific Data ---
   const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser.nom);
   const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser.nom);
@@ -108,7 +116,34 @@ const PersonalWorkspace = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--accent)', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2px' }}>
             <Zap size={16} /> Espace Personnel IPC
           </div>
-          <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 800 }}>Bonjour, {currentUser.nom}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+             {isEditingName ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                   <span style={{ fontSize: '2.5rem', fontWeight: 800 }}>Bonjour, </span>
+                   <input 
+                     autoFocus
+                     value={nickname}
+                     onChange={e => setNickname(e.target.value)}
+                     onKeyDown={e => e.key === 'Enter' && handleNicknameSave()}
+                     onBlur={handleNicknameSave}
+                     style={{ fontSize: '2.5rem', fontWeight: 800, background: 'transparent', border: 'none', borderBottom: '2px solid var(--accent)', color: 'var(--text)', outline: 'none', width: '250px' }}
+                   />
+                   <button onClick={handleNicknameSave} style={{ background: 'var(--accent)', border: 'none', padding: '8px', borderRadius: '50%', color: 'white', cursor: 'pointer', display: 'flex' }}>
+                     <Check size={20} />
+                   </button>
+                </div>
+             ) : (
+                <div 
+                  onClick={() => setIsEditingName(true)} 
+                  title="Modifier comment l'application vous appelle"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+                  className="hover-opacity"
+                >
+                   <h1 style={{ margin: 0, fontSize: '2.5rem', fontWeight: 800 }}>Bonjour, <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--border)', textUnderlineOffset: '8px' }}>{nickname}</span></h1>
+                   <Edit2 size={18} color="var(--text-muted)" style={{ marginTop: '10px' }} />
+                </div>
+             )}
+          </div>
           <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-muted)' }}>Bienvenue dans votre espace de travail. Voici l'état de vos missions.</p>
         </div>
         <div className="glass" style={{ padding: '1.25rem', borderRadius: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', minWidth: '300px' }}>
