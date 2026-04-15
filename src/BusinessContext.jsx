@@ -865,7 +865,16 @@ export const BusinessProvider = ({ children }) => {
         if (docSnap.exists()) {
           const userData = docSnap.data();
           if (userData.data) setData(userData.data);
-          profile = { ...profile, ...userData.profile, role: userData.profile?.role || role };
+          
+          let fetchedRole = role;
+          if (userData.permissions && userData.permissions.roles && userData.permissions.roles.length > 0) {
+             fetchedRole = userData.permissions.roles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : userData.permissions.roles[0];
+          }
+          profile = { ...profile, ...userData.profile, role: fetchedRole };
+
+          if (userData.permissions) {
+             setPermissions(prev => ({ ...prev, [user.uid]: userData.permissions }));
+          }
         }
         
         setCurrentUser(profile);
