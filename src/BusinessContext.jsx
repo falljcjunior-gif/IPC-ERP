@@ -864,8 +864,10 @@ export const BusinessProvider = ({ children }) => {
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          if (userData.data) setData(userData.data);
-          
+          // NOTE: Ne pas écraser data avec userData.data — les collections Firestore
+          // ('hr', 'crm', etc.) sont la source de vérité, et le listener cloud
+          // les charge via onSnapshot. Écraser ici causerait des données obsolètes.
+
           let fetchedRole = role;
           if (userData.permissions && userData.permissions.roles && userData.permissions.roles.length > 0) {
              fetchedRole = userData.permissions.roles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : userData.permissions.roles[0];
@@ -920,17 +922,48 @@ export const BusinessProvider = ({ children }) => {
   }, [currentUser]);
 
   useEffect(() => {
-    if (!auth.currentUser) return;
-    const unsubscribes = ['crm', 'sales', 'inventory', 'production', 'accounting', 'projects', 'audit_logs', 'hr', 'base', 'workflows', 'notifications'].map(colName => {
-      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(100));
+    // Déclencher les listeners uniquement quand un vrai utilisateur est authentifié
+    if (!currentUser || currentUser.id === 'guest' || !auth.currentUser) return;
+
+    const COLLECTIONS = [
+      'crm', 'sales', 'inventory', 'production',
+      'accounting', 'projects', 'audit_logs', 'hr',
+      'base', 'workflows', 'notifications', 'users'
+    ];
+
+    const unsubscribes = COLLECTIONS.map(colName => {
+      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(200));
       return onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
         setData(prev => {
           const newState = { ...prev };
-          if (colName === 'audit_logs') newState.audit = { ...newState.audit, logs: docs };
-          else {
+          if (colName === 'audit_logs') {
+            newState.audit = { ...newState.audit, logs: docs };
+          } else if (colName === 'users') {
+            // Synchroniser les profils utilisateurs dans la liste RH
+            const employeeProfiles = docs
+              .filter(u => u.profile)
+              .map(u => ({ ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' }));
+            if (employeeProfiles.length > 0) {
+              const existingIds = new Set((prev.hr?.employees || []).map(e => e.id));
+              const newEmployees = employeeProfiles.filter(e => !existingIds.has(e.id));
+              if (newEmployees.length > 0) {
+                newState.hr = { ...prev.hr, employees: [...(prev.hr?.employees || []), ...newEmployees] };
+              }
+            }
+          } else {
             const grouped = {};
-            docs.forEach(doc => { const sub = doc.subModule || 'others'; if (!grouped[sub]) grouped[sub] = []; grouped[sub].push(doc); });
+            docs.forEach(d => {
+              const sub = d.subModule || 'others';
+              if (!grouped[sub]) grouped[sub] = [];
+              grouped[sub].push(d);
+            });
+            // Fusionner pour ne pas écraser les données locales non encore sync
+            Object.keys(grouped).forEach(sub => {
+              const firestoreIds = new Set(grouped[sub].map(d => d.id));
+              const localOnly = (prev[colName]?.[sub] || []).filter(d => !firestoreIds.has(d.id));
+              grouped[sub] = [...grouped[sub], ...localOnly];
+            });
             newState[colName] = { ...prev[colName], ...grouped };
           }
           if (colName === 'notifications') setNotifications(docs);
@@ -940,7 +973,7 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, []);
+  }, [currentUser.id]); // Re-run quand l'utilisateur authentifié change
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION
