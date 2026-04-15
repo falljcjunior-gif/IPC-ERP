@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, LayoutGrid, Users, Calendar, 
-  Sparkles, Zap, Heart, Search, Bell, Settings
+  Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useBusiness } from '../../BusinessContext';
 
@@ -16,6 +16,14 @@ import EventsTab from './tabs/EventsTab';
 const ConnectHub = ({ onOpenDetail }) => {
   const { data, currentUser, navigationIntent, setNavigationIntent } = useBusiness();
   const [activeTab, setActiveTab] = useState('wall');
+  const [showSettings, setShowSettings] = useState(false);
+  const [connectSettings, setConnectSettings] = useState({
+    notifyMentions: true,
+    notifyLikes: true,
+    notifyComments: true,
+    publicProfile: true,
+    showStatus: true,
+  });
 
   // Deep Link Handling
   useEffect(() => {
@@ -55,7 +63,7 @@ const ConnectHub = ({ onOpenDetail }) => {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>Cœur Social : 100% Connecté</span>
            </div>
            
-           <button className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)' }}>
+           <button onClick={() => setShowSettings(true)} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', border: 'none', cursor: 'pointer', background: 'white' }}>
               <Settings size={22} />
            </button>
            <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -63,6 +71,47 @@ const ConnectHub = ({ onOpenDetail }) => {
            </button>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onClick={e => e.target === e.currentTarget && setShowSettings(false)}>
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+              style={{ background: 'var(--bg)', borderRadius: '2rem', padding: '2.5rem', width: '480px', maxWidth: '95vw', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.3rem' }}>Paramètres IPC Connect</h3>
+                <button onClick={() => setShowSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[
+                  { key: 'notifyMentions', label: 'Notifications de mentions', desc: 'Vous alerter quand quelqu\'un vous mentionne' },
+                  { key: 'notifyLikes', label: 'Notifications de likes', desc: 'Vous alerter quand vos posts reçoivent des réactions' },
+                  { key: 'notifyComments', label: 'Notifications de commentaires', desc: 'Vous alerter sur les nouveaux commentaires' },
+                  { key: 'publicProfile', label: 'Profil public dans l\'annuaire', desc: 'Visible par tous les collaborateurs' },
+                  { key: 'showStatus', label: 'Afficher mon statut de présence', desc: 'Montrer si vous êtes en ligne' },
+                ].map(s => (
+                  <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderRadius: '1rem', background: 'var(--bg-subtle)' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{s.label}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{s.desc}</div>
+                    </div>
+                    <button onClick={() => setConnectSettings(p => ({ ...p, [s.key]: !p[s.key] }))}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: connectSettings[s.key] ? '#8B5CF6' : 'var(--text-muted)' }}>
+                      {connectSettings[s.key] ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setShowSettings(false)}
+                style={{ width: '100%', marginTop: '1.5rem', padding: '0.9rem', borderRadius: '1rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}>
+                Sauvegarder
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Connectivity Navigation */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>

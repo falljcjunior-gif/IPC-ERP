@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, MessageSquare, Search, User, Users, Paperclip, 
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
-  Plus, Settings, ImageIcon, Clock, Hash, Shield
+  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 import { db, auth } from '../../../firebase/config';
@@ -12,11 +12,13 @@ import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const { currentUser, data, setActiveCall } = useBusiness();
-  const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
+  const [activeTab, setActiveTab] = useState('chats');
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRoomSettings, setShowRoomSettings] = useState(false);
+  const [roomSettings, setRoomSettings] = useState({ muteNotifs: false, pinned: false });
   const scrollRef = useRef();
   const inputRef = useRef();
 
@@ -160,14 +162,47 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                   </div>
                </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-               <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
-                  <button onClick={() => initiateCall('audio')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Phone size={20} /></button>
-                  <button onClick={() => initiateCall('video')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Video size={20} /></button>
-               </div>
-               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Settings size={20} /></button>
-            </div>
-         </div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
+                   <button onClick={() => initiateCall('audio')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Phone size={20} /></button>
+                   <button onClick={() => initiateCall('video')} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}><Video size={20} /></button>
+                </div>
+                <button onClick={() => setShowRoomSettings(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Settings size={20} /></button>
+             </div>
+          </div>
+
+          {/* Room Settings Modal */}
+          <AnimatePresence>
+            {showRoomSettings && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={e => e.target === e.currentTarget && setShowRoomSettings(false)}>
+                <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+                  style={{ background: 'var(--bg)', borderRadius: '2rem', padding: '2rem', width: '420px', maxWidth: '95vw', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Paramètres — {activeRoom.label}</h3>
+                    <button onClick={() => setShowRoomSettings(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={18} /></button>
+                  </div>
+                  {[
+                    { key: 'muteNotifs', label: 'Couper les notifications', icon: <Bell size={16} /> },
+                    { key: 'pinned', label: 'Conversation épinglée', icon: <Shield size={16} /> },
+                  ].map(s => (
+                    <div key={s.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.9rem 1rem', borderRadius: '0.9rem', background: 'var(--bg-subtle)', marginBottom: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.9rem' }}>{s.icon} {s.label}</div>
+                      <button onClick={() => setRoomSettings(p => ({ ...p, [s.key]: !p[s.key] }))}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: roomSettings[s.key] ? '#8B5CF6' : 'var(--text-muted)' }}>
+                        {roomSettings[s.key] ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+                      </button>
+                    </div>
+                  ))}
+                  <button onClick={() => setShowRoomSettings(false)}
+                    style={{ width: '100%', marginTop: '0.5rem', padding: '0.8rem', borderRadius: '0.9rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+                    Fermer
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
          {/* Chat Messages */}
          <div ref={scrollRef} style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'linear-gradient(to bottom, transparent, var(--bg-subtle))' }}>

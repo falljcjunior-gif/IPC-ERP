@@ -40,21 +40,47 @@ const INITIAL_FEED = [
 ];
 
 const WallTab = ({ data, currentUser }) => {
-  const { addConnectPost, likeConnectPost, addConnectComment } = useBusiness();
-  const feed = data?.connect?.posts?.length > 0 ? data.connect.posts : INITIAL_FEED;
+  const { addConnectPost, addConnectComment } = useBusiness();
+
+  // Local feed state so likes update immediately in the UI
+  const [feed, setFeed] = useState(() =>
+    data?.connect?.posts?.length > 0 ? data.connect.posts : INITIAL_FEED
+  );
   const [showCompose, setShowCompose] = useState(false);
   const [form, setForm] = useState({ type: 'success', title: '', content: '', category: '' });
   const [commentInputs, setCommentInputs] = useState({});
   const [openComments, setOpenComments] = useState({});
 
+  // Sync when new posts are added from context
+  React.useEffect(() => {
+    if (data?.connect?.posts?.length > 0) {
+      setFeed(prev => {
+        // Preserve local liked/reactions state for existing posts
+        const likedMap = {};
+        prev.forEach(p => { likedMap[p.id] = { liked: p.liked, reactions: p.reactions }; });
+        return data.connect.posts.map(p => likedMap[p.id] ? { ...p, ...likedMap[p.id] } : p);
+      });
+    }
+  }, [data?.connect?.posts?.length]);
+
   const handleLike = (id) => {
-    likeConnectPost(id);
+    setFeed(prev =>
+      prev.map(p =>
+        p.id === id
+          ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked }
+          : p
+      )
+    );
   };
 
   const handleAddComment = (postId) => {
     const text = commentInputs[postId]?.trim();
     if (!text) return;
-    const comment = { author: currentUser?.nom || 'Moi', text, time: 'À l\'instant' };
+    const comment = { id: Date.now(), author: currentUser?.nom || 'Moi', text, time: 'À l\'instant' };
+    // Update local feed immediately
+    setFeed(prev =>
+      prev.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p)
+    );
     addConnectComment(postId, comment);
     setCommentInputs(prev => ({ ...prev, [postId]: '' }));
   };
@@ -63,14 +89,21 @@ const WallTab = ({ data, currentUser }) => {
     if (!form.title.trim() || !form.content.trim()) return;
     const typeConf = POST_TYPES.find(t => t.id === form.type);
     const newPost = {
+      id: `f${Date.now()}`,
       type: form.type,
       category: form.category || typeConf?.label || 'Général',
       title: form.title,
       content: form.content,
       author: currentUser?.nom || 'Moi',
       authorInit: (currentUser?.nom || 'M')[0],
-      color: typeConf?.color || '#8B5CF6'
+      color: typeConf?.color || '#8B5CF6',
+      date: 'À l\'instant',
+      reactions: 0,
+      liked: false,
+      comments: []
     };
+    // Add to local feed immediately
+    setFeed(prev => [newPost, ...prev]);
     addConnectPost(newPost);
     setForm({ type: 'success', title: '', content: '', category: '' });
     setShowCompose(false);
