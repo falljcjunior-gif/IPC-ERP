@@ -770,7 +770,7 @@ export const BusinessProvider = ({ children }) => {
 
       // 3. Send Notification
       if (source === 'hr') {
-        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'user_management');
+        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
       } else {
         await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
       }
