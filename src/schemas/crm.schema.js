@@ -116,6 +116,57 @@ export const crmSchema = {
           ]
         }
       }
+    },
+    clients: {
+      label: 'Clients',
+      fields: {
+        nom: { label: 'Raison Sociale', type: 'text', required: true, search: true },
+        siret: { label: 'Numéro RCCM / SIRET', type: 'text', search: true },
+        secteur: { 
+          label: 'Secteur', 
+          type: 'selection', 
+          options: ['BTP', 'Industrie', 'Commerce', 'Services', 'Agro-Alimentaire', 'Transport', 'Public', 'Autre'] 
+        },
+        type_legal: { 
+          label: 'Type Juridique', 
+          type: 'selection', 
+          options: ['SARL', 'SA', 'SAS', 'SASU', 'EI', 'Collectivité Publique', 'ONG', 'Autre'] 
+        },
+        responsable: { label: 'Responsable Commercial', type: 'text', search: true },
+        email: { label: 'Email', type: 'email', search: true },
+        telephone: { label: 'Téléphone', type: 'text' },
+        adresse: { label: 'Adresse', type: 'text' },
+        ville: { label: 'Ville', type: 'text', search: true },
+        pays: { label: 'Pays', type: 'text', default: 'Sénégal' },
+        ca_estime: { label: 'CA Estimé (FCFA/an)', type: 'money', currency: 'FCFA' },
+        niveau: { 
+          label: 'Niveau Client', 
+          type: 'selection', 
+          options: ['Gold', 'Silver', 'Bronze'],
+          default: 'Bronze' 
+        },
+        statut: { 
+          label: 'Statut', 
+          type: 'selection', 
+          options: ['Actif', 'Inactif', 'Prospect Chaud', 'En Négociation'],
+          default: 'Actif' 
+        },
+        description: { label: 'Notes Internes', type: 'textarea' }
+      },
+      views: {
+        list: ['nom', 'secteur', 'responsable', 'email', 'telephone', 'niveau', 'statut'],
+        search: {
+          filters: [
+            { id: 'active', label: 'Clients Actifs', domain: [['statut', '==', 'Actif']] },
+            { id: 'gold', label: 'Compte Gold', domain: [['niveau', '==', 'Gold']] }
+          ],
+          groups: [
+            { id: 'secteur', label: 'Par Secteur' },
+            { id: 'niveau', label: 'Par Niveau' },
+            { id: 'ville', label: 'Par Ville' }
+          ]
+        }
+      }
     }
   }
 };

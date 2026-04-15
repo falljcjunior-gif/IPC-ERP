@@ -20,6 +20,7 @@ const LogisticsHub = ({ onOpenDetail }) => {
   const { data, addRecord, updateRecord, formatCurrency } = useBusiness();
   const [mainTab, setMainTab] = useState('inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('movement'); // movement | purchase | project
 
   const tabs = [
     { id: 'inventory', label: 'Stocks & Entrepôts', icon: <Package size={16} /> },
@@ -53,8 +54,15 @@ const LogisticsHub = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
              <History size={20} />
            </button>
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Opération</span>
+          <button className="btn-primary" onClick={() => { 
+            setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
+            setIsModalOpen(true); 
+          }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
+            <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
+              mainTab === 'purchase' ? 'Nouvelle Commande Achat' : 
+              mainTab === 'project' ? 'Nouvelle Tâche' : 
+              'Entrée/Sortie Stock'
+            }</span>
           </button>
         </div>
       </div>
@@ -83,15 +91,38 @@ const LogisticsHub = ({ onOpenDetail }) => {
       <RecordModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Nouvelle Opération Logistique"
-        fields={[
-          { name: 'produitId', label: 'Article', type: 'selection', options: data.inventory?.products?.map(p => ({ value: p.id, label: p.nom })) || [] },
-          { name: 'type', label: 'Type de Mouvement', type: 'selection', options: ['Réception', 'Expédition', 'Consommation', 'Ajustement Entrée', 'Ajustement Sortie'] },
-          { name: 'qte', label: 'Quantité', type: 'number' },
-          { name: 'ref', label: 'Document Source (ex: BL-001)', type: 'text' }
-        ]} 
+        title={
+          modalMode === 'purchase' ? 'Nouvelle Commande Achat' :
+          modalMode === 'project' ? 'Nouvelle Tâche Projet' :
+          'Mouvement de Stock'
+        }
+        fields={
+          modalMode === 'purchase' ? [
+            { name: 'fournisseur', label: 'Fournisseur', type: 'text', required: true },
+            { name: 'ref', label: 'Référence PO', type: 'text', required: true },
+            { name: 'date', label: 'Date Commande', type: 'date', required: true },
+            { name: 'total', label: 'Montant Total (FCFA)', type: 'money', currency: 'FCFA' },
+            { name: 'statut', label: 'Statut', type: 'selection', options: ['Brouillon', 'Commandé', 'En Transit', 'Réceptionné', 'Annulé'], default: 'Brouillon' },
+            { name: 'notes', label: 'Notes', type: 'textarea' }
+          ] : modalMode === 'project' ? [
+            { name: 'titre', label: 'Titre de la Tâche', type: 'text', required: true },
+            { name: 'projet', label: 'Projet Parent', type: 'text', required: true },
+            { name: 'assigne', label: 'Assigné à', type: 'text' },
+            { name: 'priorite', label: 'Priorité', type: 'selection', options: ['Basse', 'Moyenne', 'Haute'], default: 'Moyenne' },
+            { name: 'dateEcheance', label: 'Échéance', type: 'date' },
+            { name: 'statut', label: 'Statut', type: 'selection', options: ['À faire', 'En cours', 'Terminé'], default: 'À faire' }
+          ] : [
+            { name: 'produit', label: 'Article', type: 'text', required: true },
+            { name: 'type', label: 'Type de Mouvement', type: 'selection', options: ['Réception', 'Expédition', 'Consommation', 'Ajustement Entrée', 'Ajustement Sortie'], required: true },
+            { name: 'qte', label: 'Quantité', type: 'number', required: true },
+            { name: 'ref', label: 'Document Source (ex: BL-001)', type: 'text' },
+            { name: 'date', label: 'Date', type: 'date' }
+          ]
+        }
         onSave={(f) => {
-          addRecord('inventory', 'movements', f);
+          if (modalMode === 'purchase') addRecord('purchase', 'orders', f);
+          else if (modalMode === 'project') addRecord('projects', 'tasks', f);
+          else addRecord('inventory', 'movements', f);
           setIsModalOpen(false);
         }}
       />

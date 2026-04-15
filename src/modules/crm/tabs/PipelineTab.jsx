@@ -48,7 +48,7 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
             key={opp.id} 
             variants={item}
             whileHover={{ x: 10, background: 'var(--bg-subtle)' }}
-            onClick={() => onOpenDetail && onOpenDetail('crm', 'opportunities', opp)}
+            onClick={() => onOpenDetail && onOpenDetail(opp, 'crm', 'opportunities')}
             className="glass" 
             style={{ 
               padding: '1.5rem 2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', 

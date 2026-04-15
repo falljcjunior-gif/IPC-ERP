@@ -74,7 +74,7 @@ const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
               key={client.id}
               variants={item}
               whileHover={{ background: 'rgba(59, 130, 246, 0.02)' }}
-              onClick={() => onOpenDetail && onOpenDetail('crm', 'clients', client)}
+              onClick={() => onOpenDetail && onOpenDetail(client, 'crm', 'clients')}
               style={{ 
                 display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr 60px', 
                 padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', 

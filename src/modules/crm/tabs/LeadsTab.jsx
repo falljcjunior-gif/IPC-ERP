@@ -87,13 +87,15 @@ const LeadsTab = ({ leads, onOpenDetail }) => {
 
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button 
-                onClick={() => onOpenDetail && onOpenDetail('crm', 'leads', lead)}
+                onClick={() => onOpenDetail && onOpenDetail(lead, 'crm', 'leads')}
                 className="glass" 
                 style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem' }}
               >
                 Détails
               </button>
-              <button className="btn-primary" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--text)', color: 'white' }}>
+              <button 
+                onClick={() => onOpenDetail && onOpenDetail(lead, 'crm', 'leads')}
+                className="btn-primary" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--text)', color: 'white' }}>
                  Qualifier <ArrowRight size={14} />
               </button>
             </div>

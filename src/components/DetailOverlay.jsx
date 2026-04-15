@@ -25,7 +25,7 @@ import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
-  const { config, navigateTo } = useBusiness();
+  const { config, navigateTo, deleteRecord } = useBusiness();
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);
@@ -421,7 +421,15 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                   >
                      Générer le PDF <Download size={16} />
                   </button>
-                  <button className="btn" style={{ border: '1px solid #EF4444', background: 'transparent', color: '#EF4444', marginTop: '2rem' }}>
+                  <button 
+                    className="btn" 
+                    onClick={() => {
+                      if (window.confirm(`Confirmer la suppression de "${record.titre || record.nom || record.num}" ? Cette action est irréversible.`)) {
+                        if (deleteRecord) deleteRecord(appId, subModule, record.id);
+                        onClose();
+                      }
+                    }}
+                    style={{ border: '1px solid #EF4444', background: 'transparent', color: '#EF4444', marginTop: '2rem' }}>
                      <Trash2 size={18} /> Supprimer l'enregistrement
                   </button>
                 </div>

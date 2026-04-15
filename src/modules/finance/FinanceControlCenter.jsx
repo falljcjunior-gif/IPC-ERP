@@ -58,8 +58,10 @@ const FinanceControlCenter = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
              <History size={20} />
            </button>
-          <button className="btn-primary" onClick={() => { setMainTab('accounting'); setModalMode('invoices'); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
-            <TrendingUp size={20} /> <span style={{ fontWeight: 800 }}>Audit Flash</span>
+          <button className="btn-primary" 
+            onClick={() => { setMainTab('accounting'); }}
+            style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
+            <TrendingUp size={20} /> <span style={{ fontWeight: 800 }}>Vue Comptabilité</span>
           </button>
         </div>
       </div>

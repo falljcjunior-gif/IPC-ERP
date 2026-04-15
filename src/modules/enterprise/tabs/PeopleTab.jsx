@@ -49,7 +49,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
               <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
                 <Building2 size={18} /> Organigramme
               </button>
-              <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>
+              <button onClick={() => onOpenDetail && onOpenDetail(null, 'hr', 'employees')} className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>
                 <UserPlus size={20} /> Nouveau Profil
               </button>
            </div>

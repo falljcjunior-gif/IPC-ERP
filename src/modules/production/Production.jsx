@@ -84,8 +84,11 @@ const Production = ({ onOpenDetail }) => {
           style={{ position: 'relative' }}
         >
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
-          {mainTab === 'execution' && <ExecutionTab data={data} onOpenDetail={onOpenDetail} />}
-          {mainTab === 'design' && <DesignTab data={data} />}
+          {mainTab === 'execution' && <ExecutionTab data={data} onOpenDetail={onOpenDetail} onNewWorkOrder={() => { setModalMode('workOrders'); setIsModalOpen(true); }} />}
+          {mainTab === 'design' && <DesignTab data={data} onOpenDetail={(rec, app, sub) => {
+            if (!rec) { setModalMode('boms'); setIsModalOpen(true); }
+            else if (onOpenDetail) onOpenDetail(rec, app, sub);
+          }} />}
           {mainTab === 'maintenance' && <MaintenanceTab />}
         </motion.div>
       </AnimatePresence>

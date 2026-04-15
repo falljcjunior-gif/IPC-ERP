@@ -11,7 +11,7 @@ import { useBusiness } from '../../../BusinessContext';
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
-const ExecutionTab = ({ data, onOpenDetail }) => {
+const ExecutionTab = ({ data, onOpenDetail, onNewWorkOrder }) => {
   const { launchProductionOrder, updateRecord } = useBusiness();
   const workOrders = data?.production?.workOrders || [];
   const products = data?.inventory?.products || [];
@@ -45,7 +45,9 @@ const ExecutionTab = ({ data, onOpenDetail }) => {
             <Filter size={18} /> Filtres
           </button>
         </div>
-        <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#06B6D4', borderColor: '#06B6D4' }}>
+        <button 
+          onClick={() => onNewWorkOrder && onNewWorkOrder()}
+          className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#06B6D4', borderColor: '#06B6D4' }}>
           <Plus size={20} /> Nouvel OF
         </button>
       </div>
@@ -204,7 +206,9 @@ const ExecutionTab = ({ data, onOpenDetail }) => {
                   Stock actuel : <strong>{p.qteStock} {p.unite}</strong> — Seuil d'alerte : {p.seuilAlerte} {p.unite}
                 </p>
               </div>
-              <button className="btn" style={{ background: '#F59E0B', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onNewWorkOrder && onNewWorkOrder(p.id); }}
+                className="btn" style={{ background: '#F59E0B', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <ShoppingCart size={14} /> Commander
               </button>
             </div>

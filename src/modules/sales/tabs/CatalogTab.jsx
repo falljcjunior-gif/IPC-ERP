@@ -10,7 +10,7 @@ import Chip from '../../marketing/components/Chip';
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
-const CatalogTab = ({ data, formatCurrency }) => {
+const CatalogTab = ({ data, formatCurrency, onOpenDetail }) => {
   const products = data?.masterdata?.products || [
     { id: '1', nom: 'Bloc Béton 15x20x40', categorie: 'Maçonnerie', prix: 450, stock: 12500, statut: 'En Stock' },
     { id: '2', nom: 'Bloc Béton 20x20x40', categorie: 'Maçonnerie', prix: 550, stock: 8200, statut: 'En Stock' },
@@ -72,8 +72,12 @@ const CatalogTab = ({ data, formatCurrency }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button className="glass" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem' }}>Détails</button>
-              <button className="btn-primary" style={{ padding: '0.75rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button 
+                onClick={() => onOpenDetail && onOpenDetail(product, 'sales', 'products')}
+                className="glass" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem' }}>Détails</button>
+              <button 
+                onClick={() => onOpenDetail && onOpenDetail(product, 'sales', 'products')}
+                className="btn-primary" style={{ padding: '0.75rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Edit3 size={16} />
               </button>
             </div>

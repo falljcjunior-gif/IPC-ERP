@@ -85,7 +85,7 @@ const Sales = ({ onOpenDetail }) => {
         >
           {view === 'dashboard' && <AnalyticsTab opportunities={opportunities} formatCurrency={formatCurrency} />}
           {view === 'orders' && <OrdersTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
-          {view === 'products' && <CatalogTab data={data} formatCurrency={formatCurrency} />}
+          {view === 'products' && <CatalogTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
         </motion.div>
       </AnimatePresence>
 

@@ -9,7 +9,7 @@ import {
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
-const DesignTab = ({ data }) => {
+const DesignTab = ({ data, onOpenDetail }) => {
   const boms = data?.production?.boms || [];
 
   return (
@@ -23,7 +23,9 @@ const DesignTab = ({ data }) => {
               style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.8rem', borderRadius: '1rem', border: 'none', fontSize: '0.85rem' }} />
           </div>
         </div>
-        <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#8B5CF6', borderColor: '#8B5CF6' }}>
+        <button 
+          onClick={() => onOpenDetail && onOpenDetail(null, 'production', 'boms')}
+          className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#8B5CF6', borderColor: '#8B5CF6' }}>
           <Plus size={20} /> Nouvelle BOM
         </button>
       </div>
@@ -69,10 +71,14 @@ const DesignTab = ({ data }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button className="glass" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
+              <button 
+                onClick={() => onOpenDetail && onOpenDetail(bom, 'production', 'boms')}
+                className="glass" style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
                 <ClipboardList size={14} /> Voir Recette
               </button>
-              <button className="glass" style={{ padding: '0.75rem', borderRadius: '1rem' }}>
+              <button 
+                onClick={() => onOpenDetail && onOpenDetail(bom, 'production', 'boms')}
+                className="glass" style={{ padding: '0.75rem', borderRadius: '1rem' }}>
                 <Edit3 size={16} />
               </button>
             </div>
