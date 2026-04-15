@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import { updatePassword } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
   Moon, Sun, Grid, Home, ShoppingCart, Package, FileText, Users2,
@@ -326,6 +327,12 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                     setPwdModal(p => ({ ...p, loading: true, error: '' }));
                     try {
                       await updatePassword(auth.currentUser, pwdModal.newPwd);
+                      // Update DB flag if exists
+                      if (currentUser?.id) {
+                        await updateDoc(doc(db, 'users', currentUser.id), {
+                          'profile.mustChangePassword': false
+                        }).catch(e => console.warn("Mise à jour drapeau échouée:", e));
+                      }
                       setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
                       setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
                     } catch (err) {
