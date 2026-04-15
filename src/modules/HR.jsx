@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, CheckSquare, Briefcase, Activity
+  Users, CheckSquare, Briefcase, Activity, UserPlus
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 
 import TabBar from './marketing/components/TabBar';
 import PeopleTab from './enterprise/tabs/PeopleTab';
 import ApprovalsTab from './hr/tabs/ApprovalsTab';
+import OnboardingTab from './hr/tabs/OnboardingTab';
 
 const HRControlCenter = ({ onOpenDetail }) => {
   const { data } = useBusiness();
@@ -26,6 +27,7 @@ const HRControlCenter = ({ onOpenDetail }) => {
       label: `Approbations${pendingCount > 0 ? ` (${pendingCount})` : ''}`, 
       icon: <CheckSquare size={16} /> 
     },
+    { id: 'onboarding', label: 'Onboarding & Accès', icon: <UserPlus size={16} /> }
   ];
 
   return (
@@ -70,6 +72,7 @@ const HRControlCenter = ({ onOpenDetail }) => {
         >
           {mainTab === 'people' && <PeopleTab data={data} onOpenDetail={onOpenDetail} />}
           {mainTab === 'approvals' && <ApprovalsTab />}
+          {mainTab === 'onboarding' && <OnboardingTab />}
         </motion.div>
       </AnimatePresence>
     </div>

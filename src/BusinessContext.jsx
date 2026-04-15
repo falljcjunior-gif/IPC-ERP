@@ -747,19 +747,30 @@ export const BusinessProvider = ({ children }) => {
         createdAt: new Date().toISOString() 
       };
 
+      const permissionsData = {
+        roles: userData.roles || [role],
+        allowedModules: userData.allowedModules || ['home']
+      };
+
       // 1. Create User Document
       await setDoc(doc(db, 'users', uid), { 
         profile: profileData, 
-        permissions: { roles: [role], allowedModules: ['staff_portal'] }, 
+        permissions: permissionsData, 
         data: {} 
       });
 
-      // 2. Create HR Record
-      await setDoc(doc(db, 'hr', uid), { ...profileData, subModule: 'employees' });
+      // 2. Create HR Record with exact employee structure
+      await setDoc(doc(db, 'hr', uid), { 
+         ...profileData, 
+         subModule: 'employees',
+         salaire: userData.salaire || 0,
+         contratType: userData.contratType || 'CDI',
+         contratDuree: userData.contratDuree || '',
+      });
 
       // 3. Send Notification
       if (source === 'hr') {
-        await sendNotification('SUPER_ADMIN', 'Nouveau Collaborateur RH', `Un nouveau compte pour ${userData.nom} a été créé par les RH. Veuillez configurer ses accès.`, 'user', 'user_management');
+        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'user_management');
       } else {
         await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
       }
