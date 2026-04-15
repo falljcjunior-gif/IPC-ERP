@@ -72,6 +72,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     setDetails({ record, context: { appId, subModule } });
   }, []);
 
+  const navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
+
   useEffect(() => {
     // Registry is now initialized at App level. 
     // We just need to sync the appsPool here.
