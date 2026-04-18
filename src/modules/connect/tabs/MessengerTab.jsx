@@ -22,6 +22,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const [roomSettings, setRoomSettings] = useState({ muteNotifs: false, pinned: false });
   const [showEmojis, setShowEmojis] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [activeParticipants, setActiveParticipants] = useState({});
   const scrollRef = useRef();
   const inputRef = useRef();
   const fileInputRef = useRef();
@@ -77,6 +78,16 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     return () => unsubscribe();
   }, [activeRoom.id]);
 
+  useEffect(() => {
+    if (!activeRoom.id) return;
+    const unsub = onSnapshot(collection(db, 'rooms', activeRoom.id, 'participants'), (snap) => {
+        const p = {};
+        snap.forEach(d => { p[d.id] = d.data() });
+        setActiveParticipants(p);
+    });
+    return () => unsub();
+  }, [activeRoom.id]);
+
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !auth.currentUser) return;
@@ -94,25 +105,42 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   };
 
   const initiateCall = async (type) => {
-    if (activeRoom.type !== 'direct') {
-      alert("Les appels groupés ne sont pas encore supportés. Passez par un chat direct pour appeler un collaborateur.");
-      return;
+    let targetUsers = [];
+    if (activeRoom.type === 'direct') {
+      const parts = activeRoom.id.split('_');
+      const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+      targetUsers = [receiverId];
+    } else {
+      targetUsers = employees.filter(e => e.id !== currentUser.id).map(e => e.id);
     }
-    const parts = activeRoom.id.split('_');
-    const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
     
     try {
-      // 1. Démarrer le flux local (caméra/micro) avant de créer l'offre WebRTC
-      await webrtcService.startLocalStream(type);
+      const batchPromises = targetUsers.map(uid => 
+        addDoc(collection(db, 'calls'), {
+          roomId: activeRoom.id,
+          roomLabel: activeRoom.label,
+          callerId: currentUser.id,
+          callerName: currentUser.nom,
+          receiverId: uid, 
+          type,
+          status: 'ringing',
+          startedAt: serverTimestamp()
+        })
+      );
+      await Promise.all(batchPromises);
       
-      // 2. Créer l'appel au niveau de la couche WebRTC et Firestore
-      const callId = await webrtcService.createCall(currentUser.id, currentUser.nom, receiverId, type);
-      
-      // 3. Activer l'interface d'appel (PlatformShell réagira via BusinessContext)
-      setActiveCall({ id: callId, role: 'caller', type, contactName: activeRoom.label });
+      setActiveCall({ 
+        id: activeRoom.id, 
+        callDocId: activeRoom.id, // For caller, call doc doesn't really matter to hangup the same way
+        roomId: activeRoom.id,
+        role: 'caller', 
+        type, 
+        contactName: activeRoom.label,
+        accepted: true 
+      });
     } catch (err) { 
       console.error("Call Error:", err); 
-      alert("Impossible de démarrer l'appel. Veuillez vérifier vos permissions caméra/micro.");
+      alert("Impossible de démarrer l'appel.");
     }
   };
 
@@ -211,7 +239,11 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                   <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}>{activeRoom.label}</h4>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                      <Circle size={8} fill="#10B981" color="#10B981" />
-                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>Actif</span>
+                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>
+                       {Object.keys(activeParticipants).length > 0 
+                         ? `${Object.keys(activeParticipants).length} en appel` 
+                         : 'Actif'}
+                     </span>
                   </div>
                </div>
             </div>
@@ -219,15 +251,15 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                  <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
                     <button 
                       onClick={() => initiateCall('audio')} 
-                      title={activeRoom.type !== 'direct' ? "Appels directs uniquement" : "Appel Audio"}
-                      style={{ background: 'none', border: 'none', padding: '8px', cursor: activeRoom.type === 'direct' ? 'pointer' : 'not-allowed', color: activeRoom.type === 'direct' ? '#8B5CF6' : 'var(--text-muted)', opacity: activeRoom.type === 'direct' ? 1 : 0.5 }}
+                      title="Appel Audio"
+                      style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: '#8B5CF6' }}
                     >
                       <Phone size={20} />
                     </button>
                     <button 
                       onClick={() => initiateCall('video')} 
-                      title={activeRoom.type !== 'direct' ? "Appels directs uniquement" : "Appel Vidéo"}
-                      style={{ background: 'none', border: 'none', padding: '8px', cursor: activeRoom.type === 'direct' ? 'pointer' : 'not-allowed', color: activeRoom.type === 'direct' ? '#8B5CF6' : 'var(--text-muted)', opacity: activeRoom.type === 'direct' ? 1 : 0.5 }}
+                      title="Appel Vidéo"
+                      style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', color: '#8B5CF6' }}
                     >
                       <Video size={20} />
                     </button>

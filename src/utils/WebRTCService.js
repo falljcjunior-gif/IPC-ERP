@@ -25,150 +25,199 @@ const servers = {
 
 export class WebRTCService {
   constructor() {
-    this.pc = null;
+    this.pcs = new Map(); // { participantId: RTCPeerConnection }
     this.localStream = null;
-    this.remoteStream = null;
+    this.remoteStreams = new Map(); // { participantId: MediaStream }
+    this.roomUnsubscribe = null;
+    this.signalUnsubscribes = {};
   }
 
   async startLocalStream(type = 'video') {
+    if (this.localStream) return this.localStream;
     const constraints = {
       video: type === 'video' ? { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } : false,
       audio: true,
     };
     this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-    this.remoteStream = new MediaStream();
     return this.localStream;
   }
 
-  async createCall(callerId, callerName, receiverId, callType, onRemoteStream) {
-    this.pc = new RTCPeerConnection(servers);
+  // Multi-party Room Joing (Mesh)
+  async joinRoom(roomId, userId, userName, onParticipantsUpdate) {
+    const roomRef = doc(db, 'rooms', roomId);
+    const participantRef = doc(collection(roomRef, 'participants'), userId);
 
-    // Push tracks from local stream to peer connection
-    this.localStream.getTracks().forEach((track) => {
-      this.pc.addTrack(track, this.localStream);
+    // 1. Register self
+    await setDoc(participantRef, {
+      userId,
+      userName,
+      joinedAt: serverTimestamp()
     });
 
-    // Pull tracks from remote stream, add to video stream
-    this.pc.ontrack = (event) => {
-      event.streams[0].getTracks().forEach((track) => {
-        this.remoteStream.addTrack(track);
-      });
-      if (onRemoteStream) onRemoteStream(this.remoteStream);
-    };
+    // 2. Listen for other participants
+    this.roomUnsubscribe = onSnapshot(collection(roomRef, 'participants'), async (snapshot) => {
+      snapshot.docChanges().forEach(async (change) => {
+        const participant = change.doc.data();
+        if (participant.userId === userId) return; // Skip self
 
-    // Create call document
-    const callDoc = doc(collection(db, 'calls'));
-    const offerCandidates = collection(callDoc, 'offerCandidates');
-    const answerCandidates = collection(callDoc, 'answerCandidates');
-
-    // Get candidates for caller, save to db
-    this.pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        addDoc(offerCandidates, event.candidate.toJSON());
-      }
-    };
-
-    // Create offer
-    const offerDescription = await this.pc.createOffer();
-    await this.pc.setLocalDescription(offerDescription);
-
-    const offer = {
-      sdp: offerDescription.sdp,
-      type: offerDescription.type,
-    };
-
-    await setDoc(callDoc, { 
-      offer, 
-      callerId, 
-      callerName,
-      receiverId, 
-      type: callType, 
-      status: 'ringing',
-      createdAt: serverTimestamp() 
-    });
-
-    // Listen for remote answer
-    onSnapshot(callDoc, (snapshot) => {
-      const data = snapshot.data();
-      if (!this.pc.currentRemoteDescription && data?.answer) {
-        const answerDescription = new RTCSessionDescription(data.answer);
-        this.pc.setRemoteDescription(answerDescription);
-      }
-    });
-
-    // When answered, add candidate to peer connection
-    onSnapshot(answerCandidates, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
-          const data = change.doc.data();
-          this.pc.addIceCandidate(new RTCIceCandidate(data));
+          // New participant joined. 
+          // If they joined AFTER me, I initiate the connection (Offer)
+          const myDoc = await getDoc(participantRef);
+          if (myDoc.exists()) {
+             const myData = myDoc.data();
+             if (myData.joinedAt?.toMillis() < participant.joinedAt?.toMillis()) {
+               this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
+             }
+          } else {
+             // Fallback
+             this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
+          }
+        } else if (change.type === 'removed') {
+          this.closePeerConnection(participant.userId);
+          if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
         }
       });
     });
 
-    return callDoc.id;
-  }
-
-  async answerCall(callId, onRemoteStream) {
-    this.pc = new RTCPeerConnection(servers);
-
-    this.localStream.getTracks().forEach((track) => {
-      this.pc.addTrack(track, this.localStream);
-    });
-
-    this.pc.ontrack = (event) => {
-      event.streams[0].getTracks().forEach((track) => {
-        this.remoteStream.addTrack(track);
-      });
-      if (onRemoteStream) onRemoteStream(this.remoteStream);
-    };
-
-    const callDoc = doc(db, 'calls', callId);
-    const answerCandidates = collection(callDoc, 'answerCandidates');
-    const offerCandidates = collection(callDoc, 'offerCandidates');
-
-    this.pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        addDoc(answerCandidates, event.candidate.toJSON());
-      }
-    };
-
-    const callData = (await getDoc(callDoc)).data();
-
-    const offerDescription = callData.offer;
-    await this.pc.setRemoteDescription(new RTCSessionDescription(offerDescription));
-
-    const answerDescription = await this.pc.createAnswer();
-    await this.pc.setLocalDescription(answerDescription);
-
-    const answer = {
-      type: answerDescription.type,
-      sdp: answerDescription.sdp,
-    };
-
-    await updateDoc(callDoc, { answer, status: 'accepted' });
-
-    onSnapshot(offerCandidates, (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
+    // 3. Listen for incoming signals (Offers/Answers/Candidates targeted to ME)
+    const signalsRef = collection(roomRef, 'signals');
+    const signalsQuery = query(signalsRef, where('targetId', '==', userId));
+    
+    this.signalUnsubscribes[userId] = onSnapshot(signalsQuery, async (snapshot) => {
+      snapshot.docChanges().forEach(async (change) => {
         if (change.type === 'added') {
-          let data = change.doc.data();
-          this.pc.addIceCandidate(new RTCIceCandidate(data));
+          const signal = change.doc.data();
+          if (signal.type === 'offer') {
+            await this.handleOffer(roomId, userId, signal, onParticipantsUpdate);
+          } else if (signal.type === 'answer') {
+            await this.handleAnswer(signal);
+          } else if (signal.type === 'candidate') {
+            await this.handleCandidate(signal);
+          }
+          // Remove signal document after processing to keep it clean
+          await deleteDoc(doc(signalsRef, change.doc.id));
         }
       });
     });
   }
 
-  hangup(callId) {
-    if (this.pc) {
-      this.pc.close();
-      this.pc = null;
+  async initiatePeerConnection(roomId, myId, targetId, onParticipantsUpdate) {
+    const pc = new RTCPeerConnection(servers);
+    this.pcs.set(targetId, pc);
+
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
     }
+
+    pc.ontrack = (event) => {
+      if (!this.remoteStreams.has(targetId)) {
+        this.remoteStreams.set(targetId, new MediaStream());
+      }
+      event.streams[0].getTracks().forEach(track => this.remoteStreams.get(targetId).addTrack(track));
+      if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.sendSignal(roomId, myId, targetId, { type: 'candidate', candidate: event.candidate.toJSON() });
+      }
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    this.sendSignal(roomId, myId, targetId, { type: 'offer', sdp: offer.sdp });
+  }
+
+  async handleOffer(roomId, myId, signal, onParticipantsUpdate) {
+    const targetId = signal.senderId;
+    const pc = new RTCPeerConnection(servers);
+    this.pcs.set(targetId, pc);
+
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
+    }
+
+    pc.ontrack = (event) => {
+      if (!this.remoteStreams.has(targetId)) {
+        this.remoteStreams.set(targetId, new MediaStream());
+      }
+      event.streams[0].getTracks().forEach(track => this.remoteStreams.get(targetId).addTrack(track));
+      if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.sendSignal(roomId, myId, targetId, { type: 'candidate', candidate: event.candidate.toJSON() });
+      }
+    };
+
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: signal.sdp }));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    this.sendSignal(roomId, myId, targetId, { type: 'answer', sdp: answer.sdp });
+  }
+
+  async handleAnswer(signal) {
+    const pc = this.pcs.get(signal.senderId);
+    if (pc) {
+      await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: signal.sdp }));
+    }
+  }
+
+  async handleCandidate(signal) {
+    const pc = this.pcs.get(signal.senderId);
+    if (pc) {
+      await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+    }
+  }
+
+  async sendSignal(roomId, senderId, targetId, data) {
+    const signalsRef = collection(db, 'rooms', roomId, 'signals');
+    await addDoc(signalsRef, { ...data, senderId, targetId, createdAt: serverTimestamp() });
+  }
+
+  closePeerConnection(participantId) {
+    const pc = this.pcs.get(participantId);
+    if (pc) {
+      pc.close();
+      this.pcs.delete(participantId);
+    }
+    if (this.remoteStreams.has(participantId)) {
+      this.remoteStreams.delete(participantId);
+    }
+  }
+
+  async leaveRoom(roomId, userId) {
+    if (this.roomUnsubscribe) {
+      this.roomUnsubscribe();
+      this.roomUnsubscribe = null;
+    }
+    if (this.signalUnsubscribes[userId]) {
+      this.signalUnsubscribes[userId]();
+      delete this.signalUnsubscribes[userId];
+    }
+    
+    // Close all connections
+    this.pcs.forEach((pc, id) => this.closePeerConnection(id));
+    
+    // Delete participant from Firestore room
+    if (roomId && userId) {
+      const participantRef = doc(db, 'rooms', roomId, 'participants', userId);
+      try {
+        await deleteDoc(participantRef);
+      } catch (e) {
+        console.error("Error deleting participant from room", e);
+      }
+    }
+  }
+
+  async hangup(roomId, userId) {
+    await this.leaveRoom(roomId, userId);
+
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => track.stop());
       this.localStream = null;
-    }
-    if (callId) {
-      updateDoc(doc(db, 'calls', callId), { status: 'ended' });
     }
   }
 }

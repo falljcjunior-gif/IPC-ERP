@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { auth, db } from '../firebase/config';
 import { updatePassword } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
   Moon, Sun, Grid, Home, ShoppingCart, Package, FileText, Users2,
@@ -394,11 +394,25 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <CallInterface 
         isOpen={activeCall && activeCall.accepted} 
         onClose={() => setActiveCall(null)}
-        callId={activeCall?.id}
+        callId={activeCall?.roomId || activeCall?.id}
         role={activeCall?.role}
         callType={activeCall?.type}
         contactName={activeCall?.contactName}
-        onHangup={() => {
+        onHangup={async () => {
+          const roomId = activeCall?.roomId || activeCall?.id;
+          if (roomId) {
+            try {
+               // 1. Cancel any ringing receivers
+               const q = query(collection(db, 'calls'), where('roomId', '==', roomId), where('status', '==', 'ringing'));
+               const snap = await getDocs(q);
+               snap.forEach(d => updateDoc(d.ref, { status: 'ended' }).catch(()=>{}));
+               
+               // 2. Instruct any active participants in the room to hang up via a room signal
+               await setDoc(doc(db, 'rooms', roomId), { status: 'ended', endedAt: new Date().toISOString() }, { merge: true });
+            } catch (e) {
+               console.warn("Error ending call globally:", e);
+            }
+          }
           setActiveCall(null);
         }}
       />
