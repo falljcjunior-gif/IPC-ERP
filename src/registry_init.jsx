@@ -42,6 +42,9 @@ import ControlHub from './modules/admin/ControlHub';
 import History from './modules/History';
 import Workflows from './modules/Workflows';
 import Shipping from './modules/Shipping';
+import WebsiteHub from './modules/website/WebsiteHub';
+import CommerceHub from './modules/sales/CommerceHub';
+import TalentHub from './modules/hr/TalentHub';
 
 // Schemas
 import { crmSchema } from './schemas/crm.schema';
@@ -99,6 +102,18 @@ export const initRegistry = () => {
     id: 'sales', label: 'Ventes', icon: <ShoppingCart size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
     component: Sales, priority: 3
+  });
+
+  registry.register({
+    id: 'commerce', label: 'PdV & Abonnements', icon: <ShoppingBag size={18} />,
+    category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
+    component: CommerceHub, priority: 3
+  });
+
+  registry.register({
+    id: 'website', label: 'Sites Web', icon: <Layout size={18} />,
+    category: 'core', roles: ['ADMIN', 'SALES', 'MARKETING', 'STAFF'],
+    component: WebsiteHub, priority: 4
   });
 
   registry.register({
@@ -180,6 +195,12 @@ export const initRegistry = () => {
     id: 'hr', label: 'RH', icon: <Users2 size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
     component: HR, priority: 30
+  });
+
+  registry.register({
+    id: 'talent', label: 'Talents & Congés', icon: <Users2 size={18} />,
+    category: 'hr', roles: ['ADMIN', 'HR'],
+    component: TalentHub, priority: 31
   });
 
   registry.register({
