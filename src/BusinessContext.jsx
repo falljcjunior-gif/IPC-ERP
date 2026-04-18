@@ -99,6 +99,30 @@ export const BusinessProvider = ({ children }) => {
       if (!merged.finance.entries) merged.finance.entries = [];
       if (!merged.finance.lines) merged.finance.lines = [];
       if (!merged.activities) merged.activities = [];
+      
+      if (!merged.connect) merged.connect = {};
+      if (!merged.connect.events || merged.connect.events.length === 0) {
+        merged.connect.events = [
+          {
+            id: 'ev-1', title: "Town Hall : Vision 2026",
+            date: "24 Avril", time: "10:00 - 11:30", type: "Remote",
+            category: "Stratégie", attendees: 120, color: "#8B5CF6",
+            participated: false
+          },
+          {
+            id: 'ev-2', title: "Afterwork : Équipe Industrial",
+            date: "18 Avril", time: "18:30 - 20:30", type: "On-site",
+            category: "Détente", attendees: 25, color: "#F59E0B",
+            participated: false
+          },
+          {
+            id: 'ev-3', title: "Lancement Hub Supply Chain",
+            date: "20 Avril", time: "09:00 - 10:00", type: "Hybrid",
+            category: "Opérations", attendees: 45, color: "#10B981",
+            participated: false
+          }
+        ];
+      }
 
       return merged;
     } catch (e) {
@@ -164,12 +188,12 @@ export const BusinessProvider = ({ children }) => {
     localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
     localStorage.setItem('daxcelor_user_role', currentUser.role);
     
-    // Cloud Sync for User settings
+    // Cloud Sync for User settings (ONLY sync config/theme, NEVER permissions which are admin-controlled)
     if (auth.currentUser) {
       const userDoc = doc(db, 'users', auth.currentUser.uid);
-      setDoc(userDoc, { config, permissions }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
+      setDoc(userDoc, { config }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
     }
-  }, [currentUser, config, permissions]);
+  }, [currentUser, config]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      3. UTILITY LOGIC (Stable Helpers)
@@ -961,6 +985,7 @@ export const BusinessProvider = ({ children }) => {
         // Automatically trigger incoming call UI
         setActiveCall({ 
           id: callDoc.id, 
+          roomId: callData.roomId || callDoc.id,
           role: 'receiver', 
           type: callData.type, 
           contactName: callData.callerName || 'Collègue',
