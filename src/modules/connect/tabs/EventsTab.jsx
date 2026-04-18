@@ -10,39 +10,18 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const EventsTab = ({ data }) => {
-  const { participateInEvent, addHint } = useBusiness();
+  const { participateInEvent, addHint, deleteRecord } = useBusiness();
   const [showCalendar, setShowCalendar] = useState(false);
   const [calDate, setCalDate] = useState(new Date());
-  const [localEvents, setLocalEvents] = useState(() => [
-    {
-      id: 1, title: "Town Hall : Vision 2026",
-      date: "24 Avril", time: "10:00 - 11:30", type: "Remote",
-      category: "Stratégie", attendees: 120, color: "#8B5CF6",
-      icon: <Video size={20} />, participated: false
-    },
-    {
-      id: 2, title: "Afterwork : Équipe Industrial",
-      date: "18 Avril", time: "18:30 - 20:30", type: "On-site",
-      category: "Détente", attendees: 25, color: "#F59E0B",
-      icon: <Coffee size={20} />, participated: false
-    },
-    {
-      id: 3, title: "Lancement Hub Supply Chain",
-      date: "20 Avril", time: "09:00 - 10:00", type: "Hybrid",
-      category: "Opérations", attendees: 45, color: "#10B981",
-      icon: <PartyPopper size={20} />, participated: false
-    }
-  ]);
 
-  const events = data?.connect?.events?.length > 0 ? data.connect.events : localEvents;
+  const events = data?.connect?.events || [];
 
   const handleParticipate = (id) => {
-    setLocalEvents(prev => prev.map(e => e.id === id ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e));
     participateInEvent(id);
   };
 
   const handleDelete = (id) => {
-    setLocalEvents(prev => prev.filter(e => e.id !== id));
+    deleteRecord('connect', 'events', id);
     addHint({ title: "Événement supprimé", message: "L'événement a été retiré de votre agenda.", type: 'info' });
   };
 
@@ -136,7 +115,7 @@ const EventsTab = ({ data }) => {
               style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)', background: 'var(--bg)', position: 'relative', overflow: 'hidden' }}
             >
                <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: `${event.color}08`, borderRadius: '0 0 0 100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: event.color }}>
-                  {event.icon}
+                  {event.category === 'Stratégie' ? <Video size={20} /> : event.category === 'Détente' ? <Coffee size={20} /> : event.category === 'Opérations' ? <PartyPopper size={20} /> : <Star size={20} />}
                </div>
 
                <div style={{ marginBottom: '2rem' }}>
