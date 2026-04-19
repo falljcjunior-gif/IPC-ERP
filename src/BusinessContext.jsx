@@ -158,6 +158,13 @@ export const BusinessProvider = ({ children }) => {
   });
 
   const [activeApp, setActiveApp] = useState('home');
+  const BRANDS = [
+    { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
+    { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },
+    { id: 'B2B_LOG', name: 'B2B Logistics', short: 'B2B' }
+  ];
+  const [activeBrand, setActiveBrand] = useState(() => localStorage.getItem('ipc_erp_active_brand') || 'ALL');
+  
   const [hints, setHints] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [workflows, setWorkflows] = useState([]);
@@ -182,7 +189,9 @@ export const BusinessProvider = ({ children }) => {
   useEffect(() => { localStorage.setItem('ipc_erp_config', JSON.stringify(config)); }, [config]);
   useEffect(() => { localStorage.setItem('ipc_erp_global_settings', JSON.stringify(globalSettings)); }, [globalSettings]);
   useEffect(() => { localStorage.setItem('ipc_erp_schemas', JSON.stringify(schemaOverrides)); }, [schemaOverrides]);
+  useEffect(() => { localStorage.setItem('ipc_erp_active_brand', activeBrand); }, [activeBrand]);
   useEffect(() => { localStorage.setItem('daxcelor_data', JSON.stringify(data)); }, [data]);
+
 
   useEffect(() => {
     localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
@@ -244,7 +253,8 @@ export const BusinessProvider = ({ children }) => {
       targetId,
       user: currentUser.nom,
       timestamp: new Date().toISOString(),
-      type: 'log'
+      type: 'log',
+      brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
     };
     
     setData(prev => ({
@@ -255,7 +265,7 @@ export const BusinessProvider = ({ children }) => {
     if (auth.currentUser) {
       setDoc(doc(db, 'activities', activity.id), activity);
     }
-  }, [currentUser.nom]);
+  }, [currentUser.nom, activeBrand]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      5. DATA MUTATION LOGIC (Topological Order)
@@ -360,9 +370,47 @@ export const BusinessProvider = ({ children }) => {
       const seqKey = 'inventory_movements';
       const mvtNum = getNextSequence(seqKey);
       const newMove = { id: Date.now().toString(), num: mvtNum, date: new Date().toISOString(), produit: product.nom, produitId: product.id, type, qte: qteNum, ref: ref || 'Interne', source: source || 'Entrepôt Principal', dest: dest || 'Client/Transit', createdAt: new Date().toISOString() };
-      if (newStock <= (product.alerte || 0)) addHint({ title: "Alerte Stock Bas", message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, type: 'warning', appId: 'inventory' });
+      
+      // Auto-Replenishment Logic (SSOT)
+      const pointDeCommande = parseFloat(product.alerte || product.seuilAlerte || 0);
+      let newPoDraft = null;
+
+      if (pointDeCommande > 0) {
+         const pendingPurchases = (prev.purchase?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Réceptionné' && o.statut !== 'Annulé').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
+         const pendingSales = (prev.sales?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Livré' && o.statut !== 'Annulé' && o.statut !== 'Gagné').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
+         const stockProjete = newStock + pendingPurchases - pendingSales;
+
+         if (stockProjete <= pointDeCommande) {
+            const qteACommander = Math.max((pointDeCommande * 2) - stockProjete, 10);
+            const poNum = `CMD-AUTO-${Date.now().toString().slice(-4)}-${product.id.substring(0, 4)}`;
+            
+            newPoDraft = {
+               id: `PO-AUTO-${Date.now()}`,
+               num: poNum,
+               fournisseur: product.fournisseur || 'FOURNISSEUR_AUTO',
+               produitId: product.id,
+               qte: qteACommander,
+               qteRecue: 0,
+               qteFacturee: 0,
+               statut: 'Brouillon',
+               date: new Date().toISOString().split('T')[0],
+               createdAt: new Date().toISOString()
+            };
+            addHint({ title: "Réassort Automatique", message: `Stock projeté critique (${stockProjete}). Brouillon d'achat ${poNum} généré pour ${qteACommander} unitées.`, type: 'warning', appId: 'purchase' });
+         } else if (newStock <= pointDeCommande) {
+            addHint({ title: "Alerte Stock Bas", message: `Stock critique (${newStock}) mais réassort déjà en cours (Projeté: ${stockProjete}).`, type: 'info', appId: 'inventory' });
+         }
+      } else if (newStock <= (product.alerte || 0)) {
+         addHint({ title: "Alerte Stock Bas", message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, type: 'warning', appId: 'inventory' });
+      }
+
       logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
-      return { ...prev, inventory: { ...prev.inventory, products: updatedProducts, movements: [newMove, ...(prev.inventory?.movements || [])] } };
+      
+      const nextState = { ...prev, inventory: { ...prev.inventory, products: updatedProducts, movements: [newMove, ...(prev.inventory?.movements || [])] } };
+      if (newPoDraft) {
+         nextState.purchase = { ...prev.purchase, orders: [newPoDraft, ...(prev.purchase?.orders || [])] };
+      }
+      return nextState;
     });
   }, [getNextSequence, addHint, logAction]);
 
@@ -412,7 +460,12 @@ export const BusinessProvider = ({ children }) => {
       const seqKey = `${appId}__${subModule}`;
       if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
     }
-    const newRecord = { ...processedRecord, id: Date.now().toString(), createdAt: new Date().toISOString() };
+    const newRecord = { 
+      ...processedRecord, 
+      id: Date.now().toString(), 
+      createdAt: new Date().toISOString(),
+      brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
+    };
     setData(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
@@ -422,7 +475,7 @@ export const BusinessProvider = ({ children }) => {
       return nextState;
     });
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
-  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction]);
+  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand]);
 
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
@@ -452,33 +505,76 @@ export const BusinessProvider = ({ children }) => {
       if (appId === 'hr' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateExpenseEntry(record);
       }
+      if (appId === 'hr' && subModule === 'timesheets' && newData.statut === 'Validé' && oldRecord.statut !== 'Validé') {
+         const employee = (prev.hr?.employees || []).find(e => e.nom === record.collaborateur);
+         const salaireMensuel = parseFloat(employee?.salaire || 150000); // Estimation si non renseigné
+         const tauxHoraire = parseFloat((salaireMensuel / 160).toFixed(2));
+         const heures = parseFloat(record.heures || 0);
+         const coutTotal = Math.round(heures * tauxHoraire);
+         
+         const entryNum = getNextSequence('finance_entries');
+         const analyticalEntry = {
+            num: entryNum,
+            date: new Date().toISOString().split('T')[0],
+            libelle: `Imputation Analytique - ${record.collaborateur} (${heures}h sur ${record.projet})`,
+            journal: 'OD',
+            statut: 'Brouillon',
+         };
+         const lines = [
+            { accountId: '641100', label: 'Frais de Personnel', debit: coutTotal, credit: 0, profitCenter: record.projet || 'Général' },
+            { accountId: '421000', label: 'Personnel - Rémunérations dues', debit: 0, credit: coutTotal, profitCenter: 'Administration' }
+         ];
+         addAccountingEntry(analyticalEntry, lines);
+         addHint({ title: "Comptabilité Analytique", message: `Pointage validé. Coût affecté: ${coutTotal} FCFA sur [${record.projet}].`, type: 'success', appId: 'finance' });
+         logAction('Imputation Analytique', `${coutTotal} FCFA pour ${heures}h affectés à ${record.projet}`, 'hr');
+      }
       if (appId === 'purchase' && subModule === 'orders') {
         if (newData.statut === 'Réceptionné' && oldRecord.statut !== 'Réceptionné') {
+          // Moteur SSOT: On incremente avec la qteRecue physiquement, pas celle de la commande théorique.
+          const actualQte = parseFloat(record.qteRecue || record.qte || 0);
           applyStockMove({ 
             productId: record.produitId, 
-            qte: record.qte, 
+            qte: actualQte, 
             type: 'Réception', 
             ref: `ACHAT-${record.num || record.id}`,
             source: record.fournisseur,
             dest: 'Entrepôt Principal'
           });
-          addHint({ title: "Marchandise Réceptionnée", message: `La commande ${record.num || record.id} a été réceptionnée dans le stock.`, type: 'success', appId: 'inventory' });
+          addHint({ title: "Marchandise Réceptionnée", message: `La commande ${record.num || record.id} a été réceptionnée dans le stock (${actualQte} unités).`, type: 'success', appId: 'inventory' });
         }
         if (newData.statut === 'Facturé' && oldRecord.statut !== 'Facturé') {
            const billNum = getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
+           
+           // Three-Way Match Engine
+           const qteCommandee = parseFloat(record.qte || 0);
+           const qteRecue = parseFloat(record.qteRecue || qteCommandee);
+           const qteFacturee = parseFloat(record.qteFacturee || qteCommandee);
+           
+           const threeWayMatch = (qteCommandee === qteRecue && qteRecue === qteFacturee);
+
            const newBill = {
              id: Date.now().toString(),
              num: billNum,
              fournisseur: record.fournisseur,
              date: new Date().toISOString().split('T')[0],
              montant: record.total,
-             statut: 'À payer',
+             statut: threeWayMatch ? 'À payer' : 'Bloqué (Anomalie 3-Way Match)',
              orderId: record.id,
+             qteCommandee,
+             qteRecue,
+             qteFacturee,
+             anomalie: !threeWayMatch,
              createdAt: new Date().toISOString()
            };
            nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
-           addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est désormais à régler en finance.`, type: 'info', appId: 'finance' });
-           logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
+           
+           if (!threeWayMatch) {
+             addHint({ title: "Alerte Fraude (3-Way Match)", message: `Facture bloquée ! Divergence QTE: Cmd(${qteCommandee}) ≠ Reçue(${qteRecue}) ≠ Fact(${qteFacturee})`, type: 'error', appId: 'finance' });
+             logAction('Alerte Financière', `Blocage Facture ${newBill.num} (Anomalie 3-Way Match)`, 'finance');
+           } else {
+             addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est validée (Match Parfait).`, type: 'success', appId: 'finance' });
+             logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
+           }
         }
       }
       return nextState;
@@ -740,14 +836,31 @@ export const BusinessProvider = ({ children }) => {
      ══════════════════════════════════════════════════════════════════════════ */
 
   const updateUserRole = useCallback((userId, newRole) => {
-    setPermissions(prev => ({ ...prev, [userId]: { ...(prev[userId] || { allowedModules: [] }), roles: [newRole] } }));
+    setPermissions(prev => {
+      const userPerms = prev[userId] || { allowedModules: [] };
+      const newPerms = { ...userPerms, roles: [newRole] };
+      
+      if (auth.currentUser) {
+        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+          .catch(e => console.error("Erreur save role:", e));
+      }
+      return { ...prev, [userId]: newPerms };
+    });
   }, []);
 
   const toggleModuleAccess = useCallback((userId, moduleId) => {
     setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], allowedModules: [] };
-      const newModules = userPerms.allowedModules.includes(moduleId) ? userPerms.allowedModules.filter(m => m !== moduleId) : [...userPerms.allowedModules, moduleId];
-      return { ...prev, [userId]: { ...userPerms, allowedModules: newModules } };
+      const newModules = userPerms.allowedModules.includes(moduleId) 
+        ? userPerms.allowedModules.filter(m => m !== moduleId) 
+        : [...userPerms.allowedModules, moduleId];
+      const newPerms = { ...userPerms, allowedModules: newModules };
+
+      if (auth.currentUser) {
+        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+          .catch(e => console.error("Erreur save permissions:", e));
+      }
+      return { ...prev, [userId]: newPerms };
     });
   }, []);
 
@@ -1007,13 +1120,15 @@ export const BusinessProvider = ({ children }) => {
     const COLLECTIONS = [
       'crm', 'sales', 'inventory', 'production',
       'accounting', 'projects', 'audit_logs', 'hr',
-      'base', 'workflows', 'notifications', 'users'
+      'base', 'workflows', 'notifications', 'users', 'activities'
     ];
 
     const unsubscribes = COLLECTIONS.map(colName => {
       const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(200));
       return onSnapshot(q, (snapshot) => {
-        const docs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+        const docs = snapshot.docs
+          .map(d => ({ ...d.data(), id: d.id }))
+          .filter(d => activeBrand === 'ALL' || !d.brandId || d.brandId === activeBrand);
         setData(prev => {
           const newState = { ...prev };
           if (colName === 'audit_logs') {
@@ -1030,6 +1145,8 @@ export const BusinessProvider = ({ children }) => {
                 newState.hr = { ...prev.hr, employees: [...(prev.hr?.employees || []), ...newEmployees] };
               }
             }
+          } else if (colName === 'activities') {
+            newState.activities = docs;
           } else {
             const grouped = {};
             docs.forEach(d => {
@@ -1052,7 +1169,7 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [currentUser.id]); // Re-run quand l'utilisateur authentifié change
+  }, [currentUser.id, activeBrand]); // Re-run quand l'utilisateur ou la marque courante change
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION
@@ -1071,7 +1188,7 @@ export const BusinessProvider = ({ children }) => {
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
-      setActiveApp, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule,
+      setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
       addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({

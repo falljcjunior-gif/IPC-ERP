@@ -9,7 +9,7 @@ import {
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
   Folder, Activity as ActivityIcon, Zap, Sparkles, MessageCircle,
-  Pin, PinOff, CreditCard, Landmark, Key
+  Pin, PinOff, CreditCard, Landmark, Key, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
@@ -23,6 +23,8 @@ import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
 import MobileNavbar from './MobileNavbar';
+import BarcodeScanner from './BarcodeScanner';
+import PointageWidget from './PointageWidget';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (V1.2 - CLEAN)
@@ -31,7 +33,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
     globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
     globalSettings, currentUser, permissions, logout, activeApp, 
-    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule 
+    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
+    activeBrand, setActiveBrand, BRANDS
   } = useBusiness();
 
   // Unified UI Flags
@@ -49,6 +52,12 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   
   // Password Change State
   const [pwdModal, setPwdModal] = useState({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false });
+
+  // Mobile Scanner State
+  const [showScanner, setShowScanner] = useState(false);
+
+  // Pointage RH State
+  const [showPointage, setShowPointage] = useState(false);
 
   // Navigation State (UNQIUE NAMES)
   const [appsPool, setAppsPool] = useState([]);
@@ -205,11 +214,27 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             <div style={{ position: 'relative', flex: 1, minWidth: shellView.mobile ? '40px' : '300px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '0.75rem', border: search.focused ? '1px solid var(--accent)' : '1px solid var(--border)', width: '100%' }}>
                 <Search size={18} color="var(--text-muted)" />
-                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} onFocus={() => setSearch(p => ({ ...p, focused: true }))} onBlur={() => setTimeout(() => setSearch(p => ({ ...p, focused: false })), 200)} placeholder="Rechercher..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%' }} />
+                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} onFocus={() => setSearch(p => ({ ...p, focused: true }))} onBlur={() => setTimeout(() => setSearch(p => ({ ...p, focused: false })), 200)} placeholder="Rechercher ou scanner..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%' }} />
+                <button onClick={() => setShowScanner(true)} title="Scanner un Code-Barres / QR" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
+                  <Camera size={20} />
+                </button>
               </div>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            {userRole === 'SUPER_ADMIN' && (
+              <select 
+                 value={activeBrand} 
+                 onChange={(e) => setActiveBrand(e.target.value)} 
+                 className="glass"
+                 title="Changer de Marque / Société"
+                 style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', fontWeight: 600, outline: 'none', cursor: 'pointer', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: '0.8rem' }}
+              >
+                 {BRANDS.map(b => (
+                   <option key={b.id} value={b.id}>{b.name}</option>
+                 ))}
+              </select>
+            )}
             <button onClick={() => setShellView(p => ({ ...p, ai: true }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
               <Sparkles size={20} /> <span className="hide-mobile">IPC Intelligence</span>
             </button>
@@ -218,6 +243,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
                <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
             </div>
+            <button 
+              onClick={() => setShowPointage(true)} 
+              title="Pointage RH (Check-in/Check-out)" 
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#10B981', display: 'flex', alignItems: 'center' }}
+            >
+               <Clock size={22} />
+            </button>
             <div onClick={() => setShellView(p => ({ ...p, chat: true }))} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)20', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}><MessageCircle size={18} /> Chat</div>
             <div style={{ position: 'relative' }}>
               <div onClick={() => setShellView(p => ({ ...p, profile: !p.profile }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
@@ -416,6 +448,20 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           setActiveCall(null);
         }}
       />
+      <AnimatePresence>
+        {showScanner && (
+           <BarcodeScanner 
+             onClose={() => setShowScanner(false)} 
+             onScan={(text) => {
+               setSearch(p => ({ ...p, query: text }));
+               setShowScanner(false);
+             }} 
+           />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showPointage && <PointageWidget onClose={() => setShowPointage(false)} />}
+      </AnimatePresence>
     </div>
   );
 };

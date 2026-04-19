@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../../../BusinessContext';
-import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link } from 'lucide-react';
+import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link, Cpu } from 'lucide-react';
 
 const BankReconTab = () => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency, updateRecord, addHint } = useBusiness();
   const [bankLines, setBankLines] = useState([]);
   const [reconciledIds, setReconciledIds] = useState([]);
   const [selectedBankLine, setSelectedBankLine] = useState(null);
@@ -55,6 +55,43 @@ const BankReconTab = () => {
     setBankLines(mock);
   };
 
+  const autoReconcile = () => {
+    let matchCount = 0;
+    let reconciledAmount = 0;
+    const newReconciledIds = [...reconciledIds];
+    const newBankLines = [...bankLines];
+
+    newBankLines.forEach((line, index) => {
+        if (line.reconciledWith !== null) return;
+        
+        // Match exact amounts (< 1 FCFA tolerance)
+        const match = systemElements.find(el => 
+            !newReconciledIds.includes(el.id) && 
+            Math.abs(el.amount - line.amount) <= 1
+        );
+
+        if (match) {
+            newBankLines[index] = { ...line, reconciledWith: match };
+            newReconciledIds.push(match.id);
+            matchCount++;
+            reconciledAmount += Math.abs(match.amount);
+            
+            const isRevenue = match.type === 'Revenue';
+            const appId = isRevenue ? 'finance' : 'hr';
+            const subModule = isRevenue ? 'invoices' : 'expenses';
+            updateRecord(appId, subModule, match.id, { statut: 'Payé' });
+        }
+    });
+
+    setBankLines(newBankLines);
+    setReconciledIds(newReconciledIds);
+    if(matchCount > 0) {
+        addHint({ title: "Auto-Lettrage (IA)", message: `${matchCount} écritures lettrées automatiquement pour ${formatCurrency(reconciledAmount)}.`, type: 'success', appId: 'finance' });
+    } else {
+        addHint({ title: "Auto-Lettrage", message: "Aucune correspondance mathématique exacte trouvée. Lettrage manuel requis.", type: 'warning' });
+    }
+  };
+
   const handleMatch = (systemEl) => {
     if (!selectedBankLine) return;
     
@@ -76,6 +113,7 @@ const BankReconTab = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h3 style={{ margin: 0, fontWeight: 800 }}>Relevé Bancaire</h3>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+             <button onClick={autoReconcile} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}><Cpu size={14} /> Auto-Lettrage (IA)</button>
              <button onClick={simulateImport} className="btn" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', fontSize: '0.8rem' }}>Simuler</button>
              <label className="btn btn-primary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, fontSize: '0.8rem' }}>
                 <Upload size={14} /> Import CSV
