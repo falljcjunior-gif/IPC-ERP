@@ -5,10 +5,11 @@ import {
   BarChart3, ArrowUpRight, ArrowDownRight, Zap, Crown, Activity
 } from 'lucide-react';
 import {
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, CartesianGrid, Cell, LineChart, Line, ComposedChart
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -50,7 +51,7 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Analyse mensuelle de la performance commerciale.</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
             <ComposedChart data={forecastData}>
               <defs>
                 <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
@@ -65,7 +66,7 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
               <Area type="monotone" dataKey="real" name="Chiffre d'Affaires" stroke="#3B82F6" strokeWidth={4} fillOpacity={1} fill="url(#colorReal)" />
               <Bar dataKey="target" name="Objectif" fill="#8B5CF630" radius={[4, 4, 0, 0]} barSize={20} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
 
         {/* AI Sales Insights */}

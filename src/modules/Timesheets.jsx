@@ -5,9 +5,10 @@ import {
   BarChart3, Target, AlertCircle
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   ComposedChart, Legend
 } from 'recharts';
+import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
@@ -96,7 +97,7 @@ const Timesheets = () => {
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Heures Hebdomadaires — Totales vs Facturables</h4>
-          <ResponsiveContainer width="100%" height={220}>
+          <SafeResponsiveChart minHeight={220} fallbackHeight={220}>
             <ComposedChart data={weeklyTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="sem" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
@@ -106,11 +107,11 @@ const Timesheets = () => {
               <Bar dataKey="heures"       name="Total (h)"       fill="#3B82F630" radius={[4,4,0,0]} barSize={22} />
               <Bar dataKey="facturables"  name="Facturables (h)" fill="#10B981"   radius={[4,4,0,0]} barSize={22} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </div>
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Heures par Collaborateur</h4>
-          <ResponsiveContainer width="100%" height={220}>
+          <SafeResponsiveChart minHeight={220} fallbackHeight={220}>
             <BarChart data={heuresParCollab} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
@@ -118,7 +119,7 @@ const Timesheets = () => {
               <Tooltip content={<TT />} />
               <Bar dataKey="heures" name="Heures" fill="var(--accent)" radius={[0, 6, 6, 0]} barSize={18} />
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </div>
       </motion.div>
 

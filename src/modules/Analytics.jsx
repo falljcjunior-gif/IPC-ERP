@@ -1,9 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Activity, BarChart2, PieChart as PieIcon, LineChart as LineIcon, Zap, Target, TrendingUp } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useBusiness } from '../BusinessContext';
 import KpiCard from '../components/KpiCard';
+import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 
 const Analytics = () => {
   const { data } = useBusiness();
@@ -30,7 +31,7 @@ const Analytics = () => {
 
        <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
           <h3 style={{ fontWeight: 800, marginBottom: '1.5rem' }}>Trafic & Activité Globale</h3>
-          <ResponsiveContainer width="100%" height={300}>
+          <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
              <AreaChart data={mockTrend}>
                 <defs>
                    <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
@@ -44,7 +45,7 @@ const Analytics = () => {
                 <Tooltip />
                 <Area type="monotone" dataKey="val" stroke="#EC4899" fillOpacity={1} fill="url(#colorVal)" strokeWidth={3} />
              </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
        </div>
 
        <div className="grid grid-2" style={{ gap: '1.5rem' }}>

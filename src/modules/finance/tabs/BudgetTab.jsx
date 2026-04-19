@@ -6,7 +6,8 @@ import {
   Zap, TrendingUp, TrendingDown, RefreshCcw, 
   BarChart3, PieChart, Calculator
 } from 'lucide-react';
-import { ResponsiveContainer, PieChart as RechartsPie, Pie, Cell, Tooltip } from 'recharts';
+import { PieChart as RechartsPie, Pie, Cell, Tooltip } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { budgetSchema } from '../../../schemas/budget.schema';
 
@@ -79,7 +80,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '1.5rem' }}>
          <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h4 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.1rem', alignSelf: 'flex-start' }}>Répartition Géographique</h4>
-            <ResponsiveContainer width="100%" height={240}>
+            <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
                <RechartsPie>
                   <Pie
                     data={budgets.map((b, i) => ({ name: b.departement, value: b.prevision }))}
@@ -96,7 +97,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
                   </Pie>
                   <Tooltip />
                </RechartsPie>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
                {budgets.map((b, i) => (
                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)' }}>

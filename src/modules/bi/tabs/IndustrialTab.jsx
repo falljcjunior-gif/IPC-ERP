@@ -2,8 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, 
-  CartesianGrid, ResponsiveContainer, ComposedChart, Line
+  CartesianGrid, ComposedChart, Line
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import { 
   Factory, Truck, Package, Activity, 
   AlertTriangle, CheckCircle2, Zap
@@ -51,8 +52,8 @@ const IndustrialTab = ({ data }) => {
                   <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981', background: '#10B98115', padding: '4px 10px', borderRadius: '20px' }}>Temps Réel</span>
                </div>
             </div>
-            <div style={{ height: '320px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '320px', minHeight: '320px' }}>
+               <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
                   <AreaChart data={perfData}>
                      <defs>
                         <linearGradient id="colorOtif" x1="0" y1="0" x2="0" y2="1">
@@ -67,7 +68,7 @@ const IndustrialTab = ({ data }) => {
                      <Area type="monotone" dataKey="otif" stroke="#10B981" strokeWidth={4} fillOpacity={1} fill="url(#colorOtif)" />
                      <Area type="monotone" dataKey="efficiency" stroke="#6366F1" strokeWidth={2} fillOpacity={0} />
                   </AreaChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
          </div>
 

@@ -5,9 +5,10 @@ import {
   Plus, Play, Pause, MoreVertical, ExternalLink, Zap
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, 
+  BarChart, Bar, XAxis, YAxis, Tooltip, 
   CartesianGrid, Cell
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import KpiCard from '../../../components/KpiCard';
 import Chip from '../components/Chip';
 
@@ -72,7 +73,7 @@ const AdsTab = ({ campaigns, formatCurrency }) => {
         <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
           <h4 style={{ fontWeight: 900, fontSize: '1.1rem', marginBottom: '1.5rem' }}>Répartition du Budget</h4>
           <div style={{ height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <SafeResponsiveChart minHeight="100%" fallbackHeight={300}>
               <BarChart data={chartData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" opacity={0.3} />
                 <XAxis type="number" hide />
@@ -84,7 +85,7 @@ const AdsTab = ({ campaigns, formatCurrency }) => {
                 <Bar dataKey="budget" name="Budget" fill="var(--accent)" radius={[0, 4, 4, 0]} barSize={20} />
                 <Bar dataKey="spent" name="Dépensé" fill="#EC4899" radius={[0, 4, 4, 0]} barSize={12} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
           </div>
           
           <div style={{ marginTop: '2rem', background: 'linear-gradient(135deg, var(--bg-subtle) 0%, var(--bg) 100%)', padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>

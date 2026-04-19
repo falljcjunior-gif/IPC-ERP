@@ -16,9 +16,10 @@ import {
   Target
 } from 'lucide-react';
 import { 
-  ResponsiveContainer, RadarChart, PolarGrid, 
+  RadarChart, PolarGrid, 
   PolarAngleAxis, PolarRadiusAxis, Radar 
 } from 'recharts';
+import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { useBusiness } from '../BusinessContext';
@@ -321,14 +322,14 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                        <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                           <Target size={16} color="var(--accent)" /> MATRICE DES COMPÉTENCES
                        </h3>
-                       <ResponsiveContainer width="100%" height={240}>
+                       <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
                          <RadarChart cx="50%" cy="50%" outerRadius="75%" data={Object.entries(record.skills).map(([subject, value]) => ({ subject, value }))}>
                             <PolarGrid stroke="var(--border)" />
                             <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                             <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                             <Radar name={record.nom} dataKey="value" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.5} />
                          </RadarChart>
-                       </ResponsiveContainer>
+                       </SafeResponsiveChart>
                     </div>
                   )}
                   {customFields.map(field => (

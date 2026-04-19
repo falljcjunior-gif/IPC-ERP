@@ -1,14 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   BarChart, Bar, Cell, PieChart, Pie, Legend
 } from 'recharts';
+import SafeResponsiveChart from './charts/SafeResponsiveChart';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
 export const AreaChartComp = ({ data, dataKey = "value", xKey = "name", color = "#3B82F6" }) => (
-  <ResponsiveContainer width="100%" height={300}>
+  <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
     <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
       <defs>
         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -29,11 +30,11 @@ export const AreaChartComp = ({ data, dataKey = "value", xKey = "name", color = 
       />
       <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
     </AreaChart>
-  </ResponsiveContainer>
+  </SafeResponsiveChart>
 );
 
 export const BarChartComp = ({ data, dataKey = "value", xKey = "name", color = "#3B82F6" }) => (
-  <ResponsiveContainer width="100%" height={300}>
+  <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
     <BarChart data={data}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
       <XAxis dataKey={xKey} axisLine={false} tickLine={false} tick={{fill: 'var(--text-muted)', fontSize: 12}} />
@@ -48,11 +49,11 @@ export const BarChartComp = ({ data, dataKey = "value", xKey = "name", color = "
       />
       <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} barSize={40} />
     </BarChart>
-  </ResponsiveContainer>
+  </SafeResponsiveChart>
 );
 
 export const DonutChartComp = ({ data }) => (
-  <ResponsiveContainer width="100%" height={300}>
+  <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
     <PieChart>
       <Pie
         data={data}
@@ -76,7 +77,7 @@ export const DonutChartComp = ({ data }) => (
       />
       <Legend verticalAlign="bottom" height={36}/>
     </PieChart>
-  </ResponsiveContainer>
+  </SafeResponsiveChart>
 );
 
 export const FunnelChartComp = ({ data }) => {

@@ -7,9 +7,10 @@ import {
   Filter, Activity, DollarSign, BarChart2
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   Cell, ComposedChart, Line, Legend, PieChart, Pie
 } from 'recharts';
+import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { useBusiness } from '../BusinessContext';
 import EnterpriseView from '../components/EnterpriseView';
 import KpiCard from '../components/KpiCard';
@@ -52,7 +53,7 @@ const Expenses = ({ onOpenDetail }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>
         <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem' }}>
            <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Analyse des Coûts par Catégorie</h3>
-           <ResponsiveContainer width="100%" height={240}>
+           <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
               <BarChart data={[{n:'Transport',v:450},{n:'Repas',v:320},{n:'Logement',v:890},{n:'Autres',v:120}]}>
                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
                  <XAxis dataKey="n" axisLine={false} tickLine={false} />
@@ -60,7 +61,7 @@ const Expenses = ({ onOpenDetail }) => {
                  <Tooltip />
                  <Bar dataKey="v" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
-           </ResponsiveContainer>
+           </SafeResponsiveChart>
         </div>
         <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
            <Activity size={48} color="var(--accent)" />

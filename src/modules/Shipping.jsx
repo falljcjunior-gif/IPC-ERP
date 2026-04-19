@@ -6,9 +6,10 @@ import {
   Navigation, RefreshCcw, ArrowUpRight, FileText, Filter, Search
 } from 'lucide-react';
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
   Cell, LineChart, Line, ComposedChart, Legend, PieChart, Pie, AreaChart, Area
 } from 'recharts';
+import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { useBusiness } from '../BusinessContext';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
@@ -161,7 +162,7 @@ const Shipping = ({ onOpenDetail }) => {
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>OTIF & Retards — 7 Mois</h4>
-          <ResponsiveContainer width="100%" height={220}>
+          <SafeResponsiveChart minHeight={220} fallbackHeight={220}>
             <ComposedChart data={otifTrend}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
@@ -172,7 +173,7 @@ const Shipping = ({ onOpenDetail }) => {
               <Bar  yAxisId="r" dataKey="retards" name="Retards"     fill="#EF444430" radius={[4,4,0,0]} barSize={20} />
               <Line yAxisId="l" dataKey="otif"    name="OTIF (%)"    stroke="#10B981" strokeWidth={2.5} dot={{ r: 4, fill: '#10B981' }} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </div>
         <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
           <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Causes des Retards</h4>
@@ -293,7 +294,7 @@ const Shipping = ({ onOpenDetail }) => {
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Volume Hebdomadaire — Colis Expédiés / Livrés</h4>
-        <ResponsiveContainer width="100%" height={250}>
+        <SafeResponsiveChart minHeight={250} fallbackHeight={250}>
           <BarChart data={volumeTrend}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
             <XAxis dataKey="sem" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
@@ -304,7 +305,7 @@ const Shipping = ({ onOpenDetail }) => {
             <Bar dataKey="colisLiv" name="Livrés"   fill="#10B981" radius={[4,4,0,0]} barSize={24} />
             <Bar dataKey="retours"  name="Retours"  fill="#EF4444" radius={[4,4,0,0]} barSize={24} />
           </BarChart>
-        </ResponsiveContainer>
+        </SafeResponsiveChart>
       </motion.div>
 
       {/* Par destination */}

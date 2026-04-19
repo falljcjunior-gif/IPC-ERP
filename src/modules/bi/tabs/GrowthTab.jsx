@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, 
-  CartesianGrid, ResponsiveContainer, Radar, RadarChart, 
+  CartesianGrid, Radar, RadarChart, 
   PolarGrid, PolarAngleAxis, Funnel, FunnelChart, LabelList, Cell
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import { 
   Target, TrendingUp, Users, Zap, 
   Star, MousePointer2, Briefcase, Rocket,
@@ -48,8 +49,8 @@ const GrowthTab = ({ data, formatCurrency }) => {
                </div>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Tunnel de Conversion Dynamique</h4>
             </div>
-            <div style={{ height: '350px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '350px', minHeight: '350px' }}>
+               <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
                   <FunnelChart>
                      <Tooltip />
                      <Funnel
@@ -63,7 +64,7 @@ const GrowthTab = ({ data, formatCurrency }) => {
                         ))}
                      </Funnel>
                   </FunnelChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
          </div>
 
@@ -77,8 +78,8 @@ const GrowthTab = ({ data, formatCurrency }) => {
                   <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Efficience Marketing par Canal</h4>
                </div>
             </div>
-            <div style={{ height: '350px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '350px', minHeight: '350px' }}>
+               <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
                   <BarChart data={channelROI} layout="vertical">
                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
                      <XAxis type="number" hide />
@@ -90,7 +91,7 @@ const GrowthTab = ({ data, formatCurrency }) => {
                         ))}
                      </Bar>
                   </BarChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
             <div style={{ marginTop: '1.5rem', padding: '1rem 1.5rem', borderRadius: '1.5rem', background: '#10B98115', border: '1px solid #10B98130', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

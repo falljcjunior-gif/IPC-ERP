@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Filter, Download } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import SafeResponsiveChart from './charts/SafeResponsiveChart';
 
 const DrillDownModal = ({ isOpen, onClose, title, data, config }) => {
   if (!isOpen) return null;
@@ -66,7 +67,7 @@ const DrillDownModal = ({ isOpen, onClose, title, data, config }) => {
             {/* Visual Breakdown */}
             <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', height: '300px' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Répartition Globale</h3>
-              <ResponsiveContainer width="100%" height="100%">
+              <SafeResponsiveChart minHeight={260} fallbackHeight={260}>
                 <BarChart data={data?.chartData || []}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                   <XAxis dataKey="name" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
@@ -77,7 +78,7 @@ const DrillDownModal = ({ isOpen, onClose, title, data, config }) => {
                   />
                   <Bar dataKey="val" fill={config?.color || "var(--accent)"} radius={[4, 4, 0, 0]} />
                 </BarChart>
-              </ResponsiveContainer>
+              </SafeResponsiveChart>
             </div>
 
             {/* Table Details */}

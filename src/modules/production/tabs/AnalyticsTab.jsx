@@ -6,11 +6,12 @@ import {
   ArrowUpRight, ArrowDownRight, TrendingUp 
 } from 'lucide-react';
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  AreaChart, Area, XAxis, YAxis,
   Tooltip, CartesianGrid, PieChart, Pie, Cell, 
   RadialBarChart, RadialBar, Legend
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -48,7 +49,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Unités produites par jour.</p>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
             <AreaChart data={performanceData}>
               <defs>
                 <linearGradient id="colorQty" x1="0" y1="0" x2="0" y2="1">
@@ -62,7 +63,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
               <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
               <Area type="monotone" dataKey="qty" stroke="#06B6D4" strokeWidth={4} fillOpacity={1} fill="url(#colorQty)" />
             </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
 
         {/* Machine Status & Utilization */}

@@ -5,7 +5,8 @@ import {
   BarChart2, Target, AlertTriangle, CheckCircle2, Award,
   Wallet, Scale, ArrowUpRight, Activity
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, RadarChart, Radar, PolarGrid, PolarAngleAxis } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -116,7 +117,7 @@ const BudgetTab = ({ campaigns, emailings, events, formatCurrency }) => {
         <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
           <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1rem' }}>Performance par Canal</h4>
           {canalData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
               <BarChart data={canalData} barGap={3}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="canal" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -125,7 +126,7 @@ const BudgetTab = ({ campaigns, emailings, events, formatCurrency }) => {
                 <Bar dataKey="leads" name="Leads" fill="#EC4899" radius={[4,4,0,0]} />
                 <Bar dataKey="depense" name="Dépense" fill="#8B5CF620" radius={[4,4,0,0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
           ) : (
             <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>Aucune donnée de canal</div>
           )}

@@ -2,8 +2,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip, 
-  CartesianGrid, ResponsiveContainer, ComposedChart, Line, PieChart, Pie, Cell
+  CartesianGrid, ComposedChart, Line, PieChart, Pie, Cell
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import { 
   DollarSign, TrendingUp, CreditCard, Landmark, 
   PieChart as PieIcon, Activity, ArrowUpRight, ArrowDownRight,
@@ -59,8 +60,8 @@ const FinancialTab = ({ data, formatCurrency }) => {
                   </div>
                </div>
             </div>
-            <div style={{ height: '320px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '320px', minHeight: '320px' }}>
+               <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
                   <ComposedChart data={plData}>
                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                      <XAxis dataKey="m" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontWeight: 700 }} />
@@ -70,15 +71,15 @@ const FinancialTab = ({ data, formatCurrency }) => {
                      <Line dataKey="exp" name="Charges" stroke="#EF4444" strokeWidth={3} dot={{ r: 4, fill: '#EF4444' }} />
                      <Area type="monotone" dataKey="profit" name="Marge Net" fill="#10B981" fillOpacity={0.1} stroke="#10B981" strokeWidth={2} />
                   </ComposedChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
          </div>
 
          {/* Cash Flow Distribution */}
          <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', background: 'var(--bg)', border: '1px solid var(--border)' }}>
             <h4 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.1rem' }}>Structure de Trésorerie</h4>
-            <div style={{ height: '220px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '220px', minHeight: '220px' }}>
+               <SafeResponsiveChart minHeight={220} fallbackHeight={220}>
                   <PieChart>
                      <Pie
                         data={cashFlow}
@@ -95,7 +96,7 @@ const FinancialTab = ({ data, formatCurrency }) => {
                      </Pie>
                      <Tooltip />
                   </PieChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
                {cashFlow.map((item, i) => (

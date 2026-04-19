@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area } from 'recharts';
+import SafeResponsiveChart from './charts/SafeResponsiveChart';
 
 const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, onDrillDown }) => {
   const isPositive = trendType === 'up';
@@ -58,8 +59,8 @@ const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, o
       </div>
 
       {/* Sparkline */}
-      <div style={{ height: '40px', width: '100%', marginTop: '0.5rem' }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ height: '40px', minHeight: '40px', width: '100%', marginTop: '0.5rem' }}>
+        <SafeResponsiveChart minHeight={40} fallbackHeight={40}>
           <AreaChart data={sparklineData}>
             <defs>
               <linearGradient id={`grad-${title.replace(/\s+/g, '')}`} x1="0" y1="0" x2="0" y2="1">
@@ -76,7 +77,7 @@ const KpiCard = ({ title, value, trend, trendType, icon, color, sparklineData, o
               fill={`url(#grad-${title.replace(/\s+/g, '')})`} 
             />
           </AreaChart>
-        </ResponsiveContainer>
+        </SafeResponsiveChart>
       </div>
     </motion.div>
   );

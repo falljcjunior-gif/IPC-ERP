@@ -6,11 +6,12 @@ import {
   Activity, Scale, Wallet, Target, Clock, ShieldCheck 
 } from 'lucide-react';
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  AreaChart, Area, XAxis, YAxis,
   Tooltip, CartesianGrid, ComposedChart, Line, Bar,
   Cell, PieChart as RechartsPie, Pie
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -87,7 +88,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E' }} /> Décaissements</div>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
             <ComposedChart data={cashFlowData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 700 }} dy={10} />
@@ -96,7 +97,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
               <Area type="monotone" dataKey="in" name="Encaissement" stroke="#6366F1" strokeWidth={4} fillOpacity={0.1} fill="#6366F1" />
               <Line type="monotone" dataKey="out" name="Décaissement" stroke="#F43F5E" strokeWidth={3} dot={{ r: 4, fill: '#F43F5E', strokeWidth: 2, stroke: 'white' }} />
             </ComposedChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
 
         {/* Financial Health Radar / Insights */}

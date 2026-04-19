@@ -5,10 +5,11 @@ import {
   Target, Users, ArrowUpRight, ArrowDownRight, Zap 
 } from 'lucide-react';
 import {
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   Tooltip, CartesianGrid, Cell, PieChart, Pie
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -48,7 +49,7 @@ const AnalyticsTab = ({ leads, opportunities, formatCurrency }) => {
         {/* Pipeline Distribution */}
         <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
           <h4 style={{ fontWeight: 900, fontSize: '1.1rem', marginBottom: '2rem' }}>Pipeline par Étape Commerciale</h4>
-          <ResponsiveContainer width="100%" height={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
             <BarChart data={pipelineByStage} layout="vertical" margin={{ left: 20, right: 40 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" opacity={0.3} />
               <XAxis type="number" hide />
@@ -69,13 +70,13 @@ const AnalyticsTab = ({ leads, opportunities, formatCurrency }) => {
                 {pipelineByStage.map((entry, index) => <Cell key={index} fill={entry.color} fillOpacity={0.8} />)}
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
 
         {/* Lead Sources Analysis */}
         <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
           <h4 style={{ fontWeight: 900, fontSize: '1.1rem', marginBottom: '2rem' }}>Origine des Prospects</h4>
-          <ResponsiveContainer width="100%" height={260}>
+          <SafeResponsiveChart minHeight={260} fallbackHeight={260}>
             <PieChart>
               <Pie
                 data={[
@@ -97,7 +98,7 @@ const AnalyticsTab = ({ leads, opportunities, formatCurrency }) => {
               </Pie>
               <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none' }} />
             </PieChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
           <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             {[
               { label: 'FB Ads', value: '45%', color: '#1877F2' },

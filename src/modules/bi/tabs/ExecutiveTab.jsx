@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, 
+  BarChart, Bar, XAxis, YAxis, Tooltip, 
   CartesianGrid, Legend
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import { 
   TrendingUp, Activity, Star, Target, 
   ShieldCheck, Zap, Globe, Users2, DollarSign
@@ -47,8 +48,8 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
                </div>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Santé Organisationnelle</h4>
             </div>
-            <div style={{ height: '300px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '300px', minHeight: '300px' }}>
+               <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
                   <RadarChart cx="50%" cy="50%" outerRadius="80%" data={orgHealth}>
                      <PolarGrid stroke="var(--border)" />
                      <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 700 }} />
@@ -62,7 +63,7 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
                         strokeWidth={3}
                      />
                   </RadarChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
          </div>
 
@@ -77,8 +78,8 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
                </div>
                <button className="btn-secondary" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 900 }}>Audit Trimestriel</button>
             </div>
-            <div style={{ height: '300px' }}>
-               <ResponsiveContainer width="100%" height="100%">
+            <div style={{ height: '300px', minHeight: '300px' }}>
+               <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
                   <BarChart data={trends}>
                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontWeight: 700 }} />
@@ -91,7 +92,7 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
                      <Bar dataKey="ca" name="CA (M FCFA)" fill="#6366F1" radius={[8, 8, 0, 0]} barSize={40} />
                      <Bar dataKey="margin" name="Marge Brute (%)" fill="#D946EF" radius={[8, 8, 0, 0]} barSize={20} />
                   </BarChart>
-               </ResponsiveContainer>
+               </SafeResponsiveChart>
             </div>
          </div>
       </div>

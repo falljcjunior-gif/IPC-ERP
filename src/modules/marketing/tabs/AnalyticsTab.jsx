@@ -5,10 +5,11 @@ import {
   TrendingUp, TrendingDown, ArrowUpRight, Zap
 } from 'lucide-react';
 import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis,
+  AreaChart, Area, XAxis, YAxis,
   Tooltip, CartesianGrid, Line, ComposedChart, Bar, BarChart, Cell
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { 
   hidden: { opacity: 0 }, 
@@ -106,7 +107,7 @@ const AnalyticsTab = ({ subNetwork, setSubNetwork }) => {
             </div>
           </div>
           
-          <ResponsiveContainer width="100%" height={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
             <AreaChart data={evolutionData}>
               <defs>
                 <linearGradient id="colorFollowers" x1="0" y1="0" x2="0" y2="1">
@@ -144,7 +145,7 @@ const AnalyticsTab = ({ subNetwork, setSubNetwork }) => {
                 fill="url(#colorEngagement)" 
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
 
         {/* Heatmap Section - Re-engineered for Aesthetics */}

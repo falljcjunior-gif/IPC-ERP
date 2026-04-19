@@ -26,10 +26,11 @@ import {
   Globe
 } from 'lucide-react';
 import { 
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
   LineChart, Line, Legend, ReferenceLine
 } from 'recharts';
 import { useBusiness } from '../BusinessContext';
+import SafeResponsiveChart from './charts/SafeResponsiveChart';
 import KpiCard from './KpiCard';
 import DrillDownModal from './DrillDownModal';
 
@@ -331,7 +332,7 @@ const GlobalDashboard = () => {
               <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', background:'#8B5CF6', display:'inline-block', borderRadius:'2px', borderTop:'3px dashed #8B5CF6', height:'0' }} /> Prévisions</span>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
+          <SafeResponsiveChart minHeight={280} fallbackHeight={280}>
             <LineChart data={caComparaisonData} margin={{ top:5, right:20, left:0, bottom:5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill:'var(--text-muted)', fontSize:12 }} />
@@ -342,7 +343,7 @@ const GlobalDashboard = () => {
               <Line type="monotone" dataKey="prevu"   name="Prévisions" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls />
               <Line type="monotone" dataKey="realise" name="Réalisé"    stroke="var(--accent)" strokeWidth={3} dot={{ r:4, fill:'var(--accent)', strokeWidth:0 }} connectNulls />
             </LineChart>
-          </ResponsiveContainer>
+          </SafeResponsiveChart>
         </motion.div>
       )}
 

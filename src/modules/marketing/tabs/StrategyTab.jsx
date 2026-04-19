@@ -5,9 +5,10 @@ import {
   BarChart3, ArrowUpRight, Lightbulb, AlertTriangle 
 } from 'lucide-react';
 import {
-  ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis,
+  Radar, RadarChart, PolarGrid, PolarAngleAxis,
   RadialBarChart, RadialBar, Legend, Tooltip
 } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 import KpiCard from '../../../components/KpiCard';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -55,7 +56,7 @@ const StrategyTab = ({ predictionData, formatCurrency }) => {
         <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem' }}>
           <h4 style={{ fontWeight: 900, fontSize: '1.1rem', marginBottom: '1.5rem' }}>Performance ROI par Canal</h4>
           <div style={{ height: '300px' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <SafeResponsiveChart minHeight="100%" fallbackHeight={300}>
               <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" barSize={20} data={roiData}>
                 <RadialBar
                   minAngle={15}
@@ -67,7 +68,7 @@ const StrategyTab = ({ predictionData, formatCurrency }) => {
                 <Tooltip />
                 <Legend iconSize={10} layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '0.75rem', fontWeight: 700 }} />
               </RadialBarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
           </div>
           <div style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
             Indice de retour sur investissement (Ventes / Budget Ads)

@@ -5,7 +5,8 @@ import {
   TrendingDown, Target, DollarSign, Eye, MousePointerClick,
   ArrowUpRight, Activity, Zap, BarChart3, Award
 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
+import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -84,7 +85,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
             <BarChart3 size={20} color="var(--text-muted)" />
           </div>
           {budgetData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
               <BarChart data={budgetData} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="name" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -93,7 +94,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
                 <Bar dataKey="budget" name="Budget" fill="#EC489920" radius={[6,6,0,0]} />
                 <Bar dataKey="depense" name="Dépensé" fill="#EC4899" radius={[6,6,0,0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
           ) : (
             <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
               Aucune campagne avec budget défini
@@ -108,7 +109,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
             <Target size={20} color="var(--text-muted)" />
           </div>
           {sourceData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <SafeResponsiveChart minHeight={240} fallbackHeight={240}>
               <PieChart>
                 <Pie data={sourceData} cx="50%" cy="45%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
                   {sourceData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -116,7 +117,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
                 <Tooltip contentStyle={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '12px' }} />
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: '0.75rem' }} />
               </PieChart>
-            </ResponsiveContainer>
+            </SafeResponsiveChart>
           ) : (
             <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
               Aucun lead enregistré
