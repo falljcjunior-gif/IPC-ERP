@@ -1,2 +1,2 @@
-import FinanceControlCenter from './finance/FinanceControlCenter';
-export default FinanceControlCenter;
+import AccountingCenter from './finance/AccountingCenter';
+export default AccountingCenter;
