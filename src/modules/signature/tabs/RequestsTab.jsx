@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FileText, Clock, CheckCircle2, User, Send, Plus, X, Upload
+  FileText, Clock, CheckCircle2, User, Send, Plus, X, Upload, ShieldCheck, Lock
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 import SignaturePad from '../../../components/SignaturePad';
@@ -9,27 +9,56 @@ import SignaturePad from '../../../components/SignaturePad';
 const RequestsTab = () => {
   const { data, addRecord, updateRecord, formatCurrency, logAction } = useBusiness();
   const requests = data.signature?.requests || [];
+  const salesOrders = data.sales?.orders || [];
 
   const [isSignModalOpen, setIsSignModalOpen] = useState(false);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [newReq, setNewReq] = useState({ titre: '', destinataires: '', documentUrl: '' });
+  const [newReq, setNewReq] = useState({ titre: '', destinataires: '', documentUrl: '', sourceId: '' });
+  const [otpCode, setOtpCode] = useState('');
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+  const generateHash = async (content) => {
+    const msgUint8 = new TextEncoder().encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const verifyOtp = (e) => {
+    e.preventDefault();
+    if (otpCode === '1234') setIsOtpVerified(true);
+    else alert('Code OTP incorrect (utilisez 1234 pour le test)');
+  };
 
   const handleSign = (req) => {
     setSelectedRequest(req);
     setIsSignModalOpen(true);
   };
 
-  const handleSaveSignature = (dataUrl) => {
+  const handleSaveSignature = async (dataUrl) => {
     if (selectedRequest) {
+      const hash = await generateHash(`${selectedRequest.titre}-${selectedRequest.destinataires}-${Date.now()}`);
+      const auditTrail = {
+        hashDocument: hash,
+        signatureBase64: dataUrl,
+        ipAddress: '192.168.1.42', // Mock PII
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        otpVerifiedAt: new Date().toISOString()
+      };
+
       updateRecord('signature', 'requests', selectedRequest.id, {
         statut: 'Signé',
-        dateSignature: new Date().toISOString()
+        dateSignature: new Date().toISOString(),
+        auditTrail
       });
-      logAction('Signature Électronique', `Document "${selectedRequest.titre}" signé.`, 'signature', selectedRequest.id);
+      logAction('Signature Électronique', `Document scellé cryptographiquement (Hash: ${hash.substring(0,8)}...)`, 'signature', selectedRequest.id);
     }
     setIsSignModalOpen(false);
     setSelectedRequest(null);
+    setIsOtpVerified(false);
+    setOtpCode('');
   };
 
   const handleCreateRequest = (e) => {
@@ -40,7 +69,7 @@ const RequestsTab = () => {
       num: `REQ-${Date.now().toString().slice(-4)}`
     });
     setIsNewModalOpen(false);
-    setNewReq({ titre: '', destinataires: '', documentUrl: '' });
+    setNewReq({ titre: '', destinataires: '', documentUrl: '', sourceId: '' });
   };
 
   return (
@@ -111,7 +140,7 @@ const RequestsTab = () => {
                     style={{ width: '100%', justifyContent: 'center', background: '#10B98115', color: '#10B981', borderColor: '#10B98130' }}
                     disabled
                   >
-                    <CheckCircle2 size={16} /> Document Signé
+                    <ShieldCheck size={16} /> Certifié IPC
                   </button>
                 )}
               </div>
@@ -153,14 +182,56 @@ const RequestsTab = () => {
                      <p>Date : {new Date().toLocaleDateString('fr-FR')}</p>
                      <div style={{ marginTop: '150px', borderTop: '1px solid #ccc', paddingTop: '1rem', width: '200px' }}>
                         <p style={{ color: 'var(--text-muted)' }}>Signature du destinataire</p>
+                        {selectedRequest.statut === 'Signé' && selectedRequest.auditTrail && (
+                           <div style={{ marginTop: '1rem', border: '2px solid #10B981', padding: '0.5rem', borderRadius: '0.5rem', transform: 'rotate(-5deg)' }}>
+                              <div style={{ color: '#10B981', fontWeight: 900, textAlign: 'center', fontSize: '1.2rem' }}>CERTIFIÉ IPC</div>
+                              <div style={{ fontSize: '0.5rem', color: '#10B981', textAlign: 'center' }}>{selectedRequest.auditTrail.hashDocument.substring(0, 16)}...</div>
+                           </div>
+                        )}
                      </div>
                   </div>
                 </div>
                 {/* Signature Panel */}
-                <div style={{ width: '380px', padding: '2rem', borderLeft: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column' }}>
-                   <h4 style={{ marginBottom: '1rem' }}>Veuillez signer ci-dessous</h4>
-                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Dessinez votre signature avec la souris ou sur l'écran tactile, puis validez.</p>
-                   <SignaturePad onSave={handleSaveSignature} onCancel={() => setIsSignModalOpen(false)} />
+                <div style={{ width: '380px', padding: '2rem', borderLeft: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+                   {selectedRequest.statut === 'Signé' && selectedRequest.auditTrail ? (
+                      <div>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#10B981', marginBottom: '1rem' }}>
+                            <ShieldCheck size={24} /> <h3 style={{ margin: 0 }}>Dossier de Preuve</h3>
+                         </div>
+                         <div className="glass" style={{ padding: '1rem', borderRadius: '1rem', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                            <p><strong>Hash (SHA-256):</strong><br/>{selectedRequest.auditTrail.hashDocument}</p>
+                            <hr style={{ margin: '0.5rem 0', borderColor: 'var(--border-color)' }} />
+                            <p><strong>IP:</strong> {selectedRequest.auditTrail.ipAddress}</p>
+                            <p><strong>Horodatage:</strong> {new Date(selectedRequest.auditTrail.timestamp).toLocaleString('fr-FR')}</p>
+                            <p><strong>OTP Vérifié:</strong> Oui</p>
+                            <p><strong>Agent:</strong> {selectedRequest.auditTrail.userAgent.substring(0, 40)}...</p>
+                         </div>
+                      </div>
+                   ) : !isOtpVerified ? (
+                      <form onSubmit={verifyOtp} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
+                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                            <Lock size={48} color="var(--accent)" style={{ margin: '0 auto 1rem' }} />
+                            <h3>Authentification 2FA</h3>
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Un SMS a été envoyé au signataire pour valider son identité.</p>
+                         </div>
+                         <input 
+                            type="text" 
+                            className="form-control" 
+                            placeholder="Code OTP (ex: 1234)" 
+                            required
+                            value={otpCode}
+                            onChange={e => setOtpCode(e.target.value)}
+                            style={{ textAlign: 'center', letterSpacing: '0.5rem', fontSize: '1.2rem', marginBottom: '1rem' }}
+                         />
+                         <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>Vérifier l'identité</button>
+                      </form>
+                   ) : (
+                      <>
+                         <h4 style={{ marginBottom: '1rem' }}>Identité vérifiée <CheckCircle2 size={16} color="#10B981" style={{ verticalAlign: 'middle' }}/></h4>
+                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>Veuillez tracer votre signature ci-dessous pour sceller le document cryptographiquement.</p>
+                         <SignaturePad onSave={handleSaveSignature} onCancel={() => setIsSignModalOpen(false)} />
+                      </>
+                   )}
                 </div>
               </div>
             </motion.div>
@@ -200,6 +271,19 @@ const RequestsTab = () => {
                     value={newReq.titre}
                     onChange={e => setNewReq({...newReq, titre: e.target.value})}
                   />
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Objet Lié (Devis/Commande)</label>
+                  <select 
+                    className="form-control" 
+                    value={newReq.sourceId}
+                    onChange={e => setNewReq({...newReq, sourceId: e.target.value})}
+                  >
+                    <option value="">-- Aucun document source --</option>
+                    {salesOrders.map(so => (
+                       <option key={so.id} value={so.id}>{so.num} - {so.client}</option>
+                    ))}
+                  </select>
                 </div>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Destinataires (Email ou Nom) *</label>

@@ -565,6 +565,39 @@ export const BusinessProvider = ({ children }) => {
          nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
       }
 
+      // Workflow Signature (100% Souverain - Effet Domino)
+      if (appId === 'signature' && subModule === 'requests' && newData.statut === 'Signé' && oldRecord.statut !== 'Signé') {
+         // Domino 1: Archiver dans le module Juridique
+         const legalContract = {
+           id: `L-PKI-${Date.now().toString().slice(-4)}`,
+           titre: record.titre,
+           type: 'Contrat Scellé',
+           partie: record.destinataires,
+           dateEffet: record.dateSignature,
+           statut: 'Signé',
+           modifie: false,
+           visaJuridique: true,
+           hash: record.auditTrail?.hashDocument
+         };
+         nextState = { ...nextState, legal: { ...nextState.legal, contracts: [legalContract, ...(nextState.legal?.contracts || [])] } };
+         addHint({ title: "Archivage Souverain", message: "Le document scellé a été archivé en sécurité dans le module juridique.", type: 'success', appId: 'legal' });
+         
+         // Domino 2: Validation du Devis (Sales)
+         if (record.sourceId) {
+             const salesList = nextState.sales?.orders || [];
+             const saleIndex = salesList.findIndex(o => o.id === record.sourceId);
+             if (saleIndex !== -1) {
+                 const saleOld = salesList[saleIndex];
+                 const updatedSalesList = [...salesList];
+                 updatedSalesList[saleIndex] = { ...saleOld, statut: 'Confirmé' };
+                 nextState = { ...nextState, sales: { ...nextState.sales, orders: updatedSalesList } };
+                 addHint({ title: "Contrat Confirmé", message: `Le devis ${saleOld.num} a été automatiquement confirmé suite à la signature P.K.I.`, type: 'success', appId: 'sales' });
+                 logAction('Effet Domino', `Devis ${saleOld.num} validé par signature P.K.I.`, 'sales', saleOld.id);
+                 processOrderValidation(saleOld);
+             }
+         }
+      }
+
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);
       }
