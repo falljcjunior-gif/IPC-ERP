@@ -546,7 +546,7 @@ export const BusinessProvider = ({ children }) => {
          const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Validation Juridique' } : item);
          nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
       }
-      }
+
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);
       }
@@ -625,9 +625,9 @@ export const BusinessProvider = ({ children }) => {
            }
         }
       }
-      return nextState;
+    return nextState;
     });
-  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence]);
+  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence, generateLitigationEntry, sendNotification]);
 
   const deleteRecord = useCallback((appId, subModule, id) => {
     setData(prev => {
