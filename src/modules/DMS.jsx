@@ -17,11 +17,13 @@ import {
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 import { generatePDF } from '../utils/PDFExporter';
+import { X } from 'lucide-react';
 
 const DMS = () => {
   const { data } = useBusiness();
   const [viewMode, setViewMode] = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
+  const [previewFile, setPreviewFile] = useState(null);
 
   const folders = data.dms?.folders || [];
   const files = (data.dms?.files || []).filter(f => f.folder === currentFolder || (currentFolder === 'Racine' && !f.folder));
@@ -110,9 +112,9 @@ const DMS = () => {
           <tbody>
             {files.map(file => (
               <tr key={file.name} style={{ borderBottom: '1px solid var(--border)', fontSize: '0.9rem' }}>
-                <td style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <td style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }} onClick={() => setPreviewFile(file)}>
                   {getFileIcon(file.type)}
-                  <span style={{ fontWeight: 600 }}>{file.name}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--accent)', textDecoration: 'underline' }}>{file.name}</span>
                 </td>
                 <td style={{ padding: '1rem' }}>{file.owner}</td>
                 <td style={{ padding: '1rem' }}><span className="badge">{file.folder}</span></td>
@@ -143,6 +145,41 @@ const DMS = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal de Prévisualisation */}
+      <AnimatePresence>
+         {previewFile && (
+            <motion.div
+               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', padding: '2rem' }}
+            >
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', marginBottom: '2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                     {getFileIcon(previewFile.type)}
+                     <h2 style={{ margin: 0, fontWeight: 700 }}>{previewFile.name}</h2>
+                  </div>
+                  <button onClick={() => setPreviewFile(null)} className="glass" style={{ color: 'white', padding: '0.6rem', borderRadius: '50%' }}>
+                     <X size={24} />
+                  </button>
+               </div>
+
+               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', overflow: 'hidden', position: 'relative' }}>
+                  {/* Fake viewer box */}
+                  <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+                     <File size={80} opacity={0.3} />
+                     <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>Prévisualisation sémantique</span>
+                     <span>Taille: {previewFile.size} • Propriétaire: {previewFile.owner}</span>
+                     <button onClick={() => {
+                        if (previewFile.metadata) generatePDF(previewFile.metadata, previewFile.metadata._appId || 'hr', previewFile.metadata._subModule || 'payslip');
+                        else alert('Mode demo: Impossible de télécharger le fichier factice.');
+                     }} className="btn-primary" style={{ marginTop: '1rem', padding: '0.8rem 1.5rem', borderRadius: '2rem' }}>
+                        Télécharger la copie originale cryptée
+                     </button>
+                  </div>
+               </div>
+            </motion.div>
+         )}
+      </AnimatePresence>
     </div>
   );
 };

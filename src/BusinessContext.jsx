@@ -749,6 +749,49 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction]);
 
+  const processPOSOrder = useCallback((order) => {
+    const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    addRecord('commerce', 'posOrders', {
+      id: newId,
+      client: order.customer || 'Passager',
+      montant: order.totalAmount,
+      items: `Ticket avec ${order.cart.length} ligne(s)`,
+      statut: 'Payé',
+      date: dateStr,
+      type: order.type || 'boutique'
+    });
+
+    addRecord('finance', 'incomes', {
+      id: `FAC-${newId}`,
+      description: `Vente Caisse (${order.type}) - ${order.customer || 'Passager'}`,
+      montant: order.totalAmount,
+      categorie: 'Ventes',
+      statut: 'Payé',
+      date: dateStr
+    });
+
+    // Decrement stock for each item in the cart
+    setData(prev => {
+      const invProducts = prev.inventory?.products || [];
+      const updatedProducts = invProducts.map(p => {
+         const cartItem = order.cart.find(c => c.id === p.id);
+         if (cartItem) {
+            return { ...p, qte: Math.max(0, (p.qte || 0) - cartItem.qty) };
+         }
+         return p;
+      });
+      return { ...prev, inventory: { ...(prev.inventory || {}), products: updatedProducts } };
+    });
+
+    addHint({
+       title: 'Vente Enregistrée',
+       message: `Ticket ${newId} encaissé avec succès. Stock mis à jour.`,
+       type: 'success'
+    });
+  }, [addRecord, addHint]);
+
   const generatePayrollEntry = useCallback(() => {
     const activeEmployees = (data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
     if (activeEmployees.length === 0) {
@@ -1372,6 +1415,7 @@ export const BusinessProvider = ({ children }) => {
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
       addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData,
+      processPOSOrder,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({
            ...prev,
