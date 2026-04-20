@@ -223,11 +223,7 @@ export const initRegistry = () => {
     component: DMS, priority: 35
   });
 
-  registry.register({
-    id: 'staff_portal', label: 'Portail Employé', icon: <UserCircle size={18} />,
-    category: 'hr', roles: ['STAFF', 'ADMIN', 'HR'],
-    component: StaffPortal, priority: 36
-  });
+
 
   registry.register({
     id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,

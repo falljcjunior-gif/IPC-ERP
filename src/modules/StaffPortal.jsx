@@ -17,7 +17,7 @@ import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 import { generatePDF } from '../utils/PDFExporter';
 
-const StaffPortal = () => {
+const StaffPortal = ({ embedded }) => {
   const { data, currentUser, addRecord, formatCurrency, navigateTo } = useBusiness();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'leaves', 'expenses', 'payslips'
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -153,13 +153,15 @@ const StaffPortal = () => {
   );
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div style={{ padding: embedded ? '0' : '2.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        {!embedded && (
         <div>
           <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Bienvenue, {currentUser.nom}</h1>
           <p style={{ color: 'var(--text-muted)' }}>Votre espace collaborateur I.P.C</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        )}
+        <div style={{ display: 'flex', gap: '1rem', width: embedded ? '100%' : 'auto', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
           <button 
              onClick={() => navigateTo('timesheets')}
              className="glass" 

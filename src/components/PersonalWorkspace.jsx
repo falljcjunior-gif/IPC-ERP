@@ -11,6 +11,7 @@ import VictoryHeartbeat from './workspace/VictoryHeartbeat';
 import QuickNotes from './workspace/QuickNotes';
 import GamificationBadges from './workspace/GamificationBadges';
 import KaizenBox from './workspace/KaizenBox';
+import StaffPortal from '../modules/StaffPortal';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -172,11 +173,14 @@ const PersonalWorkspace = () => {
       {/* SWITCH TABS */}
       <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
          <button onClick={() => setActiveTab('overview')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'overview' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'overview' ? '2px solid var(--accent)' : '2px solid transparent' }}>Vue d'Ensemble</button>
+         <button onClick={() => setActiveTab('hr')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'hr' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'hr' ? '2px solid var(--accent)' : '2px solid transparent' }}>Mon Dossier RH</button>
          <button onClick={() => setActiveTab('gps')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'gps' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'gps' ? '2px solid var(--accent)' : '2px solid transparent' }}>Mon GPS Stratégique</button>
       </div>
 
       {activeTab === 'gps' ? (
         <GPSWorkspace />
+      ) : activeTab === 'hr' ? (
+        <StaffPortal embedded={true} />
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
@@ -253,7 +257,7 @@ const PersonalWorkspace = () => {
          <h3 style={{ fontWeight: 800, fontSize: '1.15rem', marginBottom: '1.5rem' }}>Mes Accès Directs</h3>
          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
            
-           <div onClick={() => navigateTo('staff_portal')} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+           <div onClick={() => setActiveTab('hr')} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Briefcase size={28} color="var(--accent)" />
               <div>
                 <span style={{ fontWeight: 700, display: 'block' }}>Espace Employé</span>
