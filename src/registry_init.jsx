@@ -15,7 +15,7 @@ import PersonalWorkspace from './components/PersonalWorkspace';
 import CRM from './modules/crm/CRM';
 import Sales from './modules/sales/Sales';
 import Inventory from './modules/logistics/LogisticsHub';
-import Accounting from './modules/finance/FinanceControlCenter';
+import Accounting from './modules/finance/AccountingCenter';
 import Finance from './modules/finance/FinanceControlCenter';
 import Budget from './modules/finance/FinanceControlCenter';
 import HR from './modules/HR';
