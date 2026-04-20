@@ -114,5 +114,9 @@ export const mockData = {
       { id: 'CORP-001', entite: 'IPC CORE SERVICE SA', type: 'SA', capitalSocial: 100000000, dateCreation: '2020-02-15', siège: 'Abidjan, Cote d\'Ivoire' },
       { id: 'CORP-002', entite: 'B2B LOGISTICS SARL', type: 'SARL', capitalSocial: 10000000, dateCreation: '2022-11-20', siège: 'San Pedro, Cote d\'Ivoire' }
     ]
+  },
+  signature: {
+    requests: [],
+    templates: []
   }
 };

@@ -23,6 +23,7 @@ import Production from './modules/production/Production';
 import Project from './modules/logistics/LogisticsHub';
 import Purchase from './modules/logistics/LogisticsHub';
 import LegalHub from './modules/legal/LegalHub';
+import SignatureHub from './modules/signature/SignatureHub';
 import Marketing from './modules/marketing/Marketing';
 import BI from './modules/bi/BIHub';
 import MasterData from './modules/MasterData';
@@ -63,6 +64,7 @@ import { auditSchema } from './schemas/audit.schema';
 import { adminSchema } from './schemas/admin.schema';
 import { legalSchema } from './schemas/legal.schema';
 import { marketingSchema } from './schemas/marketing.schema';
+import { signatureSchema } from './schemas/signature.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -73,7 +75,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema].forEach(s => registry.registerSchema(s));
+   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cœur de Métier ---
   registry.register({
@@ -221,6 +223,12 @@ export const initRegistry = () => {
     id: 'staff_portal', label: 'Portail Employé', icon: <UserCircle size={18} />,
     category: 'hr', roles: ['STAFF', 'ADMIN', 'HR'],
     component: StaffPortal, priority: 36
+  });
+
+  registry.register({
+    id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
+    category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
+    component: SignatureHub, priority: 37
   });
 
   // --- Configuration & Admin ---
