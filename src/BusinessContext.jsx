@@ -498,6 +498,24 @@ export const BusinessProvider = ({ children }) => {
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
   }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand, generateLitigationEntry]);
 
+  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
+    const notifyDoc = {
+      id: Date.now().toString(),
+      targetRole,
+      title,
+      message,
+      type,
+      actionApp,
+      readBy: [],
+      createdAt: new Date().toISOString()
+    };
+    try {
+      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
+    } catch (e) {
+      console.error("sendNotification Error:", e);
+    }
+  }, []);
+
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
@@ -860,23 +878,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [userRole]);
 
-  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
-    const notifyDoc = {
-      id: Date.now().toString(),
-      targetRole,
-      title,
-      message,
-      type,
-      actionApp,
-      readBy: [],
-      createdAt: new Date().toISOString()
-    };
-    try {
-      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
-    } catch (e) {
-      console.error("sendNotification Error:", e);
-    }
-  }, []);
+
 
 
   /* ══════════════════════════════════════════════════════════════════════════
