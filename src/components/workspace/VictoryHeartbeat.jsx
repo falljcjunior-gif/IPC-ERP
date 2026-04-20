@@ -36,7 +36,7 @@ const VictoryHeartbeat = () => {
       items.push({
         id: 'empty',
         icon: <Target color="#10B981" />,
-        title: 'Prêt pour l\\'Action',
+        title: "Prêt pour l'Action",
         desc: "En attente des prochains succès de l'équipe."
       });
     }
