@@ -6,6 +6,11 @@ import {
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 import GPSWorkspace from './GPSWorkspace';
+import FocusTracker from './workspace/FocusTracker';
+import VictoryHeartbeat from './workspace/VictoryHeartbeat';
+import QuickNotes from './workspace/QuickNotes';
+import GamificationBadges from './workspace/GamificationBadges';
+import KaizenBox from './workspace/KaizenBox';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -233,6 +238,15 @@ const PersonalWorkspace = () => {
         </motion.div>
 
       </div>
+
+      {/* BENTO BOX GRID: 5 NEW WIDGETS */}
+      <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+        <FocusTracker />
+        <VictoryHeartbeat />
+        <QuickNotes />
+        <GamificationBadges score={successScore} timesheets={(data.hr?.timesheets || []).filter(t => t.employe === currentUser.nom).length || 0} leads={myLeads?.length || 0} />
+        <KaizenBox />
+      </motion.div>
 
       {/* QUICK WORK WIDGETS BY ROLE */}
       <motion.div variants={itemVariants}>
