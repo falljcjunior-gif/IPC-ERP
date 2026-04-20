@@ -496,6 +496,29 @@ export const BusinessProvider = ({ children }) => {
     }
 
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
+
+    // --- I.P.C. Automator (BPM Engine) onCreate ---
+    const activeWorkflowsCreate = (data.workflows || []).filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onCreate');
+    activeWorkflowsCreate.forEach(wf => {
+       const recordFieldVal = newRecord[wf.conditionField];
+       let conditionMet = false;
+       if (!wf.conditionField) conditionMet = true;
+       else if (wf.operator === '==') conditionMet = recordFieldVal == wf.value;
+       else if (wf.operator === '!=') conditionMet = recordFieldVal != wf.value;
+       else if (wf.operator === '>') conditionMet = recordFieldVal > parseFloat(wf.value);
+       else if (wf.operator === '<') conditionMet = recordFieldVal < parseFloat(wf.value);
+       else if (wf.operator === 'contains') conditionMet = String(recordFieldVal || '').toLowerCase().includes(String(wf.value).toLowerCase());
+
+       if (conditionMet) {
+           if (wf.actionType === 'SEND_NOTIFICATION') {
+               const msg = wf.actionPayload.replace('{statut}', newRecord.statut || '').replace('{num}', newRecord.num || newRecord.id);
+               sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
+           } else if (wf.actionType === 'LOG_ACTION') {
+               logAction('I.P.C. Automator', wf.actionPayload, appId, newRecord.id);
+           }
+           addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
+       }
+    });
   }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand, generateLitigationEntry]);
 
   const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
@@ -676,6 +699,33 @@ export const BusinessProvider = ({ children }) => {
            }
         }
       }
+
+      // --- I.P.C. Automator (BPM Engine) onUpdate ---
+      const activeWorkflowsUpdate = (prev.workflows || []).filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onUpdate');
+      activeWorkflowsUpdate.forEach(wf => {
+         const recordFieldVal = newData[wf.conditionField] !== undefined ? newData[wf.conditionField] : oldRecord[wf.conditionField];
+         let conditionMet = false;
+         if (!wf.conditionField) conditionMet = true;
+         else if (wf.operator === '==') conditionMet = recordFieldVal == wf.value;
+         else if (wf.operator === '!=') conditionMet = recordFieldVal != wf.value;
+         else if (wf.operator === '>') conditionMet = recordFieldVal > parseFloat(wf.value);
+         else if (wf.operator === '<') conditionMet = recordFieldVal < parseFloat(wf.value);
+         else if (wf.operator === 'contains') conditionMet = String(recordFieldVal || '').toLowerCase().includes(String(wf.value).toLowerCase());
+
+         if (conditionMet) {
+             if (wf.actionType === 'SEND_NOTIFICATION') {
+                 const msg = wf.actionPayload.replace('{statut}', newData.statut || record.statut || '').replace('{num}', record.num || id);
+                 sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
+             } else if (wf.actionType === 'UPDATE_STATUS') {
+                 // Apply the status change on top of nextState directly
+                 const finalUpdatedList = nextState[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
+                 nextState = { ...nextState, [appId]: { ...nextState[appId], [subModule]: finalUpdatedList } };
+             } else if (wf.actionType === 'LOG_ACTION') {
+                 logAction('I.P.C. Automator', wf.actionPayload, appId, id);
+             }
+             addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée avec succès.`, type: 'info', appId });
+         }
+      });
     return nextState;
     });
   }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence, generateLitigationEntry, sendNotification]);

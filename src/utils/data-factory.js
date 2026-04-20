@@ -118,5 +118,6 @@ export const mockData = {
   signature: {
     requests: [],
     templates: []
-  }
+  },
+  workflows: []
 };
