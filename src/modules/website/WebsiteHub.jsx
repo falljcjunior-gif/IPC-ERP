@@ -280,7 +280,7 @@ const WebsiteHub = () => {
                               {themeConfig.heroTitle || 'Votre Titre'}
                            </h1>
                            <p style={{ margin: '1rem 0 2rem', fontSize: previewMode === 'mobile' ? '0.9rem' : '1.1rem', opacity: 0.9, maxWidth: '600px' }}>
-                              {themeConfig.heroSubtitle || 'Votre phrase d\\'accroche persuasive.'}
+                              {themeConfig.heroSubtitle || "Votre phrase d'accroche persuasive."}
                            </p>
                            <button onClick={() => setPortalTab('catalog')} style={{ background: '#FFFFFF', color: themeConfig.primaryColor, border: 'none', padding: '0.8rem 2rem', borderRadius: '3rem', fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
                               {themeConfig.ctaLabel || 'Action'}
