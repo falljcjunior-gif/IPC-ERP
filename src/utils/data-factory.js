@@ -129,5 +129,22 @@ export const mockData = {
     },
     pages: [],
     chats: []
+  },
+  shipping: {
+    shipments: [
+       { id: 'BL-2026-001', client: 'Industries Ouest', dest: 'San Pedro, CI', transporteur: 'Bolloré Logistics', date: '2026-04-18', dateExpec: '2026-04-20', colis: 4, poids: '240 kg', montant: 1560000, statut: 'Retardé', tracking: 'BOLL-9988X' },
+       { id: 'BL-2026-002', client: 'TechCorp Plus', dest: 'Abidjan, Agban', transporteur: 'Flotte Interne', date: '2026-04-19', dateExpec: '2026-04-19', colis: 1, poids: '12 kg', montant: 450000, statut: 'Livré', tracking: 'INT-TRK-012' },
+       { id: 'BL-2026-003', client: 'BTP Alpha', dest: 'Yamoussoukro', transporteur: 'DHL Express', date: '2026-04-20', dateExpec: '2026-04-22', colis: 12, poids: '850 kg', montant: 5800000, statut: 'En Transit', tracking: 'DHL-4451000' }
+    ],
+    carriers: [
+       { nom: 'Bolloré Logistics', color: '#1D4ED8', otif: 88, livraisons: 304, retards: 12, coutMoy: 125000 },
+       { nom: 'DHL Express', color: '#F59E0B', otif: 97, livraisons: 412, retards: 3, coutMoy: 85000 },
+       { nom: 'Flotte Interne', color: '#10B981', otif: 93, livraisons: 520, retards: 7, coutMoy: 45000 }
+    ],
+    fleet: [
+      { imm: '1244 KN 01', modele: 'Camion 10T Isuzu', statut: 'Disponible' },
+      { imm: '8812 JB 01', modele: 'Fourgonnette Renault', statut: 'En Course' },
+      { imm: '5566 GH 01', modele: 'Camionnette Kia', statut: 'Maintenance' }
+    ]
   }
 };
