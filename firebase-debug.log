@@ -1,0 +1,38 @@
+[debug] [2026-04-20T20:42:21.883Z] ----------------------------------------------------------------------
+[debug] [2026-04-20T20:42:21.885Z] Command:       /opt/homebrew/Cellar/node/25.8.2/bin/node /opt/homebrew/bin/firebase deploy
+[debug] [2026-04-20T20:42:21.885Z] CLI Version:   15.14.0
+[debug] [2026-04-20T20:42:21.885Z] Platform:      darwin
+[debug] [2026-04-20T20:42:21.885Z] Node Version:  v25.8.2
+[debug] [2026-04-20T20:42:21.885Z] Time:          Mon Apr 20 2026 20:42:21 GMT+0000 (Greenwich Mean Time)
+[debug] [2026-04-20T20:42:21.885Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-20T20:42:23.007Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-20T20:42:23.008Z] > authorizing via signed-in user (fall.jcjunior@gmail.com)
+[debug] [2026-04-20T20:42:23.008Z] [iam] checking project ipc-erp for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-20T20:42:23.008Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:23.008Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:23.009Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/ipc-erp:testIamPermissions [none]
+[debug] [2026-04-20T20:42:23.009Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/ipc-erp:testIamPermissions  x-goog-user-project=ipc-erp
+[debug] [2026-04-20T20:42:23.009Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ipc-erp:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-20T20:42:24.102Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/ipc-erp:testIamPermissions 200
+[debug] [2026-04-20T20:42:24.102Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/ipc-erp:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","datastore.indexes.create","datastore.indexes.delete","datastore.indexes.list","datastore.indexes.update","firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-20T20:42:24.103Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:24.103Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:24.103Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/ipc-erp/serviceAccounts/ipc-erp@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2026-04-20T20:42:24.103Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/ipc-erp/serviceAccounts/ipc-erp@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-04-20T20:42:24.986Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/ipc-erp/serviceAccounts/ipc-erp@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2026-04-20T20:42:24.986Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/ipc-erp/serviceAccounts/ipc-erp@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2026-04-20T20:42:24.990Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:24.990Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:24.991Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/ipc-erp [none]
+[debug] [2026-04-20T20:42:25.670Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/ipc-erp 200
+[debug] [2026-04-20T20:42:25.670Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/ipc-erp {"projectId":"ipc-erp","projectNumber":"487186181701","displayName":"IPC ERP","name":"projects/ipc-erp","resources":{"hostingSite":"ipc-erp","realtimeDatabaseInstance":"ipc-erp-default-rtdb"},"state":"ACTIVE","etag":"1_cf5d3b2c-31bd-48d8-a126-742c312864f7"}
+[info] 
+[info] === Deploying to 'ipc-erp'...
+[info] 
+[info] i  deploying firestore, functions, hosting 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[info] i  firestore: ensuring required API firestore.googleapis.com is enabled... 
+[debug] [2026-04-20T20:42:25.677Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:25.677Z] Checked if tokens are valid: true, expires at: 1776718668592
+[debug] [2026-04-20T20:42:25.677Z] >>> [apiv2][query] GET https://firestore.googleapis.com/v1/projects/ipc-erp/databases/(default) [none]
