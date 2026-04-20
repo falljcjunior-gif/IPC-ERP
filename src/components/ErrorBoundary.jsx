@@ -14,9 +14,21 @@ class ErrorBoundary extends React.Component {
     console.error("Uncaught error in component:", error, errorInfo);
   }
 
-  handleReset = () => {
+  handleReset = async () => {
     localStorage.clear();
-    window.location.reload();
+    try {
+      if (window.indexedDB && window.indexedDB.databases) {
+        const dbs = await window.indexedDB.databases();
+        for (let db of dbs) { window.indexedDB.deleteDatabase(db.name); }
+      } else if (window.indexedDB) {
+        window.indexedDB.deleteDatabase('firestore/[DEFAULT]/ipc-erp/main');
+        window.indexedDB.deleteDatabase('firebaseLocalStorageDb');
+      }
+    } catch (e) {
+      console.error('Erreur purge indexedDB:', e);
+    } finally {
+      window.location.reload();
+    }
   };
 
   render() {
