@@ -35,9 +35,11 @@ export const marketingSchema = {
         statut: {
           label: 'Statut',
           type: 'selection',
-          options: ['Brouillon', 'Planifiée', 'Active', 'En Pause', 'Clôturée', 'Annulée'],
+          options: ['Brouillon', 'En Attente de Validation', 'Approuvée', 'Planifiée', 'Active', 'En Pause', 'Clôturée', 'Annulée'],
           default: 'Brouillon'
         },
+        approuvePar: { label: 'Approuvé par (Dir.)', type: 'text' },
+        dateApprobation: { label: 'Date d\'Approbation', type: 'date' },
         reach: { label: 'Portée (Reach)', type: 'number' },
         clics: { label: 'Clics', type: 'number' },
         conversions: { label: 'Conversions / Leads', type: 'number' },

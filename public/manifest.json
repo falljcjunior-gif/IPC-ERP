@@ -1,0 +1,17 @@
+{
+  "name": "I.P.C. Industrial OS",
+  "short_name": "IPC Connect",
+  "description": "L'ERP industriel d'avant-garde",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F172A",
+  "theme_color": "#06B6D4",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 256x256 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -6,12 +6,15 @@ import {
   MoreHorizontal, ChevronRight, LayoutGrid, List, Target, Zap,
   Calendar, Tag, BarChart2, ArrowUpRight
 } from 'lucide-react';
+import { useBusiness } from '../../../BusinessContext';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const STATUT_CONFIG = {
   'Brouillon':  { color: '#6B7280', bg: '#6B728015', icon: <Clock size={12} /> },
+  'En Attente de Validation': { color: '#F59E0B', bg: '#F59E0B20', icon: <Clock size={12} /> },
+  'Approuvée':  { color: '#10B981', bg: '#10B98120', icon: <CheckCircle2 size={12} /> },
   'Planifiée':  { color: '#3B82F6', bg: '#3B82F615', icon: <Calendar size={12} /> },
   'Active':     { color: '#10B981', bg: '#10B98115', icon: <Play size={12} /> },
   'En Pause':   { color: '#F59E0B', bg: '#F59E0B15', icon: <Pause size={12} /> },
@@ -26,6 +29,7 @@ const TYPE_COLORS = {
 };
 
 const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
+  const { userRole, currentUser, updateRecord } = useBusiness();
   const [view, setView] = useState('cards'); // cards | list
   const [filterStatut, setFilterStatut] = useState('all');
   const [search, setSearch] = useState('');
@@ -36,7 +40,7 @@ const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
     return matchSearch && matchStatut;
   });
 
-  const statuts = ['all', 'Brouillon', 'Planifiée', 'Active', 'En Pause', 'Clôturée'];
+  const statuts = ['all', 'Brouillon', 'En Attente de Validation', 'Approuvée', 'Planifiée', 'Active', 'En Pause', 'Clôturée'];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -164,9 +168,22 @@ const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
                     {c.dateDebut} → {c.dateFin || '∞'}
                   </div>
-                  <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.75rem', fontWeight: 800 }}>
-                    <span style={{ color: '#10B981' }}>ROI ×{roi}</span>
-                    <span style={{ color: '#8B5CF6' }}>CPC: {typeof cpc === 'number' ? `${cpc.toLocaleString()} F` : '—'}</span>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    {c.statut === 'En Attente de Validation' && ['SUPER_ADMIN', 'FINANCE', 'MARKETING'].includes(userRole) && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateRecord('marketing', 'campaigns', c.id, { statut: 'Approuvée', approuvePar: currentUser?.nom, dateApprobation: new Date().toISOString() }); }}
+                        style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', border: 'none', background: '#10B981', color: 'white', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer' }}
+                      >Approuver</button>
+                    )}
+                    {c.statut === 'Brouillon' && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); updateRecord('marketing', 'campaigns', c.id, { statut: 'En Attente de Validation' }); }}
+                        style={{ padding: '0.3rem 0.6rem', borderRadius: '0.5rem', border: 'none', background: 'var(--accent)', color: 'white', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer' }}
+                      >Demander Accès</button>
+                    )}
+                    <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', fontWeight: 800 }}>
+                      <span style={{ color: '#10B981' }}>ROI ×{roi}</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>

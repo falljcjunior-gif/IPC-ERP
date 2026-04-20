@@ -5,6 +5,7 @@ import {
   Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check 
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
+import GPSWorkspace from './GPSWorkspace';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -163,6 +164,16 @@ const PersonalWorkspace = () => {
         </div>
       </motion.div>
 
+      {/* SWITCH TABS */}
+      <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+         <button onClick={() => setActiveTab('overview')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'overview' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'overview' ? '2px solid var(--accent)' : '2px solid transparent' }}>Vue d'Ensemble</button>
+         <button onClick={() => setActiveTab('gps')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'gps' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'gps' ? '2px solid var(--accent)' : '2px solid transparent' }}>Mon GPS Stratégique</button>
+      </div>
+
+      {activeTab === 'gps' ? (
+        <GPSWorkspace />
+      ) : (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
         
         {/* RETARDS & ALERTES (ATTENTION REQUISE) */}
@@ -268,6 +279,8 @@ const PersonalWorkspace = () => {
 
          </div>
       </motion.div>
+      </div>
+      )}
 
     </motion.div>
   );

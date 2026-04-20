@@ -95,6 +95,24 @@ export const hrSchema = {
           subtitleField: 'type'
         }
       }
+    },
+    gps_okr: {
+      label: 'GPS Personnel (Stratégies)',
+      fields: {
+        collaborateur: { label: 'Employé', type: 'text', required: true, search: true },
+        manager: { label: 'Manager / Responsable', type: 'text', search: true },
+        departement: { label: 'Département', type: 'text', search: true },
+        semestre: { label: 'Semestre / Trimestre', type: 'text', search: true },
+        donnees: { label: 'Arbre GPS (JSON)', type: 'textarea' }
+      },
+      views: {
+        list: ['collaborateur', 'departement', 'semestre', 'manager'],
+        kanban: {
+          groupField: 'departement',
+          titleField: 'collaborateur',
+          subtitleField: 'semestre'
+        }
+      }
     }
   }
 };
