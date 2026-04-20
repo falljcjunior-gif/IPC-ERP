@@ -1181,6 +1181,16 @@ export const BusinessProvider = ({ children }) => {
     localStorage.removeItem('daxcelor_data');
   }, []);
 
+  const resetAllData = useCallback(() => {
+    // Effacement complet : LocalStorage + état React
+    const keysToKeep = ['ipc_erp_current_user', 'ipc_erp_config', 'ipc_erp_global_settings', 'ipc_erp_active_brand', 'ipc_erp_permissions'];
+    Object.keys(localStorage).forEach(key => {
+      if (!keysToKeep.includes(key)) localStorage.removeItem(key);
+    });
+    setData(mockData);
+    addHint({ title: "ERP Réinitialisé", message: "Toutes les données métier ont été effacées. L'ERP est vierge.", type: 'success' });
+  }, [addHint]);
+
   const navigateTo = useCallback((appId) => setActiveApp(appId), []);
 
   return (
@@ -1189,7 +1199,7 @@ export const BusinessProvider = ({ children }) => {
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
-      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent,
+      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({
            ...prev,

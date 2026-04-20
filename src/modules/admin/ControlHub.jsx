@@ -18,7 +18,7 @@ import MasterData from '../MasterData';
 import History from '../History';
 
 const ControlHub = ({ onOpenDetail }) => {
-  const { userRole, config, currentUser } = useBusiness();
+  const { userRole, config, currentUser, resetAllData } = useBusiness();
   const [activeTab, setActiveTab] = useState('identity');
 
   // Security Check : Tactical Firewall
@@ -77,13 +77,11 @@ const ControlHub = ({ onOpenDetail }) => {
               <Bell size={22} />
            </button>
            <button onClick={() => {
-             if(window.confirm('Voulez-vous forcer un redémarrage à froid du système ? Cela purgera la mémoire locale et rechargera entièrement la plateforme.')) {
-                localStorage.removeItem('daxcelor_data');
-                localStorage.clear();
-                window.location.reload(true);
+             if(window.confirm('⚠️ EFFACER TOUTES LES DONNÉES : Ceci va supprimer TOUS les enregistrements (clients, commandes, stocks, RH, finance...) irréversiblement. Confirmer ?')) {
+                resetAllData();
              }
-           }} className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#F97316', borderColor: '#F97316', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Power size={20} /> <span style={{ fontWeight: 800 }}>Démarrage à froid</span>
+           }} className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#EF4444', borderColor: '#EF4444', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Power size={20} /> <span style={{ fontWeight: 800 }}>Effacer les Données</span>
            </button>
         </div>
       </div>
