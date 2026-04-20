@@ -65,6 +65,7 @@ import { adminSchema } from './schemas/admin.schema';
 import { legalSchema } from './schemas/legal.schema';
 import { marketingSchema } from './schemas/marketing.schema';
 import { signatureSchema } from './schemas/signature.schema';
+import { websiteSchema } from './schemas/website.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -75,7 +76,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema].forEach(s => registry.registerSchema(s));
+   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cœur de Métier ---
   registry.register({

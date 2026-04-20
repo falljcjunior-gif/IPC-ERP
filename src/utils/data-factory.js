@@ -119,5 +119,15 @@ export const mockData = {
     requests: [],
     templates: []
   },
-  workflows: []
+  workflows: [],
+  website: {
+    config: {
+      heroTitle: 'Bienvenue chez I.P.C.',
+      heroSubtitle: 'Solutions et Produits B2B',
+      ctaLabel: 'Découvrir nos produits',
+      primaryColor: '#06B6D4'
+    },
+    pages: [],
+    chats: []
+  }
 };
