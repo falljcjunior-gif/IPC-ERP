@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, Calculator, Landmark, BookCopy, FileCheck, 
   Search, Filter, Plus, Info, RefreshCcw, Save, 
-  Trash2, ChevronRight, Scale, BookMarked
+  Trash2, ChevronRight, Scale, BookMarked, PieChart, TrendingUp
 } from 'lucide-react';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { accountingSchema } from '../../../schemas/accounting.schema';
@@ -16,7 +16,7 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
   const { data } = useBusiness();
   const accounts = data?.finance?.accounts || [];
   const lines = data?.finance?.lines || [];
-  const [view, setView] = useState('ledger'); // 'ledger', 'saisie', 'coe' (Chart of Accounts), 'balance'
+  const [view, setView] = useState('ledger'); // 'ledger', 'saisie', 'coe', 'balance', 'bilan_sheet', 'pnl'
   
   // Saisie State
   const [saisieLines, setSaisieLines] = useState([
@@ -71,6 +71,39 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
 
   const currentBalance = balanceGenerale();
 
+  // Bilan (Balance Sheet) Logic
+  const getBilan = () => {
+    // Actif = Classes 2, 3 + Classes 4,5 (Solde Débiteur)
+    const actifs = currentBalance.lines.filter(b => /^[23]/.test(b.code) || (/^[45]/.test(b.code) && b.soldeDebit > 0));
+    const totalActif = actifs.reduce((s, a) => s + a.soldeDebit, 0);
+
+    // Passif = Classe 1 + Classes 4,5 (Solde Créditeur)
+    const passifs = currentBalance.lines.filter(b => /^[1]/.test(b.code) || (/^[45]/.test(b.code) && b.soldeCredit > 0));
+    const totalPassifBrut = passifs.reduce((s, p) => s + p.soldeCredit, 0);
+
+    // Résultat net (Compte de Résultat impact) pour équilibrer le Bilan
+    const revenus = currentBalance.lines.filter(b => /^7/.test(b.code)).reduce((s, r) => s + r.soldeCredit, 0);
+    const charges = currentBalance.lines.filter(b => /^6/.test(b.code)).reduce((s, c) => s + c.soldeDebit, 0);
+    const resultatNet = revenus - charges;
+    
+    const totalPassif = totalPassifBrut + resultatNet;
+
+    return { actifs, passifs, totalActif, totalPassif, resultatNet };
+  };
+
+  // Compte de Résultat (P&L) Logic
+  const getPnL = () => {
+    const revenus = currentBalance.lines.filter(b => /^7/.test(b.code));
+    const totalRevenus = revenus.reduce((s, r) => s + r.soldeCredit, 0);
+    const charges = currentBalance.lines.filter(b => /^6/.test(b.code));
+    const totalCharges = charges.reduce((s, c) => s + c.soldeDebit, 0);
+    const resultatNet = totalRevenus - totalCharges;
+    return { revenus, totalRevenus, charges, totalCharges, resultatNet };
+  };
+
+  const bilan = getBilan();
+  const pnl = getPnL();
+
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Sub-Navigation Accounting */}
@@ -80,7 +113,9 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
              { id: 'ledger', label: 'Grand Livre', icon: <BookOpen size={14} /> },
              { id: 'saisie', label: 'Saisie Journal', icon: <BookCopy size={14} /> },
              { id: 'coe', label: 'Plan de Comptes', icon: <BookMarked size={14} /> },
-             { id: 'balance', label: 'Balance', icon: <Scale size={14} /> },
+             { id: 'balance', label: 'Balance Globale', icon: <Scale size={14} /> },
+             { id: 'bilan_sheet', label: 'Bilan (Actif/Passif)', icon: <PieChart size={14} /> },
+             { id: 'pnl', label: 'Compte de Résultat', icon: <TrendingUp size={14} /> },
            ].map(t => (
              <button
                key={t.id}
@@ -252,6 +287,120 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
                        </tr>
                     </tfoot>
                  </table>
+              </div>
+           </motion.div>
+        ) : view === 'bilan_sheet' ? (
+           <motion.div
+             key="bilan_sheet"
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -10 }}
+             style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}
+           >
+             {/* ACTIF */}
+             <div className="glass" style={{ padding: '2rem', borderRadius: '2rem', display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1.4rem', color: '#10B981', borderBottom: '2px solid #10B981', paddingBottom: '1rem' }}>ACTIF (Emplois)</h3>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {bilan.actifs.map((a, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg)', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                       <div>
+                         <span style={{ fontWeight: 800, marginRight: '8px' }}>{a.code}</span>
+                         <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{a.label}</span>
+                       </div>
+                       <div style={{ fontWeight: 800 }}>{a.soldeDebit.toLocaleString()}</div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#10B98115', color: '#10B981', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1.2rem' }}>
+                   <span>TOTAL ACTIF</span>
+                   <span>{bilan.totalActif.toLocaleString()} FCFA</span>
+                </div>
+             </div>
+             {/* PASSIF */}
+             <div className="glass" style={{ padding: '2rem', borderRadius: '2rem', display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1.4rem', color: '#F59E0B', borderBottom: '2px solid #F59E0B', paddingBottom: '1rem' }}>PASSIF (Ressources)</h3>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {bilan.passifs.map((p, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'var(--bg)', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                       <div>
+                         <span style={{ fontWeight: 800, marginRight: '8px' }}>{p.code}</span>
+                         <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{p.label}</span>
+                       </div>
+                       <div style={{ fontWeight: 800 }}>{p.soldeCredit.toLocaleString()}</div>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: bilan.resultatNet >= 0 ? '#10B98110' : '#EF444410', borderRadius: '0.75rem', border: `1px solid ${bilan.resultatNet >= 0 ? '#10B981' : '#EF4444'}30` }}>
+                      <div style={{ fontWeight: 800, color: bilan.resultatNet >= 0 ? '#10B981' : '#EF4444' }}>
+                        RÉSULTAT NET (Bénéfice/Perte)
+                      </div>
+                      <div style={{ fontWeight: 900, color: bilan.resultatNet >= 0 ? '#10B981' : '#EF4444' }}>
+                        {bilan.resultatNet.toLocaleString()}
+                      </div>
+                  </div>
+                </div>
+                <div style={{ marginTop: '2rem', padding: '1rem', background: '#F59E0B15', color: '#F59E0B', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1.2rem' }}>
+                   <span>TOTAL PASSIF</span>
+                   <span>{bilan.totalPassif.toLocaleString()} FCFA</span>
+                </div>
+             </div>
+           </motion.div>
+        ) : view === 'pnl' ? (
+           <motion.div
+             key="pnl"
+             initial={{ opacity: 0, y: 10 }}
+             animate={{ opacity: 1, y: 0 }}
+             exit={{ opacity: 0, y: -10 }}
+             className="glass"
+             style={{ padding: '3rem', borderRadius: '2rem', maxWidth: '800px', margin: '0 auto', width: '100%' }}
+           >
+              <h3 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.8rem', textAlign: 'center' }}>Compte de Résultat</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                 {/* PRODUITS */}
+                 <div>
+                    <h4 style={{ margin: '0 0 1rem 0', color: '#6366F1', fontWeight: 800, fontSize: '1.2rem' }}>PRODUITS (Revenus)</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                       {pnl.revenus.map((r, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'var(--bg-subtle)', borderRadius: '0.5rem' }}>
+                             <span style={{ fontWeight: 600 }}>{r.code} - {r.label}</span>
+                             <span style={{ fontWeight: 800 }}>{r.soldeCredit.toLocaleString()}</span>
+                          </div>
+                       ))}
+                       {pnl.revenus.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aucun produit comptabilisé.</div>}
+                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderTop: '2px solid #6366F1', marginTop: '0.5rem', fontWeight: 900, fontSize: '1.1rem' }}>
+                          <span>Total Produits d'Exploitation</span>
+                          <span style={{ color: '#6366F1' }}>{pnl.totalRevenus.toLocaleString()} FCFA</span>
+                       </div>
+                    </div>
+                 </div>
+                 
+                 {/* CHARGES */}
+                 <div>
+                    <h4 style={{ margin: '0 0 1rem 0', color: '#EF4444', fontWeight: 800, fontSize: '1.2rem' }}>CHARGES (Dépenses)</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                       {pnl.charges.map((c, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem 1rem', background: 'var(--bg-subtle)', borderRadius: '0.5rem' }}>
+                             <span style={{ fontWeight: 600 }}>{c.code} - {c.label}</span>
+                             <span style={{ fontWeight: 800 }}>{c.soldeDebit.toLocaleString()}</span>
+                          </div>
+                       ))}
+                       {pnl.charges.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aucune charge comptabilisée.</div>}
+                       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', borderTop: '2px solid #EF4444', marginTop: '0.5rem', fontWeight: 900, fontSize: '1.1rem' }}>
+                          <span>Total Charges d'Exploitation</span>
+                          <span style={{ color: '#EF4444' }}>{pnl.totalCharges.toLocaleString()} FCFA</span>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* RESULTAT NET */}
+                 <div style={{ 
+                    marginTop: '1rem', padding: '1.5rem', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: pnl.resultatNet >= 0 ? '#10B98120' : '#EF444420',
+                    color: pnl.resultatNet >= 0 ? '#10B981' : '#EF4444'
+                 }}>
+                    <div style={{ fontWeight: 900, fontSize: '1.2rem' }}>RÉSULTAT NET</div>
+                    <div style={{ fontWeight: 900, fontSize: '1.8rem' }}>{pnl.resultatNet.toLocaleString()} FCFA</div>
+                 </div>
               </div>
            </motion.div>
         ) : (

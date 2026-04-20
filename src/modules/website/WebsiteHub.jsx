@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Globe, Palette, ShoppingBag, Store, Search, LayoutTemplate, Smartphone, Monitor, ShoppingCart
+  Globe, Palette, ShoppingBag, Store, Search, LayoutTemplate, Smartphone, Monitor, ShoppingCart, Package
 } from 'lucide-react';
 import { useBusiness } from '../../BusinessContext';
 
