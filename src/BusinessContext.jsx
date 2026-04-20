@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { mockData } from './utils/data-factory';
 import { auth, db, firebaseConfig } from './firebase/config';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where } from 'firebase/firestore';
+import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
 import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 
@@ -1181,14 +1181,46 @@ export const BusinessProvider = ({ children }) => {
     localStorage.removeItem('daxcelor_data');
   }, []);
 
-  const resetAllData = useCallback(() => {
-    // Effacement complet : LocalStorage + état React
+  const resetAllData = useCallback(async () => {
+    // Collections métier à purger dans Firestore
+    const businessCollections = [
+      'crm', 'sales', 'inventory', 'finance', 'hr',
+      'production', 'purchase', 'marketing', 'activities',
+      'notifications', 'connect'
+    ];
+
+    addHint({ title: "Purge en cours...", message: "Suppression des données Firestore et locales...", type: 'info' });
+
+    try {
+      if (auth.currentUser) {
+        for (const col of businessCollections) {
+          const snap = await getDocs(collection(db, col));
+          // Firestore writeBatch = max 500 docs par batch
+          const chunks = [];
+          const docs = snap.docs;
+          for (let i = 0; i < docs.length; i += 400) {
+            chunks.push(docs.slice(i, i + 400));
+          }
+          for (const chunk of chunks) {
+            const batch = writeBatch(db);
+            chunk.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erreur purge Firestore:", e);
+    }
+
+    // Purge LocalStorage (données métier uniquement)
     const keysToKeep = ['ipc_erp_current_user', 'ipc_erp_config', 'ipc_erp_global_settings', 'ipc_erp_active_brand', 'ipc_erp_permissions'];
     Object.keys(localStorage).forEach(key => {
       if (!keysToKeep.includes(key)) localStorage.removeItem(key);
     });
+
+    // Reset état React
     setData(mockData);
-    addHint({ title: "ERP Réinitialisé", message: "Toutes les données métier ont été effacées. L'ERP est vierge.", type: 'success' });
+    addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
   }, [addHint]);
 
   const navigateTo = useCallback((appId) => setActiveApp(appId), []);
