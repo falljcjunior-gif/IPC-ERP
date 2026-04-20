@@ -59,14 +59,24 @@ const DesignTab = ({ data, onOpenDetail }) => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1.25rem', background: 'var(--bg-subtle)', borderRadius: '1.25rem', marginBottom: '1.5rem' }}>
                <div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Composants</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Composants Inclus</div>
                   <div style={{ fontWeight: 900, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Box size={14} /> {bom.components}
+                    <Box size={14} /> 
+                    {
+                       typeof bom.components === 'string' && bom.components.startsWith('[')
+                         ? (() => {
+                              try {
+                                 const list = JSON.parse(bom.components);
+                                 return `${list.length} Matières/Sous-ens.`;
+                              } catch(e) { return bom.components; }
+                           })()
+                         : bom.components || 'Aucun'
+                    }
                   </div>
                </div>
                <div>
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Type Flux</div>
-                  <div style={{ fontWeight: 900, fontSize: '1rem' }}>{bom.type}</div>
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase' }}>Coût Prod UNit.</div>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: '#10B981' }}>{bom.coutEstime ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'FCFA' }).format(bom.coutEstime) : 'Non défini'}</div>
                </div>
             </div>
 

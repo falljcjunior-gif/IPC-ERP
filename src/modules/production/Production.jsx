@@ -11,6 +11,7 @@ import { productionSchema } from '../../schemas/production.schema';
 // Components
 import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
+import BomBuilderModal from './components/BomBuilderModal';
 
 // Tabs
 import AnalyticsTab from './tabs/AnalyticsTab';
@@ -23,6 +24,7 @@ const Production = ({ onOpenDetail }) => {
   const [mainTab, setMainTab] = useState('analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
+  const [isBomModalOpen, setIsBomModalOpen] = useState(false);
 
   const tabs = [
     { id: 'analytics', label: 'Performance', icon: <BarChart3 size={16} /> },
@@ -86,7 +88,7 @@ const Production = ({ onOpenDetail }) => {
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
           {mainTab === 'execution' && <ExecutionTab data={data} onOpenDetail={onOpenDetail} onNewWorkOrder={() => { setModalMode('workOrders'); setIsModalOpen(true); }} />}
           {mainTab === 'design' && <DesignTab data={data} onOpenDetail={(rec, app, sub) => {
-            if (!rec) { setModalMode('boms'); setIsModalOpen(true); }
+            if (!rec) { setIsBomModalOpen(true); }
             else if (onOpenDetail) onOpenDetail(rec, app, sub);
           }} />}
           {mainTab === 'maintenance' && <MaintenanceTab />}
@@ -101,6 +103,15 @@ const Production = ({ onOpenDetail }) => {
         onSave={(f) => {
           addRecord('production', modalMode, f);
           setIsModalOpen(false);
+        }}
+      />
+
+      <BomBuilderModal 
+        isOpen={isBomModalOpen}
+        onClose={() => setIsBomModalOpen(false)}
+        onSave={(data) => {
+           addRecord('production', 'boms', data);
+           setIsBomModalOpen(false);
         }}
       />
     </div>

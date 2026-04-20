@@ -433,15 +433,22 @@ export const BusinessProvider = ({ children }) => {
     setData(prev => {
       const mo = prev.production?.workOrders?.find(o => o.id === moId);
       if (!mo) return prev;
-      const bom = prev.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+      const bom = prev.production?.boms?.find(b => b.produit === mo.produit || b.product === mo.produit || b.productId === mo.produitId);
       if (!bom) {
         addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
         return prev;
       }
       let componentsList = [];
       try { componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); } catch (e) { componentsList = []; }
+      
+      // Appliquer la décrémentation des stocks des matières premières (MRP)
       componentsList.forEach(comp => applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
-      applyStockMove({ productId: bom.productId || mo.produitId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
+      
+      // Appliquer l'incrémentation du nouveau produit fini
+      const finalProductId = bom.productId || mo.produitId || prev.inventory?.products?.find(p => p.nom === mo.produit)?.id;
+      if (finalProductId) {
+        applyStockMove({ productId: finalProductId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
+      }
       addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
       return prev;
     });
