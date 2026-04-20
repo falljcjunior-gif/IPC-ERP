@@ -4,7 +4,8 @@ import { useBusiness } from '../../BusinessContext';
 
 const FocusTracker = () => {
   const { addRecord, currentUser } = useBusiness();
-  const [timeLeft, setTimeLeft] = useState(25 * 60); // 25 minutes
+  const [duration, setDuration] = useState(25);
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [taskName, setTaskName] = useState('');
@@ -23,7 +24,7 @@ const FocusTracker = () => {
   }, [isRunning, timeLeft]);
 
   const toggle = () => setIsRunning(!isRunning);
-  const reset = () => { setIsRunning(false); setTimeLeft(25 * 60); setSessionCompleted(false); };
+  const reset = (newDuration = duration) => { setIsRunning(false); setDuration(newDuration); setTimeLeft(newDuration * 60); setSessionCompleted(false); };
 
   const logTimesheet = () => {
     if (!taskName) return alert("Veuillez entrer le nom de la tâche.");
@@ -32,7 +33,7 @@ const FocusTracker = () => {
       collaborateur: currentUser?.nom,
       projet: 'Deep Work (Pomodoro)',
       tache: taskName,
-      heures: 0.5, // ~25-30 mins is roughly 0.5h in decimal
+      heures: Number((duration / 60).toFixed(2)),
       facturable: false,
       statut: 'Validé' // Auto-validated if it's personal focus tracking
     });
@@ -43,7 +44,7 @@ const FocusTracker = () => {
 
   const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const s = (timeLeft % 60).toString().padStart(2, '0');
-  const progress = ((25 * 60 - timeLeft) / (25 * 60)) * 100;
+  const progress = ((duration * 60 - timeLeft) / (duration * 60)) * 100;
 
   return (
     <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', position: 'relative', overflow: 'hidden' }}>
@@ -52,8 +53,21 @@ const FocusTracker = () => {
         <div style={{ height: '100%', width: `${progress}%`, background: '#EC4899', transition: 'width 1s linear' }} />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EC4899', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem', marginBottom: '1rem' }}>
-        <Clock size={14} /> Focus Tracker
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EC4899', fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem' }}>
+          <Clock size={14} /> Focus Tracker
+        </div>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {[15, 25, 45, 60].map(mins => (
+             <button 
+               key={mins}
+               onClick={() => !isRunning && reset(mins)}
+               style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800, border: 'none', cursor: isRunning ? 'default' : 'pointer', background: duration === mins ? '#EC4899' : 'transparent', color: duration === mins ? 'white' : 'var(--text-muted)' }}
+             >
+               {mins}m
+             </button>
+          ))}
+        </div>
       </div>
 
       <div style={{ background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '1rem', textAlign: 'center', marginBottom: '1rem' }}>
@@ -64,9 +78,9 @@ const FocusTracker = () => {
 
       <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
         <button onClick={toggle} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', background: isRunning ? '#F59E0B' : '#EC4899', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-          {isRunning ? <><Pause size={16}/> Pause</> : <><Play size={16}/> {timeLeft < 25*60 ? 'Reprendre' : 'Start'}</>}
+          {isRunning ? <><Pause size={16}/> Pause</> : <><Play size={16}/> {timeLeft < duration * 60 ? 'Reprendre' : 'Start'}</>}
         </button>
-        <button onClick={reset} style={{ padding: '0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', color: 'var(--text)', border: 'none', cursor: 'pointer' }}>
+        <button onClick={() => reset(duration)} style={{ padding: '0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', color: 'var(--text)', border: 'none', cursor: 'pointer' }}>
           <RotateCcw size={16} />
         </button>
       </div>
