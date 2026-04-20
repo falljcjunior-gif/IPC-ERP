@@ -352,6 +352,21 @@ export const BusinessProvider = ({ children }) => {
     addAccountingEntry(entry, lines);
   }, [addAccountingEntry]);
 
+  const generateLitigationEntry = useCallback((litigation, isProvision = true) => {
+    const entry = {
+      libelle: isProvision ? `Provision Risque : ${litigation.objet}` : `Annulation Provision : ${litigation.objet}`,
+      date: new Date().toISOString().split('T')[0],
+      journalCode: 'J-OD',
+      piece: litigation.id
+    };
+    const amount = litigation.risqueFinancier || 0;
+    const lines = [
+      { accountId: '686000', label: 'Dotations aux provisions', debit: isProvision ? amount : 0, credit: isProvision ? 0 : amount },
+      { accountId: '151000', label: 'Provisions pour litiges', debit: isProvision ? 0 : amount, credit: isProvision ? amount : 0 }
+    ];
+    addAccountingEntry(entry, lines);
+  }, [addAccountingEntry]);
+
 
   // C. Physical Moves
   const applyStockMove = useCallback((movementData) => {
@@ -474,8 +489,14 @@ export const BusinessProvider = ({ children }) => {
       if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
       return nextState;
     });
+
+    // Workflow: Legal ↔ Finance (Provisions)
+    if (appId === 'legal' && subModule === 'litigations' && processedRecord.risqueFinancier > 0) {
+      generateLitigationEntry(newRecord, true);
+    }
+
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
-  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand]);
+  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand, generateLitigationEntry]);
 
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
@@ -497,7 +518,34 @@ export const BusinessProvider = ({ children }) => {
         addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => convertOppToSalesOrder(id) });
       }
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
-        processOrderValidation(record);
+        // Workflow: Sales ↔ Legal (Lock if modified)
+        if (record.modifieHorsTemplate) {
+           addHint({ 
+             title: "Visa Juridique Manquant", 
+             message: "Ce contrat a été modifié hors template. Le statut est bloqué en attente de visa.", 
+             type: 'error', 
+             appId: 'legal' 
+           });
+           // Revert Confirmé to 'Attente Visa'
+           const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Attente Visa Juridique' } : item);
+           nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
+           sendNotification('Juridique', 'Visa requis pour commande modifiée', 'warning', 'legal');
+        } else {
+           processOrderValidation(record);
+        }
+      }
+
+      // Workflow: Legal ↔ Finance (Closing litigation)
+      if (appId === 'legal' && subModule === 'litigations' && (newData.statut === 'Gagné' || newData.statut === 'Clos') && oldRecord.statut === 'En cours') {
+         generateLitigationEntry(record, false);
+      }
+
+      // Workflow: RH ↔ Juridique (Visa final)
+      if (appId === 'hr' && subModule === 'employees' && newData.statut === 'Signé' && !record.visaJuridique) {
+         addHint({ title: "Visa Juridique Requis", message: "Le contrat de travail nécessite le visa du pôle juridique avant signature finale.", type: 'warning', appId: 'legal' });
+         const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Validation Juridique' } : item);
+         nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
+      }
       }
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateInvoiceEntry(record);

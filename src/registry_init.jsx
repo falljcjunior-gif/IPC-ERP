@@ -22,6 +22,7 @@ import HR from './modules/HR';
 import Production from './modules/production/Production';
 import Project from './modules/logistics/LogisticsHub';
 import Purchase from './modules/logistics/LogisticsHub';
+import LegalHub from './modules/legal/LegalHub';
 import Marketing from './modules/marketing/Marketing';
 import BI from './modules/bi/BIHub';
 import MasterData from './modules/MasterData';
@@ -60,6 +61,7 @@ import { purchaseSchema } from './schemas/purchase.schema';
 import { baseSchema } from './schemas/base.schema';
 import { auditSchema } from './schemas/audit.schema';
 import { adminSchema } from './schemas/admin.schema';
+import { legalSchema } from './schemas/legal.schema';
 import { marketingSchema } from './schemas/marketing.schema';
 
 /**
@@ -71,7 +73,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-   baseSchema, auditSchema, adminSchema, marketingSchema].forEach(s => registry.registerSchema(s));
+   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cœur de Métier ---
   registry.register({
@@ -158,6 +160,12 @@ export const initRegistry = () => {
     id: 'finance', label: 'Finance', icon: <CreditCard size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
     component: Finance, priority: 20
+  });
+
+  registry.register({
+    id: 'legal', label: 'Juridique', icon: <Scale size={18} />,
+    category: 'finance', roles: ['ADMIN', 'FINANCE', 'LEGAL'],
+    component: LegalHub, priority: 20.5
   });
 
   registry.register({

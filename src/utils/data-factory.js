@@ -97,5 +97,22 @@ export const mockData = {
       { name: 'Paies', count: 0, size: '0 KB', type: 'system' }
     ],
     files: []
+  },
+  legal: {
+    contracts: [
+      { id: 'L-001', titre: 'Bail Commercial Siège', type: 'Bail', partie: 'Immobilier Corp', dateEffet: '2025-01-01', dateExpiration: '2034-01-01', statut: 'Signé', amount: 12000000, modifie: false, visaJuridique: true },
+      { id: 'L-002', titre: 'Accord NDA Labos', type: 'NDA', partie: 'Labo Alpha', dateEffet: '2026-03-15', statut: 'Signé', modifie: false, visaJuridique: true }
+    ],
+    ip: [
+      { id: 'IP-001', nom: 'SHAYNAYAH', type: 'Marque', territoire: 'International (OMPI)', numeroDepot: 'M-52899', dateDepot: '2024-05-10', dateRenouvellement: '2034-05-10', statut: 'Enregistré' },
+      { id: 'IP-002', nom: 'shaynayah.com', type: 'Nom de Domaine', territoire: 'Monde', dateRenouvellement: '2027-10-22', statut: 'Enregistré' }
+    ],
+    litigations: [
+      { id: 'LIT-001', objet: 'Impayé Client Retail', type: 'Impayé Client', partieAdverse: 'DistriGroup Ltd', risqueFinancier: 5000000, avocat: 'Maitre Yao', statut: 'En cours' }
+    ],
+    corporate: [
+      { id: 'CORP-001', entite: 'IPC CORE SERVICE SA', type: 'SA', capitalSocial: 100000000, dateCreation: '2020-02-15', siège: 'Abidjan, Cote d\'Ivoire' },
+      { id: 'CORP-002', entite: 'B2B LOGISTICS SARL', type: 'SARL', capitalSocial: 10000000, dateCreation: '2022-11-20', siège: 'San Pedro, Cote d\'Ivoire' }
+    ]
   }
 };

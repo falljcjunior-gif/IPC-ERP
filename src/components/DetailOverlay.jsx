@@ -228,9 +228,20 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                                 let optLabel = opt;
                                 if (appId === 'sales' && subModule === 'orders' && key === 'statut' && (opt === 'Confirmé' || opt === 'Expédié')) {
                                     const prod = data?.inventory?.products?.find(p => p.nom === formData.produit || p.id === formData.produitId);
-                                    if (!prod || prod.qte < (formData.qte || 0)) {
+                                    if (!prod || prod.stock < (formData.qte || 0)) {
                                         optDisabled = true;
-                                        optLabel = `${opt} ⚠️ Bloqué (Stock Physique Insuffisant: ${prod ? prod.qte : 0})`;
+                                        optLabel = `${opt} ⚠️ Bloqué (Stock Physique Insuffisant: ${prod ? prod.stock : 0})`;
+                                    }
+                                    if (formData.modifieHorsTemplate && !formData.visaJuridique) {
+                                        optDisabled = true;
+                                        optLabel = `${opt} ⚖️ Bloqué (Visa Juridique Requis)`;
+                                    }
+                                }
+                                if (appId === 'purchase' && subModule === 'orders' && key === 'statut' && opt === 'Confirmé') {
+                                    const supplierContract = (data.legal?.contracts || []).find(c => c.partie === formData.fournisseur && c.statut === 'Signé');
+                                    if (!supplierContract) {
+                                        optDisabled = true;
+                                        optLabel = `${opt} ⚖️ Bloqué (Contrat Cadre Non Signé)`;
                                     }
                                 }
                                 return (
