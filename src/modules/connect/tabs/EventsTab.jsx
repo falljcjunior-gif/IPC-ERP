@@ -10,9 +10,11 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const EventsTab = ({ data }) => {
-  const { participateInEvent, addHint, deleteRecord } = useBusiness();
+  const { participateInEvent, addHint, deleteRecord, addRecord, currentUser } = useBusiness();
   const [showCalendar, setShowCalendar] = useState(false);
   const [calDate, setCalDate] = useState(new Date());
+  const [showCreate, setShowCreate] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', type: 'Présentiel', category: 'Stratégie', description: '' });
 
   const events = data?.connect?.events || [];
 
@@ -23,6 +25,21 @@ const EventsTab = ({ data }) => {
   const handleDelete = (id) => {
     deleteRecord('connect', 'events', id);
     addHint({ title: "Événement supprimé", message: "L'événement a été retiré de votre agenda.", type: 'info' });
+  };
+
+  const handleCreateEvent = () => {
+    if (!newEvent.title.trim() || !newEvent.date) return;
+    const colors = { 'Stratégie': '#8B5CF6', 'Détente': '#10B981', 'Opérations': '#3B82F6', 'Formation': '#F59E0B' };
+    addRecord('connect', 'events', {
+      ...newEvent,
+      color: colors[newEvent.category] || '#8B5CF6',
+      attendees: 0,
+      participated: false,
+      createdBy: currentUser.nom,
+    });
+    addHint({ title: 'Événement créé !', message: `${newEvent.title} ajouté au calendrier IPC Life.`, type: 'success' });
+    setShowCreate(false);
+    setNewEvent({ title: '', date: '', time: '', type: 'Présentiel', category: 'Stratégie', description: '' });
   };
 
   // Calendar helpers
@@ -40,11 +57,14 @@ const EventsTab = ({ data }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: '#0F172A' }}>IPC Life & Événements</h3>
+             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--text)' }}>IPC Life & Événements</h3>
              <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>Restez synchronisés avec la vie sociale et les jalons de l'entreprise.</p>
           </div>
-          <button onClick={() => setShowCalendar(true)} className="btn-secondary" style={{ padding: '0.8rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, border: '1px solid var(--border)', background: 'white', cursor: 'pointer' }}>
-             <Calendar size={18} /> Voir le Calendrier Complet
+          <button onClick={() => setShowCalendar(true)} className="btn-secondary" style={{ padding: '0.8rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, border: '1px solid var(--border)', background: 'var(--bg-subtle)', cursor: 'pointer' }}>
+             <Calendar size={18} /> Calendrier
+          </button>
+          <button onClick={() => setShowCreate(true)} style={{ padding: '0.8rem 1.5rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, border: 'none', background: '#8B5CF6', color: 'white', cursor: 'pointer' }}>
+             <Zap size={18} /> Créer un Événement
           </button>
        </div>
 
@@ -105,6 +125,59 @@ const EventsTab = ({ data }) => {
          )}
        </AnimatePresence>
 
+       {/* Create Event Modal */}
+       <AnimatePresence>
+         {showCreate && (
+           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+             style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
+             onClick={e => e.target === e.currentTarget && setShowCreate(false)}>
+             <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
+               style={{ background: 'var(--bg)', borderRadius: '2rem', padding: '2.5rem', width: '500px', maxWidth: '95vw', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                 <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.3rem' }}>Créer un Événement</h3>
+                 <button onClick={() => setShowCreate(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
+               </div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                 <input value={newEvent.title} onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))}
+                   placeholder="Titre de l'événement *" style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.95rem', fontWeight: 700, outline: 'none' }} />
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                   <input type="date" value={newEvent.date} onChange={e => setNewEvent(p => ({ ...p, date: e.target.value }))}
+                     style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.9rem', outline: 'none' }} />
+                   <input type="time" value={newEvent.time} onChange={e => setNewEvent(p => ({ ...p, time: e.target.value }))}
+                     style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.9rem', outline: 'none' }} />
+                 </div>
+                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                   <select value={newEvent.category} onChange={e => setNewEvent(p => ({ ...p, category: e.target.value }))}
+                     style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.9rem', outline: 'none', fontWeight: 600 }}>
+                     {['Stratégie', 'Détente', 'Opérations', 'Formation'].map(c => <option key={c}>{c}</option>)}
+                   </select>
+                   <select value={newEvent.type} onChange={e => setNewEvent(p => ({ ...p, type: e.target.value }))}
+                     style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.9rem', outline: 'none', fontWeight: 600 }}>
+                     {['Présentiel', 'Visio', 'Hybride'].map(t => <option key={t}>{t}</option>)}
+                   </select>
+                 </div>
+                 <textarea value={newEvent.description} onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))}
+                   placeholder="Description de l'événement..." rows={3}
+                   style={{ padding: '0.85rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.9rem', outline: 'none', resize: 'vertical', lineHeight: 1.5 }} />
+               </div>
+               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+                 <button onClick={() => setShowCreate(false)} style={{ flex: 1, padding: '0.9rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'transparent', fontWeight: 700, cursor: 'pointer' }}>Annuler</button>
+                 <button onClick={handleCreateEvent} style={{ flex: 2, padding: '0.9rem', borderRadius: '0.9rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.95rem', cursor: 'pointer' }}>Publier l'Événement</button>
+               </div>
+             </motion.div>
+           </motion.div>
+         )}
+       </AnimatePresence>
+
+       {/* Empty state */}
+       {events.length === 0 && (
+         <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+           <PartyPopper size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
+           <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem' }}>Aucun événement prévu</div>
+           <div style={{ fontSize: '0.9rem' }}>Créez le premier événement IPC Life pour fédérer l'équipe !</div>
+         </div>
+       )}
+
        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '1.5rem' }}>
           {events.map(event => (
             <motion.div 
@@ -122,7 +195,7 @@ const EventsTab = ({ data }) => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: event.color, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>
                      <Zap size={14} /> {event.category}
                   </div>
-                  <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#0F172A', lineHeight: 1.2 }}>{event.title}</h4>
+                  <h4 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)', lineHeight: 1.2 }}>{event.title}</h4>
                </div>
 
                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>

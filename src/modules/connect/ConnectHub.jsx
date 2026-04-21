@@ -51,7 +51,7 @@ const ConnectHub = ({ onOpenDetail }) => {
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC CONNECT OS</span>
           </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: '#0F172A', lineHeight: 1 }}>Human Synergy</h1>
+          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: 'var(--text)', lineHeight: 1 }}>Human Synergy</h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
             Votre écosystème collaboratif intelligent : Communiquez, collaborez et célébrez la culture de l'entreprise au même endroit.
           </p>

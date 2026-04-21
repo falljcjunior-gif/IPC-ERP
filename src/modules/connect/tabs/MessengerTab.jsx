@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, MessageSquare, Search, User, Users, Paperclip, 
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
-  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight
+  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 import { db, auth, storage } from '../../../firebase/config';
