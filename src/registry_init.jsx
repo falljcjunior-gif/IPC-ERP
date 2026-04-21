@@ -47,6 +47,7 @@ import Shipping from './modules/Shipping';
 import WebsiteHub from './modules/website/WebsiteHub';
 import CommerceHub from './modules/sales/CommerceHub';
 import TalentHub from './modules/hr/TalentHub';
+import PlanningTemps from './components/PlanningTemps';
 
 // Schemas
 import { crmSchema } from './schemas/crm.schema';
@@ -229,6 +230,19 @@ export const initRegistry = () => {
     id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
     category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
     component: SignatureHub, priority: 37
+  });
+
+  registry.register({
+    id: 'planning', label: 'Planning & Temps', icon: <Calendar size={18} />,
+    category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
+    component: PlanningTemps, priority: 33
+  });
+
+  registry.register({
+    id: 'timesheets', label: 'Feuilles de Temps', icon: <Clock size={18} />,
+    hidden: true, // accessible via navigateTo but not in sidebar
+    category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
+    component: PlanningTemps, priority: 34
   });
 
   // --- Configuration & Admin ---
