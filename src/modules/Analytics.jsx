@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Activity, Zap, Target, TrendingUp, DollarSign, 
-  Briefcase, Users, LayoutDashboard, ToggleRight, ToggleLeft
+  Briefcase, Users, LayoutDashboard, ToggleRight, ToggleLeft, Sparkles
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
