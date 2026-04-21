@@ -10,7 +10,7 @@ import PeopleTab from './enterprise/tabs/PeopleTab';
 import ApprovalsTab from './hr/tabs/ApprovalsTab';
 import OnboardingTab from './hr/tabs/OnboardingTab';
 
-const HRControlCenter = ({ onOpenDetail }) => {
+const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
   const { data } = useBusiness();
   const [mainTab, setMainTab] = useState('people');
 
@@ -70,9 +70,9 @@ const HRControlCenter = ({ onOpenDetail }) => {
           exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
           transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
         >
-          {mainTab === 'people' && <PeopleTab data={data} onOpenDetail={onOpenDetail} />}
-          {mainTab === 'approvals' && <ApprovalsTab />}
-          {mainTab === 'onboarding' && <OnboardingTab />}
+          {mainTab === 'people' && <PeopleTab data={data} onOpenDetail={onOpenDetail} accessLevel={accessLevel} />}
+          {mainTab === 'approvals' && <ApprovalsTab accessLevel={accessLevel} />}
+          {mainTab === 'onboarding' && <OnboardingTab accessLevel={accessLevel} />}
         </motion.div>
       </AnimatePresence>
     </div>

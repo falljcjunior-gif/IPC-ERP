@@ -16,7 +16,7 @@ import InventoryTab from './tabs/InventoryTab';
 import PurchaseTab from './tabs/PurchaseTab';
 import ProjectTab from './tabs/ProjectTab';
 
-const LogisticsHub = ({ onOpenDetail }) => {
+const LogisticsHub = ({ onOpenDetail, accessLevel }) => {
   const { data, addRecord, updateRecord, formatCurrency } = useBusiness();
   const [mainTab, setMainTab] = useState('inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,16 +54,18 @@ const LogisticsHub = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
              <History size={20} />
            </button>
-          <button className="btn-primary" onClick={() => { 
-            setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
-            setIsModalOpen(true); 
-          }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
-              mainTab === 'purchase' ? 'Nouvelle Commande Achat' : 
-              mainTab === 'project' ? 'Nouvelle Tâche' : 
-              'Entrée/Sortie Stock'
-            }</span>
-          </button>
+           {accessLevel === 'write' && (
+            <button className="btn-primary" onClick={() => { 
+              setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
+              setIsModalOpen(true); 
+            }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
+              <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
+                mainTab === 'purchase' ? 'Nouvelle Commande Achat' : 
+                mainTab === 'project' ? 'Nouvelle Tâche' : 
+                'Entrée/Sortie Stock'
+              }</span>
+            </button>
+          )}
         </div>
       </div>
 

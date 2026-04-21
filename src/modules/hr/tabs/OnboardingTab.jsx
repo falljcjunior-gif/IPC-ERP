@@ -179,7 +179,7 @@ const EditAccessPanel = ({ employee, onClose }) => {
 // ─────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────
-const OnboardingTab = () => {
+const OnboardingTab = ({ accessLevel }) => {
   const { createFullUser, data, permissions } = useBusiness();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -278,15 +278,23 @@ const OnboardingTab = () => {
     }
   };
 
+  const onboardingTabs = useMemo(() => {
+    const tabs = [];
+    if (accessLevel === 'write') tabs.push({ key: 'create', label: '+ Nouvel Employé', icon: <UserPlus size={16} /> });
+    tabs.push({ key: 'edit', label: '✏️ Modifier les Accès', icon: <Edit3 size={16} /> });
+    return tabs;
+  }, [accessLevel]);
+
+  useEffect(() => {
+    if (accessLevel !== 'write' && mode === 'create') setMode('edit');
+  }, [accessLevel, mode]);
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: '1100px', margin: '0 auto' }}>
       
       {/* Mode Switcher */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', background: 'var(--bg-subtle)', padding: '0.4rem', borderRadius: '1rem', width: 'fit-content' }}>
-        {[
-          { key: 'create', label: '+ Nouvel Employé', icon: <UserPlus size={16} /> },
-          { key: 'edit', label: '✏️ Modifier les Accès', icon: <Edit3 size={16} /> },
-        ].map(tab => (
+        {onboardingTabs.map(tab => (
           <button key={tab.key} onClick={() => { setMode(tab.key); setSelectedEmployee(null); }}
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: '0.2s',
               background: mode === tab.key ? '#8B5CF6' : 'transparent',

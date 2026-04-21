@@ -18,7 +18,7 @@ import PipelineTab from './tabs/PipelineTab';
 import LeadsTab from './tabs/LeadsTab';
 import CustomerTab from './tabs/CustomerTab';
 
-const CRM = ({ onOpenDetail }) => {
+const CRM = ({ onOpenDetail, accessLevel }) => {
   const { data, addRecord, formatCurrency, userRole } = useBusiness();
   const [mainTab, setMainTab] = useState('analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -65,9 +65,11 @@ const CRM = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
              <Download size={20} />
            </button>
-          <button className="btn-primary" onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#10B981', borderColor: '#10B981' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouveau Lead</span>
-          </button>
+           {accessLevel === 'write' && (
+            <button className="btn-primary" onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#10B981', borderColor: '#10B981' }}>
+              <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouveau Lead</span>
+            </button>
+          )}
         </div>
       </div>
 

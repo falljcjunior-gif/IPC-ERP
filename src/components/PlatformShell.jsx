@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { auth, db } from '../firebase/config';
 import { updatePassword } from 'firebase/auth';
 import { doc, updateDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
 import { initRegistry } from '../registry_init';
-import DetailOverlay from './DetailOverlay';
+const DetailOverlay = lazy(() => import('./DetailOverlay'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import NotificationCenter from './NotificationCenter';
@@ -106,7 +106,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, [search.query, globalSearch]);
 
   const renderContent = () => {
-    const commonProps = { onOpenDetail: openDetail, navigateTo, appId: activeApp };
+    const accessLevel = getModuleAccess(currentUser?.id, activeApp);
+    const commonProps = { 
+      onOpenDetail: openDetail, 
+      navigateTo, 
+      appId: activeApp,
+      accessLevel
+    };
     // 1. Check Registry First (Primary)
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
@@ -285,14 +291,16 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         </div>
       </main>
 
-      <DetailOverlay 
-        isOpen={!!details.record} 
-        onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })} 
-        record={details.record} 
-        appId={details.context.appId} 
-        subModule={details.context.subModule} 
-        onUpdate={updateRecord} 
-      />
+      <Suspense fallback={null}>
+        <DetailOverlay 
+          isOpen={!!details.record} 
+          onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })} 
+          record={details.record} 
+          appId={details.context.appId} 
+          subModule={details.context.subModule} 
+          onUpdate={updateRecord} 
+        />
+      </Suspense>
 
       <RecordModal 
         isOpen={!!details.context.appId && !details.record}

@@ -17,7 +17,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import OrdersTab from './tabs/OrdersTab';
 import CatalogTab from './tabs/CatalogTab';
 
-const Sales = ({ onOpenDetail }) => {
+const Sales = ({ onOpenDetail, accessLevel }) => {
   const { data, addRecord, formatCurrency, userRole } = useBusiness();
   const [view, setView] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,9 +62,11 @@ const Sales = ({ onOpenDetail }) => {
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
              <Download size={20} />
            </button>
-          <button className="btn-primary" onClick={() => { setModalMode('orders'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Commande</span>
-          </button>
+           {accessLevel === 'write' && (
+            <button className="btn-primary" onClick={() => { setModalMode('orders'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Commande</span>
+            </button>
+          )}
         </div>
       </div>
 
