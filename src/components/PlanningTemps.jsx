@@ -341,8 +341,8 @@ const TempsView = () => {
 /* ════════════════════════════════════════════
    MAIN MODULE — Planning & Temps
 ════════════════════════════════════════════ */
-const PlanningTemps = () => {
-  const [mainTab, setMainTab] = useState('planning');
+const PlanningTemps = ({ appId }) => {
+  const [mainTab, setMainTab] = useState(appId === 'timesheets' ? 'temps' : 'planning');
 
   return (
     <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2.5rem', minHeight: '100vh' }}>

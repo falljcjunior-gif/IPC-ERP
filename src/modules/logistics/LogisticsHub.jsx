@@ -16,17 +16,19 @@ import InventoryTab from './tabs/InventoryTab';
 import PurchaseTab from './tabs/PurchaseTab';
 import ProjectTab from './tabs/ProjectTab';
 
-const LogisticsHub = ({ onOpenDetail, accessLevel }) => {
+const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const { data, addRecord, updateRecord, formatCurrency } = useBusiness();
-  const [mainTab, setMainTab] = useState('inventory');
+  const [mainTab, setMainTab] = useState(appId === 'purchase' ? 'purchase' : 'inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('movement'); // movement | purchase | project
+  const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); // movement | purchase | project
 
   const tabs = [
     { id: 'inventory', label: 'Stocks & Entrepôts', icon: <Package size={16} /> },
     { id: 'purchase', label: 'Achats & Fournisseurs', icon: <ShoppingBag size={16} /> },
     { id: 'project', label: 'Projets & Delivery', icon: <Briefcase size={16} /> },
   ];
+
+  const isPurchaseContext = appId === 'purchase';
 
   return (
     <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(79, 70, 229, 0.02) 100%)' }}>
@@ -37,11 +39,17 @@ const LogisticsHub = ({ onOpenDetail, accessLevel }) => {
             <motion.div animate={{ rotate: [0, 90, 180, 270, 360] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }} style={{ background: '#4F46E520', padding: '6px', borderRadius: '8px' }}>
               <Link size={18} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Supply Chain & Project Hub</span>
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>
+              {isPurchaseContext ? 'IPC Procurement Core' : 'IPC Supply Chain & Project Hub'}
+            </span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>Logistics & Delivery</h1>
+          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>
+            {isPurchaseContext ? 'Gestion des Achats' : 'Logistics & Delivery'}
+          </h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Gestion intégrée des flux physiques et opérationnels. Pilotez vos stocks, fournisseurs et projets avec une précision industrielle.
+            {isPurchaseContext 
+              ? 'Pilotage stratégique des approvisionnements et relations fournisseurs. Maximisez votre rentabilité opérationnelle.'
+              : 'Gestion intégrée des flux physiques et opérationnels. Pilotez vos stocks, fournisseurs et projets avec une précision industrielle.'}
           </p>
         </div>
 

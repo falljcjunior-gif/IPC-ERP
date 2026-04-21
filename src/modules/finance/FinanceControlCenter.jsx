@@ -18,9 +18,9 @@ import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
 import BankReconTab from './tabs/BankReconTab';
 
-const FinanceControlCenter = ({ onOpenDetail }) => {
+const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const { data, addRecord, formatCurrency, addAccountingEntry, userRole } = useBusiness();
-  const [mainTab, setMainTab] = useState('analytics');
+  const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('invoices');
 
@@ -32,6 +32,8 @@ const FinanceControlCenter = ({ onOpenDetail }) => {
     { id: 'banque', label: 'Banque', icon: <Wallet size={16} /> },
   ];
 
+  const isBudgetContext = appId === 'budget';
+
   return (
     <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
       {/* Header Specialized Experience */}
@@ -41,11 +43,17 @@ const FinanceControlCenter = ({ onOpenDetail }) => {
             <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 4 }} style={{ background: '#6366F120', padding: '6px', borderRadius: '8px' }}>
               <Landmark size={18} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Financial OS</span>
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>
+              {isBudgetContext ? 'IPC Budgeting & FP&A' : 'IPC Financial OS'}
+            </span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>Finance Excellence</h1>
+          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>
+            {isBudgetContext ? 'Gestion Budgétaire' : 'Finance Excellence'}
+          </h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Cockpit de pilotage stratégique : Maîtrisez vos flux, votre comptabilité et vos budgets avec une précision institutionnelle.
+            {isBudgetContext 
+              ? 'Planification stratégique et suivi de la performance financière. Optimisez vos allocations de ressources.'
+              : 'Cockpit de pilotage stratégique : Maîtrisez vos flux, votre comptabilité et vos budgets avec une précision institutionnelle.'}
           </p>
         </div>
 

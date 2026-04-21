@@ -19,9 +19,9 @@ import ExecutionTab from './tabs/ExecutionTab';
 import DesignTab from './tabs/DesignTab';
 import MaintenanceTab from './tabs/MaintenanceTab';
 
-const Production = ({ onOpenDetail }) => {
+const Production = ({ onOpenDetail, appId }) => {
   const { data, addRecord, formatCurrency, userRole } = useBusiness();
-  const [mainTab, setMainTab] = useState('analytics');
+  const [mainTab, setMainTab] = useState(appId === 'manufacturing' ? 'execution' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
