@@ -183,7 +183,7 @@ const PersonalWorkspace = () => {
         <StaffPortal embedded={true} />
       ) : (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: '2rem' }}>
         
         {/* RETARDS & ALERTES (ATTENTION REQUISE) */}
         <motion.div variants={itemVariants} className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', minHeight: '340px' }}>
@@ -244,7 +244,7 @@ const PersonalWorkspace = () => {
       </div>
 
       {/* BENTO BOX GRID: 5 NEW WIDGETS */}
-      <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+      <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '2rem' }}>
         <FocusTracker />
         <VictoryHeartbeat />
         <QuickNotes />
@@ -255,7 +255,7 @@ const PersonalWorkspace = () => {
       {/* QUICK WORK WIDGETS BY ROLE */}
       <motion.div variants={itemVariants}>
          <h3 style={{ fontWeight: 800, fontSize: '1.15rem', marginBottom: '1.5rem' }}>Mes Accès Directs</h3>
-         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
+         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: '1.5rem' }}>
            
            <div onClick={() => setActiveTab('hr')} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <Briefcase size={28} color="var(--accent)" />

@@ -141,7 +141,7 @@ const CallInterface = ({
   // Grid logic
   let gridCols = '1fr';
   if (participantsCount === 2) gridCols = '1fr 1fr';
-  else if (participantsCount > 2) gridCols = 'repeat(auto-fit, minmax(320px, 1fr))';
+  else if (participantsCount > 2) gridCols = 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))';
 
   return (
     <motion.div

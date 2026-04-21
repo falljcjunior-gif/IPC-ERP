@@ -36,7 +36,7 @@ const CatalogTab = ({ data, formatCurrency, onOpenDetail }) => {
       </div>
 
       {/* Product Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
         {products.map((product) => (
           <motion.div 
             key={product.id} 

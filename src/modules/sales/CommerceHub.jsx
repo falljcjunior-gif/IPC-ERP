@@ -67,7 +67,7 @@ const CommerceHub = () => {
         </div>
 
         {/* Internal Grid Layout */}
-        <div style={{ padding: '2rem', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '1.25rem', alignContent: 'start' }}>
+        <div style={{ padding: '2rem', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))', gap: '1.25rem', alignContent: 'start' }}>
           {inventory.map((prod, idx) => (
             <motion.div
               whileHover={{ y: -4, scale: 1.02 }}

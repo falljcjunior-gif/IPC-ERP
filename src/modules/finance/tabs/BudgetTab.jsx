@@ -22,7 +22,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Budget Performance Overview */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
         {budgets.map((b, i) => {
            const burnRate = Math.round((b.realise / b.prevision) * 100);
            const isOver = burnRate > 100;
@@ -73,7 +73,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
       </div>
 
       {/* Corporate Allocation / Pie */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(min(100%, 300px), 1fr) 2fr', gap: '1.5rem' }}>
          <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <h4 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.1rem', alignSelf: 'flex-start' }}>Répartition Géographique</h4>
             <SafeResponsiveChart minHeight={240} fallbackHeight={240}>

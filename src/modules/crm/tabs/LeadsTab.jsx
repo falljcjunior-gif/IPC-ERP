@@ -13,7 +13,7 @@ const LeadsTab = ({ leads, onOpenDetail }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.5rem' }}>
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none' }}>
           <div style={{ opacity: 0.8, fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Nouveaux Leads (7j)</div>
           <div style={{ fontSize: '2rem', fontWeight: 900 }}>0</div>
@@ -45,7 +45,7 @@ const LeadsTab = ({ leads, onOpenDetail }) => {
       </div>
 
       {/* Leads Grid - High density premium cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
         {leads.length > 0 ? leads.map((lead) => (
           <motion.div 
             key={lead.id} 

@@ -87,7 +87,7 @@ const Timesheets = () => {
   /* ═══════════ DASHBOARD ═══════════ */
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Heures Totales"      value={`${kpis.totalH}h`}          trend={0}  trendType="up"   icon={<Clock size={20}/>}       color="#3B82F6" sparklineData={[]} />
         <KpiCard title="Heures Validées"     value={`${kpis.validees}h`}         trend={0}  trendType="up"   icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={[]} />
         <KpiCard title="À Valider"           value={`${kpis.enAttente} saisies`} trend={0}    trendType="down" icon={<AlertCircle size={20}/>}  color="#F59E0B" sparklineData={[]} />

@@ -63,7 +63,7 @@ const AccountingCenter = ({ onOpenDetail }) => {
       </div>
 
       {/* KPI Banner */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '1rem' }}>
         {[
           { icon: <BookCopy size={20} />, label: 'Journal Général', desc: 'Saisie & consultation', color: '#6366F1' },
           { icon: <BookOpen size={20} />, label: 'Grand Livre', desc: 'Mouvements par compte', color: '#8B5CF6' },

@@ -135,7 +135,7 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="OTIF Livraisons"      value={`${kpis.otif}%`}                           trend={0} trendType="down"  icon={<Target size={20}/>}       color="#F59E0B" sparklineData={[]} />
         <KpiCard title="Livraisons Réalisées" value={kpis.livres}                               trend={0}  trendType="up"    icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={[]} />
         <KpiCard title="En Transit / Expédié" value={kpis.transit}                              trend={0}    trendType="up"    icon={<Navigation size={20}/>}   color="#3B82F6" sparklineData={[]} />
@@ -243,7 +243,7 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
       </motion.div>
 
       {/* Cards BL */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: '1.1rem' }}>
         {filtered.map((s, i) => {
           const sc = SHIP_STATUS[s.statut] || SHIP_STATUS['Expédié'];
           return (

@@ -26,7 +26,7 @@ const ProjectTab = ({ data, onOpenDetail, updateRecord }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Project Execution KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Projets Actifs" value={projects.length} icon={<Briefcase size={22} />} color="#4F46E5" />
         <KpiCard title="Burn-Rate (Tâches)" value="0%" icon={<Zap size={22} />} color="#F59E0B" />
         <KpiCard title="OTIF Livraison" value="0%" icon={<ShieldCheck size={22} />} color="#0D9488" />

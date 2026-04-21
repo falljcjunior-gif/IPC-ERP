@@ -35,7 +35,7 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Revenue Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Revenu Projeté" value={formatCurrency(pipeline.weighted, true)} trend={0} trendType="up" icon={<TrendingUp size={22} />} color="#3B82F6" sparklineData={[]} />
         <KpiCard title="Pipeline Brut" value={formatCurrency(pipeline.total, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="Win Rate" value={`${pipeline.winRate}%`} trend={0} trendType="down" icon={<Award size={22} />} color="#10B981" sparklineData={[]} />

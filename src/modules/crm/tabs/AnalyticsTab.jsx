@@ -38,7 +38,7 @@ const AnalyticsTab = ({ leads, opportunities, formatCurrency }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Sales Velocity KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Valeur Pipeline" value={formatCurrency(kpis.totalPipeline, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} />
         <KpiCard title="Prévu (Pondéré)" value={formatCurrency(kpis.weightedPipeline, true)} trend={0} trendType="up" icon={<Target size={22} />} color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="Conversion Leads" value={`${kpis.convRate}%`} trend={0} trendType="up" icon={<Zap size={22} />} color="#F59E0B" sparklineData={[]} />

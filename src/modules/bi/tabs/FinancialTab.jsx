@@ -56,7 +56,7 @@ const FinancialTab = ({ data, formatCurrency }) => {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       
       {/* Financial KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
          <KpiCard 
            title="Marge EBITDA" value={`${ebitdaMargin.toFixed(1)}%`} 
            icon={<TrendingUp size={20}/>} color="#6366F1" 

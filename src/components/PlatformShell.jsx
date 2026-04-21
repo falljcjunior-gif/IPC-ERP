@@ -219,8 +219,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       </motion.aside>
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <header className="glass" style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', borderBottom: '1px solid var(--border)', zIndex: 50 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <header className="glass" style={{ padding: shellView.mobile ? '0.8rem 1rem' : '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', borderBottom: '1px solid var(--border)', zIndex: 50 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: shellView.mobile ? '0.5rem' : '1.25rem' }}>
             <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center' }}>
               {shellView.sidebar ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
             </button>

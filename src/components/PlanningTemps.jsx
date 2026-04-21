@@ -253,7 +253,7 @@ const TempsView = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%, 200px),1fr))', gap: '1.25rem' }}>
         <KpiCard title="Mes Heures Totales" value={`${myTotalH}h`} icon={<Clock size={20} />} color="#3B82F6" trend={0} />
         <KpiCard title="Heures Validées" value={`${myValidatedH}h`} icon={<CheckCircle2 size={20} />} color="#10B981" trend={0} />
         <KpiCard title="En Attente" value={`${myPending} saisie${myPending > 1 ? 's' : ''}`} icon={<AlertCircle size={20} />} color="#F59E0B" trend={0} />

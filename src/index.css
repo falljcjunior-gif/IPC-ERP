@@ -223,6 +223,22 @@ a {
 }
 
 @media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  html, body {
+    overscroll-behavior-y: none;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    display: none;
+  }
+
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .section { padding: 4rem 0; }
   .hide-mobile { display: none !important; }
@@ -232,6 +248,8 @@ a {
   /* Mobile Hub Optimizations */
   main {
     padding-bottom: 100px !important; /* Spacing for Mobile Navbar */
+    width: 100vw;
+    overflow-x: hidden;
   }
   
   .glass {

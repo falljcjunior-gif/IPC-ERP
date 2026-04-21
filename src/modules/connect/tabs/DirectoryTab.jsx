@@ -72,7 +72,7 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
           <div style={{ fontSize: '0.85rem', marginTop: '0.4rem' }}>Ajoutez des employés depuis le module RH.</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '1.25rem' }}>
           {filtered.map(emp => {
             const color = DEPT_COLORS[emp.departement] || '#8B5CF6';
             return (

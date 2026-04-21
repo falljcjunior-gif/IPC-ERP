@@ -218,7 +218,7 @@ const GPSWorkspace = () => {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 350px), 1fr))', gap: '2rem' }}>
           {gpsData.goals.map((goal, gIndex) => (
             <motion.div 
               key={goal.id}

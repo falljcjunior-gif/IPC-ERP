@@ -155,7 +155,7 @@ const StudioTab = () => {
                       <h4 style={{ fontWeight: 900, margin: 0 }}>Gestion des Colonnes de Liste</h4>
                    </div>
                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '2.5rem', fontWeight: 500 }}>Séquencez et activez les champs visibles dans les tableaux de ce module.</p>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '1rem' }}>
                       {Object.entries(currentModelSchema.fields).map(([name, f]) => {
                          const isActive = currentModelSchema.views.list.includes(name);
                          return (

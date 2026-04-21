@@ -43,7 +43,7 @@ const Expenses = ({ onOpenDetail }) => {
   /* ─── Dashboard Renderer ─── */
   const renderDashboard = () => (
     <motion.div variants={containerVariants} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Total Frais Déclarés" value={formatCurrency(kpis.total, true)} icon={<Wallet size={20}/>} color="#3B82F6" />
         <KpiCard title="En Attente" value={`${kpis.enAttente} dossiers`} icon={<Clock size={20}/>} color="#F59E0B" />
         <KpiCard title="Taux de Validation" value={`${kpis.txValidation}%`} icon={<Target size={20}/>} color="#8B5CF6" />

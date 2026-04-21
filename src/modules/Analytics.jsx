@@ -129,7 +129,7 @@ const Analytics = () => {
        </div>
 
        {/* TOP KPIs */}
-       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '1.5rem' }}>
           <KpiCard title="Chiffre d'Affaires Brut" value={formatCurrency(caGenere)} icon={<DollarSign size={20}/>} color="#10B981" />
           <KpiCard title="Valeur Pipeline (CRM)" value={formatCurrency(pipelineValue)} icon={<Target size={20}/>} color="#3B82F6" />
           <KpiCard title="Dettes Fournisseurs" value={formatCurrency(dettes)} icon={<TrendingUp size={20}/>} color="#EF4444" />
@@ -172,7 +172,7 @@ const Analytics = () => {
        </div>
 
        {/* SECONDARY ROW */}
-       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}>
           
           {/* PIE CHART OPORTUNITIES */}
           <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', display: 'flex', flexDirection: 'column' }}>
@@ -233,7 +233,7 @@ const Analytics = () => {
        </div>
 
        {/* TERTIARY METRICS ROW */}
-       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
           <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', textAlign: 'center' }}>
              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--accent)' }}>{activeWorkflows}</div>
              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Règles BPM Actives</div>

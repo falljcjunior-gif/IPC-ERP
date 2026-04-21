@@ -67,7 +67,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.25rem' }}>
         <KpiCard title="Campagnes Actives" value={stats.activeCampaigns} sub="+2 ce mois" trend={2} trendType="up" icon={<Megaphone size={26} />} color="#EC4899" />
         <KpiCard title="ROI Global" value={`${stats.roi}%`} sub="vs objectif 150%" trend={stats.roi > 150 ? 1 : -1} trendType={stats.roi > 150 ? 'up' : 'down'} icon={<TrendingUp size={26} />} color="#10B981" />
         <KpiCard title="Leads Générés" value={stats.totalConversions + stats.newLeads} sub="+18 cette semaine" trend={18} trendType="up" icon={<Users2 size={26} />} color="#8B5CF6" />

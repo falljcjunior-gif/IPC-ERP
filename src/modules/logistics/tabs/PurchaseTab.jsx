@@ -27,7 +27,7 @@ const PurchaseTab = ({ data, formatCurrency, onOpenDetail }) => {
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Dépenses Totales" value={formatCurrency(stats.totalSpent, true)} icon={<DollarSign size={22} />} color="#4F46E5" />
         <KpiCard title="Performance Fourn." value={`${stats.vendorScore}%`} icon={<Star size={22} />} color="#F59E0B" />
         <KpiCard title="Commandes en cours" value={stats.pendingOrders} icon={<ShoppingBag size={22} />} color="#6366F1" />
@@ -35,7 +35,7 @@ const PurchaseTab = ({ data, formatCurrency, onOpenDetail }) => {
       </motion.div>
 
       {/* Vendors & Scorecards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}>
          <motion.div variants={item} className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Top Partenaires Stratégiques</h4>

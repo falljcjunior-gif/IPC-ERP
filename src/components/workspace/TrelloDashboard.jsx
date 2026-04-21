@@ -20,7 +20,7 @@ const TrelloDashboard = ({ tasks, project }) => {
 
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.5rem' }}>
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <h4 style={{ color: 'var(--text-muted)', margin: '0 0 0.5rem 0' }}>Total des tâches</h4>
           <div style={{ fontSize: '2.5rem', fontWeight: 800 }}>{tasks.length}</div>
@@ -33,7 +33,7 @@ const TrelloDashboard = ({ tasks, project }) => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}>
         {/* Bar Chart 1 */}
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', height: '350px' }}>
            <h3 style={{ margin: '0 0 1rem 0' }}>Cartes par liste</h3>

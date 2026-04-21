@@ -31,7 +31,7 @@ const DesignTab = ({ data, onOpenDetail }) => {
       </div>
 
       {/* BOM Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
         {boms.map((bom) => (
           <motion.div 
             key={bom.id} 

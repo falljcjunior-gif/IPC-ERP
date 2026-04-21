@@ -49,7 +49,7 @@ const EventsTab = ({ events, onNew, onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.25rem' }}>
         {[
           { label: 'Événements à venir', value: upcomingCount, color: '#3B82F6', icon: <CalendarDays size={22} /> },
           { label: 'Total Inscrits', value: totalInscrits.toLocaleString(), color: '#8B5CF6', icon: <Users size={22} /> },

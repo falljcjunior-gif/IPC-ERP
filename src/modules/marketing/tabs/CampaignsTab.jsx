@@ -104,7 +104,7 @@ const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
           <p style={{ fontWeight: 700 }}>Aucune campagne trouvée.</p>
         </div>
       ) : view === 'cards' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.25rem' }}>
           {filtered.map((c, i) => {
             const cfg = STATUT_CONFIG[c.statut] || STATUT_CONFIG['Brouillon'];
             const color = TYPE_COLORS[c.type] || '#6B7280';

@@ -39,7 +39,7 @@ const EmailingTab = ({ emailings, onNew, onOpenDetail, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
       {/* Global E-mail KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.25rem' }}>
         {[
           { label: 'Total Envoyés', value: sent.toLocaleString(), icon: <Send size={20} />, color: '#3B82F6' },
           { label: 'Taux d\'Ouverture', value: `${openRate}%`, icon: <Eye size={20} />, color: '#EC4899', note: 'Objectif: 25%' },
@@ -68,7 +68,7 @@ const EmailingTab = ({ emailings, onNew, onOpenDetail, formatCurrency }) => {
       {/* Template Picker */}
       <motion.div variants={item} className="glass" style={{ padding: '1.75rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
         <h4 style={{ margin: '0 0 1rem 0', fontWeight: 900, fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>📐 Choisir un Template</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))', gap: '0.75rem' }}>
           {TEMPLATES.map(t => (
             <div key={t.id} onClick={() => setSelectedTemplate(selectedTemplate === t.id ? null : t.id)}
               style={{

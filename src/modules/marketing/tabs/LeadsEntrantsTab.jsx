@@ -58,7 +58,7 @@ const LeadsEntrantsTab = ({ leads, onNew, onOpenDetail, navigateToCrm }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '1.25rem' }}>
         {[
           { label: 'Total Leads', value: counts.total, color: '#EC4899', icon: <Users2 size={22} /> },
           { label: 'Nouveaux', value: counts.nouveau, color: '#3B82F6', icon: <UserPlus size={22} /> },
@@ -110,7 +110,7 @@ const LeadsEntrantsTab = ({ leads, onNew, onOpenDetail, navigateToCrm }) => {
           <p style={{ fontWeight: 700 }}>Aucun lead entrant trouvé.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.25rem' }}>
           {filtered.map((lead, i) => {
             const interetCfg = INTERET_CFG[lead.interet] || INTERET_CFG['Tiède'];
             const statutCfg = STATUT_CFG[lead.statut] || STATUT_CFG['Nouveau'];

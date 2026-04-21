@@ -78,7 +78,7 @@ const Workflows = () => {
       </div>
 
       {/* Liste des Workflows */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
         {workflows.length === 0 ? (
           <div className="glass" style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', borderRadius: '2rem', border: '2px dashed var(--border)' }}>
              <Activity size={48} color="var(--text-muted)" style={{ marginBottom: '1rem', margin: '0 auto' }} />

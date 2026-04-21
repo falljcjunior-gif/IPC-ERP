@@ -27,7 +27,7 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Stock Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Valeur du Stock" value={formatCurrency(stats.valuation, true)} icon={<Database size={22} />} color="#4F46E5" />
         <KpiCard title="Alerte Ruptures" value={stats.alerts} icon={<AlertTriangle size={22} />} color="#F59E0B" />
         <KpiCard title="Rotation Stock" value={stats.rotation} icon={<RefreshCcw size={22} />} color="#0D9488" />
@@ -48,7 +48,7 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
            </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
            {warehouses.map(wh => (
              <motion.div 
                key={wh.id} 

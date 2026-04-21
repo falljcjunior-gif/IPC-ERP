@@ -88,7 +88,7 @@ const DashboardTab = ({ data }) => {
   return (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
-      <motion.div variants={fade} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: '1.25rem' }}>
+      <motion.div variants={fade} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%, 210px),1fr))', gap: '1.25rem' }}>
         <KpiCard title="Effectif Total" value={activeCount} trend={2.1} trendType="up" icon={<Users size={20} />} color="#0D9488" />
         <KpiCard title="Nouvelles Recrues (3m)" value={newHires} trend={0} icon={<UserPlus size={20} />} color="#8B5CF6" />
         <KpiCard title="Congés en Attente" value={pendingLeaves} trend={0} icon={<CalendarDays size={20} />} color="#F59E0B" />
@@ -209,7 +209,7 @@ const RecrutementTab = () => {
       </div>
 
       {/* Kanban Pipeline */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${RECRUIT_STAGES.length}, minmax(200px, 1fr))`, gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${RECRUIT_STAGES.length}, minmax(min(100%, 200px), 1fr))`, gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
         {RECRUIT_STAGES.map(stage => {
           const cards = byStage[stage] || [];
           const color = STAGE_COLORS[stage];
@@ -294,7 +294,7 @@ const EvaluationsTab = () => {
 
       {/* Summary Cards */}
       {appraisals.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap: '1.25rem' }}>
           {appraisals.map(ap => {
             const score = parseFloat(ap.score) || 0;
             return (
@@ -375,7 +375,7 @@ const FormationsTab = () => {
       </div>
 
       {formations.length > 0 ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(300px,1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 300px),1fr))', gap: '1.25rem' }}>
           {formations.map(f => {
             const color = CATS[f.categorie] || '#64748B';
             const progress = parseFloat(f.progression) || 0;
@@ -442,7 +442,7 @@ const BienEtreTab = () => {
       {/* Initiatives */}
       <div>
         <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 900 }}>🌟 Initiatives Bien-être</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 260px),1fr))', gap: '1.25rem' }}>
           {initiatives.map((init, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass"
               style={{ padding: '1.5rem', borderRadius: '1.5rem', border: `1px solid ${init.color}25` }}>
@@ -551,7 +551,7 @@ const OrgaTab = ({ data }) => {
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{emps.length} collaborateur{emps.length > 1 ? 's' : ''}</div>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: '1rem', paddingLeft: '1.25rem', borderLeft: `2px solid ${color}30` }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 220px),1fr))', gap: '1rem', paddingLeft: '1.25rem', borderLeft: `2px solid ${color}30` }}>
                   {emps.map(emp => (
                     <motion.div key={emp.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass"
                       style={{ padding: '1.25rem', borderRadius: '1.25rem', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.9rem' }}>

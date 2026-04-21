@@ -23,7 +23,7 @@ const SupportTab = ({ data, onOpenDetail, updateRecord }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Support Excellence KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
          <motion.div variants={item} className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <div style={{ background: '#0D948815', color: '#0D9488', padding: '12px', borderRadius: '1rem' }}><Zap size={24} /></div>
             <div>

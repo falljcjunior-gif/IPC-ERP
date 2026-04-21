@@ -87,7 +87,7 @@ const RequestsTab = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '1.5rem' }}>
         {requests.length === 0 ? (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', background: 'var(--bg-subtle)', borderRadius: '1.5rem' }}>
             <FileText size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem' }} />

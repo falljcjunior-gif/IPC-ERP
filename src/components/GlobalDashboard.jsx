@@ -291,7 +291,7 @@ const GlobalDashboard = () => {
             </span>
           </div>
           
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'1rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap:'1rem' }}>
             {[
               {
                 level:'green', icon:<CheckCircle2 size={16} />, color:'#10B981',
@@ -322,7 +322,7 @@ const GlobalDashboard = () => {
         <h3 style={{ fontSize:'1.15rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
           <ActivityIcon size={18} color="var(--accent)" /> Santé des Départements
         </h3>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(200px, 1fr))', gap:'1rem' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap:'1rem' }}>
           {deptHealth.map((dept, i) => (
             <motion.div key={i} variants={itemVariants} whileHover={{ y:-4 }} onClick={() => navigateTo(dept.link)} className="glass"
               style={{ padding:'1.25rem', borderRadius:'1.25rem', cursor:'pointer', display:'flex', flexDirection:'column', gap:'0.75rem' }}>
@@ -388,7 +388,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <Target size={18} color="#3B82F6" /> Direction Commerciale
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} onClick={() => navigateTo('sales')} />
               <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} onClick={() => navigateTo('crm')} />
               <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} onClick={() => navigateTo('marketing')} />
@@ -403,7 +403,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <DollarSign size={18} color="#10B981" /> Direction Financière (CFO)
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Cash-flow Opérationnel" value={formatCurrency(metrics.finance.cashFlow, true)} trend={0}  trendType="up"   icon={<ActivityIcon size={22} />} color="#10B981" sparklineData={[]} onDrillDown={() => handleDrillDown('finance_cashflow')} />
               <KpiCard title="DSO (Délai Recouvrement)" value={`${metrics.finance.dso} Jours`}             trend={0} trendType="down" icon={<Calendar size={22} />}  color="#EF4444" sparklineData={[]}   onDrillDown={() => handleDrillDown('finance_dso')} />
               <KpiCard title="Marge Nette Globale"     value={`${metrics.finance.margeNette}%`}             trend={0}  trendType="up"   icon={<ArrowUpRight size={22} />} color="#06B6D4" sparklineData={[]} />
@@ -417,7 +417,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <Truck size={18} color="#F59E0B" /> Supply Chain & Logistique
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Taux de Service (OTIF)"      value={`${metrics.supply.otif}%`}             trend={0}  trendType="down" icon={<Target size={22} />}    color="#F59E0B" sparklineData={[]} onDrillDown={() => handleDrillDown('supply_otif')} />
               <KpiCard title="Rotation des Stocks"          value={`${metrics.supply.rotationStocks}x/an`} trend={0}  trendType="up"   icon={<Package size={22} />}   color="#8B5CF6" sparklineData={[]} />
               <KpiCard title="Coût Logistique / Commande"  value={formatCurrency(metrics.supply.coutLogistique)} trend={0} trendType="up" icon={<ArrowDownRight size={22} />} color="#10B981" sparklineData={[]} />
@@ -431,7 +431,7 @@ const GlobalDashboard = () => {
             <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
               <HeartPulse size={18} color="#F43F5E" /> Ressources Humaines
             </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'1.5rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
               <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} onClick={() => navigateTo('hr')} />
               <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} onClick={() => navigateTo('hr')} />
               <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} onClick={() => navigateTo('hr')} />
@@ -446,7 +446,7 @@ const GlobalDashboard = () => {
         <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
           <Zap size={18} color="var(--accent)" /> Accès Rapides
         </h3>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(160px, 1fr))', gap:'1rem' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(min(100%, 160px), 1fr))', gap:'1rem' }}>
           {[
             { id:'crm',        label:'CRM',           icon:<Target size={22} />,       color:'#3B82F6' },
             { id:'sales',      label:'Ventes',         icon:<ShoppingCart size={22} />, color:'#10B981' },

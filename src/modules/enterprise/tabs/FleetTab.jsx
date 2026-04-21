@@ -26,7 +26,7 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Fleet Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Disponibilité Fleet" value={`${Math.round((fleetStats.inService / vehicles.length) * 100 || 0)}%`} trend={0} trendType="up" icon={<Activity size={22} />} color="#0D9488" sparklineData={[]} />
         <KpiCard title="Consommation Moy." value={`${fleetStats.avgConsumption} L/100`} trend={0} trendType="down" icon={<Fuel size={22} />} color="#6366F1" sparklineData={[]} />
         <KpiCard title="Kilométrage Total" value={`${(fleetStats.totalKm / 1000).toFixed(1)}k KM`} trend={0} trendType="up" icon={<Gauge size={22} />} color="#8B5CF6" sparklineData={[]} />
@@ -45,7 +45,7 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
            </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: '1.5rem' }}>
            {vehicles.map(v => (
              <motion.div 
                key={v.id} 

@@ -162,7 +162,7 @@ const RecordModal = ({
                   <SmartButtons buttons={smartButtons} />
 
                   <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '2rem' }}>
                       {fields.map(field => (
                         <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                           <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>

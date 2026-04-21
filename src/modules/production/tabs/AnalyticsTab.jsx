@@ -33,7 +33,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Industrial Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="OEE (Rendement Global)" value={`${industrialKPIs.oee}%`} icon={<Activity size={22} />} color="#06B6D4" />
         <KpiCard title="TRS (Efficacité OF)" value={`${industrialKPIs.trs}%`} icon={<Zap size={22} />} color="#3B82F6" />
         <KpiCard title="Qualité (Conformité)" value={`${industrialKPIs.quality}%`} icon={<ShieldCheck size={22} />} color="#10B981" />

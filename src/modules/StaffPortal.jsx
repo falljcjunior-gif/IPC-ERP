@@ -52,7 +52,7 @@ const StaffPortal = ({ embedded }) => {
 
   const renderDashboard = () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '1.5rem' }}>
         <KpiCard 
           title="Solde Congés" 
           value={`${myEmployeeRecord?.congesRestants || 0} Jours`}
@@ -132,7 +132,7 @@ const StaffPortal = ({ embedded }) => {
                Explorer les projets →
             </button>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 250px), 1fr))', gap: '1rem' }}>
             {myProjects.length === 0 ? (
               <div style={{ gridColumn: 'span 3', padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-subtle)', borderRadius: '1rem' }}>
                 Aucune mission assignée.

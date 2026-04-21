@@ -106,7 +106,7 @@ const ModuleSwitcher = ({ onSelectApp }) => {
             </h3>
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 140px), 1fr))', 
               gap: '1.5rem' 
             }}>
               {cat.apps.map(app => (

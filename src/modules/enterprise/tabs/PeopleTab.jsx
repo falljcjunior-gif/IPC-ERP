@@ -28,7 +28,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Human Capital KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Effectif Actif" value={stats.active} icon={<Users size={22} />} color="#0D9488" />
         <KpiCard title="Satisfaction Coll." value={`${stats.satisfaction}/10`} icon={<Heart size={22} />} color="#EC4899" />
         <KpiCard title="Formations YTD" value={stats.formations} icon={<Award size={22} />} color="#6366F1" />
@@ -66,7 +66,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
       </div>
 
       {/* Organizational Insights */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}>
          <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
             <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1rem' }}>Alertes RH & Rappels</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

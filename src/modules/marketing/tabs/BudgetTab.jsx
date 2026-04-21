@@ -87,7 +87,7 @@ const BudgetTab = ({ campaigns, emailings, events, formatCurrency }) => {
       {/* Métriques de Performance */}
       <motion.div variants={item}>
         <h3 style={{ margin: '0 0 1rem 0', fontWeight: 900 }}>Indicateurs de Performance (KPIs)</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))', gap: '1.25rem' }}>
           {[
             { label: 'ROI Global', value: `${stats.roi}%`, note: 'Objectif: 300%', color: parseInt(stats.roi) > 300 ? '#10B981' : '#EF4444', icon: <TrendingUp size={22} />, good: parseInt(stats.roi) > 300 },
             { label: 'Coût par Mille (CPM)', value: `${parseInt(stats.cpm).toLocaleString()} F`, note: `Sur ${(stats.totalReach/1000).toFixed(0)}k personnes atteintes`, color: '#3B82F6', icon: <Target size={22} /> },

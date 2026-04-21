@@ -63,7 +63,7 @@ const LegalHub = ({ onOpenDetail }) => {
       </div>
 
       {/* KPI Section */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.5rem' }}>
         {[
           { label: 'Contrats Actifs', value: (data.legal?.contracts || []).length, icon: <FileSignature size={20} />, color: 'var(--accent)' },
           { label: 'Alertes Échéance', value: 0, sub: 'Prochains 30 jours', icon: <AlertCircle size={20} />, color: '#EF4444' },

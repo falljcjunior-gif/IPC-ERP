@@ -62,7 +62,7 @@ const DMS = () => {
       </div>
 
       {/* Folders Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {folders.map(folder => {
           const folderFiles = (data.dms?.files || []).filter(f => f.folder === folder.name || (folder.name === 'Racine' && !f.folder));
           const numFiles = folderFiles.length;

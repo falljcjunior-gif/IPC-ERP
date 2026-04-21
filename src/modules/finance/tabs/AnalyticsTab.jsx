@@ -68,7 +68,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Financial Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Résultat Net" value={formatCurrency(financialKPIs.netResult, true)} trend={0} trendType="up" icon={<Scale size={22} />} color="#0F172A" sparklineData={[]} />
         <KpiCard title="Trésorerie Totale" value={formatCurrency(financialKPIs.cashOnHand, true)} trend={0} trendType="up" icon={<Landmark size={22} />} color="#6366F1" sparklineData={[]} />
         <KpiCard title="Chiffre d'Affaires" value={formatCurrency(financialKPIs.revenue, true)} trend={0} trendType="up" icon={<TrendingUp size={22} />} color="#10B981" sparklineData={[]} />
