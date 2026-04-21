@@ -29,17 +29,22 @@ const CallInterface = ({
   const [localSpeaking, setLocalSpeaking] = useState(false);
 
   // Global hangup listener
+  const onHangupRef = useRef(onHangup);
+  useEffect(() => {
+    onHangupRef.current = onHangup;
+  }, [onHangup]);
+
   useEffect(() => {
     if (!isOpen || !callId) return;
     const roomRef = doc(db, 'rooms', callId);
     const unsub = onSnapshot(roomRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().status === 'ended') {
          webrtcService.hangup(callId, currentUser.id);
-         if (onHangup) onHangup();
+         if (onHangupRef.current) onHangupRef.current();
       }
     });
     return () => unsub();
-  }, [isOpen, callId, currentUser.id, onHangup]);
+  }, [isOpen, callId, currentUser.id]);
 
   useEffect(() => {
     if (!isOpen || !callId) return;
