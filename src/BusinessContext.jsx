@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { mockData } from './utils/data-factory';
-import { auth, db, firebaseConfig } from './firebase/config';
+import { auth, db, storage } from './firebase/config';
 import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 
@@ -1025,6 +1026,20 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [userRole]);
 
+  const uploadLogo = useCallback(async (file) => {
+    if (userRole !== 'SUPER_ADMIN') throw new Error("Accès refusé");
+    const storageRef = ref(storage, `brand/logos/master_logo_${Date.now()}`);
+    try {
+      const snapshot = await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(snapshot.ref);
+      await updateGlobalSettings({ logoUrl: url });
+      return url;
+    } catch (error) {
+      console.error("Erreur lors de l'upload du logo:", error);
+      throw error;
+    }
+  }, [userRole, updateGlobalSettings]);
+
 
 
 
@@ -1486,7 +1501,7 @@ export const BusinessProvider = ({ children }) => {
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
       addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
-      processPOSOrder,
+      processPOSOrder, uploadLogo,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({
            ...prev,

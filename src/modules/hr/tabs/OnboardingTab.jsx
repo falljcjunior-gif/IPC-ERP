@@ -10,15 +10,31 @@ import {
 } from 'lucide-react';
 
 const availableModules = [
-  { id: 'home',       label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: '👤', color: '#10B981', locked: true },
-  { id: 'connect',    label: 'IPC Connect (Réseau)',         role: 'STAFF',      icon: '💬', color: '#8B5CF6' },
-  { id: 'crm',        label: 'CRM & Acquisition',            role: 'SALES',      icon: '🎯', color: '#3B82F6' },
-  { id: 'sales',      label: 'Gestion des Ventes',           role: 'SALES',      icon: '🛒', color: '#06B6D4' },
-  { id: 'production', label: 'Atelier & Production',         role: 'PRODUCTION', icon: '⚙️', color: '#F59E0B' },
-  { id: 'inventory',  label: 'Logistique & Stocks',          role: 'LOGISTICS',  icon: '📦', color: '#F97316' },
-  { id: 'finance',    label: 'Finance & Trésorerie',         role: 'FINANCE',    icon: '💰', color: '#6366F1' },
-  { id: 'hr',         label: 'Ressources Humaines',          role: 'HR',         icon: '👥', color: '#EC4899' },
-  { id: 'admin',      label: 'Administration Système',       role: 'ADMIN',      icon: '🛡️', color: '#EF4444' },
+  { id: 'home',       category: 'Général', label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: '👤', color: '#10B981', locked: true, desc: 'Profil et base employés' },
+  { id: 'connect',    category: 'Général', label: 'IPC Connect (Réseau)',        role: 'STAFF',      icon: '💬', color: '#8B5CF6', desc: 'Messagerie & Appels' },
+  { id: 'crm',        category: 'Ventes & Marketing', label: 'CRM & Acquisition',           role: 'SALES',      icon: '🎯', color: '#3B82F6', desc: 'Clients & Prospection' },
+  { id: 'sales',      category: 'Ventes & Marketing', label: 'Gestion des Ventes',          role: 'SALES',      icon: '🛒', color: '#06B6D4', desc: 'Devis & Facturation' },
+  { id: 'marketing',  category: 'Ventes & Marketing', label: 'Marketing & Coms',            role: 'MARKETING',  icon: '📢', color: '#F59E0B', desc: 'Campagnes & Reseaux' },
+  { id: 'production', category: 'Production & Log', label: 'Atelier & Production',        role: 'PRODUCTION', icon: '⚙️', color: '#F59E0B', desc: 'Ordres & Machines' },
+  { id: 'inventory',  category: 'Production & Log', label: 'Logistique & Stocks',         role: 'LOGISTICS',  icon: '📦', color: '#F97316', desc: 'Entrepôts & Flux' },
+  { id: 'purchase',   category: 'Production & Log', label: 'Achats & Approvis.',          role: 'PURCHASE',   icon: '🛍️', color: '#64748B', desc: 'Fournisseurs & Commandes' },
+  { id: 'finance',    category: 'Admin & Finance', label: 'Finance & Comptabilité',      role: 'FINANCE',    icon: '💰', color: '#6366F1', desc: 'Trésorerie & Bilans' },
+  { id: 'hr',         category: 'Admin & Finance', label: 'Ressources Humaines',         role: 'HR',         icon: '👥', color: '#EC4899', desc: 'Paie & Contrats' },
+  { id: 'legal',      category: 'Admin & Finance', label: 'Juridique & Conformité',      role: 'LEGAL',      icon: '⚖️', color: '#14B8A6', desc: 'Litiges & Contrats' },
+  { id: 'projects',   category: 'Projets & Support', label: 'Gestion de Projets',          role: 'PROJECTS',   icon: '📋', color: '#8B5CF6', desc: 'Tâches & Planification' },
+  { id: 'support',    category: 'Projets & Support', label: 'Support & SAV',               role: 'SUPPORT',    icon: '🎧', color: '#0EA5E9', desc: 'Tickets & Assistance' },
+  { id: 'executive',  category: 'Direction & IT', label: 'Direction & Pilotage',        role: 'EXECUTIVE',  icon: '👑', color: '#F43F5E', desc: 'Stratégie & KPIs' },
+  { id: 'data',       category: 'Direction & IT', label: 'Data & BI',                   role: 'DATA',       icon: '📊', color: '#8B5CF6', desc: 'Analytique & Stats' },
+  { id: 'admin',      category: 'Direction & IT', label: 'Administration Système',      role: 'ADMIN',      icon: '🛡️', color: '#EF4444', desc: 'Sécurité & Accès' },
+];
+
+const moduleCategories = [
+  'Général',
+  'Ventes & Marketing',
+  'Production & Log',
+  'Admin & Finance',
+  'Projets & Support',
+  'Direction & IT'
 ];
 
 // ─────────────────────────────────────────────────────────────────
@@ -40,6 +56,16 @@ const EditAccessPanel = ({ employee, onClose }) => {
     setLocalModules(prev =>
       prev.includes(modId) ? prev.filter(m => m !== modId) : [...prev, modId]
     );
+  };
+
+  const toggleCategory = (cat) => {
+    const catMods = availableModules.filter(m => m.category === cat && !m.locked).map(m => m.id);
+    const allSelected = catMods.every(m => localModules.includes(m));
+    if (allSelected) {
+      setLocalModules(prev => prev.filter(m => !catMods.includes(m)));
+    } else {
+      setLocalModules(prev => Array.from(new Set([...prev, ...catMods])));
+    }
   };
 
   const handleSave = async () => {
@@ -123,30 +149,58 @@ const EditAccessPanel = ({ employee, onClose }) => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gap: '0.6rem', marginBottom: '2rem' }}>
-        {availableModules.map(mod => {
-          const isActive = localModules.includes(mod.id);
+      <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
+        {moduleCategories.map(cat => {
+          const mods = availableModules.filter(m => m.category === cat);
+          if (mods.length === 0) return null;
+          
+          const lockedMods = mods.filter(m => m.locked).map(m => m.id);
+          const unlockableMods = mods.filter(m => !m.locked).map(m => m.id);
+          const allUnlockedSelected = unlockableMods.length > 0 && unlockableMods.every(m => localModules.includes(m));
+
           return (
-            <div
-              key={mod.id}
-              onClick={() => toggleMod(mod.id)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '0.9rem',
-                padding: '0.85rem 1rem', borderRadius: '1rem',
-                border: isActive ? `2px solid ${mod.color}` : '2px solid transparent',
-                background: isActive ? `${mod.color}12` : 'var(--bg-subtle)',
-                cursor: mod.locked ? 'not-allowed' : 'pointer',
-                transition: 'all 0.18s'
-              }}
-            >
-              <span style={{ fontSize: '1.1rem' }}>{mod.icon}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: '0.88rem', color: isActive ? mod.color : 'var(--text)' }}>{mod.label}</div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', fontWeight: 700 }}>Rôle : {mod.role}</div>
+            <div key={cat} style={{ background: 'var(--bg-subtle)', borderRadius: '1.25rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
+              <div style={{ padding: '0.75rem 1rem', background: '#00000005', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  {cat}
+                </span>
+                {unlockableMods.length > 0 && (
+                  <button onClick={() => toggleCategory(cat)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>
+                    {allUnlockedSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </button>
+                )}
               </div>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: isActive ? mod.color : 'var(--text-muted)', display: 'flex' }}>
-                {isActive ? <ToggleRight size={26} /> : <ToggleLeft size={26} />}
-              </button>
+              <div style={{ display: 'grid', gap: '2px', background: 'var(--border)' }}>
+                {mods.map(mod => {
+                  const isActive = localModules.includes(mod.id);
+                  return (
+                    <div
+                      key={mod.id}
+                      onClick={() => toggleMod(mod.id)}
+                      style={{
+                        background: 'var(--bg)',
+                        display: 'flex', alignItems: 'center', gap: '1rem',
+                        padding: '1rem', cursor: mod.locked ? 'not-allowed' : 'pointer',
+                        transition: 'all 0.18s'
+                      }}
+                    >
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: isActive ? `${mod.color}15` : 'var(--bg-subtle)', color: isActive ? mod.color : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'all 0.3s' }}>
+                        {mod.icon}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: isActive ? mod.color : 'var(--text)' }}>{mod.label}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px' }}>
+                           <span style={{ fontSize: '0.65rem', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)', fontWeight: 700 }}>Rôle: {mod.role}</span>
+                           {mod.desc && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {mod.desc}</span>}
+                        </div>
+                      </div>
+                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: isActive ? mod.color : 'var(--text-muted)', display: 'flex' }}>
+                        {isActive ? <ToggleRight size={30} /> : <ToggleLeft size={30} />}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           );
         })}
@@ -226,6 +280,16 @@ const OnboardingTab = () => {
     setSelectedModules(prev =>
       prev.includes(modId) ? prev.filter(m => m !== modId) : [...prev, modId]
     );
+  };
+
+  const toggleCreateCategory = (cat) => {
+    const catMods = availableModules.filter(m => m.category === cat && !m.locked).map(m => m.id);
+    const allSelected = catMods.every(m => selectedModules.includes(m));
+    if (allSelected) {
+      setSelectedModules(prev => prev.filter(m => !catMods.includes(m)));
+    } else {
+      setSelectedModules(prev => Array.from(new Set([...prev, ...catMods])));
+    }
   };
 
   const handleInputChange = (e) => {
@@ -437,8 +501,18 @@ const OnboardingTab = () => {
                       <div>
                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>Département</label>
                         <select name="dept" value={formData.dept} onChange={handleInputChange} className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-                           <option>Ventes</option><option>Production</option><option>Finance</option>
-                           <option>IT</option><option>RH</option><option>Logistique</option><option>Direction</option>
+                           <option>Ventes</option>
+                           <option>Marketing</option>
+                           <option>Production</option>
+                           <option>Logistique</option>
+                           <option>Achats</option>
+                           <option>Finance</option>
+                           <option>RH</option>
+                           <option>Juridique</option>
+                           <option>IT</option>
+                           <option>Support/SAV</option>
+                           <option>Projets</option>
+                           <option>Direction</option>
                         </select>
                       </div>
                    </div>
@@ -499,20 +573,49 @@ const OnboardingTab = () => {
                     Cochez les applications auxquelles ce collaborateur aura accès. Les rôles seront automatiquement déduits.
                  </p>
                  
-                 <div style={{ display: 'grid', gap: '0.75rem' }}>
-                    {availableModules.map(mod => {
-                      const isSelected = selectedModules.includes(mod.id);
+                 <div style={{ display: 'grid', gap: '1.25rem' }}>
+                    {moduleCategories.map(cat => {
+                      const mods = availableModules.filter(m => m.category === cat);
+                      if (mods.length === 0) return null;
+                      
+                      const lockedMods = mods.filter(m => m.locked).map(m => m.id);
+                      const unlockableMods = mods.filter(m => !m.locked).map(m => m.id);
+                      const allUnlockedSelected = unlockableMods.length > 0 && unlockableMods.every(m => selectedModules.includes(m));
+
                       return (
-                        <div key={mod.id} onClick={() => toggleModule(mod.id)}
-                          style={{ padding: '1rem', borderRadius: '1rem', border: isSelected ? `2px solid ${mod.color}` : '2px solid transparent', background: isSelected ? `${mod.color}15` : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', gap: '1rem', cursor: mod.locked ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
-                           <div style={{ fontSize: '1.25rem' }}>{mod.icon}</div>
-                           <div style={{ flex: 1 }}>
-                              <div style={{ fontWeight: 800, color: isSelected ? mod.color : 'var(--text)' }}>{mod.label}</div>
-                              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px', fontWeight: 700 }}>Rôle induit : {mod.role}</div>
-                           </div>
-                           <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: isSelected ? mod.color : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? 'white' : 'transparent', opacity: mod.locked ? 0.5 : 1 }}>
-                             <Check size={16} />
-                           </div>
+                        <div key={cat} style={{ background: 'var(--bg-subtle)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
+                          <div style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                              {cat}
+                            </span>
+                            {unlockableMods.length > 0 && (
+                              <button type="button" onClick={(e) => { e.preventDefault(); toggleCreateCategory(cat); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>
+                                {allUnlockedSelected ? 'Désélectionner' : 'Sélectionner tout'}
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div style={{ padding: '0.75rem', display: 'grid', gap: '0.5rem' }}>
+                            {mods.map(mod => {
+                              const isSelected = selectedModules.includes(mod.id);
+                              return (
+                                <div key={mod.id} onClick={(e) => { e.preventDefault(); toggleModule(mod.id); }}
+                                  style={{ padding: '0.85rem', borderRadius: '0.75rem', border: isSelected ? `2px solid ${mod.color}` : '2px solid transparent', background: isSelected ? `${mod.color}15` : 'var(--bg)', display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: mod.locked ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
+                                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isSelected ? mod.color : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', color: isSelected ? 'white' : 'var(--text)' }}>{mod.icon}</div>
+                                   <div style={{ flex: 1 }}>
+                                      <div style={{ fontWeight: 800, color: isSelected ? mod.color : 'var(--text)', fontSize: '0.88rem' }}>{mod.label}</div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                        <span style={{ fontSize: '0.65rem', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role}</span>
+                                        {mod.desc && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {mod.desc}</span>}
+                                      </div>
+                                   </div>
+                                   <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: isSelected ? mod.color : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? 'white' : 'transparent', opacity: mod.locked ? 0.5 : 1 }}>
+                                     <Check size={14} />
+                                   </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       );
                     })}

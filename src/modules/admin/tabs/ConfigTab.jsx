@@ -4,12 +4,29 @@ import {
   Palette, Globe, Clock, Building2, 
   Settings, Save, RefreshCcw, Landmark,
   Type, Hash, CreditCard, Layout,
-  Monitor, Sidebar, Sparkles, Check
+  Monitor, Sidebar, Sparkles, Check, Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 
 const ConfigTab = () => {
-  const { config, updateConfig, globalSettings, updateGlobalSettings } = useBusiness();
+  const { config, updateConfig, globalSettings, updateGlobalSettings, uploadLogo } = useBusiness();
+  const [uploading, setUploading] = React.useState(false);
+  const fileInputRef = React.useRef();
+
+  const handleLogoUpload = async (e) => {
+     const file = e.target.files[0];
+     if (!file) return;
+     
+     setUploading(true);
+     try {
+        await uploadLogo(file);
+        alert("Logo mis à jour avec succès !");
+     } catch (err) {
+        alert("Erreur lors de l'upload : " + err.message);
+     } finally {
+        setUploading(false);
+     }
+  };
 
   const colorPresets = [
     { name: 'Pétrole (IPC)', primary: '#1F363D', accent: '#529990' },
@@ -42,12 +59,31 @@ const ConfigTab = () => {
                    </div>
                 </div>
 
-                <div>
-                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                      <Monitor size={14} /> URL du Logo Master
-                   </label>
-                   <input className="form-input" value={globalSettings.logoUrl} onChange={(e) => updateGlobalSettings({ logoUrl: e.target.value })} />
-                </div>
+                 <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
+                       <Monitor size={14} /> Logo Master (Branding)
+                    </label>
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                       <div className="glass" style={{ width: '80px', height: '80px', borderRadius: '1.25rem', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
+                          <img src={globalSettings.logoUrl || '/logo.png'} alt="Preview" style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
+                       </div>
+                       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                             <input className="form-input" value={globalSettings.logoUrl} onChange={(e) => updateGlobalSettings({ logoUrl: e.target.value })} style={{ flex: 1, fontSize: '0.8rem', padding: '0.75rem 1rem' }} placeholder="https://..." />
+                             <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={uploading}
+                                className="btn" 
+                                style={{ padding: '0.5rem 1rem', borderRadius: '1rem', border: '1px solid #3B82F6', color: '#3B82F6', fontWeight: 700, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}
+                             >
+                                {uploading ? <Loader2 className="spin" size={14} /> : <Upload size={14} />} 
+                                {uploading ? '...' : 'Upload'}
+                             </button>
+                             <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" style={{ display: 'none' }} />
+                          </div>
+                       </div>
+                    </div>
+                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                    <div>
