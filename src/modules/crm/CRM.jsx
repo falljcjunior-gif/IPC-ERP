@@ -19,7 +19,7 @@ import LeadsTab from './tabs/LeadsTab';
 import CustomerTab from './tabs/CustomerTab';
 
 const CRM = ({ onOpenDetail, accessLevel }) => {
-  const { data, addRecord, formatCurrency, userRole } = useBusiness();
+  const { data, addRecord, formatCurrency, userRole, shellView } = useBusiness();
   const [mainTab, setMainTab] = useState('analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('leads');
@@ -40,7 +40,7 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
   };
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(16, 185, 129, 0.02) 100%)' }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: shellView?.mobile ? '1.5rem' : '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(16, 185, 129, 0.02) 100%)' }}>
       {/* Header Premium Experience */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
@@ -50,13 +50,13 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Sales Intelligence</span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Velocity Center</h1>
+          <h1 style={{ fontSize: shellView?.mobile ? '2rem' : '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Velocity Center</h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
             Transformez vos prospects en partenaires fidèles avec une visibilité totale sur votre tunnel de conversion.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
            <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #10B98130' }}>
               <Zap size={16} color="#10B981" />
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>Pipeline: +15% ce mois</span>

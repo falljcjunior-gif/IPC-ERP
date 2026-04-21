@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, MessageSquare, Search, User, Users, Paperclip, 
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
-  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square
+  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square, ChevronLeft
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 import { db, auth, storage } from '../../../firebase/config';
@@ -12,9 +12,9 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
-  const { currentUser, data, setActiveCall, sendNotification } = useBusiness();
+  const { currentUser, data, setActiveCall, sendNotification, shellView } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats');
-  const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
+  const [activeRoom, setActiveRoom] = useState(shellView?.mobile ? null : { id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -329,9 +329,10 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%', borderRadius: '2.5rem', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', height: '100%', borderRadius: shellView?.mobile ? '1rem' : '2.5rem', overflow: 'hidden', border: '1px solid var(--border)', background: 'var(--bg)' }}>
       {/* Sidebar Area */}
-      <div style={{ width: '300px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-subtle)' }}>
+      {(!shellView?.mobile || !activeRoom) && (
+      <div style={{ width: shellView?.mobile ? '100%' : '300px', borderRight: shellView?.mobile ? 'none' : '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-subtle)' }}>
         <div style={{ padding: '2rem', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ margin: '0 0 1rem 0', fontWeight: 900, fontSize: '1.25rem' }}>Messenger</h3>
           <div style={{ display: 'flex', gap: '0.6rem', background: 'var(--bg)', padding: '0.6rem 1rem', borderRadius: '1rem', border: '1px solid var(--border)', alignItems: 'center' }}>
@@ -385,13 +386,20 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
             )}
          </div>
       </div>
+      )}
 
       {/* Main Chat Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+      {(!shellView?.mobile || activeRoom) && (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg)', width: shellView?.mobile ? '100%' : 'auto' }}>
          {/* Room Header */}
-         <div style={{ padding: '1.25rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-               <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem' }}>
+         <div style={{ padding: shellView?.mobile ? '1rem' : '1.25rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+               {shellView?.mobile && (
+                 <button onClick={() => setActiveRoom(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.4rem', color: 'var(--text)' }}>
+                   <ChevronLeft size={24} />
+                 </button>
+               )}
+               <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.1rem', flexShrink: 0 }}>
                   {activeRoom.label[0]}
                </div>
                <div>
@@ -585,6 +593,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
             </div>
          </form>
       </div>
+      )}
     </div>
   );
 };

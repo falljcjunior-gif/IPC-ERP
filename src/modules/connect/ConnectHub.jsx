@@ -14,7 +14,7 @@ import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
-  const { data, currentUser, navigationIntent, setNavigationIntent } = useBusiness();
+  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useBusiness();
   const [activeTab, setActiveTab] = useState('wall');
   const [showSettings, setShowSettings] = useState(false);
   const [connectSettings, setConnectSettings] = useState({
@@ -40,7 +40,7 @@ const ConnectHub = ({ onOpenDetail }) => {
   ];
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: shellView?.mobile ? '1.5rem' : '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
       
       {/* Header : The Social Pulse */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
@@ -51,13 +51,13 @@ const ConnectHub = ({ onOpenDetail }) => {
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC CONNECT OS</span>
           </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: 'var(--text)', lineHeight: 1 }}>Human Synergy</h1>
+          <h1 style={{ fontSize: shellView?.mobile ? '2rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: 'var(--text)', lineHeight: 1 }}>Human Synergy</h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
             Votre écosystème collaboratif intelligent : Communiquez, collaborez et célébrez la culture de l'entreprise au même endroit.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
            <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.75rem 1.5rem', borderRadius: '3rem', border: '1px solid #8B5CF630' }}>
               <Heart size={16} color="#8B5CF6" />
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>Cœur Social : 100% Connecté</span>
