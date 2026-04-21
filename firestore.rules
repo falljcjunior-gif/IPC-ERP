@@ -45,6 +45,17 @@ service cloud.firestore {
       }
     }
 
+    // ── Rooms (Chat Groups & WebRTC Mesh) ────────────────────────────────────
+    match /rooms/{roomId} {
+      allow read, write: if isAuthenticated();
+      match /participants/{participantId} {
+        allow read, write: if isAuthenticated();
+      }
+      match /signals/{signalId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
     // ── Audit Logs ───────────────────────────────────────────────────────────
     match /audit_logs/{docId} {
       allow read: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE']);
