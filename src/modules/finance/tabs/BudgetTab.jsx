@@ -15,11 +15,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
-  const budgets = useMemo(() => data?.finance?.budgets || [
-    { id: '1', departement: 'Marketing', prevision: 5000000, realise: 4600000, statut: 'Optimal' },
-    { id: '2', departement: 'Production', prevision: 15000000, realise: 12400000, statut: 'Optimal' },
-    { id: '3', departement: 'Logistique', prevision: 8000000, realise: 8500000, statut: 'Alerte' },
-  ], [data?.finance?.budgets]);
+  const budgets = useMemo(() => data?.finance?.budgets || [], [data?.finance?.budgets]);
 
   const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#F43F5E'];
 

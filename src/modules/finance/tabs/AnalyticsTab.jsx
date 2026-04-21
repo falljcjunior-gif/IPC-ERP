@@ -40,7 +40,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       revenue: rev,
       expenses: exp,
       cashOnHand: cash,
-      dso: 35, // Remains estimated or could be calculated if we have sales/payments link
+      dso: 0, // Remains estimated or could be calculated if we have sales/payments link
     };
   }, [ledgerLines]);
 
@@ -110,10 +110,10 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
              <div style={{ padding: '1.5rem', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                    <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Marge Autonome</div>
-                   <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#10B981' }}>28%</div>
+                   <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#10B981' }}>0%</div>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                   <motion.div initial={{ width: 0 }} animate={{ width: '28%' }} transition={{ duration: 1 }} style={{ height: '100%', background: '#10B981' }} />
+                   <motion.div initial={{ width: 0 }} animate={{ width: '0%' }} transition={{ duration: 1 }} style={{ height: '100%', background: '#10B981' }} />
                 </div>
              </div>
 
@@ -123,16 +123,16 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'start' }}>
                    <div style={{ padding: '8px', borderRadius: '8px', background: '#10B98120', color: '#10B981' }}><TrendingUp size={16} /></div>
                    <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Collection Efficace</div>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Le DSO a réduit de 7 jours ce mois-ci, libérant +12M FCFA de liquidités.</p>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>En attente de données</div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Les analyses IA seront générées avec plus d'historique.</p>
                    </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'start' }}>
                    <div style={{ padding: '8px', borderRadius: '8px', background: '#F59E0B20', color: '#F59E0B' }}><Target size={16} /></div>
                    <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Pression Budgétaire</div>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Le département Marketing a atteint 92% de son budget OPEX. Vigilance requise.</p>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Statut Budgétaire</div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Initialisation des budgets en cours.</p>
                    </div>
                 </div>
              </div>

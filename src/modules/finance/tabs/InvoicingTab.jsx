@@ -23,9 +23,9 @@ const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
          <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '1.75rem', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
                <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Total Recevables (AR)</div>
-               <div style={{ fontSize: '1.75rem', fontWeight: 900 }}>{formatCurrency && formatCurrency(12845000)}</div>
+               <div style={{ fontSize: '1.75rem', fontWeight: 900 }}>{formatCurrency && formatCurrency(0)}</div>
                <div style={{ fontSize: '0.75rem', color: '#EF4444', fontWeight: 800, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Clock size={12} /> 12 Factures en retard
+                  <Clock size={12} /> 0 Facture en retard
                </div>
             </div>
             <div style={{ background: '#F59E0B15', padding: '16px', borderRadius: '1.25rem', color: '#F59E0B' }}>
@@ -36,9 +36,9 @@ const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
          <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '1.75rem', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
                <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Total Payables (AP)</div>
-               <div style={{ fontSize: '1.75rem', fontWeight: 900 }}>{formatCurrency && formatCurrency(8240000)}</div>
+               <div style={{ fontSize: '1.75rem', fontWeight: 900 }}>{formatCurrency && formatCurrency(0)}</div>
                <div style={{ fontSize: '0.75rem', color: '#10B981', fontWeight: 800, marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <CheckCircle2 size={12} /> Flux de trésorerie positif
+                  <CheckCircle2 size={12} /> Flux de trésorerie neutre
                </div>
             </div>
             <div style={{ background: '#6366F115', padding: '16px', borderRadius: '1.25rem', color: '#6366F1' }}>
