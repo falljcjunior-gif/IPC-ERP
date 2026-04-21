@@ -124,8 +124,8 @@ const DashboardTab = ({ data }) => {
           <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '0.95rem' }}>❤️ Baromètre Bien-être</h4>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
             {moods.map(m => (
-              <div key={m.label} style={{ textAlign: 'center', flex: 1 }}>
-                <div style={{ padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)', marginBottom: '0.5rem' }}>{m.icon}</div>
+              <div key={m.label} onClick={() => onSentiment(m.label)} style={{ textAlign: 'center', flex: 1, cursor: 'pointer' }}>
+                <motion.div whileHover={{ scale: 1.1, y: -5 }} style={{ padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)', marginBottom: '0.5rem' }}>{m.icon}</motion.div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>{m.label}</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 900 }}>{m.pct}%</div>
               </div>
@@ -583,8 +583,9 @@ const OrgaTab = ({ data }) => {
    MAIN MODULE
 ══════════════════════════════════════ */
 const PeopleAndCulture = () => {
-  const { data } = useBusiness();
+  const { data, userRole, seedDemoData, addRecord } = useBusiness();
   const [tab, setTab] = useState('dashboard');
+  const [showUat, setShowUat] = useState(false);
 
   const tabs = [
     { id: 'dashboard', label: 'Vue Culture', icon: <Sparkles size={15} /> },
@@ -595,8 +596,13 @@ const PeopleAndCulture = () => {
     { id: 'orga', label: 'Organigramme', icon: <GitBranch size={15} /> },
   ];
 
+  const handleSentiment = (mood) => {
+    addRecord('talent', 'surveys', { type: 'Pulse', sentiment: mood, date: new Date().toISOString() });
+    alert(`Merci ! Votre sentiment "${mood}" a été enregistré.`);
+  };
+
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2.5rem', minHeight: '100vh' }}>
+    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2.5rem', minHeight: '100vh', background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%)' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.5rem' }}>
         <div>
@@ -614,17 +620,36 @@ const PeopleAndCulture = () => {
             Talent, bien-être, évaluations, formations et culture d'entreprise.
           </p>
         </div>
-        <div className="glass" style={{ padding: '1rem 1.5rem', borderRadius: '1.5rem', border: '1px solid #EC489930', display: 'flex', gap: '2rem' }}>
-          {[
-            { val: (data.hr?.employees || []).length, label: 'Collaborateurs' },
-            { val: (data.talent?.candidates || []).length, label: 'Candidats' },
-            { val: (data.talent?.formations || []).length, label: 'Formations' },
-          ].map(s => (
-            <div key={s.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EC4899' }}>{s.val}</div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>{s.label}</div>
+
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          {userRole === 'ADMIN' && (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+               <button onClick={() => setShowUat(!showUat)} className="glass" style={{ padding: '0.6rem 1.2rem', borderRadius: '1rem', border: '1px solid #8B5CF6', color: '#8B5CF6', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
+                 UAT Lab {showUat ? '▼' : '▲'}
+               </button>
+               <AnimatePresence>
+                 {showUat && (
+                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={seedDemoData} className="glass" style={{ background: '#10B98120', border: '1px solid #10B981', color: '#10B981', padding: '0.6rem 1.2rem', borderRadius: '1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Seed Data</button>
+                      <div className="glass" style={{ padding: '0.6rem 1.2rem', borderRadius: '1rem', border: '1px solid #3B82F6', color: '#3B82F6', fontSize: '0.8rem', fontWeight: 700 }}>Firestore: OK</div>
+                   </motion.div>
+                 )}
+               </AnimatePresence>
             </div>
-          ))}
+          )}
+
+          <div className="glass" style={{ padding: '1rem 1.5rem', borderRadius: '1.5rem', border: '1px solid #EC489930', display: 'flex', gap: '2rem' }}>
+            {[
+              { val: (data.hr?.employees || []).length, label: 'Collaborateurs' },
+              { val: (data.talent?.candidates || []).length, label: 'Candidats' },
+              { val: (data.talent?.formations || []).length, label: 'Formations' },
+            ].map(s => (
+              <div key={s.label} style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#EC4899' }}>{s.val}</div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -634,7 +659,7 @@ const PeopleAndCulture = () => {
       {/* Content */}
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }} transition={{ duration: 0.28 }}>
-          {tab === 'dashboard'    && <DashboardTab data={data} />}
+          {tab === 'dashboard'    && <DashboardTab data={data} onSentiment={handleSentiment} />}
           {tab === 'recrutement' && <RecrutementTab />}
           {tab === 'evaluations' && <EvaluationsTab />}
           {tab === 'formations'  && <FormationsTab />}

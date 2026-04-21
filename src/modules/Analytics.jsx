@@ -14,9 +14,9 @@ import KpiCard from '../components/KpiCard';
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 const Analytics = () => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency, seedDemoData } = useBusiness();
   // Option pour facilement désactiver les courbes lissées factices dans le futur
-  const [enableDemoHistory, setEnableDemoHistory] = useState(true);
+  const [enableDemoHistory, setEnableDemoHistory] = useState(false);
 
   // -------------- DATA AGGREGATION ---------------
 
@@ -47,23 +47,44 @@ const Analytics = () => {
   const activeWorkflows = (Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || [])).filter(w => w.active).length;
   const signedDocs = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
 
-  // -------------- DEMO HISTORY GENERATOR ---------------
+  // -------------- REAL HISTORY AGGREGATOR ---------------
   const cashflowTrend = useMemo(() => {
-    if (!enableDemoHistory) {
-       // Vrai calcul : agrouper par mois basé sur createdAt
-       // Sauf que toutes les données actuelles ont été créées aujourd'hui.
-       const today = new Date().toLocaleString('fr-FR', { month: 'short' });
-       return [{ m: today, ca: caGenere, depenses: dettes }];
+    if (enableDemoHistory) {
+      // Mode Demo : Répartit le CA global sur 6 mois pour le visuel
+      const months = ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'];
+      return months.map((m, i) => ({
+         m,
+         ca: Math.round(caGenere * (0.1 + (Math.random() * 0.15))),
+         depenses: Math.round(dettes * (0.1 + (Math.random() * 0.2))),
+      }));
     }
 
-    // Mode Demo : Répartit le CA global sur 6 mois pour le visuel
-    const months = ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'];
-    return months.map((m, i) => ({
-       m,
-       ca: Math.round(caGenere * (0.1 + (Math.random() * 0.15))),
-       depenses: Math.round(dettes * (0.1 + (Math.random() * 0.2))),
-    }));
-  }, [caGenere, dettes, enableDemoHistory]);
+    // Vrai calcul : agrouper par mois basé sur createdAt
+    const monthlyData = {};
+    
+    invoices.forEach(inv => {
+      const date = inv.createdAt ? new Date(inv.createdAt) : new Date();
+      const m = date.toLocaleString('fr-FR', { month: 'short' });
+      if (!monthlyData[m]) monthlyData[m] = { m, ca: 0, depenses: 0 };
+      monthlyData[m].ca += parseFloat(inv.montant || 0);
+    });
+
+    vendorBills.forEach(bill => {
+      const date = bill.createdAt ? new Date(bill.createdAt) : new Date();
+      const m = date.toLocaleString('fr-FR', { month: 'short' });
+      if (!monthlyData[m]) monthlyData[m] = { m, ca: 0, depenses: 0 };
+      monthlyData[m].depenses += parseFloat(bill.montant || 0);
+    });
+
+    const result = Object.values(monthlyData);
+    if (result.length === 0) {
+      const today = new Date().toLocaleString('fr-FR', { month: 'short' });
+      return [{ m: today, ca: caGenere, depenses: dettes }];
+    }
+    
+    // Sort by Date (approx using month strings is tricky, but here we assume recent history)
+    return result;
+  }, [caGenere, dettes, enableDemoHistory, invoices, vendorBills]);
 
 
   const hrDeptCost = useMemo(() => {
@@ -88,13 +109,22 @@ const Analytics = () => {
              <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>Aperçu granulaire • Flux financiers • Optimisation RH</p>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-card)', padding: '0.5rem 1rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
-             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: enableDemoHistory ? 'var(--accent)' : 'var(--text-muted)' }}>Historique Fictif (Maquette Lisse)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
              <button 
-                onClick={() => setEnableDemoHistory(!enableDemoHistory)}
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: enableDemoHistory ? 'var(--accent)' : 'var(--text-muted)', display: 'flex' }}>
-                {enableDemoHistory ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                onClick={seedDemoData}
+                className="glass"
+                style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', border: '1px solid #10B981', color: '#10B981', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Sparkles size={16} /> Générer Historique
              </button>
+
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-card)', padding: '0.5rem 1rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: enableDemoHistory ? 'var(--accent)' : 'var(--text-muted)' }}>Maquette Lisse</span>
+                <button 
+                   onClick={() => setEnableDemoHistory(!enableDemoHistory)}
+                   style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, color: enableDemoHistory ? 'var(--accent)' : 'var(--text-muted)', display: 'flex' }}>
+                   {enableDemoHistory ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                </button>
+             </div>
           </div>
        </div>
 

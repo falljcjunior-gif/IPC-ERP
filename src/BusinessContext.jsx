@@ -488,8 +488,8 @@ export const BusinessProvider = ({ children }) => {
     }
     const newRecord = { 
       ...processedRecord, 
-      id: Date.now().toString(), 
-      createdAt: new Date().toISOString(),
+      id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
+      createdAt: processedRecord.createdAt || new Date().toISOString(),
       brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
     };
     setData(prev => {
@@ -1420,6 +1420,63 @@ export const BusinessProvider = ({ children }) => {
     addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
   }, [addHint]);
 
+  const seedDemoData = useCallback(async () => {
+    const months = 6;
+    const now = new Date();
+    
+    addHint({ title: "🌱 Seeding...", message: "Génération de 6 mois d'historique métier...", type: 'info' });
+
+    // 1. Clients & Fournisseurs (Base)
+    const clientNoms = ["Industries Ouest", "TechCorp Plus", "BTP Alpha", "Giga Mart", "Auto Pro"];
+    const clients = clientNoms.map((nom, i) => ({ id: `CLI-00${i+1}`, nom, type: 'Client', email: `contact@${nom.toLowerCase().replace(' ', '')}.com`, categorie: 'B2B' }));
+    clients.forEach(c => addRecord('base', 'contacts', c));
+
+    // 2. Factures & Ventes (Finance)
+    for (let m = 0; m < months; m++) {
+      const dateM = new Date(now.getFullYear(), now.getMonth() - m, 15);
+      const isPast = m > 0;
+      
+      // 5-8 Factures par mois
+      const count = 5 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const montant = 500000 + Math.floor(Math.random() * 2500000);
+        addRecord('finance', 'invoices', {
+          client: clientNoms[i % 5],
+          montant,
+          statut: isPast ? 'Payé' : 'Envoyé',
+          createdAt: dateM.toISOString(),
+          type: 'vente'
+        });
+
+        // Achats correspondants (40% du CA)
+        addRecord('finance', 'vendor_bills', {
+          fournisseur: "Grossiste Global",
+          montant: montant * 0.4,
+          statut: 'Payé',
+          createdAt: dateM.toISOString()
+        });
+      }
+    }
+
+    // 3. RH & Talent
+    const hrData = [
+      { id: 'T-001', nom: 'Alice Martin', poste: 'Dev React', source: 'LinkedIn', statut: 'Embauché', score: 85 },
+      { id: 'T-002', nom: 'Bob Dupont', poste: 'Sales Manager', source: 'Indeed', statut: 'Offre', score: 92 },
+      { id: 'T-003', nom: 'Claire Lefebvre', poste: 'UX Designer', source: 'Portfolio', statut: 'Test Technique', score: 78 }
+    ];
+    hrData.forEach(t => addRecord('talent', 'candidates', t));
+
+    // Évaluations 360
+    const skills = [
+       { name: 'Technique', alice: 9, bob: 4, claire: 6 },
+       { name: 'Com', alice: 7, bob: 10, claire: 9 },
+       { name: 'Leadership', alice: 6, bob: 9, claire: 5 }
+    ];
+    addRecord('talent', 'appraisals', { empId: 'E001', nom: 'Jean Kouassi', period: 'Q1 2026', scores: skills.map(s => ({ key: s.name, val: s.alice })) });
+
+    addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: 'success' });
+  }, [addRecord, addHint]);
+
   const navigateTo = useCallback((appId) => setActiveApp(appId), []);
 
   return (
@@ -1428,7 +1485,7 @@ export const BusinessProvider = ({ children }) => {
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
       updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
-      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData,
+      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
       processPOSOrder,
       schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
         setSchemaOverrides(prev => ({
