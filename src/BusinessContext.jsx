@@ -146,7 +146,7 @@ export const BusinessProvider = ({ children }) => {
 
   const [globalSettings, setGlobalSettings] = useState(() => {
     return safeParse('ipc_erp_global_settings', {
-      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'IPC ERP', website: 'https://ipc-erp.web.app', currency: 'FCFA',
+      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'I.P.C GREEN BLOCKS', website: 'https://ipc-erp.web.app', currency: 'FCFA',
       pinnedModules: ['home', 'crm', 'hr', 'dms'] // Default pinned modules
     });
   });
