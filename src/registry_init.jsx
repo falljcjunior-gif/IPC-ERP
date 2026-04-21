@@ -6,7 +6,7 @@ import {
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, Layout, UserCircle, Scale
+  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart
 } from 'lucide-react';
 
 // Core Components & Modules
@@ -213,7 +213,7 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'talent', label: 'Talents & Congés', icon: <Users2 size={18} />,
+    id: 'talent', label: 'People & Culture', icon: <Heart size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
     component: TalentHub, priority: 31
   });
