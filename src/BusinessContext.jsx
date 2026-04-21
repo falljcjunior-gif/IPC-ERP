@@ -71,14 +71,8 @@ export const BusinessProvider = ({ children }) => {
       }
 
       if (merged.production) {
-        if (!merged.production.boms || merged.production.boms.length === 0) {
-          merged.production.boms = [
-            { id: 'BOM-BRICK-01', product: 'Bloc Béton 15x20x40', productId: 'PRD-001', components: JSON.stringify([
-              { productId: 'MAT-CIMENT', qte: 0.5 },
-              { productId: 'MAT-SABLE', qte: 1.2 },
-              { productId: 'MAT-GRAVIER', qte: 2.0 }
-            ]), coutEstime: 450 }
-          ];
+        if (!merged.production.boms) {
+          merged.production.boms = [];
         }
         if (!merged.production.workOrders) merged.production.workOrders = [];
       }
@@ -103,27 +97,8 @@ export const BusinessProvider = ({ children }) => {
       if (!merged.activities) merged.activities = [];
       
       if (!merged.connect) merged.connect = {};
-      if (!merged.connect.events || merged.connect.events.length === 0) {
-        merged.connect.events = [
-          {
-            id: 'ev-1', title: "Town Hall : Vision 2026",
-            date: "24 Avril", time: "10:00 - 11:30", type: "Remote",
-            category: "Stratégie", attendees: 120, color: "#8B5CF6",
-            participated: false
-          },
-          {
-            id: 'ev-2', title: "Afterwork : Équipe Industrial",
-            date: "18 Avril", time: "18:30 - 20:30", type: "On-site",
-            category: "Détente", attendees: 25, color: "#F59E0B",
-            participated: false
-          },
-          {
-            id: 'ev-3', title: "Lancement Hub Supply Chain",
-            date: "20 Avril", time: "09:00 - 10:00", type: "Hybrid",
-            category: "Opérations", attendees: 45, color: "#10B981",
-            participated: false
-          }
-        ];
+      if (!merged.connect.events) {
+        merged.connect.events = [];
       }
 
       return merged;

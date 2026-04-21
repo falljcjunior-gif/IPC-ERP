@@ -88,10 +88,10 @@ const Timesheets = () => {
   const renderDashboard = () => (
     <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Heures Totales"      value={`${kpis.totalH}h`}          trend={8.2}  trendType="up"   icon={<Clock size={20}/>}       color="#3B82F6" sparklineData={weeklyTrend.map(d=>({val:d.heures}))} />
-        <KpiCard title="Heures Validées"     value={`${kpis.validees}h`}         trend={5.0}  trendType="up"   icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={weeklyTrend.map(d=>({val:d.facturables}))} />
-        <KpiCard title="À Valider"           value={`${kpis.enAttente} saisies`} trend={0}    trendType="down" icon={<AlertCircle size={20}/>}  color="#F59E0B" sparklineData={[{val:5},{val:4},{val:3},{val:3},{val:kpis.enAttente}]} />
-        <KpiCard title="Taux Facturable"     value={`${kpis.txFacturable}%`}     trend={4.1}  trendType="up"   icon={<Target size={20}/>}       color="#8B5CF6" sparklineData={[{val:60},{val:62},{val:64},{val:66},{val:kpis.txFacturable}]} />
+        <KpiCard title="Heures Totales"      value={`${kpis.totalH}h`}          trend={0}  trendType="up"   icon={<Clock size={20}/>}       color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="Heures Validées"     value={`${kpis.validees}h`}         trend={0}  trendType="up"   icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={[]} />
+        <KpiCard title="À Valider"           value={`${kpis.enAttente} saisies`} trend={0}    trendType="down" icon={<AlertCircle size={20}/>}  color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Taux Facturable"     value={`${kpis.txFacturable}%`}     trend={0}  trendType="up"   icon={<Target size={20}/>}       color="#8B5CF6" sparklineData={[]} />
       </motion.div>
 
       <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem' }}>

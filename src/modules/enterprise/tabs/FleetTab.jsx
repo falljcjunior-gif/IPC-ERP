@@ -27,10 +27,10 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Fleet Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Disponibilité Fleet" value={`${Math.round((fleetStats.inService / vehicles.length) * 100 || 0)}%`} trend={1.5} trendType="up" icon={<Activity size={22} />} color="#0D9488" sparklineData={[85, 88, 90, 92]} />
-        <KpiCard title="Consommation Moy." value={`${fleetStats.avgConsumption} L/100`} trend={-0.4} trendType="down" icon={<Fuel size={22} />} color="#6366F1" sparklineData={[13.2, 13, 12.8, 12.5]} />
-        <KpiCard title="Kilométrage Total" value={`${(fleetStats.totalKm / 1000).toFixed(1)}k KM`} trend={1240} trendType="up" icon={<Gauge size={22} />} color="#8B5CF6" sparklineData={[150000, 155000, 160000, 165000]} />
-        <KpiCard title="Coût Maintenance YTD" value={formatCurrency(fleetStats.maintenanceCosts, true)} trend={8.2} trendType="up" icon={<Wrench size={22} />} color="#F59E0B" sparklineData={[420000, 500000, 680000, 845000]} />
+        <KpiCard title="Disponibilité Fleet" value={`${Math.round((fleetStats.inService / vehicles.length) * 100 || 0)}%`} trend={0} trendType="up" icon={<Activity size={22} />} color="#0D9488" sparklineData={[]} />
+        <KpiCard title="Consommation Moy." value={`${fleetStats.avgConsumption} L/100`} trend={0} trendType="down" icon={<Fuel size={22} />} color="#6366F1" sparklineData={[]} />
+        <KpiCard title="Kilométrage Total" value={`${(fleetStats.totalKm / 1000).toFixed(1)}k KM`} trend={0} trendType="up" icon={<Gauge size={22} />} color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Coût Maintenance YTD" value={formatCurrency(fleetStats.maintenanceCosts, true)} trend={0} trendType="up" icon={<Wrench size={22} />} color="#F59E0B" sparklineData={[]} />
       </motion.div>
 
       {/* Vehicles Grid */}

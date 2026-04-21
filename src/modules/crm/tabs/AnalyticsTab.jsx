@@ -39,10 +39,10 @@ const AnalyticsTab = ({ leads, opportunities, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Sales Velocity KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Valeur Pipeline" value={formatCurrency(kpis.totalPipeline, true)} trend={15} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[30, 45, 32, 60, 55]} />
-        <KpiCard title="Prévu (Pondéré)" value={formatCurrency(kpis.weightedPipeline, true)} trend={8.2} trendType="up" icon={<Target size={22} />} color="#8B5CF6" sparklineData={[20, 30, 25, 40, 38]} />
-        <KpiCard title="Conversion Leads" value={`${kpis.convRate}%`} trend={2.5} trendType="up" icon={<Zap size={22} />} color="#F59E0B" sparklineData={[15, 18, 14, 20]} />
-        <KpiCard title="Win Rate Global" value={`${kpis.winRate}%`} trend={-1.2} trendType="down" icon={<Award size={22} />} color="#10B981" sparklineData={[65, 68, 62, 60]} />
+        <KpiCard title="Valeur Pipeline" value={formatCurrency(kpis.totalPipeline, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="Prévu (Pondéré)" value={formatCurrency(kpis.weightedPipeline, true)} trend={0} trendType="up" icon={<Target size={22} />} color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Conversion Leads" value={`${kpis.convRate}%`} trend={0} trendType="up" icon={<Zap size={22} />} color="#F59E0B" sparklineData={[]} />
+        <KpiCard title="Win Rate Global" value={`${kpis.winRate}%`} trend={0} trendType="down" icon={<Award size={22} />} color="#10B981" sparklineData={[]} />
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1.4fr', gap: '1.5rem' }}>

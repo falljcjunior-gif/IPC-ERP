@@ -36,10 +36,10 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Revenue Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Revenu Projeté" value={formatCurrency(pipeline.weighted, true)} trend={12.4} trendType="up" icon={<TrendingUp size={22} />} color="#3B82F6" sparklineData={[30, 45, 32, 60, 55]} />
-        <KpiCard title="Pipeline Brut" value={formatCurrency(pipeline.total, true)} trend={5.2} trendType="up" icon={<DollarSign size={22} />} color="#8B5CF6" sparklineData={[40, 38, 50, 48, 60]} />
-        <KpiCard title="Win Rate" value={`${pipeline.winRate}%`} trend={-2} trendType="down" icon={<Award size={22} />} color="#10B981" sparklineData={[65, 68, 62, 60]} />
-        <KpiCard title="Nombre de Deals" value={opportunities.length} trend={8} trendType="up" icon={<Target size={22} />} color="#F59E0B" sparklineData={[10, 12, 11, 15]} />
+        <KpiCard title="Revenu Projeté" value={formatCurrency(pipeline.weighted, true)} trend={0} trendType="up" icon={<TrendingUp size={22} />} color="#3B82F6" sparklineData={[]} />
+        <KpiCard title="Pipeline Brut" value={formatCurrency(pipeline.total, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#8B5CF6" sparklineData={[]} />
+        <KpiCard title="Win Rate" value={`${pipeline.winRate}%`} trend={0} trendType="down" icon={<Award size={22} />} color="#10B981" sparklineData={[]} />
+        <KpiCard title="Nombre de Deals" value={opportunities.length} trend={0} trendType="up" icon={<Target size={22} />} color="#F59E0B" sparklineData={[]} />
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>

@@ -99,21 +99,10 @@ export const mockData = {
     files: []
   },
   legal: {
-    contracts: [
-      { id: 'L-001', titre: 'Bail Commercial Siège', type: 'Bail', partie: 'Immobilier Corp', dateEffet: '2025-01-01', dateExpiration: '2034-01-01', statut: 'Signé', amount: 12000000, modifie: false, visaJuridique: true },
-      { id: 'L-002', titre: 'Accord NDA Labos', type: 'NDA', partie: 'Labo Alpha', dateEffet: '2026-03-15', statut: 'Signé', modifie: false, visaJuridique: true }
-    ],
-    ip: [
-      { id: 'IP-001', nom: 'SHAYNAYAH', type: 'Marque', territoire: 'International (OMPI)', numeroDepot: 'M-52899', dateDepot: '2024-05-10', dateRenouvellement: '2034-05-10', statut: 'Enregistré' },
-      { id: 'IP-002', nom: 'shaynayah.com', type: 'Nom de Domaine', territoire: 'Monde', dateRenouvellement: '2027-10-22', statut: 'Enregistré' }
-    ],
-    litigations: [
-      { id: 'LIT-001', objet: 'Impayé Client Retail', type: 'Impayé Client', partieAdverse: 'DistriGroup Ltd', risqueFinancier: 5000000, avocat: 'Maitre Yao', statut: 'En cours' }
-    ],
-    corporate: [
-      { id: 'CORP-001', entite: 'IPC CORE SERVICE SA', type: 'SA', capitalSocial: 100000000, dateCreation: '2020-02-15', siège: 'Abidjan, Cote d\'Ivoire' },
-      { id: 'CORP-002', entite: 'B2B LOGISTICS SARL', type: 'SARL', capitalSocial: 10000000, dateCreation: '2022-11-20', siège: 'San Pedro, Cote d\'Ivoire' }
-    ]
+    contracts: [],
+    ip: [],
+    litigations: [],
+    corporate: []
   },
   signature: {
     requests: [],
@@ -131,20 +120,8 @@ export const mockData = {
     chats: []
   },
   shipping: {
-    shipments: [
-       { id: 'BL-2026-001', client: 'Industries Ouest', dest: 'San Pedro, CI', transporteur: 'Bolloré Logistics', date: '2026-04-18', dateExpec: '2026-04-20', colis: 4, poids: '240 kg', montant: 1560000, statut: 'Retardé', tracking: 'BOLL-9988X' },
-       { id: 'BL-2026-002', client: 'TechCorp Plus', dest: 'Abidjan, Agban', transporteur: 'Flotte Interne', date: '2026-04-19', dateExpec: '2026-04-19', colis: 1, poids: '12 kg', montant: 450000, statut: 'Livré', tracking: 'INT-TRK-012' },
-       { id: 'BL-2026-003', client: 'BTP Alpha', dest: 'Yamoussoukro', transporteur: 'DHL Express', date: '2026-04-20', dateExpec: '2026-04-22', colis: 12, poids: '850 kg', montant: 5800000, statut: 'En Transit', tracking: 'DHL-4451000' }
-    ],
-    carriers: [
-       { nom: 'Bolloré Logistics', color: '#1D4ED8', otif: 88, livraisons: 304, retards: 12, coutMoy: 125000 },
-       { nom: 'DHL Express', color: '#F59E0B', otif: 97, livraisons: 412, retards: 3, coutMoy: 85000 },
-       { nom: 'Flotte Interne', color: '#10B981', otif: 93, livraisons: 520, retards: 7, coutMoy: 45000 }
-    ],
-    fleet: [
-      { imm: '1244 KN 01', modele: 'Camion 10T Isuzu', statut: 'Disponible' },
-      { imm: '8812 JB 01', modele: 'Fourgonnette Renault', statut: 'En Course' },
-      { imm: '5566 GH 01', modele: 'Camionnette Kia', statut: 'Maintenance' }
-    ]
+    shipments: [],
+    carriers: [],
+    fleet: []
   }
 };

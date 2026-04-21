@@ -69,10 +69,10 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
       {/* Financial Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Résultat Net" value={formatCurrency(financialKPIs.netResult, true)} trend={8.2} trendType="up" icon={<Scale size={22} />} color="#0F172A" sparklineData={[5, 8, 12, 12.45]} />
-        <KpiCard title="Trésorerie Totale" value={formatCurrency(financialKPIs.cashOnHand, true)} trend={12.4} trendType="up" icon={<Landmark size={22} />} color="#6366F1" sparklineData={[120, 140, 135, 154]} />
-        <KpiCard title="Chiffre d'Affaires" value={formatCurrency(financialKPIs.revenue, true)} trend={4.5} trendType="up" icon={<TrendingUp size={22} />} color="#10B981" sparklineData={[35, 38, 42, 45]} />
-        <KpiCard title="DSO (Paiement Client)" value={`${financialKPIs.dso} Jrs`} trend={-12} trendType="down" icon={<Clock size={22} />} color="#F59E0B" sparklineData={[45, 42, 40, 38]} />
+        <KpiCard title="Résultat Net" value={formatCurrency(financialKPIs.netResult, true)} trend={0} trendType="up" icon={<Scale size={22} />} color="#0F172A" sparklineData={[]} />
+        <KpiCard title="Trésorerie Totale" value={formatCurrency(financialKPIs.cashOnHand, true)} trend={0} trendType="up" icon={<Landmark size={22} />} color="#6366F1" sparklineData={[]} />
+        <KpiCard title="Chiffre d'Affaires" value={formatCurrency(financialKPIs.revenue, true)} trend={0} trendType="up" icon={<TrendingUp size={22} />} color="#10B981" sparklineData={[]} />
+        <KpiCard title="DSO (Paiement Client)" value={`${financialKPIs.dso} Jrs`} trend={0} trendType="down" icon={<Clock size={22} />} color="#F59E0B" sparklineData={[]} />
       </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '1.5rem' }}>
