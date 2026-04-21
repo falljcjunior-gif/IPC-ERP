@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History, FileText, Upload, Plus } from 'lucide-react';
+import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History, FileText, Upload, Plus, CheckCircle2 } from 'lucide-react';
 import Chatter from './Chatter';
 import SmartButtons from './SmartButtons';
 import { useBusiness } from '../BusinessContext';
@@ -22,6 +22,7 @@ const RecordModal = ({
   const [formData, setFormData] = useState(initialData || {});
   const [isEditMode, setIsEditMode] = useState(!recordId); // Default to edit if no ID (new record)
   const [activeTab, setActiveTab] = useState('data'); // data, chatter, documents
+  const [showSuccessAnim, setShowSuccessAnim] = useState(false);
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -30,8 +31,20 @@ const RecordModal = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLoading) return;
-    onSave(formData);
-    if (recordId) setIsEditMode(false);
+    
+    // Native-like validation for 'required' fields since footer button bypasses form submit
+    const missingFields = fields.filter(f => f.required && !formData[f.name]);
+    if (missingFields.length > 0) {
+        alert("Attention : Veuillez remplir les champs obligatoires suivants : " + missingFields.map(f => f.label).join(', '));
+        return;
+    }
+
+    setShowSuccessAnim(true);
+    setTimeout(() => {
+       setShowSuccessAnim(false);
+       onSave(formData);
+       if (recordId) setIsEditMode(false);
+    }, 1500);
   };
 
   return (
@@ -49,6 +62,21 @@ const RecordModal = ({
           zIndex: 2000,
           padding: '1rem'
         }}>
+          {/* Success Overlay */}
+          <AnimatePresence>
+            {showSuccessAnim && (
+               <motion.div
+                 initial={{ opacity: 0, scale: 0.8 }}
+                 animate={{ opacity: 1, scale: 1 }}
+                 exit={{ opacity: 0, scale: 0.8 }}
+                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(16, 185, 129, 0.95)', zIndex: 3000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '2rem' }}
+               >
+                 <CheckCircle2 size={80} color="white" style={{ marginBottom: '1rem' }} />
+                 <h2 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, textAlign: 'center' }}>Demande envoyée !</h2>
+               </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}

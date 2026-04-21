@@ -236,8 +236,10 @@ export const BusinessProvider = ({ children }) => {
      ══════════════════════════════════════════════════════════════════════════ */
 
   const addHint = useCallback((hint) => {
-    const id = Date.now().toString();
-    setHints(prev => [{ ...hint, id }, ...prev]);
+    setTimeout(() => {
+      const id = Date.now().toString();
+      setHints(prev => [{ ...hint, id }, ...prev]);
+    }, 0);
   }, []);
 
   const dismissHint = useCallback((id) => {
@@ -257,14 +259,16 @@ export const BusinessProvider = ({ children }) => {
       brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
     };
     
-    setData(prev => ({
-      ...prev,
-      activities: [activity, ...(prev.activities || [])]
-    }));
+    setTimeout(() => {
+      setData(prev => ({
+        ...prev,
+        activities: [activity, ...(prev.activities || [])]
+      }));
 
-    if (auth.currentUser) {
-      setDoc(doc(db, 'activities', activity.id), activity);
-    }
+      if (auth.currentUser) {
+        setDoc(doc(db, 'activities', activity.id), activity);
+      }
+    }, 0);
   }, [currentUser.nom, activeBrand]);
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -492,8 +496,12 @@ export const BusinessProvider = ({ children }) => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
-      logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-      if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
+      
+      setTimeout(() => {
+         logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
+         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
+      }, 0);
+
       return nextState;
     });
 
@@ -555,8 +563,10 @@ export const BusinessProvider = ({ children }) => {
       const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
       let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
       const record = updatedList.find(o => o.id === id);
-      logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
-      if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
+      setTimeout(() => {
+         logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
+         if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
+      }, 0);
       
       if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
         applyMOTransformation(id);
@@ -743,8 +753,10 @@ export const BusinessProvider = ({ children }) => {
       const subModuleData = moduleData[subModule] || [];
       const updatedList = subModuleData.filter(item => item.id !== id);
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: updatedList } };
-      logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
-      if (auth.currentUser) deleteDoc(doc(db, appId, id));
+      setTimeout(() => {
+         logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
+         if (auth.currentUser) deleteDoc(doc(db, appId, id));
+      }, 0);
       return nextState;
     });
   }, [logAction]);
