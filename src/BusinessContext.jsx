@@ -273,6 +273,192 @@ export const BusinessProvider = ({ children }) => {
     }, 0);
   }, [currentUser.nom, activeBrand]);
 
+
+  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
+    const notifyDoc = {
+      id: Date.now().toString(),
+      targetRole,
+      title,
+      message,
+      type,
+      actionApp,
+      readBy: [],
+      createdAt: new Date().toISOString()
+    };
+    try {
+      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
+    } catch (e) {
+      console.error("sendNotification Error:", e);
+    }
+  }, []);
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     ADMIN LOGIC (User Management)
+     ══════════════════════════════════════════════════════════════════════════ */
+
+  const updateUserRole = useCallback((userId, newRole) => {
+    setPermissions(prev => {
+      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
+      const newPerms = { ...userPerms, roles: [newRole] };
+      
+      if (auth.currentUser) {
+        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+          .catch(e => console.error("Erreur save role:", e));
+      }
+      return { ...prev, [userId]: newPerms };
+    });
+  }, []);
+
+  const setModuleAccessLevel = useCallback((userId, moduleId, level) => {
+    setPermissions(prev => {
+      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
+      const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
+      
+      if (level === 'none') {
+        delete newModuleAccess[moduleId];
+      } else {
+        newModuleAccess[moduleId] = level;
+      }
+      
+      const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
+      
+      // Clean up legacy allowedModules if present
+      if (newPerms.allowedModules) delete newPerms.allowedModules;
+
+      if (auth.currentUser) {
+        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+          .catch(e => console.error("Erreur save permissions:", e));
+      }
+      return { ...prev, [userId]: newPerms };
+    });
+  }, []);
+
+  const getModuleAccess = useCallback((userId, moduleId) => {
+    const userPerms = permissions[userId];
+    if (!userPerms) return 'none';
+    
+    // Check for SUPER_ADMIN role (global write access)
+    if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
+    
+    // Special case for 'home' - always write access for authenticated users
+    if (moduleId === 'home') return 'write';
+
+    // Check new structure
+    if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
+      return userPerms.moduleAccess[moduleId];
+    }
+    
+    // Check legacy structure
+    if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
+      return 'write';
+    }
+    
+    return 'none';
+  }, [permissions]);
+
+  const createFullUser = useCallback(async (userData, source = 'admin') => {
+    let secondaryApp;
+    try {
+      secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
+      const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
+      const uid = userCredential.user.uid;
+      
+      const role = userData.role || 'STAFF';
+      const profileData = { 
+        nom: userData.nom, 
+        email: userData.email, 
+        poste: userData.poste, 
+        id: uid, 
+        dept: userData.dept || '',
+        avatar: userData.avatar || userData.nom[0],
+        statut: source === 'admin' ? 'À compléter' : 'Actif',
+        active: true,
+        createdAt: new Date().toISOString() 
+      };
+
+      const permissionsData = {
+        roles: userData.roles || [role],
+        moduleAccess: userData.moduleAccess || { home: 'write' },
+        // Legacy fallback
+        allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
+      };
+
+      // 1. Create User Document
+      await setDoc(doc(db, 'users', uid), { 
+        profile: profileData, 
+        permissions: permissionsData, 
+        data: {} 
+      });
+
+      // 2. Create HR Record with exact employee structure
+      await setDoc(doc(db, 'hr', uid), { 
+         ...profileData, 
+         subModule: 'employees',
+         salaire: userData.salaire || 0,
+         contratType: userData.contratType || 'CDI',
+         contratDuree: userData.contratDuree || '',
+      });
+
+      // 3. Send Notification
+      if (source === 'hr') {
+        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
+      } else {
+        await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
+      }
+
+      return { success: true, uid };
+    } finally { if (secondaryApp) deleteApp(secondaryApp); }
+  }, [sendNotification]);
+ 
+  const toggleUserStatus = useCallback(async (userId, newStatus) => {
+    const uid = String(userId);
+    try {
+      if (auth.currentUser) {
+        await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
+        await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
+      }
+      logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
+      return { success: true };
+    } catch (e) {
+      console.error("toggleUserStatus error:", e);
+      throw e;
+    }
+  }, [logAction]);
+
+
+  const permanentlyDeleteUserRecord = useCallback(async (userId) => {
+    const uid = String(userId);
+    
+    // Call Cloud Function to delete from Firebase Authentication
+    try {
+      const functions = getFunctions();
+      const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
+      await deleteUserFunc({ uid });
+      console.log("Auth user deleted successfully");
+    } catch (err) {
+      console.error("Erreur suppression Auth:", err);
+      if (addHint) {
+        addHint({ 
+          title: "Suppression Auth Échouée", 
+          message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
+          type: 'warning' 
+        });
+      }
+    }
+
+    if (auth.currentUser) {
+      await deleteDoc(doc(db, 'users', uid));
+      await deleteDoc(doc(db, 'hr', uid));
+    }
+    setData(prev => ({ 
+      ...prev, 
+      hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
+      base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
+    }));
+    setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
+    logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
+  }, [logAction, addHint]);
+
   /* ══════════════════════════════════════════════════════════════════════════
      5. DATA MUTATION LOGIC (Topological Order)
      ══════════════════════════════════════════════════════════════════════════ */
@@ -539,23 +725,6 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand, generateLitigationEntry]);
 
-  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
-    const notifyDoc = {
-      id: Date.now().toString(),
-      targetRole,
-      title,
-      message,
-      type,
-      actionApp,
-      readBy: [],
-      createdAt: new Date().toISOString()
-    };
-    try {
-      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
-    } catch (e) {
-      console.error("sendNotification Error:", e);
-    }
-  }, []);
 
   const updateRecord = useCallback((appId, subModule, id, newData) => {
     setData(prev => {
@@ -1050,172 +1219,7 @@ export const BusinessProvider = ({ children }) => {
 
 
 
-  /* ══════════════════════════════════════════════════════════════════════════
-     7. ADMIN LOGIC (User Management)
-     ══════════════════════════════════════════════════════════════════════════ */
 
-  const updateUserRole = useCallback((userId, newRole) => {
-    setPermissions(prev => {
-      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
-      const newPerms = { ...userPerms, roles: [newRole] };
-      
-      if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
-          .catch(e => console.error("Erreur save role:", e));
-      }
-      return { ...prev, [userId]: newPerms };
-    });
-  }, []);
-
-  const setModuleAccessLevel = useCallback((userId, moduleId, level) => {
-    setPermissions(prev => {
-      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
-      const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
-      
-      if (level === 'none') {
-        delete newModuleAccess[moduleId];
-      } else {
-        newModuleAccess[moduleId] = level;
-      }
-      
-      const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
-      
-      // Clean up legacy allowedModules if present
-      if (newPerms.allowedModules) delete newPerms.allowedModules;
-
-      if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
-          .catch(e => console.error("Erreur save permissions:", e));
-      }
-      return { ...prev, [userId]: newPerms };
-    });
-  }, []);
-
-  const getModuleAccess = useCallback((userId, moduleId) => {
-    const userPerms = permissions[userId];
-    if (!userPerms) return 'none';
-    
-    // Check for SUPER_ADMIN role (global write access)
-    if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
-    
-    // Special case for 'home' - always write access for authenticated users
-    if (moduleId === 'home') return 'write';
-
-    // Check new structure
-    if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
-      return userPerms.moduleAccess[moduleId];
-    }
-    
-    // Check legacy structure
-    if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
-      return 'write';
-    }
-    
-    return 'none';
-  }, [permissions]);
-
-  const createFullUser = useCallback(async (userData, source = 'admin') => {
-    let secondaryApp;
-    try {
-      secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-      const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
-      const uid = userCredential.user.uid;
-      
-      const role = userData.role || 'STAFF';
-      const profileData = { 
-        nom: userData.nom, 
-        email: userData.email, 
-        poste: userData.poste, 
-        id: uid, 
-        dept: userData.dept || '',
-        avatar: userData.avatar || userData.nom[0],
-        statut: source === 'admin' ? 'À compléter' : 'Actif',
-        active: true,
-        createdAt: new Date().toISOString() 
-      };
-
-      const permissionsData = {
-        roles: userData.roles || [role],
-        moduleAccess: userData.moduleAccess || { home: 'write' },
-        // Legacy fallback
-        allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
-      };
-
-      // 1. Create User Document
-      await setDoc(doc(db, 'users', uid), { 
-        profile: profileData, 
-        permissions: permissionsData, 
-        data: {} 
-      });
-
-      // 2. Create HR Record with exact employee structure
-      await setDoc(doc(db, 'hr', uid), { 
-         ...profileData, 
-         subModule: 'employees',
-         salaire: userData.salaire || 0,
-         contratType: userData.contratType || 'CDI',
-         contratDuree: userData.contratDuree || '',
-      });
-
-      // 3. Send Notification
-      if (source === 'hr') {
-        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
-      } else {
-        await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
-      }
-
-      return { success: true, uid };
-    } finally { if (secondaryApp) deleteApp(secondaryApp); }
-  }, [sendNotification]);
- 
-  const toggleUserStatus = useCallback(async (userId, newStatus) => {
-    const uid = String(userId);
-    try {
-      if (auth.currentUser) {
-        await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
-        await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
-      }
-      logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
-      return { success: true };
-    } catch (e) {
-      console.error("toggleUserStatus error:", e);
-      throw e;
-    }
-  }, [logAction]);
-
-
-  const permanentlyDeleteUserRecord = useCallback(async (userId) => {
-    const uid = String(userId);
-    
-    // Call Cloud Function to delete from Firebase Authentication
-    try {
-      const functions = getFunctions();
-      const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
-      await deleteUserFunc({ uid });
-      console.log("Auth user deleted successfully");
-    } catch (err) {
-      console.error("Erreur suppression Auth:", err);
-      if (addHint) {
-        addHint({ 
-          title: "Suppression Auth Échouée", 
-          message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
-          type: 'warning' 
-        });
-      }
-    }
-
-    if (auth.currentUser) {
-      await deleteDoc(doc(db, 'users', uid));
-      await deleteDoc(doc(db, 'hr', uid));
-    }
-    setData(prev => ({ 
-      ...prev, 
-      hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
-      base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
-    }));
-    setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
-    logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
-  }, [logAction, addHint]);
 
   const approveRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });

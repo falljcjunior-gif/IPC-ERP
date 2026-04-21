@@ -166,10 +166,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
               if (userRole === 'SUPER_ADMIN') return true;
               
               const access = getModuleAccess(currentUser.id, item.id);
-              if (access !== 'none') return true;
-              
-              const itemRoles = Array.isArray(item.roles) ? item.roles : [];
-              return itemRoles.includes(userRole);
+              return access !== 'none';
             });
             if (visibleItems.length === 0) return null;
             const isExpanded = openSections.includes(cat.label);

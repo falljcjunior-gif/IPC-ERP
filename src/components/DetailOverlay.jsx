@@ -148,8 +148,8 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                     <button 
                       onClick={() => { navigateTo('user_management'); onClose(); }}
                       className="glass"
-                      disabled={isReadOnly}
-                      style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--accent)40', color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 700, cursor: isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: isReadOnly ? 0.5 : 1 }}
+                      disabled={isLocked}
+                      style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--accent)40', color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 700, cursor: isLocked ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: isLocked ? 0.5 : 1 }}
                     >
                       <Settings size={14} /> Accès Système
                     </button>
@@ -370,8 +370,9 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                             <input 
                               type="checkbox" 
                               checked={item.completed}
+                              disabled={isLocked}
                               onChange={() => toggleSubtask(item.id)}
-                              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent)' }}
+                              style={{ width: '18px', height: '18px', cursor: isLocked ? 'not-allowed' : 'pointer', accentColor: 'var(--accent)', opacity: isLocked ? 0.6 : 1 }}
                             />
                             <span style={{ 
                               fontSize: '0.85rem', 
@@ -382,42 +383,46 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                             }}>
                               {item.label}
                             </span>
-                            <button 
-                              onClick={() => deleteSubtask(item.id)}
-                              style={{ background: 'transparent', border: 'none', color: '#EF4444', fontSize: '0.7rem', cursor: 'pointer', opacity: 0.5 }}
-                            >
-                              Suppr.
-                            </button>
+                            {!isLocked && (
+                              <button 
+                                onClick={() => deleteSubtask(item.id)}
+                                style={{ background: 'transparent', border: 'none', color: '#EF4444', fontSize: '0.7rem', cursor: 'pointer', opacity: 0.5 }}
+                              >
+                                Suppr.
+                              </button>
+                            )}
                         </div>
                       ))}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input 
-                          type="text" 
-                          placeholder="Ajouter une action à faire..."
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && e.target.value.trim() !== '') {
-                              addSubtask(e.target.value);
-                              e.target.value = '';
-                            }
-                          }}
-                          style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg)', fontSize: '0.8rem', color: 'var(--text)' }}
-                        />
-                        <button 
-                          onClick={(e) => {
-                            const input = e.currentTarget.previousSibling;
-                            if (input.value.trim() !== '') {
-                              addSubtask(input.value);
-                              input.value = '';
-                            }
-                          }}
-                          className="btn btn-primary" 
-                          style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}
-                        >
-                          <Plus size={16} />
-                        </button>
-                    </div>
+                    {!isLocked && (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input 
+                            type="text" 
+                            placeholder="Ajouter une action à faire..."
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                                addSubtask(e.target.value);
+                                e.target.value = '';
+                              }
+                            }}
+                            style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--bg)', fontSize: '0.8rem', color: 'var(--text)' }}
+                          />
+                          <button 
+                            onClick={(e) => {
+                              const input = e.currentTarget.previousSibling;
+                              if (input.value.trim() !== '') {
+                                addSubtask(input.value);
+                                input.value = '';
+                              }
+                            }}
+                            className="btn btn-primary" 
+                            style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}
+                          >
+                            <Plus size={16} />
+                          </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Traces / Chatter Streams */}
@@ -429,14 +434,15 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
                         <input 
                           type="text" 
-                          placeholder="Laisser une trace (appel, note, rapport d'avancement)..."
+                          disabled={isLocked}
+                          placeholder={isLocked ? "Verrouillé : Impossible de laisser une trace." : "Laisser une trace (appel, note, rapport d'avancement)..."}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && e.target.value.trim() !== '') {
                               logAction('Note Manuelle', e.target.value, appId, record.id);
                               e.target.value = '';
                             }
                           }}
-                          style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text)', fontSize: '0.85rem' }}
+                          style={{ flex: 1, padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: isLocked ? 'transparent' : 'var(--bg)', color: 'var(--text)', fontSize: '0.85rem', opacity: isLocked ? 0.6 : 1, cursor: isLocked ? 'not-allowed' : 'text' }}
                         />
                         <button 
                           onClick={(e) => {
@@ -446,8 +452,9 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                                input.value = '';
                             }
                           }}
+                          disabled={isLocked}
                           className="btn btn-primary" 
-                          style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem' }}
+                          style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', opacity: isLocked ? 0.5 : 1, cursor: isLocked ? 'not-allowed' : 'pointer' }}
                         >
                           <Send size={16} />
                         </button>
@@ -479,7 +486,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
 
               {activeTab === 'actions' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {!isLocked && !isReadOnly && (
+                  {!isLocked && (
                     <button 
                       onClick={() => {
                         if (appId === 'crm') handleChange('etape', 'Gagné');
@@ -499,7 +506,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                   >
                      Générer le PDF <Download size={16} />
                   </button>
-                  {!isLocked && !isReadOnly && (
+                  {!isLocked && (
                     <button 
                       className="btn" 
                       onClick={() => {

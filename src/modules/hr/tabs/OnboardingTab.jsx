@@ -150,7 +150,7 @@ const EditAccessPanel = ({ employee, onClose }) => {
                        
                        <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '4px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
                          <button onClick={() => setAccess(mod.id, 'none')} title="Aucun accès" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)' }}>
-                           <ShieldX size={16} />
+                           <ShieldOff size={16} />
                          </button>
                          <button onClick={() => setAccess(mod.id, 'read')} title="Regard (Lecture)" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)' }}>
                            <Eye size={16} />
