@@ -33,7 +33,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const groups = [
     { id: 'team_it', label: 'Équipe IT', type: 'team', lastMsg: 'Serveur déployé.', time: '10:45', members: 12 },
     { id: 'team_sales', label: 'Équipe Ventes', type: 'team', lastMsg: 'Nouveau lead entrant.', time: '09:30', members: 8 },
-    { id: 'project_ipc', label: 'Projet IPC ERP', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier', members: 5 },
+    { id: 'project_ipc', label: 'Projet I.P.C', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier', members: 5 },
   ];
 
   const employees = data.hr?.employees || [];

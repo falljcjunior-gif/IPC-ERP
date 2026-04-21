@@ -1,6 +1,6 @@
 {
   "name": "functions",
-  "description": "Cloud Functions for IPC ERP Social Integration",
+  "description": "Cloud Functions for I.P.C Social Integration",
   "main": "index.js",
   "scripts": {
     "serve": "firebase emulators:start --only functions",

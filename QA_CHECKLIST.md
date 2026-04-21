@@ -1,4 +1,4 @@
-# QA Release Checklist — IPC ERP
+# QA Release Checklist — I.P.C
 
 ## 1) Pré-Release Build & Runtime
 - [x] `npm run build` passe sans erreur bloquante

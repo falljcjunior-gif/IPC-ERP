@@ -44,7 +44,7 @@ const Features = () => {
             One Platform, <span style={{ color: 'var(--accent)' }}>Infinite Possibilities</span>
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.25rem', maxWidth: '600px', margin: '0 auto' }}>
-            IPC ERP replaces dozens of isolated tools with a single, unified source of truth for your business.
+            I.P.C replaces dozens of isolated tools with a single, unified source of truth for your business.
           </p>
         </div>
 

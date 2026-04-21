@@ -157,7 +157,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           <div style={{ minWidth: `${globalSettings.logoWidth || 40}px`, height: `${globalSettings.logoHeight || 40}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img src={globalSettings.logoUrl || "/logo.png"} alt="IPC" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
-          {shellView.sidebar && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--primary)' }}>{globalSettings.companyName || "IPC ERP"}</motion.span>}
+          {shellView.sidebar && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--primary)' }}>{globalSettings.companyName || "I.P.C"}</motion.span>}
         </div>
 
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>

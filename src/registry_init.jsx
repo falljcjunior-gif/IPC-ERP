@@ -20,7 +20,7 @@ import Finance from './modules/finance/FinanceControlCenter';
 import Budget from './modules/finance/FinanceControlCenter';
 import HR from './modules/HR';
 import Production from './modules/production/Production';
-import Project from './modules/logistics/LogisticsHub';
+import Project from './modules/Project';
 import Purchase from './modules/logistics/LogisticsHub';
 import LegalHub from './modules/legal/LegalHub';
 import SignatureHub from './modules/signature/SignatureHub';

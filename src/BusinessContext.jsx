@@ -135,7 +135,7 @@ export const BusinessProvider = ({ children }) => {
   const [config, setConfig] = useState(() => {
     return safeParse('ipc_erp_config', {
       theme: { primary: '#1F363D', accent: '#529990', borderRadius: '1.25rem', isCompact: false, logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40 },
-      company: { name: 'IPC ERP', website: 'https://ipc-erp.web.app', address: '', taxId: '' },
+      company: { name: 'I.P.C', website: 'https://ipc-erp.web.app', address: '', taxId: '' },
       localization: { currency: 'FCFA', dateFormat: 'DD/MM/YYYY', timezone: 'UTC+1', language: 'FR' },
       security: { tfaEnabled: false, sessionTimeout: 60 },
       notifications: { systemAlerts: true, emailDigest: false, chatSound: true },

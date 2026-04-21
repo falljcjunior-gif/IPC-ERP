@@ -14,7 +14,8 @@ export const projectSchema = {
         dateDebut: { label: 'Date Début', type: 'date' },
         echeance: { label: 'Échéance', type: 'date', search: true },
         budget: { label: 'Budget', type: 'money', currency: 'EUR' },
-        chefProjet: { label: 'Chef de Projet', type: 'text', search: true }
+        chefProjet: { label: 'Chef de Projet', type: 'text', search: true },
+        colonnes: { label: 'Colonnes (Trello)', type: 'json', default: [{ id: 'col1', title: 'À faire' }, { id: 'col2', title: 'En cours' }, { id: 'col3', title: 'Terminé' }] }
       },
       views: {
         list: ['nom', 'client', 'echeance', 'budget', 'chefProjet'],
@@ -44,7 +45,12 @@ export const projectSchema = {
         assigne: { label: 'Assigné à', type: 'text', search: true },
         echeance: { label: 'Échéance', type: 'date', search: true },
         priorite: { label: 'Priorité', type: 'selection', options: ['Basse', 'Moyenne', 'Haute'], search: true },
-        statut: { label: 'Statut', type: 'selection', options: ['À faire', 'En cours', 'Terminé'], default: 'À faire' },
+        colonneId: { label: 'Colonne', type: 'text', default: 'col1' },
+        position: { label: 'Ordre', type: 'number', default: 0 },
+        description: { label: 'Description', type: 'text' },
+        labels: { label: 'Étiquettes', type: 'json', default: [] },
+        checklists: { label: 'Listes de contrôle', type: 'json', default: [] },
+        commentaires: { label: 'Commentaires', type: 'json', default: [] },
         progression: { label: 'Avancement (%)', type: 'number' }
       },
       views: {

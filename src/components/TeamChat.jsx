@@ -42,7 +42,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   const groups = [
     { id: 'team_it', label: 'Équipe IT', type: 'team', lastMsg: 'Serveur déployé.', time: '10:45' },
     { id: 'team_sales', label: 'Équipe Ventes', type: 'team', lastMsg: 'Nouveau lead entrant.', time: '09:30' },
-    { id: 'project_ipc', label: 'Projet IPC ERP', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier' },
+    { id: 'project_ipc', label: 'Projet I.P.C', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier' },
   ];
 
   // List of employees for Direct Messages

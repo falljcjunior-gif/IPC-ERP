@@ -148,11 +148,11 @@ const Login = ({ onLogin }) => {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <img src={globalSettings.logoUrl || "/logo.png"} alt={globalSettings.companyName || "IPC ERP"} className="logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={globalSettings.logoUrl || "/logo.png"} alt={globalSettings.companyName || "I.P.C"} className="logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
 
         <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-          {mustChange ? 'Sécurité' : `Espace ${globalSettings.companyName || 'IPC ERP'}`}
+          {mustChange ? 'Sécurité' : `Espace ${globalSettings.companyName || 'I.P.C'}`}
         </h1>
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
           {mustChange ? 'Vous devez changer votre mot de passe pour continuer.' : 'Ravi de vous revoir. Connectez-vous à votre cockpit.'}

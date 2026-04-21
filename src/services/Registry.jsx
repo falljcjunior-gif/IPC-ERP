@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 /**
- * IPC ERP Platform Registry
+ * I.P.C Platform Registry
  * Based on Odoo's Addon architecture. 
  * Allows dynamic module registration and metadata-driven UI rendering.
  */

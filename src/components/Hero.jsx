@@ -79,7 +79,7 @@ const Hero = ({ setView }) => {
             margin: '0 auto 3rem',
             lineHeight: 1.6
           }}>
-            Experience the ultimate flexibility with IPC ERP. A modern, modular ecosystem designed to accelerate your business with AI-integrated workflows and a seamless low-code environment.
+            Experience the ultimate flexibility with I.P.C. A modern, modular ecosystem designed to accelerate your business with AI-integrated workflows and a seamless low-code environment.
           </p>
 
           <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>

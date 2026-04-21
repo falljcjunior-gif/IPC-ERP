@@ -22,7 +22,7 @@ const Navbar = ({ theme, toggleTheme, setView }) => {
           onClick={() => setView('landing')}
         >
           <div style={{ width: '40px', height: '40px' }}>
-            <img src="/logo.png" alt="IPC ERP" className="logo-img" />
+            <img src="/logo.png" alt="I.P.C" className="logo-img" />
           </div>
           <span style={{ 
             fontSize: '1.5rem', 
@@ -31,7 +31,7 @@ const Navbar = ({ theme, toggleTheme, setView }) => {
             fontFamily: 'var(--font-heading)',
             letterSpacing: '-1px'
           }}>
-            IPC ERP
+            I.P.C
           </span>
         </motion.div>
 
