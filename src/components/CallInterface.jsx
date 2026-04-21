@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Mic, MicOff, Video, VideoOff, PhoneOff, 
-  Maximize2, Minimize2, User, LayoutGrid, UserSquare
+  Maximize2, Minimize2, User
 } from 'lucide-react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -22,8 +22,7 @@ const CallInterface = ({
   const [localStream, setLocalStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(callType === 'video');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'speaker'
-  const [activeSpeaker, setActiveSpeaker] = useState('local');
+
   const [remoteParticipants, setRemoteParticipants] = useState({}); // { id: MediaStream }
   
   // Local speaker detection
@@ -128,11 +127,7 @@ const CallInterface = ({
     onHangup();
   };
 
-  const handleRemoteSpeak = (id, isSpeakingStatus) => {
-     if (isSpeakingStatus && viewMode === 'speaker') {
-        setActiveSpeaker(id);
-     }
-  };
+
 
   if (!isOpen) return null;
 
@@ -161,17 +156,11 @@ const CallInterface = ({
            <h4 style={{ margin: 0, fontWeight: 800 }}>{contactName}</h4>
            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>{participantsCount} participant{participantsCount > 1 ? 's' : ''}</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button onClick={() => setViewMode(viewMode === 'grid' ? 'speaker' : 'grid')} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', padding: '10px', borderRadius: '12px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {viewMode === 'grid' ? <UserSquare size={18} /> : <LayoutGrid size={18} />}
-            <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{viewMode === 'grid' ? 'Mode Orateur' : 'Mode Grille'}</span>
-          </button>
-        </div>
+
       </div>
 
       {/* Main Content Area */}
       <div style={{ flex: 1, position: 'relative', padding: '1rem', overflow: 'hidden' }}>
-        {viewMode === 'grid' ? (
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: gridCols,
@@ -188,37 +177,9 @@ const CallInterface = ({
 
             {/* Remote Participants */}
             {Object.entries(remoteParticipants).map(([id, stream]) => (
-              <RemoteVideo key={id} id={id} stream={stream} onSpeak={(status) => handleRemoteSpeak(id, status)} />
+              <RemoteVideo key={id} id={id} stream={stream} />
             ))}
           </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
-             {/* Speaker View - Large Screen */}
-             <div style={{ flex: 1, position: 'relative', borderRadius: '2rem', overflow: 'hidden', background: '#1E293B' }}>
-                {activeSpeaker === 'local' ? (
-                   <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                     <video ref={el => { if (el && el.srcObject !== localStream) el.srcObject = localStream; }} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-                     <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', padding: '6px 16px', borderRadius: '20px', background: 'rgba(0,0,0,0.6)', fontSize: '0.9rem', fontWeight: 600 }}>Vous</div>
-                   </div>
-                ) : (
-                   remoteParticipants[activeSpeaker] && <RemoteVideo id={activeSpeaker} stream={remoteParticipants[activeSpeaker]} full />
-                )}
-             </div>
-
-             {/* Bottom Strip of Participants */}
-             <div style={{ height: '160px', display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                <div onClick={() => setActiveSpeaker('local')} style={{ minWidth: '220px', borderRadius: '1rem', overflow: 'hidden', position: 'relative', cursor: 'pointer', border: activeSpeaker === 'local' ? '3px solid #8B5CF6' : (localSpeaking ? '3px solid #10B981' : '3px solid transparent'), transition: '0.2s', boxShadow: localSpeaking && activeSpeaker !== 'local' ? '0 0 10px rgba(16, 185, 129, 0.4)' : 'none' }}>
-                   <video ref={el => { if (el && el.srcObject !== localStream) el.srcObject = localStream; }} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
-                   <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem', background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem' }}>Vous</div>
-                </div>
-                {Object.entries(remoteParticipants).map(([id, stream]) => (
-                  <div key={id} onClick={() => setActiveSpeaker(id)} style={{ minWidth: '220px', borderRadius: '1rem', overflow: 'hidden', position: 'relative', cursor: 'pointer', border: activeSpeaker === id ? '3px solid #8B5CF6' : '3px solid transparent', transition: '0.2s' }}>
-                     <RemoteVideo id={id} stream={stream} strip onSpeak={(status) => handleRemoteSpeak(id, status)} isSelected={activeSpeaker === id} />
-                  </div>
-                ))}
-             </div>
-          </div>
-        )}
       </div>
 
       {/* Controls Bar */}
