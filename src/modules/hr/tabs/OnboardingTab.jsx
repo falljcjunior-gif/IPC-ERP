@@ -7,7 +7,7 @@ import {
   UserPlus, Mail, Lock, Briefcase, DollarSign, 
   Shield, Check, Calendar, Settings, AlertCircle, Loader,
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
-  Eye, Pencil, ShieldX
+  Eye, Pencil, ShieldOff
 } from 'lucide-react';
 
 
@@ -564,7 +564,7 @@ const OnboardingTab = () => {
                                       onClick={() => setAccess(mod.id, 'none')} 
                                       title="Aucun accès" 
                                       style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
-                                      <ShieldX size={16} />
+                                      <ShieldOff size={16} />
                                     </button>
                                     <button 
                                       type="button"
