@@ -7,7 +7,7 @@ import {
   GraduationCap, Briefcase, Building2, Sparkles, Flame,
   MessageSquare, ThumbsUp, CheckCircle2, AlertCircle, GitBranch
 } from 'lucide-react';
-import { motion as m } from 'framer-motion';
+
 import { useBusiness } from '../../BusinessContext';
 import KpiCard from '../../components/KpiCard';
 import RecordModal from '../../components/RecordModal';

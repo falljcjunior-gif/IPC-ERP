@@ -50,7 +50,8 @@ class ModuleRegistry {
       roles: module.roles || ['ADMIN'],
       component: module.component,
       schema: module.schema || null,
-      priority: module.priority || 100
+      priority: module.priority || 100,
+      hidden: module.hidden || false
     });
     return this;
   }

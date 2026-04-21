@@ -165,6 +165,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
             const allowedMods = Array.isArray(userPerms.allowedModules) ? userPerms.allowedModules : [];
             const visibleItems = (cat.items || []).filter(item => {
+              if (item.hidden) return false; // never show hidden modules in sidebar
               if (userRole === 'SUPER_ADMIN') return true;
               const itemRoles = Array.isArray(item.roles) ? item.roles : [];
               return allowedMods.includes(item.id) || itemRoles.includes(userRole);
