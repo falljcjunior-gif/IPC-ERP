@@ -15,29 +15,7 @@ const POST_TYPES = [
   { id: 'milestone', label: 'Jalon', icon: <Target size={16} />, color: '#D946EF' },
 ];
 
-const INITIAL_FEED = [
-  {
-    id: 'f1', type: 'success', category: 'Ventes',
-    title: 'Contrat Signé : Nouveau Partenariat BTP !',
-    content: "L'équipe commerciale vient de finaliser un accord majeur avec un promoteur immobilier d'Abidjan. Félicitations à tous !",
-    author: 'Marc Koffi', authorInit: 'MK', date: 'Il y a 2h', reactions: 24, liked: false, comments: [],
-    color: '#8B5CF6'
-  },
-  {
-    id: 'f2', type: 'announcement', category: 'RH',
-    title: 'Nouveau : Politique de Congés Q2 2026',
-    content: "Le service RH rappelle que les demandes de congés du trimestre 2 doivent être soumises avant le 20 avril via le Portail Employé.",
-    author: 'Aminata Touré', authorInit: 'AT', date: 'Il y a 5h', reactions: 18, liked: false, comments: [],
-    color: '#6366F1'
-  },
-  {
-    id: 'f3', type: 'milestone', category: 'Production',
-    title: 'Record de Production : 10 000 Blocs Béton !',
-    content: "L'atelier de production a atteint un pic historique aujourd'hui. Sécurité et excellence au rendez-vous. Bravo à l'équipe de Jean Dupont !",
-    author: 'Jean Dupont', authorInit: 'JD', date: 'Hier', reactions: 56, liked: false, comments: [],
-    color: '#D946EF'
-  }
-];
+const INITIAL_FEED = [];
 
 const WallTab = ({ data, currentUser }) => {
   const { addConnectPost, addConnectComment } = useBusiness();
@@ -244,10 +222,10 @@ const WallTab = ({ data, currentUser }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.8, fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '1rem' }}>
             <Sparkles size={14} /> Pulsation d'équipe
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.25rem' }}>+24%</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.25rem' }}>0%</div>
           <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Engagement ce mois-ci</div>
           <div style={{ height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', marginTop: '1rem', overflow: 'hidden' }}>
-            <div style={{ width: '74%', height: '100%', background: 'white', borderRadius: '2px' }} />
+            <div style={{ width: '0%', height: '100%', background: 'white', borderRadius: '2px' }} />
           </div>
         </motion.div>
 
