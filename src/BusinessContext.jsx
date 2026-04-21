@@ -334,10 +334,13 @@ export const BusinessProvider = ({ children }) => {
   }, []);
 
   const getModuleAccess = useCallback((userId, moduleId) => {
+    // 1. Super Admin Bypass
+    if (currentUser?.role === 'SUPER_ADMIN') return 'write';
+
     const userPerms = permissions[userId];
     if (!userPerms) return 'none';
     
-    // Check for SUPER_ADMIN role (global write access)
+    // Check for explicit SUPER_ADMIN role in matrix (redundant but safe)
     if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
     
     // Special case for 'home' - always write access for authenticated users
@@ -354,7 +357,7 @@ export const BusinessProvider = ({ children }) => {
     }
     
     return 'none';
-  }, [permissions]);
+  }, [permissions, currentUser]);
 
   const createFullUser = useCallback(async (userData, source = 'admin') => {
     let secondaryApp;
