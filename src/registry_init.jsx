@@ -96,7 +96,7 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'connect', label: 'IPC CONNECT', icon: <Zap size={18} />,
+    id: 'connect', label: 'Connect Plus', icon: <Zap size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
     component: Connect, priority: 2
   });
@@ -200,7 +200,7 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'analytics', label: 'Analyses IP', icon: <BarChart3 size={18} />,
+    id: 'analytics', label: 'Analyses Avancées', icon: <BarChart3 size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
     component: Analytics, priority: 25
   });

@@ -90,7 +90,7 @@ const ProjectHub = ({ onOpenDetail }) => {
              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 4 }} style={{ background: '#8B5CF620', padding: '6px', borderRadius: '8px' }}>
                 <Target size={18} />
              </motion.div>
-             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>I.P.C Project Desk</span>
+             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>Project Workspace</span>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

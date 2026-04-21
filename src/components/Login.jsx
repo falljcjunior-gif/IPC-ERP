@@ -148,11 +148,11 @@ const Login = ({ onLogin }) => {
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          <img src={globalSettings.logoUrl || "/logo.png"} alt={globalSettings.companyName || "I.P.C"} className="logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={globalSettings.logoUrl || "/logo.png"} alt="Logo" className="logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
 
         <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-          {mustChange ? 'Sécurité' : `Espace ${globalSettings.companyName || 'I.P.C'}`}
+          {mustChange ? 'Sécurité' : `Espace ${globalSettings.companyName || 'Pro'}`}
         </h1>
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
           {mustChange ? 'Vous devez changer votre mot de passe pour continuer.' : 'Ravi de vous revoir. Connectez-vous à votre cockpit.'}
@@ -192,7 +192,7 @@ const Login = ({ onLogin }) => {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="raphael@ipcerp.com" 
+                  placeholder="contact@votre-erp.com" 
                   style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%', fontSize: '1rem' }}
                   required
                 />

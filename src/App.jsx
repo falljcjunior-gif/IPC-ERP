@@ -121,7 +121,7 @@ function App() {
           borderRadius: '50%',
           marginBottom: '1.5rem'
         }} />
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>I.P.C BUSINESS OS</div>
+        <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>BUSINESS OS</div>
         <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Initialisation du noyau...</div>
         <style>{`
           @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }

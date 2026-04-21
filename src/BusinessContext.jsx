@@ -141,13 +141,13 @@ export const BusinessProvider = ({ children }) => {
       notifications: { systemAlerts: true, emailDigest: false, chatSound: true },
       customFields: {},
       aiPreference: 'floating',
-      aiName: 'IPC Intelligence'
+      aiName: 'Smart Intelligence'
     });
   });
 
   const [globalSettings, setGlobalSettings] = useState(() => {
     return safeParse('ipc_erp_global_settings', {
-      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'I.P.C GREEN BLOCKS', website: 'https://ipc-erp.web.app', currency: 'FCFA',
+      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'GREEN BLOCKS', website: 'https://ipc-erp.web.app', currency: 'FCFA',
       pinnedModules: ['home', 'crm', 'hr', 'dms'] // Default pinned modules
     });
   });

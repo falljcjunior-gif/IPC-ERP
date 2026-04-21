@@ -76,7 +76,7 @@ const TrelloButlerModal = ({ project, updateProject, onClose }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ background: '#F59E0B20', color: '#F59E0B', padding: '0.5rem', borderRadius: '12px' }}><Bot size={28} /></div>
             <div>
-               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>I.P.C Butler & Power-Ups</h2>
+               <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Smart Butler & Power-Ups</h2>
                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Configuration avancée du tableau</p>
             </div>
           </div>

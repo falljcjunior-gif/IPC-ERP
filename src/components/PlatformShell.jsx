@@ -153,11 +153,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         className="glass"
         style={{ height: '100%', display: 'flex', flexDirection: 'column', zIndex: 1000, borderRight: '1px solid var(--border)', position: shellView.mobile ? 'fixed' : 'relative', background: 'var(--bg)' }}
       >
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center' }}>
           <div style={{ minWidth: `${globalSettings.logoWidth || 40}px`, height: `${globalSettings.logoHeight || 40}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={globalSettings.logoUrl || "/logo.png"} alt="IPC" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img src={globalSettings.logoUrl || "/logo.png"} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
-          {shellView.sidebar && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--primary)' }}>{globalSettings.companyName || "I.P.C"}</motion.span>}
         </div>
 
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
@@ -237,7 +236,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
               </select>
             )}
             <button onClick={() => setShellView(p => ({ ...p, ai: true }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
-              <Sparkles size={20} /> <span className="hide-mobile">IPC Intelligence</span>
+              <Sparkles size={20} /> <span className="hide-mobile">Intelligence Cloud</span>
             </button>
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>{theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}</button>
             <div style={{ position: 'relative' }}>
