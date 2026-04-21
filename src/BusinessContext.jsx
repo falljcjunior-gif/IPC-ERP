@@ -513,7 +513,8 @@ export const BusinessProvider = ({ children }) => {
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
 
     // --- I.P.C. Automator (BPM Engine) onCreate ---
-    const activeWorkflowsCreate = (data.workflows || []).filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onCreate');
+    const safeWorkflowsCreate = Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || []);
+    const activeWorkflowsCreate = safeWorkflowsCreate.filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onCreate');
     activeWorkflowsCreate.forEach(wf => {
        const recordFieldVal = newRecord[wf.conditionField];
        let conditionMet = false;
@@ -718,7 +719,8 @@ export const BusinessProvider = ({ children }) => {
       }
 
       // --- I.P.C. Automator (BPM Engine) onUpdate ---
-      const activeWorkflowsUpdate = (prev.workflows || []).filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onUpdate');
+      const safeWorkflowsUpdate = Array.isArray(prev.workflows) ? prev.workflows : (prev.workflows?.[''] || prev.workflows?.workflows || []);
+      const activeWorkflowsUpdate = safeWorkflowsUpdate.filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onUpdate');
       activeWorkflowsUpdate.forEach(wf => {
          const recordFieldVal = newData[wf.conditionField] !== undefined ? newData[wf.conditionField] : oldRecord[wf.conditionField];
          let conditionMet = false;

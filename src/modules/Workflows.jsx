@@ -19,7 +19,7 @@ const Workflows = () => {
   const { data, addRecord, updateRecord, deleteRecord } = useBusiness();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   
-  const workflows = data.workflows || [];
+  const workflows = Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || []);
 
   // Builder State
   const [wfName, setWfName] = useState('');

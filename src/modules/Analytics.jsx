@@ -44,7 +44,7 @@ const Analytics = () => {
   const masseSalariale = employees.reduce((acc, emp) => acc + (parseFloat(emp.salaire || 0)), 0);
 
   // 4. Operations (Workflows & Signature)
-  const activeWorkflows = (data.workflows || []).filter(w => w.active).length;
+  const activeWorkflows = (Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || [])).filter(w => w.active).length;
   const signedDocs = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
 
   // -------------- DEMO HISTORY GENERATOR ---------------
