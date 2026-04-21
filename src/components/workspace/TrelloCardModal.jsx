@@ -109,7 +109,7 @@ const TrelloCardModal = ({ task, updateTask, onClose, projectColumns, currentUse
                       </h4>
                       {/* Interactive checklist progress bar */}
                       <div style={{ height: '8px', background: 'var(--bg-subtle)', borderRadius: '4px', marginBottom: '0.5rem', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: cl.items?.length ? \`\${(cl.items.filter(i => i.done).length / cl.items.length) * 100}%\` : '0%', background: '#10B981', transition: 'width 0.3s' }} />
+                        <div style={{ height: '100%', width: cl.items?.length ? `${(cl.items.filter(i => i.done).length / cl.items.length) * 100}%` : '0%', background: '#10B981', transition: 'width 0.3s' }} />
                       </div>
                       
                       {cl.items?.map((item, iIdx) => (

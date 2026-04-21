@@ -115,7 +115,7 @@ const ProjectHub = ({ onOpenDetail }) => {
                        <span>{Math.round(progress * 100)}%</span>
                      </div>
                      <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '3px', overflow: 'hidden' }}>
-                       <div style={{ height: '100%', width: \`\${progress * 100}%\`, background: 'var(--accent)' }} />
+                       <div style={{ height: '100%', width: `${progress * 100}%`, background: 'var(--accent)' }} />
                      </div>
                    </div>
                  </motion.div>
