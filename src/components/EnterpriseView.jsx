@@ -145,11 +145,9 @@ const EnterpriseView = ({
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
-              {columns.map(col => (
                 <th key={col} style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {modelSchema.fields[col].label}
+                  {modelSchema.fields?.[col]?.label || col}
                 </th>
-              ))}
               <th style={{ width: '50px' }} />
             </tr>
           </thead>
@@ -233,8 +231,8 @@ const EnterpriseView = ({
 
       {/* Breadcrumbs / Title */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-         <span style={{ fontWeight: 800, fontSize: '1.25rem' }}>{modelSchema.label}</span>
-         <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>/ {processedData.length} items</span>
+         <span style={{ fontWeight: 800, fontSize: '1.25rem' }}>{modelSchema?.label || 'Chargement...'}</span>
+         <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>/ {processedData?.length || 0} items</span>
       </div>
 
       {/* Main Content */}

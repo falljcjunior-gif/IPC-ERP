@@ -183,13 +183,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
               return access !== 'none';
             });
             if (visibleItems.length === 0) return null;
-            const isExpanded = openSections.includes(cat.label);
+            const isExpanded = openSections.includes(cat?.label);
 
             return (
-              <div key={cat.label} style={{ marginBottom: '0.5rem' }}>
+              <div key={cat?.label || index} style={{ marginBottom: '0.5rem' }}>
                 {shellView.sidebar && (
-                  <div onClick={() => toggleSection(cat.label)} style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                    {cat.label}
+                  <div onClick={() => toggleSection(cat?.label)} style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                    {cat?.label}
                     <ChevronDown size={12} style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.2s' }} />
                   </div>
                 )}
