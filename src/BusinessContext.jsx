@@ -249,10 +249,11 @@ export const BusinessProvider = ({ children }) => {
   }, [currentUser.nom, activeBrand]);
 
 
-  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null) => {
+  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null, targetUserId = null) => {
     const notifyDoc = {
       id: Date.now().toString(),
       targetRole,
+      targetUserId,
       title,
       message,
       type,
@@ -1342,13 +1343,21 @@ export const BusinessProvider = ({ children }) => {
     const q = query(
       collection(db, 'calls'), 
       where('receiverId', '==', currentUser.id), 
-      where('status', '==', 'ringing'),
-      limit(1)
+      where('status', '==', 'ringing')
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       if (!snapshot.empty) {
-        const callDoc = snapshot.docs[0];
+        // Find the most recent call
+        let latestCallDoc = snapshot.docs[0];
+        snapshot.docs.forEach(doc => {
+           const d = doc.data();
+           const l = latestCallDoc.data();
+           if (d.startedAt && l.startedAt && d.startedAt.toMillis() > l.startedAt.toMillis()) {
+               latestCallDoc = doc;
+           }
+        });
+        const callDoc = latestCallDoc;
         const callData = callDoc.data();
         
         // Prevent re-triggering if we already have an active call for this ID
@@ -1431,7 +1440,28 @@ export const BusinessProvider = ({ children }) => {
             });
             newState[colName] = { ...prev[colName], ...grouped };
           }
-          if (colName === 'notifications') setNotifications(docs);
+          if (colName === 'notifications') {
+             const now = Date.now();
+             const newChatNotifs = docs.filter(d => d.type === 'chat' && d.targetUserId === currentUser.id && (now - new Date(d.createdAt).getTime()) < 10000);
+             if (newChatNotifs.length > 0 && notifications?.length > 0) {
+                 const isActuallyNew = !notifications.some(old => old.id === newChatNotifs[0].id);
+                 if (isActuallyNew) {
+                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                     const osc = audioCtx.createOscillator();
+                     const gain = audioCtx.createGain();
+                     osc.type = 'sine';
+                     osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                     osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                     osc.connect(gain);
+                     gain.connect(audioCtx.destination);
+                     osc.start();
+                     osc.stop(audioCtx.currentTime + 0.15);
+                 }
+             }
+             setNotifications(docs);
+          }
           return newState;
         });
       });

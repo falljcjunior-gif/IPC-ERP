@@ -12,7 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
-  const { currentUser, data, setActiveCall } = useBusiness();
+  const { currentUser, data, setActiveCall, sendNotification } = useBusiness();
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
@@ -96,6 +96,18 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         userName: currentUser.nom,
         createdAt: serverTimestamp()
       });
+
+      // Send Global Notification
+      if (activeRoom.type === 'direct' && sendNotification) {
+         const parts = activeRoom.id.split('_');
+         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+         if (receiverId) {
+             sendNotification('ALL', `Message de ${currentUser.nom}`, newMessage, 'chat', 'connect', receiverId);
+         }
+      } else if (activeRoom.type === 'team' && sendNotification) {
+         // Optionally notify team members, skipping for now to avoid spam
+      }
+
       setNewMessage('');
       inputRef.current?.focus();
     } catch (err) { console.error("Send Error:", err); }

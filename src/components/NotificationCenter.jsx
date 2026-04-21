@@ -8,7 +8,8 @@ import {
   AlertCircle, 
   CheckCircle2, 
   X,
-  Clock
+  Clock,
+  MessageSquare
 } from 'lucide-react';
 import { useBusiness } from '../BusinessContext';
 
@@ -17,9 +18,12 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   
   // Filter notifications by role
   const filteredNotifications = notifications.filter(n => 
-    n.targetRole === 'ALL' || 
-    n.targetRole === currentUser.role ||
-    (currentUser.role === 'SUPER_ADMIN' && (n.targetRole === 'ADMIN' || n.targetRole === 'RH'))
+    n.targetUserId === currentUser.id || 
+    ( !n.targetUserId && (
+      n.targetRole === 'ALL' || 
+      n.targetRole === currentUser.role ||
+      (currentUser.role === 'SUPER_ADMIN' && (n.targetRole === 'ADMIN' || n.targetRole === 'RH'))
+    ))
   ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
   const getIcon = (type) => {
@@ -28,6 +32,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       case 'stock': return <Package size={18} />;
       case 'sale': return <ShoppingCart size={18} />;
       case 'alert': return <AlertCircle size={18} />;
+      case 'chat': return <MessageSquare size={18} />;
       default: return <Bell size={18} />;
     }
   };
@@ -38,6 +43,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       case 'stock': return '#EF4444';
       case 'sale': return '#10B981';
       case 'alert': return '#F59E0B';
+      case 'chat': return '#8B5CF6';
       default: return 'var(--accent)';
     }
   };

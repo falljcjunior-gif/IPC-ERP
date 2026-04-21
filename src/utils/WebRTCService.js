@@ -62,16 +62,9 @@ export class WebRTCService {
 
         if (change.type === 'added') {
           // New participant joined. 
-          // If they joined AFTER me, I initiate the connection (Offer)
-          const myDoc = await getDoc(participantRef);
-          if (myDoc.exists()) {
-             const myData = myDoc.data();
-             if (myData.joinedAt?.toMillis() < participant.joinedAt?.toMillis()) {
-               this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
-             }
-          } else {
-             // Fallback
-             this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
+          // Compare strings to deterministically decide who initiates the offer
+          if (userId < participant.userId) {
+            this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
           }
         } else if (change.type === 'removed') {
           this.closePeerConnection(participant.userId);
