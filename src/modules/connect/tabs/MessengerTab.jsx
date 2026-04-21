@@ -32,6 +32,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
+  const readReceiptTimerRef = useRef(null);
   const scrollRef = useRef();
   const inputRef = useRef();
   const fileInputRef = useRef();
@@ -83,13 +84,15 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
       // Read Receipts Logic
       if (auth.currentUser) {
-         setTimeout(() => {
-             const unreadDocs = snapshot.docs.filter(d => {
-                const mData = d.data();
-                return mData.userId !== currentUser.id && (!mData.readBy || !mData.readBy.includes(currentUser.id));
-             });
+         if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
 
-             if (unreadDocs.length > 0) {
+         const unreadDocs = snapshot.docs.filter(d => {
+            const mData = d.data();
+            return mData.userId !== currentUser.id && (!mData.readBy || !mData.readBy.includes(currentUser.id));
+         });
+
+         if (unreadDocs.length > 0) {
+             readReceiptTimerRef.current = setTimeout(() => {
                 const batch = writeBatch(db);
                 unreadDocs.forEach(d => {
                    batch.update(doc(db, 'messages', d.id), {
@@ -97,11 +100,15 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                    });
                 });
                 batch.commit().catch(()=>{});
-             }
-         }, 1500); // 1.5s delay to prevent Firebase snapshot loop crashes (INTERNAL ASSERTION FAILED: ca9)
+             }, 1500); // 1.5s delay to prevent Firebase snapshot loop crashes (INTERNAL ASSERTION FAILED: ca9)
+         }
       }
     });
-    return () => unsubscribe();
+
+    return () => {
+       unsubscribe();
+       if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
+    }
   }, [activeRoom.id]);
 
   useEffect(() => {

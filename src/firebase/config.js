@@ -20,14 +20,14 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Activer le mode Offline-First (Robust logistique logistique et terrain sans réseau)
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
+// Activer le mode Offline-First (Désactivé temporairement pour bypasser l'erreur ca9 de corruption WebChannel)
+/* enableMultiTabIndexedDbPersistence(db).catch((err) => {
   if (err.code === 'failed-precondition') {
     console.warn("Multiple tabs open, persistence can only be enabled in one tab at a a time.");
   } else if (err.code === 'unimplemented') {
     console.warn("The current browser does not support all of the features required to enable persistence");
   }
-});
+}); */
 
 export { firebaseConfig };
 export default app;
