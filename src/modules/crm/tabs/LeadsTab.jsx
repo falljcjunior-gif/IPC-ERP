@@ -16,15 +16,15 @@ const LeadsTab = ({ leads, onOpenDetail }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)', color: 'white', border: 'none' }}>
           <div style={{ opacity: 0.8, fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Nouveaux Leads (7j)</div>
-          <div style={{ fontSize: '2rem', fontWeight: 900 }}>+42</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900 }}>0</div>
         </div>
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>À Qualifier</div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, color: '#F59E0B' }}>15</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, color: '#F59E0B' }}>0</div>
         </div>
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem' }}>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Taux de Qualification</div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, color: '#10B981' }}>68%</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, color: '#10B981' }}>0%</div>
         </div>
       </div>
 

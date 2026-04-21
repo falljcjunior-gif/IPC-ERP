@@ -10,11 +10,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
-  const clients = data?.crm?.clients || [
-    { id: '1', nom: 'SOGEA SATOM', secteur: 'Construction', level: 'Gold', totalWon: 45000000, lastOrder: '2026-04-10' },
-    { id: '2', nom: 'KAMAG', secteur: 'Logistique', level: 'Silver', totalWon: 12500000, lastOrder: '2026-03-25' },
-    { id: '3', nom: 'BTP Service', secteur: 'BTP', level: 'Bronze', totalWon: 3400000, lastOrder: '2026-04-12' }
-  ];
+  const clients = data?.crm?.clients || [];
 
   const getLevelBadge = (level) => {
     const colors = {

@@ -81,29 +81,11 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
     return { livres, retardes, transit, otif, totalColis, caMoyen };
   }, [SHIPMENTS]);
 
-  const otifTrend = [
-    { mois: 'Oct', otif: 85, retards: 15 },
-    { mois: 'Nov', otif: 88, retards: 12 },
-    { mois: 'Déc', otif: 82, retards: 18 },
-    { mois: 'Jan', otif: 90, retards: 10 },
-    { mois: 'Fév', otif: 93, retards: 7 },
-    { mois: 'Mar', otif: 96, retards: 4 },
-    { mois: 'Avr', otif: kpis.otif || 98, retards: kpis.retardes || 2 }
-  ];
+  const otifTrend = [];
 
-  const volumeTrend = [
-    { sem: 'S1', colisExp: 120, colisLiv: 110, retours: 5 },
-    { sem: 'S2', colisExp: 140, colisLiv: 135, retours: 2 },
-    { sem: 'S3', colisExp: 110, colisLiv: 105, retours: 4 },
-    { sem: 'S4', colisExp: 160, colisLiv: 150, retours: 8 }
-  ];
+  const volumeTrend = [];
 
-  const causeRetards = [
-    { cause: 'Météo / Aléas Route', pct: 45, color: '#F59E0B' },
-    { cause: 'Problème Transporteur', pct: 30, color: '#EF4444' },
-    { cause: 'Erreur Préparation', pct: 15, color: '#8B5CF6' },
-    { cause: 'Client Absent', pct: 10, color: '#64748B' }
-  ];
+  const causeRetards = [];
 
   /* ─── Timeline tracker visual ─── */
   const TrackingTimeline = ({ statut }) => {
@@ -336,12 +318,7 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
       <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
         <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Flux par Région de Destination</h4>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-          {[
-             { region: 'Abidjan & Sud', livraisons: 310, pct: 55, color: '#3B82F6' },
-             { region: 'Bouaké & Centre', livraisons: 110, pct: 20, color: '#10B981' },
-             { region: 'San Pedro & Ouest', livraisons: 80, pct: 15, color: '#F59E0B' },
-             { region: 'International (Export)', livraisons: 56, pct: 10, color: '#8B5CF6' }
-          ].map((r, i) => (
+          {[].map((r, i) => (
             <div key={i}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

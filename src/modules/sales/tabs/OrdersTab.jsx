@@ -11,11 +11,7 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
-  const orders = data?.sales?.orders || [
-    { id: 'ORD-2026-001', client: 'SOGEA SATOM', date: '2026-04-12', montant: 12500000, statut: 'Livré' },
-    { id: 'ORD-2026-002', client: 'KAMAG', date: '2026-04-13', montant: 3400000, statut: 'En cours' },
-    { id: 'ORD-2026-003', client: 'BTP Service', date: '2026-04-14', montant: 8200000, statut: 'Attente Paiement' },
-  ];
+  const orders = data?.sales?.orders || [];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
