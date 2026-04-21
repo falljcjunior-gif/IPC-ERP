@@ -14,7 +14,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
-import { initRegistry } from '../registry_init';
 const DetailOverlay = lazy(() => import('./DetailOverlay'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
@@ -117,7 +116,16 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
       const RegComponent = regModule.component;
-      return <RegComponent {...commonProps} />;
+      return (
+        <Suspense fallback={
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-subtle)' }}>
+             <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--accent)', borderRadius: '50%', marginBottom: '1rem' }} />
+             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Initialisation du module...</div>
+          </div>
+        }>
+          <RegComponent {...commonProps} />
+        </Suspense>
+      );
     }
 
     // 2. Fallback / Loading

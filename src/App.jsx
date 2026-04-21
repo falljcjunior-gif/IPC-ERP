@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
-import PlatformShell from './components/PlatformShell';
+const PlatformShell = React.lazy(() => import('./components/PlatformShell'));
 import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import { initRegistry } from './registry_init';
@@ -139,11 +139,18 @@ function App() {
         )}
 
         {view === 'dashboard' && (
-          <PlatformShell 
-            toggleTheme={toggleTheme} 
-            theme={theme} 
-            setView={setView} 
-          />
+          <React.Suspense fallback={
+            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', color: 'var(--text)' }}>
+              <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid var(--bg-subtle)', borderTop: '4px solid var(--accent)', borderRadius: '50%', marginBottom: '1.5rem' }} />
+              <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Chargement du Noyau...</div>
+            </div>
+          }>
+            <PlatformShell 
+              toggleTheme={toggleTheme} 
+              theme={theme} 
+              setView={setView} 
+            />
+          </React.Suspense>
         )}
       </div>
     </BusinessProvider>

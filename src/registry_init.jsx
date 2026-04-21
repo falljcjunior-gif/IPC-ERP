@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy } from 'react';
 import { registry } from './services/Registry';
 import { 
   Home, Users, ShoppingCart, Mail, Package, Truck, ShoppingBag, 
@@ -9,47 +9,48 @@ import {
   PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart
 } from 'lucide-react';
 
-// Core Components & Modules
-import GlobalDashboard from './components/GlobalDashboard';
-import PersonalWorkspace from './components/PersonalWorkspace';
-import CRM from './modules/crm/CRM';
-import Sales from './modules/sales/Sales';
-import Inventory from './modules/logistics/LogisticsHub';
-import Accounting from './modules/finance/AccountingCenter';
-import Finance from './modules/finance/FinanceControlCenter';
-import Budget from './modules/finance/FinanceControlCenter';
-import HR from './modules/HR';
-import Production from './modules/production/Production';
-import Project from './modules/Project';
-import Purchase from './modules/logistics/LogisticsHub';
-import LegalHub from './modules/legal/LegalHub';
-import SignatureHub from './modules/signature/SignatureHub';
-import Marketing from './modules/marketing/Marketing';
-import BI from './modules/bi/BIHub';
-import MasterData from './modules/MasterData';
-import CalendarModule from './modules/Calendar';
-import Helpdesk from './modules/enterprise/EnterpriseHub';
-import Timesheets from './modules/Timesheets';
-import Fleet from './modules/enterprise/EnterpriseHub';
-import Quality from './modules/Quality';
-import Expenses from './modules/Expenses';
-import DMS from './modules/DMS';
-import Contracts from './modules/Contracts';
-import Manufacturing from './modules/production/Production';
-import Planning from './modules/Planning';
-import Analytics from './modules/Analytics';
-import StaffPortal from './modules/StaffPortal';
-import Connect from './modules/connect/ConnectHub';
-import ControlHub from './modules/admin/ControlHub';
-import History from './modules/History';
-import Workflows from './modules/Workflows';
-import Shipping from './modules/Shipping';
-import WebsiteHub from './modules/website/WebsiteHub';
-import CommerceHub from './modules/sales/CommerceHub';
-import TalentHub from './modules/hr/TalentHub';
-import PlanningTemps from './components/PlanningTemps';
+// --- LAZY LOADED CORE COMPONENTS & MODULES ---
+// This prevents circular dependencies and heavy initialization at startup.
+const GlobalDashboard = lazy(() => import('./components/GlobalDashboard'));
+const PersonalWorkspace = lazy(() => import('./components/PersonalWorkspace'));
+const CRM = lazy(() => import('./modules/crm/CRM'));
+const Sales = lazy(() => import('./modules/sales/Sales'));
+const Inventory = lazy(() => import('./modules/logistics/LogisticsHub'));
+const Accounting = lazy(() => import('./modules/finance/AccountingCenter'));
+const Finance = lazy(() => import('./modules/finance/FinanceControlCenter'));
+const Budget = lazy(() => import('./modules/finance/FinanceControlCenter')); // Shared file
+const HR = lazy(() => import('./modules/HR'));
+const Production = lazy(() => import('./modules/production/Production'));
+const Project = lazy(() => import('./modules/Project'));
+const Purchase = lazy(() => import('./modules/logistics/LogisticsHub')); // Shared file
+const LegalHub = lazy(() => import('./modules/legal/LegalHub'));
+const SignatureHub = lazy(() => import('./modules/signature/SignatureHub'));
+const Marketing = lazy(() => import('./modules/marketing/Marketing'));
+const BI = lazy(() => import('./modules/bi/BIHub'));
+const MasterData = lazy(() => import('./modules/MasterData'));
+const CalendarModule = lazy(() => import('./modules/Calendar'));
+const Helpdesk = lazy(() => import('./modules/enterprise/EnterpriseHub'));
+const Timesheets = lazy(() => import('./modules/Timesheets'));
+const Fleet = lazy(() => import('./modules/enterprise/EnterpriseHub')); // Shared file
+const Quality = lazy(() => import('./modules/Quality'));
+const Expenses = lazy(() => import('./modules/Expenses'));
+const DMS = lazy(() => import('./modules/DMS'));
+const Contracts = lazy(() => import('./modules/Contracts'));
+const Manufacturing = lazy(() => import('./modules/production/Production')); // Shared file
+const Planning = lazy(() => import('./modules/Planning'));
+const Analytics = lazy(() => import('./modules/Analytics'));
+const StaffPortal = lazy(() => import('./modules/StaffPortal'));
+const Connect = lazy(() => import('./modules/connect/ConnectHub'));
+const ControlHub = lazy(() => import('./modules/admin/ControlHub'));
+const History = lazy(() => import('./modules/History'));
+const Workflows = lazy(() => import('./modules/Workflows'));
+const Shipping = lazy(() => import('./modules/Shipping'));
+const WebsiteHub = lazy(() => import('./modules/website/WebsiteHub'));
+const CommerceHub = lazy(() => import('./modules/sales/CommerceHub'));
+const TalentHub = lazy(() => import('./modules/hr/TalentHub'));
+const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 
-// Schemas
+// Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
 import { hrSchema } from './schemas/hr.schema';
 import { salesSchema } from './schemas/sales.schema';
@@ -224,8 +225,6 @@ export const initRegistry = () => {
     component: DMS, priority: 35
   });
 
-
-
   registry.register({
     id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
     category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
@@ -240,7 +239,7 @@ export const initRegistry = () => {
 
   registry.register({
     id: 'timesheets', label: 'Feuilles de Temps', icon: <Clock size={18} />,
-    hidden: true, // accessible via navigateTo but not in sidebar
+    hidden: true,
     category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
     component: PlanningTemps, priority: 34
   });
