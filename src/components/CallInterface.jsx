@@ -19,7 +19,7 @@ const CallInterface = ({
   onHangup
 }) => {
   const { currentUser } = useBusiness();
-  const localVideoRef = useRef();
+  const [localStream, setLocalStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(callType === 'video');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'speaker'
@@ -48,7 +48,7 @@ const CallInterface = ({
     const setupCall = async () => {
       try {
         const stream = await webrtcService.startLocalStream(callType);
-        if (localVideoRef.current) localVideoRef.current.srcObject = stream;
+        setLocalStream(stream);
 
         // Local Speech Detection
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -180,7 +180,7 @@ const CallInterface = ({
           }}>
             {/* Local Video */}
             <div style={{ position: 'relative', borderRadius: '1.5rem', overflow: 'hidden', background: '#1E293B', border: localSpeaking ? '3px solid #10B981' : '3px solid rgba(255,255,255,0.1)', transition: 'border 0.2s ease-in-out', boxShadow: localSpeaking ? '0 0 15px rgba(16, 185, 129, 0.4)' : 'none' }}>
-              <video ref={localVideoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+              <video ref={el => { if (el && el.srcObject !== localStream) el.srcObject = localStream; }} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
               <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', padding: '4px 12px', borderRadius: '20px', background: 'rgba(0,0,0,0.6)', fontSize: '0.8rem', fontWeight: 600 }}>Vous</div>
               {!isVideoOn && <div style={{ position: 'absolute', inset: 0, background: '#1E293B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={64} opacity={0.3} /></div>}
               {localSpeaking && <div style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '4px', borderRadius: '50%', background: '#10B981' }}><Mic size={14} color="white" /></div>}
@@ -197,7 +197,7 @@ const CallInterface = ({
              <div style={{ flex: 1, position: 'relative', borderRadius: '2rem', overflow: 'hidden', background: '#1E293B' }}>
                 {activeSpeaker === 'local' ? (
                    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                     <video ref={localVideoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+                     <video ref={el => { if (el && el.srcObject !== localStream) el.srcObject = localStream; }} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
                      <div style={{ position: 'absolute', bottom: '1.5rem', left: '1.5rem', padding: '6px 16px', borderRadius: '20px', background: 'rgba(0,0,0,0.6)', fontSize: '0.9rem', fontWeight: 600 }}>Vous</div>
                    </div>
                 ) : (
@@ -208,7 +208,7 @@ const CallInterface = ({
              {/* Bottom Strip of Participants */}
              <div style={{ height: '160px', display: 'flex', gap: '1rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
                 <div onClick={() => setActiveSpeaker('local')} style={{ minWidth: '220px', borderRadius: '1rem', overflow: 'hidden', position: 'relative', cursor: 'pointer', border: activeSpeaker === 'local' ? '3px solid #8B5CF6' : (localSpeaking ? '3px solid #10B981' : '3px solid transparent'), transition: '0.2s', boxShadow: localSpeaking && activeSpeaker !== 'local' ? '0 0 10px rgba(16, 185, 129, 0.4)' : 'none' }}>
-                   <video ref={localVideoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+                   <video ref={el => { if (el && el.srcObject !== localStream) el.srcObject = localStream; }} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
                    <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.5rem', background: 'rgba(0,0,0,0.6)', padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem' }}>Vous</div>
                 </div>
                 {Object.entries(remoteParticipants).map(([id, stream]) => (
