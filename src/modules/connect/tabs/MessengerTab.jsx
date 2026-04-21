@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useBusiness } from '../../../BusinessContext';
 import { db, auth, storage } from '../../../firebase/config';
-import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where, updateDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { webrtcService } from '../../../utils/WebRTCService';
 
@@ -83,14 +83,22 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
       // Read Receipts Logic
       if (auth.currentUser) {
-         snapshot.docs.forEach(d => {
-            const mData = d.data();
-            if (mData.userId !== currentUser.id && (!mData.readBy || !mData.readBy.includes(currentUser.id))) {
-               updateDoc(doc(db, 'messages', d.id), {
-                  readBy: [...(mData.readBy || []), currentUser.id]
-               }).catch(()=>{});
-            }
-         });
+         setTimeout(() => {
+             const unreadDocs = snapshot.docs.filter(d => {
+                const mData = d.data();
+                return mData.userId !== currentUser.id && (!mData.readBy || !mData.readBy.includes(currentUser.id));
+             });
+
+             if (unreadDocs.length > 0) {
+                const batch = writeBatch(db);
+                unreadDocs.forEach(d => {
+                   batch.update(doc(db, 'messages', d.id), {
+                      readBy: [...(d.data().readBy || []), currentUser.id]
+                   });
+                });
+                batch.commit().catch(()=>{});
+             }
+         }, 1500); // 1.5s delay to prevent Firebase snapshot loop crashes (INTERNAL ASSERTION FAILED: ca9)
       }
     });
     return () => unsubscribe();
