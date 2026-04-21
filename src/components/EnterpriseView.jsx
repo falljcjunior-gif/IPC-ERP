@@ -145,9 +145,11 @@ const EnterpriseView = ({
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
+              {columns.map(col => (
                 <th key={col} style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {modelSchema.fields?.[col]?.label || col}
                 </th>
+              ))}
               <th style={{ width: '50px' }} />
             </tr>
           </thead>
