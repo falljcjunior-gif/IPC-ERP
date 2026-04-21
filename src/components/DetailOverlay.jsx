@@ -29,7 +29,7 @@ import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
-  const { config, navigateTo, deleteRecord, data, logAction } = useBusiness();
+  const { config, navigateTo, deleteRecord, data, logAction, getModuleAccess, currentUser } = useBusiness();
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);
@@ -37,7 +37,12 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
   const customFields = config?.customFields?.[appId] || [];
 
   // Règle d'or SSOT : Verrouillage total si le document est signé/gagné.
-  const isLocked = (appId === 'sales' || appId === 'crm') && (formData.statut === 'Signé' || formData.etape === 'Gagné' || formData.statut === 'Gagné');
+  const isLockedByStatus = (appId === 'sales' || appId === 'crm') && (formData.statut === 'Signé' || formData.etape === 'Gagné' || formData.statut === 'Gagné');
+  
+  // Vérification des habilitations granulaires
+  const accessLevel = getModuleAccess(currentUser?.id, appId);
+  const isReadOnly = accessLevel === 'read';
+  const isLocked = isLockedByStatus || isReadOnly;
 
   // Synchronize formData with record prop safely
   React.useEffect(() => {
@@ -140,13 +145,14 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {/* Contextual Logic Transitions */}
                 {appId === 'hr' && subModule === 'employees' && (
-                  <button 
-                    onClick={() => { navigateTo('user_management'); onClose(); }}
-                    className="glass"
-                    style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--accent)40', color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-                  >
-                    <Settings size={14} /> Accès Système
-                  </button>
+                    <button 
+                      onClick={() => { navigateTo('user_management'); onClose(); }}
+                      className="glass"
+                      disabled={isReadOnly}
+                      style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--accent)40', color: 'var(--accent)', fontSize: '0.75rem', fontWeight: 700, cursor: isReadOnly ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', opacity: isReadOnly ? 0.5 : 1 }}
+                    >
+                      <Settings size={14} /> Accès Système
+                    </button>
                 )}
                 {appId === 'crm' && subModule === 'opportunities' && record.etape === 'Gagné' && (
                   <button 
@@ -213,13 +219,13 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                         </label>
                         
                         {(key === 'statut' || key === 'etape' || key === 'type' || (registry.getSchema(appId)?.models?.[subModule]?.fields?.[key]?.type === 'selection')) ? (
-                          <select 
-                            value={value}
-                            onChange={(e) => handleChange(key, e.target.value)}
-                            disabled={isLocked}
-                            className="glass"
-                            style={{ padding: '0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: isLocked ? 'rgba(0,0,0,0.05)' : 'var(--bg-subtle)', color: 'var(--text)', opacity: isLocked ? 0.7 : 1, cursor: isLocked ? 'not-allowed' : 'pointer' }}
-                          >
+                             <select 
+                               value={value}
+                               onChange={(e) => handleChange(key, e.target.value)}
+                               disabled={isLocked}
+                               className="glass"
+                               style={{ padding: '0.75rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)', background: isLocked ? 'var(--bg-subtle)' : 'var(--bg-subtle)', color: 'var(--text)', opacity: isLocked ? 0.7 : 1, cursor: isLocked ? 'not-allowed' : 'pointer' }}
+                             >
                             <option value={value}>{value}</option>
                             {(registry.getSchema(appId)?.models?.[subModule]?.fields?.[key]?.options || 
                               ['Qualifié', 'Validé', 'Terminé', 'Gagné', 'Perdu']
@@ -473,7 +479,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
 
               {activeTab === 'actions' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {!isLocked && (
+                  {!isLocked && !isReadOnly && (
                     <button 
                       onClick={() => {
                         if (appId === 'crm') handleChange('etape', 'Gagné');
@@ -493,7 +499,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                   >
                      Générer le PDF <Download size={16} />
                   </button>
-                  {!isLocked && (
+                  {!isLocked && !isReadOnly && (
                     <button 
                       className="btn" 
                       onClick={() => {
@@ -513,9 +519,12 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
             {/* Footer */}
             <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', flexDirection: 'column' }}>
               {isLocked ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(239, 68, 68, 0.1)', color: '#EF4444', padding: '1rem', borderRadius: '1rem', fontWeight: 700, fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: isLockedByStatus ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-subtle)', color: isLockedByStatus ? '#EF4444' : 'var(--accent)', padding: '1rem', borderRadius: '1rem', fontWeight: 700, fontSize: '0.85rem', border: '1px solid var(--border)' }}>
                   <Lock size={20} />
-                  Document verrouillé (SSOT Axelor). Les modifications nécessitent un Avenant officiel.
+                  {isLockedByStatus 
+                    ? "Document verrouillé (SSOT Axelor). Les modifications nécessitent un Avenant officiel."
+                    : "Accès en lecture seule. Vous n'avez pas les habilitations pour modifier cet enregistrement."
+                  }
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>

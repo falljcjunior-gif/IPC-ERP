@@ -32,7 +32,7 @@ import PointageWidget from './PointageWidget';
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
     globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
-    globalSettings, currentUser, permissions, logout, activeApp, 
+    globalSettings, currentUser, permissions, getModuleAccess, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
     activeBrand, setActiveBrand, BRANDS
   } = useBusiness();
@@ -106,7 +106,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, [search.query, globalSearch]);
 
   const renderContent = () => {
-    const commonProps = { onOpenDetail: openDetail, navigateTo };
+    const commonProps = { onOpenDetail: openDetail, navigateTo, appId: activeApp };
     // 1. Check Registry First (Primary)
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
@@ -161,13 +161,15 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
 
         <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
           {appsPool.map((cat) => {
-            const userPerms = permissions[currentUser.id] || { roles: [], allowedModules: [] };
-            const allowedMods = Array.isArray(userPerms.allowedModules) ? userPerms.allowedModules : [];
             const visibleItems = (cat.items || []).filter(item => {
-              if (item.hidden) return false; // never show hidden modules in sidebar
+              if (item.hidden) return false;
               if (userRole === 'SUPER_ADMIN') return true;
+              
+              const access = getModuleAccess(currentUser.id, item.id);
+              if (access !== 'none') return true;
+              
               const itemRoles = Array.isArray(item.roles) ? item.roles : [];
-              return allowedMods.includes(item.id) || itemRoles.includes(userRole);
+              return itemRoles.includes(userRole);
             });
             if (visibleItems.length === 0) return null;
             const isExpanded = openSections.includes(cat.label);
@@ -300,6 +302,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })}
         title={registry.getSchema(details.context.appId)?.models[details.context.subModule]?.label || 'Nouvel Enregistrement'}
         recordType={details.context.subModule}
+        appId={details.context.appId}
         fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => {
           // Dynamic Injection for Campaign Source
           if (name === 'campagne_id') {

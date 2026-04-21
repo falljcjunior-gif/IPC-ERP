@@ -6,8 +6,10 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { 
   UserPlus, Mail, Lock, Briefcase, DollarSign, 
   Shield, Check, Calendar, Settings, AlertCircle, Loader,
-  Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight
+  Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
+  Eye, Pencil, ShieldX
 } from 'lucide-react';
+
 
 const availableModules = [
   { id: 'home',       category: 'Général', label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: '👤', color: '#10B981', locked: true, desc: 'Profil et base employés' },
@@ -43,198 +45,132 @@ const moduleCategories = [
 const EditAccessPanel = ({ employee, onClose }) => {
   const { permissions, setPermissions, addHint } = useBusiness();
 
-  const userPerms = permissions[employee.id] || { roles: [], allowedModules: ['home'] };
-  const [localModules, setLocalModules] = useState(
-    Array.isArray(userPerms.allowedModules) ? userPerms.allowedModules : ['home']
-  );
+  const userPerms = permissions[employee.id] || { roles: [], moduleAccess: {} };
+  
+  const [localAccess, setLocalAccess] = useState(() => {
+    const access = { ...(userPerms.moduleAccess || {}) };
+    // Legacy support
+    if (userPerms.allowedModules) {
+      userPerms.allowedModules.forEach(m => {
+        if (!access[m]) access[m] = 'write';
+      });
+    }
+    if (!access['home']) access['home'] = 'write';
+    return access;
+  });
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  const toggleMod = (modId) => {
+  const setAccess = (modId, level) => {
     if (modId === 'home') return;
-    setLocalModules(prev =>
-      prev.includes(modId) ? prev.filter(m => m !== modId) : [...prev, modId]
-    );
-  };
-
-  const toggleCategory = (cat) => {
-    const catMods = availableModules.filter(m => m.category === cat && !m.locked).map(m => m.id);
-    const allSelected = catMods.every(m => localModules.includes(m));
-    if (allSelected) {
-      setLocalModules(prev => prev.filter(m => !catMods.includes(m)));
-    } else {
-      setLocalModules(prev => Array.from(new Set([...prev, ...catMods])));
-    }
+    setLocalAccess(prev => {
+      const next = { ...prev };
+      if (level === 'none') delete next[modId];
+      else next[modId] = level;
+      return next;
+    });
   };
 
   const handleSave = async () => {
     setSaveError('');
     if (!employee?.id) {
-      setSaveError("ID employé manquant. Cet utilisateur n'est peut-être pas encore provisionné sur Firebase.");
+      setSaveError("ID employé manquant.");
       return;
     }
 
     setSaving(true);
     try {
-      // Compute roles from selected modules
       const rolesMap = {};
-      localModules.forEach(modId => {
+      Object.entries(localAccess).forEach(([modId, level]) => {
         const mod = availableModules.find(m => m.id === modId);
         if (mod?.role) rolesMap[mod.role] = true;
       });
       const newRoles = Object.keys(rolesMap);
       if (newRoles.length === 0) newRoles.push('STAFF');
 
-      const newPerms = { roles: newRoles, allowedModules: localModules };
+      const newPerms = { roles: newRoles, moduleAccess: localAccess };
 
-      console.log('[EditAccess] Saving for UID:', employee.id, '| perms:', newPerms);
-
-      // 1. Update local permissions state immediately (instant UI feedback)
       setPermissions(prev => ({ ...prev, [employee.id]: newPerms }));
-
-      // 2. Write to Firestore users/{uid}
       await setDoc(doc(db, 'users', employee.id), { permissions: newPerms }, { merge: true });
-      console.log('[EditAccess] users/ updated ✅');
-
-      // 3. Write to Firestore hr/{uid}
       await setDoc(doc(db, 'hr', employee.id), { permissions: newPerms, role: newRoles[0], subModule: 'employees' }, { merge: true });
-      console.log('[EditAccess] hr/ updated ✅');
 
       setSaved(true);
-      addHint({ title: '✅ Accès mis à jour', message: `Habilitations de ${employee.nom || employee.email} sauvegardées.`, type: 'success' });
+      addHint({ title: '✅ Accès mis à jour', message: `Habilitations de ${employee.nom} sauvegardées.`, type: 'success' });
       setTimeout(() => { setSaved(false); onClose(); }, 2000);
     } catch (err) {
-      console.error('[EditAccess] ERROR:', err);
-      setSaveError(`Erreur Firebase : ${err.message || 'Vérifiez votre connexion et vos droits.'}`);
+      console.error(err);
+      setSaveError(`Erreur : ${err.message}`);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 40 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 40 }}
-      className="glass"
-      style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid #8B5CF630', background: 'var(--bg)' }}
-    >
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: '#8B5CF620', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem' }}>
-            {(employee.nom || employee.email || '?')[0].toUpperCase()}
+    <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 40 }} className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem', color: 'var(--accent)' }}>
+            {(employee.nom || '?')[0].toUpperCase()}
           </div>
           <div>
-            <div style={{ fontWeight: 900, fontSize: '1rem' }}>{employee.nom || employee.email}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>{employee.poste || employee.email}</div>
+            <div style={{ fontWeight: 900, fontSize: '1.1rem' }}>{employee.nom}</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{employee.poste}</div>
           </div>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '0.4rem 0.9rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          ← Retour
+        <button onClick={onClose} className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+          Annuler
         </button>
       </div>
 
-      <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 800, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Shield size={16} color="#10B981" /> Habilitations & Accès Modules
-      </h4>
-      <p style={{ margin: '0 0 1.5rem 0', fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-        Cochez/décochez les modules auxquels cet employé peut accéder. Les rôles seront recalculés automatiquement.
-      </p>
+      <div style={{ marginBottom: '2rem' }}>
+        <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Shield size={18} color="var(--accent)" /> Matrice des Habilitations
+        </h4>
+        <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>Définissez les niveaux d'accès par module (Lecture / Écriture).</p>
+      </div>
 
-      {saveError && (
-        <div style={{ padding: '0.75rem 1rem', background: '#EF444415', color: '#EF4444', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 600, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <AlertCircle size={14} /> {saveError}
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2.5rem' }}>
         {moduleCategories.map(cat => {
-          const mods = availableModules.filter(m => m.category === cat);
-          if (mods.length === 0) return null;
-          
-          const lockedMods = mods.filter(m => m.locked).map(m => m.id);
-          const unlockableMods = mods.filter(m => !m.locked).map(m => m.id);
-          const allUnlockedSelected = unlockableMods.length > 0 && unlockableMods.every(m => localModules.includes(m));
-
-          return (
-            <div key={cat} style={{ background: 'var(--bg-subtle)', borderRadius: '1.25rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
-              <div style={{ padding: '0.75rem 1rem', background: '#00000005', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                  {cat}
-                </span>
-                {unlockableMods.length > 0 && (
-                  <button onClick={() => toggleCategory(cat)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>
-                    {allUnlockedSelected ? 'Tout désélectionner' : 'Tout sélectionner'}
-                  </button>
-                )}
-              </div>
-              <div style={{ display: 'grid', gap: '2px', background: 'var(--border)' }}>
-                {mods.map(mod => {
-                  const isActive = localModules.includes(mod.id);
-                  return (
-                    <div
-                      key={mod.id}
-                      onClick={() => toggleMod(mod.id)}
-                      style={{
-                        background: 'var(--bg)',
-                        display: 'flex', alignItems: 'center', gap: '1rem',
-                        padding: '1rem', cursor: mod.locked ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.18s'
-                      }}
-                    >
-                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: isActive ? `${mod.color}15` : 'var(--bg-subtle)', color: isActive ? mod.color : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', transition: 'all 0.3s' }}>
-                        {mod.icon}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 800, fontSize: '0.9rem', color: isActive ? mod.color : 'var(--text)' }}>{mod.label}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '4px' }}>
-                           <span style={{ fontSize: '0.65rem', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)', fontWeight: 700 }}>Rôle: {mod.role}</span>
-                           {mod.desc && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {mod.desc}</span>}
-                        </div>
-                      </div>
-                      <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: isActive ? mod.color : 'var(--text-muted)', display: 'flex' }}>
-                        {isActive ? <ToggleRight size={30} /> : <ToggleLeft size={30} />}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
+           const mods = availableModules.filter(m => m.category === cat);
+           if (mods.length === 0) return null;
+           return (
+             <div key={cat}>
+               <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>{cat}</div>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                 {mods.map(mod => {
+                   const level = localAccess[mod.id] || 'none';
+                   return (
+                     <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg-subtle)' : 'transparent', border: '1px solid var(--border)' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                         <span style={{ fontSize: '1.1rem' }}>{mod.icon}</span>
+                         <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
+                       </div>
+                       
+                       <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '4px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                         <button onClick={() => setAccess(mod.id, 'none')} title="Aucun accès" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)' }}>
+                           <ShieldX size={16} />
+                         </button>
+                         <button onClick={() => setAccess(mod.id, 'read')} title="Regard (Lecture)" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)' }}>
+                           <Eye size={16} />
+                         </button>
+                         <button onClick={() => setAccess(mod.id, 'write')} title="Modification (Écriture)" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)' }}>
+                           <Pencil size={16} />
+                         </button>
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+             </div>
+           );
         })}
       </div>
 
-      {/* Roles résumé */}
-      <div style={{ padding: '0.9rem 1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', marginBottom: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: '0.25rem' }}>Rôles actifs :</span>
-        {(() => {
-          const rolesMap = {};
-          localModules.forEach(modId => {
-            const mod = availableModules.find(m => m.id === modId);
-            if (mod?.role) rolesMap[mod.role] = mod.color;
-          });
-          return Object.entries(rolesMap).map(([role, color]) => (
-            <span key={role} style={{ padding: '0.25rem 0.75rem', borderRadius: '2rem', background: `${color}20`, color, fontWeight: 800, fontSize: '0.75rem' }}>{role}</span>
-          ));
-        })()}
-      </div>
-
-      <button
-        onClick={handleSave}
-        disabled={saving || saved}
-        style={{
-          width: '100%', padding: '1rem', borderRadius: '1rem',
-          background: saved ? '#10B981' : '#8B5CF6',
-          color: 'white', border: 'none', fontWeight: 900, fontSize: '0.95rem',
-          cursor: saving ? 'wait' : 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem',
-          transition: 'background 0.3s'
-        }}
-      >
-        {saving ? <Loader size={18} className="spin" /> : saved ? <Check size={18} /> : <Save size={18} />}
-        {saving ? 'Sauvegarde Firebase...' : saved ? 'Accès mis à jour !' : 'Sauvegarder les Accès'}
+      <button onClick={handleSave} disabled={saving || saved} className="btn-primary" style={{ width: '100%', padding: '1rem', borderRadius: '1rem', fontWeight: 900, background: saved ? '#10B981' : 'var(--accent)', borderColor: saved ? '#10B981' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+        {saving ? <Loader className="spin" size={20} /> : saved ? <Check size={20} /> : <Save size={20} />}
+        {saving ? 'Sauvegarde...' : saved ? 'Accès enregistrés !' : 'Enregistrer la matrice'}
       </button>
     </motion.div>
   );
@@ -258,7 +194,7 @@ const OnboardingTab = () => {
     contratDuree: '', salaire: ''
   });
 
-  const [selectedModules, setSelectedModules] = useState(['home']);
+  const [localAccess, setLocalAccess] = useState({ home: 'write' });
 
   // Load all employees from HR data
   const allEmployees = useMemo(() => {
@@ -275,21 +211,32 @@ const OnboardingTab = () => {
     );
   }, [allEmployees, searchQuery]);
 
-  const toggleModule = (modId) => {
+  const setAccess = (modId, level) => {
     if (modId === 'home') return;
-    setSelectedModules(prev =>
-      prev.includes(modId) ? prev.filter(m => m !== modId) : [...prev, modId]
-    );
+    setLocalAccess(prev => {
+      const next = { ...prev };
+      if (level === 'none') {
+        delete next[modId];
+      } else {
+        next[modId] = level;
+      }
+      return next;
+    });
   };
 
-  const toggleCreateCategory = (cat) => {
+  const toggleCreateCategory = (cat, forceLevel = 'write') => {
     const catMods = availableModules.filter(m => m.category === cat && !m.locked).map(m => m.id);
-    const allSelected = catMods.every(m => selectedModules.includes(m));
-    if (allSelected) {
-      setSelectedModules(prev => prev.filter(m => !catMods.includes(m)));
-    } else {
-      setSelectedModules(prev => Array.from(new Set([...prev, ...catMods])));
-    }
+    const allSelected = catMods.every(m => localAccess[m]);
+    
+    setLocalAccess(prev => {
+      const next = { ...prev };
+      if (allSelected && forceLevel === 'write') {
+        catMods.forEach(m => delete next[m]);
+      } else {
+        catMods.forEach(m => next[m] = forceLevel);
+      }
+      return next;
+    });
   };
 
   const handleInputChange = (e) => {
@@ -303,21 +250,24 @@ const OnboardingTab = () => {
     setError('');
     
     const selectedRolesObj = {};
-    selectedModules.forEach(modId => {
+    const moduleAccess = { ...localAccess };
+    
+    Object.entries(localAccess).forEach(([modId, level]) => {
       const mod = availableModules.find(m => m.id === modId);
-      if (mod && mod.role) selectedRolesObj[mod.role] = true;
+      if (mod && mod.role && level !== 'none') selectedRolesObj[mod.role] = true;
     });
+    
     const roles = Object.keys(selectedRolesObj);
     if (roles.length === 0) roles.push('STAFF');
 
-    const finalUserData = { ...formData, roles, allowedModules: selectedModules };
+    const finalUserData = { ...formData, roles, moduleAccess };
 
     try {
       const res = await createFullUser(finalUserData, 'hr');
       if (res && res.success) {
         setSuccess(true);
         setFormData({ nom: '', email: '', password: '', poste: '', dept: 'Ventes', contratType: 'CDI', contratDuree: '', salaire: '' });
-        setSelectedModules(['home']);
+        setLocalAccess({ home: 'write' });
         setTimeout(() => setSuccess(false), 5000);
       }
     } catch (err) {
@@ -580,7 +530,7 @@ const OnboardingTab = () => {
                       
                       const lockedMods = mods.filter(m => m.locked).map(m => m.id);
                       const unlockableMods = mods.filter(m => !m.locked).map(m => m.id);
-                      const allUnlockedSelected = unlockableMods.length > 0 && unlockableMods.every(m => selectedModules.includes(m));
+                      const allUnlockedSelected = unlockableMods.length > 0 && unlockableMods.every(m => localAccess[m]);
 
                       return (
                         <div key={cat} style={{ background: 'var(--bg-subtle)', borderRadius: '1rem', border: '1px solid var(--border)' }}>
@@ -595,23 +545,42 @@ const OnboardingTab = () => {
                             )}
                           </div>
                           
-                          <div style={{ padding: '0.75rem', display: 'grid', gap: '0.5rem' }}>
+                          <div style={{ padding: '0.75rem', display: 'grid', gap: '4px' }}>
                             {mods.map(mod => {
-                              const isSelected = selectedModules.includes(mod.id);
+                              const level = localAccess[mod.id] || 'none';
                               return (
-                                <div key={mod.id} onClick={(e) => { e.preventDefault(); toggleModule(mod.id); }}
-                                  style={{ padding: '0.85rem', borderRadius: '0.75rem', border: isSelected ? `2px solid ${mod.color}` : '2px solid transparent', background: isSelected ? `${mod.color}15` : 'var(--bg)', display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: mod.locked ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
-                                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: isSelected ? mod.color : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', color: isSelected ? 'white' : 'var(--text)' }}>{mod.icon}</div>
-                                   <div style={{ flex: 1 }}>
-                                      <div style={{ fontWeight: 800, color: isSelected ? mod.color : 'var(--text)', fontSize: '0.88rem' }}>{mod.label}</div>
-                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                        <span style={{ fontSize: '0.65rem', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role}</span>
-                                        {mod.desc && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>• {mod.desc}</span>}
-                                      </div>
-                                   </div>
-                                   <div style={{ width: '22px', height: '22px', borderRadius: '6px', background: isSelected ? mod.color : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isSelected ? 'white' : 'transparent', opacity: mod.locked ? 0.5 : 1 }}>
-                                     <Check size={14} />
-                                   </div>
+                                <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg)' : 'transparent', border: '1px solid var(--border)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <span style={{ fontSize: '1.2rem' }}>{mod.icon}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                      <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
+                                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '4px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setAccess(mod.id, 'none')} 
+                                      title="Aucun accès" 
+                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
+                                      <ShieldX size={16} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setAccess(mod.id, 'read')} 
+                                      title="Lecture" 
+                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
+                                      <Eye size={16} />
+                                    </button>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setAccess(mod.id, 'write')} 
+                                      title="Écriture" 
+                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
+                                      <Pencil size={16} />
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             })}

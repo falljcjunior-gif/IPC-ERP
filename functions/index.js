@@ -194,3 +194,45 @@ exports.metaWebhook = functions.https.onRequest(async (req, res) => {
   return res.status(405).send('Method Not Allowed');
 });
 
+/**
+ * Admin: Delete User account from Firebase Auth
+ */
+exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
+  // 1. Security Check: Only authenticated users
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Authentification requise');
+  }
+
+  // 2. Privilege Check: Only SUPER_ADMIN allowed
+  const callerUid = context.auth.uid;
+  const callerSnap = await db.collection('users').doc(callerUid).get();
+  const callerData = callerSnap.data();
+  
+  const isSuperAdmin = callerData?.permissions?.roles?.includes('SUPER_ADMIN') || 
+                      ['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com', 'yoman.raphael@gmail.com'].includes(context.auth.token.email);
+
+  if (!isSuperAdmin) {
+    throw new functions.https.HttpsError('permission-denied', 'Privilèges insuffisants pour cette opération.');
+  }
+
+  const { uid } = data;
+  if (!uid) {
+    throw new functions.https.HttpsError('invalid-argument', 'UID de l\'utilisateur manquant');
+  }
+
+  try {
+    await admin.auth().deleteUser(uid);
+    console.log(`User ${uid} successfully deleted from Firebase Auth by ${callerUid}`);
+    
+    // Optionally clean up other potential collections linked to this UID
+    // await db.collection('users').doc(uid).delete();
+    // await db.collection('hr').doc(uid).delete();
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting user ${uid}:`, error);
+    throw new functions.https.HttpsError('internal', `Erreur lors de la suppression Auth: ${error.message}`);
+  }
+});
+
+

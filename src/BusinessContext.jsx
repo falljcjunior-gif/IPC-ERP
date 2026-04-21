@@ -5,6 +5,7 @@ import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query,
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 const BusinessContext = createContext();
 
@@ -751,6 +752,12 @@ export const BusinessProvider = ({ children }) => {
   }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence, generateLitigationEntry, sendNotification]);
 
   const deleteRecord = useCallback((appId, subModule, id) => {
+    // Special handling for user deletion to ensure Auth is also cleaned up
+    if ((appId === 'admin' && subModule === 'users') || (appId === 'hr' && subModule === 'employees')) {
+      permanentlyDeleteUserRecord(id);
+      return;
+    }
+
     setData(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
@@ -762,7 +769,7 @@ export const BusinessProvider = ({ children }) => {
       }, 0);
       return nextState;
     });
-  }, [logAction]);
+  }, [logAction, permanentlyDeleteUserRecord]);
 
   const processPOSOrder = useCallback((order) => {
     const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
@@ -1049,7 +1056,7 @@ export const BusinessProvider = ({ children }) => {
 
   const updateUserRole = useCallback((userId, newRole) => {
     setPermissions(prev => {
-      const userPerms = prev[userId] || { allowedModules: [] };
+      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newPerms = { ...userPerms, roles: [newRole] };
       
       if (auth.currentUser) {
@@ -1060,13 +1067,21 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const toggleModuleAccess = useCallback((userId, moduleId) => {
+  const setModuleAccessLevel = useCallback((userId, moduleId, level) => {
     setPermissions(prev => {
-      const userPerms = prev[userId] || { roles: [], allowedModules: [] };
-      const newModules = userPerms.allowedModules.includes(moduleId) 
-        ? userPerms.allowedModules.filter(m => m !== moduleId) 
-        : [...userPerms.allowedModules, moduleId];
-      const newPerms = { ...userPerms, allowedModules: newModules };
+      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
+      const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
+      
+      if (level === 'none') {
+        delete newModuleAccess[moduleId];
+      } else {
+        newModuleAccess[moduleId] = level;
+      }
+      
+      const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
+      
+      // Clean up legacy allowedModules if present
+      if (newPerms.allowedModules) delete newPerms.allowedModules;
 
       if (auth.currentUser) {
         setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
@@ -1075,6 +1090,29 @@ export const BusinessProvider = ({ children }) => {
       return { ...prev, [userId]: newPerms };
     });
   }, []);
+
+  const getModuleAccess = useCallback((userId, moduleId) => {
+    const userPerms = permissions[userId];
+    if (!userPerms) return 'none';
+    
+    // Check for SUPER_ADMIN role (global write access)
+    if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
+    
+    // Special case for 'home' - always write access for authenticated users
+    if (moduleId === 'home') return 'write';
+
+    // Check new structure
+    if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
+      return userPerms.moduleAccess[moduleId];
+    }
+    
+    // Check legacy structure
+    if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
+      return 'write';
+    }
+    
+    return 'none';
+  }, [permissions]);
 
   const createFullUser = useCallback(async (userData, source = 'admin') => {
     let secondaryApp;
@@ -1098,7 +1136,9 @@ export const BusinessProvider = ({ children }) => {
 
       const permissionsData = {
         roles: userData.roles || [role],
-        allowedModules: userData.allowedModules || ['home']
+        moduleAccess: userData.moduleAccess || { home: 'write' },
+        // Legacy fallback
+        allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
       };
 
       // 1. Create User Document
@@ -1146,11 +1186,36 @@ export const BusinessProvider = ({ children }) => {
 
   const permanentlyDeleteUserRecord = useCallback(async (userId) => {
     const uid = String(userId);
-    if (auth.currentUser) await deleteDoc(doc(db, 'users', uid));
-    setData(prev => ({ ...prev, hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) } }));
+    
+    // Call Cloud Function to delete from Firebase Authentication
+    try {
+      const functions = getFunctions();
+      const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
+      await deleteUserFunc({ uid });
+      console.log("Auth user deleted successfully");
+    } catch (err) {
+      console.error("Erreur suppression Auth:", err);
+      if (addHint) {
+        addHint({ 
+          title: "Suppression Auth Échouée", 
+          message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
+          type: 'warning' 
+        });
+      }
+    }
+
+    if (auth.currentUser) {
+      await deleteDoc(doc(db, 'users', uid));
+      await deleteDoc(doc(db, 'hr', uid));
+    }
+    setData(prev => ({ 
+      ...prev, 
+      hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
+      base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
+    }));
     setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
     logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
-  }, [logAction]);
+  }, [logAction, addHint]);
 
   const approveRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
@@ -1346,10 +1411,20 @@ export const BusinessProvider = ({ children }) => {
           if (colName === 'audit_logs') {
             newState.audit = { ...newState.audit, logs: docs };
           } else if (colName === 'users') {
-            // Synchroniser les profils utilisateurs dans la liste RH
+            // Synchroniser les profils utilisateurs dans la liste RH ET les permissions
+            const userPermissions = {};
             const employeeProfiles = docs
-              .filter(u => u.profile)
-              .map(u => ({ ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' }));
+              .filter(u => u.profile || u.permissions)
+              .map(u => {
+                if (u.permissions) userPermissions[u.id] = u.permissions;
+                return u.profile ? { ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' } : null;
+              })
+              .filter(Boolean);
+
+            if (Object.keys(userPermissions).length > 0) {
+              setPermissions(prev => ({ ...prev, ...userPermissions }));
+            }
+
             if (employeeProfiles.length > 0) {
               const existingIds = new Set((prev.hr?.employees || []).map(e => e.id));
               const newEmployees = employeeProfiles.filter(e => !existingIds.has(e.id));
@@ -1498,7 +1573,7 @@ export const BusinessProvider = ({ children }) => {
     <BusinessContext.Provider value={{
       data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
       config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
-      updateUserRole, toggleModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
+      updateUserRole, setModuleAccessLevel, getModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
       setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
       addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
       processPOSOrder, uploadLogo,

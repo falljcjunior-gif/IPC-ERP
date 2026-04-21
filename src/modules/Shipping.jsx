@@ -57,8 +57,11 @@ const SHIP_STATUS = {
 /* ════════════════════════════════════
    SHIPPING MODULE
 ════════════════════════════════════ */
-const Shipping = ({ onOpenDetail }) => {
-  const { data, addRecord } = useBusiness();
+const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
+  const { data, addRecord, getModuleAccess, currentUser } = useBusiness();
+  const accessLevel = getModuleAccess(currentUser?.id, appId);
+  const isReadOnly = accessLevel === 'read';
+
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(false);
   const [search, setSearch] = useState('');
@@ -250,9 +253,11 @@ const Shipping = ({ onOpenDetail }) => {
           <Search size={15} color="var(--text-muted)" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Chercher BL, client, destination..." style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontSize: '0.88rem', color: 'var(--text)' }} />
         </div>
-        <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
-          <Plus size={14} /> Nouveau BL
-        </button>
+        {!isReadOnly && (
+          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
+            <Plus size={14} /> Nouveau BL
+          </button>
+        )}
       </motion.div>
 
       {/* Cards BL */}
@@ -297,11 +302,13 @@ const Shipping = ({ onOpenDetail }) => {
             </motion.div>
           );
         })}
-        <motion.div whileHover={{ scale: 1.02 }} onClick={() => setModal(true)} variants={fadeIn} className="glass"
-          style={{ padding: '1.4rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)', minHeight: '160px' }}>
-          <Plus size={26} />
-          <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Nouveau Bon de Livraison</span>
-        </motion.div>
+        {!isReadOnly && (
+          <motion.div whileHover={{ scale: 1.02 }} onClick={() => setModal(true)} variants={fadeIn} className="glass"
+            style={{ padding: '1.4rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)', minHeight: '160px' }}>
+            <Plus size={26} />
+            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Nouveau Bon de Livraison</span>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
@@ -366,9 +373,11 @@ const Shipping = ({ onOpenDetail }) => {
             OTIF · Tracking Temps Réel · Transporteurs · Volumes
           </p>
         </div>
-        <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1.25rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-          <Plus size={15} /> Nouveau Bon de Livraison
-        </button>
+        {!isReadOnly && (
+          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1.25rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+            <Plus size={15} /> Nouveau Bon de Livraison
+          </button>
+        )}
       </div>
 
       <TabBar tabs={[
@@ -381,7 +390,7 @@ const Shipping = ({ onOpenDetail }) => {
       {tab === 'shipments' && renderShipments()}
       {tab === 'volume'    && renderVolume()}
 
-      <RecordModal isOpen={modal} onClose={() => setModal(false)} title="Nouveau Bon de Livraison"
+      <RecordModal isOpen={modal} onClose={() => setModal(false)} title="Nouveau Bon de Livraison" appId={appId}
         fields={modalFields} onSave={f => { addRecord('shipping', 'shipments', { ...f, tracking: 'En attente' }); setModal(false); }} />
     </div>
   );

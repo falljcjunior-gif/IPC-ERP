@@ -15,14 +15,23 @@ const RecordModal = ({
   initialData = {}, 
   recordId, 
   recordType,
+  appId,
   smartButtons = [],
   isLoading = false 
 }) => {
-  const { data } = useBusiness();
+  const { data, getModuleAccess, currentUser } = useBusiness();
   const [formData, setFormData] = useState(initialData || {});
-  const [isEditMode, setIsEditMode] = useState(!recordId); // Default to edit if no ID (new record)
-  const [activeTab, setActiveTab] = useState('data'); // data, chatter, documents
+  
+  const accessLevel = getModuleAccess(currentUser?.id, appId);
+  const isReadOnly = accessLevel === 'read';
+
+  const [isEditMode, setIsEditMode] = useState(!recordId && !isReadOnly); 
+  const [activeTab, setActiveTab] = useState('data'); 
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
+
+  // If newly opening a creation modal but user is read-only, we should probably close it or show error.
+  // But standard enforcement here is to just disable the save button.
+
 
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -126,7 +135,11 @@ const RecordModal = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text)' }}>{title}</h2>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {isEditMode ? (
+                  {isReadOnly ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 700, background: 'var(--accent)10', padding: '0.4rem 0.8rem', borderRadius: '0.5rem' }}>
+                      <Lock size={14} /> Lecture Seule
+                    </div>
+                  ) : isEditMode ? (
                      <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Save size={14}/> Enregistrer</button>
                   ) : (
                      <button onClick={() => setIsEditMode(true)} className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Edit3 size={14}/> Modifier</button>
@@ -166,7 +179,8 @@ const RecordModal = ({
                                 required={field.required}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                 className="glass"
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
+                                disabled={!isEditMode || isReadOnly}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
                               >
                                 <option value="">Sélectionner...</option>
                                 {field.options && field.options.map(opt => {
@@ -182,7 +196,8 @@ const RecordModal = ({
                                 placeholder={field.placeholder}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                 className="glass"
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical' }}
+                                disabled={!isEditMode || isReadOnly}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical', opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
                               />
                             ) : (
                               <input
@@ -192,7 +207,8 @@ const RecordModal = ({
                                 placeholder={field.placeholder}
                                 onChange={(e) => handleChange(field.name, (field.type === 'number' || field.type === 'money') ? Number(e.target.value) : e.target.value)}
                                 className="glass"
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600 }}
+                                disabled={!isEditMode || isReadOnly}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
                               />
                             )
                           )}
@@ -270,10 +286,17 @@ const RecordModal = ({
             </div>
 
             {/* Footer Actions if needed (New Record only) */}
-            {!recordId && (
+            {!recordId && !isReadOnly && (
               <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                  <button onClick={onClose} className="btn glass" style={{ border: '1px solid var(--border)' }}>Annuler</button>
                  <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}><Save size={18}/> Créer {title}</button>
+              </div>
+            )}
+            {!recordId && isReadOnly && (
+              <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                 <div style={{ color: '#EF4444', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Lock size={18} /> Accès Refusé : Vous n'avez pas les habilitations pour créer des enregistrements.
+                 </div>
               </div>
             )}
           </motion.div>
