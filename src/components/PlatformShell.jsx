@@ -337,8 +337,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         <MobileNavbar 
           activeApp={activeApp} 
           setActiveApp={setActiveApp} 
-          onOpenAI={() => setShellView(p => ({ ...p, ai: true }))}
-          onOpenSearch={() => setSearch(p => ({ ...p, focused: true }))}
+          hasCrmAccess={getModuleAccess(currentUser.id, 'crm') !== 'none'}
+          onOpenSettings={() => setShellView(p => ({ ...p, profile: true }))}
         />
       )}
 

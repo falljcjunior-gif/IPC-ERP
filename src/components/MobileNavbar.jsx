@@ -1,17 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Home, Grid, Search, Sparkles, 
-  MessageCircle, User, Bell 
+  Home, Users,
+  MessageCircle, Settings 
 } from 'lucide-react';
 
-const MobileNavbar = ({ activeApp, setActiveApp, onOpenAI, onOpenSearch }) => {
+const MobileNavbar = ({ activeApp, setActiveApp, hasCrmAccess, onOpenSettings }) => {
   const items = [
-    { id: 'home', icon: <Home size={20} />, label: 'Home' },
-    { id: 'search', icon: <Search size={20} />, label: 'Chercher', action: onOpenSearch },
-    { id: 'ai', icon: <Sparkles size={24} />, label: 'IA', action: onOpenAI, primary: true },
-    { id: 'notifications', icon: <Bell size={20} />, label: 'Notifs' },
-    { id: 'menu', icon: <Grid size={20} />, label: 'Menu' },
+    { id: 'home', icon: <Home size={20} />, label: 'Accueil' },
+    { id: 'connect', icon: <MessageCircle size={28} fill="currentColor" strokeWidth={1} />, label: 'Connect+', primary: true },
+    ...(hasCrmAccess ? [{ id: 'crm', icon: <Users size={20} />, label: 'CRM' }] : []),
+    { id: 'settings', icon: <Settings size={20} />, label: 'Paramètre', action: onOpenSettings },
   ];
 
   return (
