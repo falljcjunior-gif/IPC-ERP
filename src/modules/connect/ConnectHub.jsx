@@ -40,37 +40,46 @@ const ConnectHub = ({ onOpenDetail }) => {
   ];
 
   return (
-    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: shellView?.mobile ? '1.5rem' : '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
+    <div style={{ padding: shellView?.mobile ? '0.75rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: shellView?.mobile ? '1rem' : '3rem', minHeight: '100%', background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.02) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
       
-      {/* Header : The Social Pulse */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#8B5CF6', marginBottom: '1rem' }}>
-            <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 4 }} style={{ background: '#8B5CF620', padding: '8px', borderRadius: '10px' }}>
-              <Zap size={20} />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC CONNECT OS</span>
+      {/* Header : masqué sur mobile, plein sur desktop */}
+      {!shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#8B5CF6', marginBottom: '1rem' }}>
+              <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 4 }} style={{ background: '#8B5CF620', padding: '8px', borderRadius: '10px' }}>
+                <Zap size={20} />
+              </motion.div>
+              <span style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC CONNECT OS</span>
+            </div>
+            <h1 style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: 'var(--text)', lineHeight: 1 }}>Human Synergy</h1>
+            <p style={{ color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
+              Votre écosystème collaboratif intelligent : Communiquez, collaborez et célébrez la culture de l'entreprise au même endroit.
+            </p>
           </div>
-          <h1 style={{ fontSize: shellView?.mobile ? '2rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: 'var(--text)', lineHeight: 1 }}>Human Synergy</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Votre écosystème collaboratif intelligent : Communiquez, collaborez et célébrez la culture de l'entreprise au même endroit.
-          </p>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+             <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.75rem 1.5rem', borderRadius: '3rem', border: '1px solid #8B5CF630' }}>
+                <Heart size={16} color="#8B5CF6" />
+                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>Cœur Social : 100% Connecté</span>
+             </div>
+             <button onClick={() => setShowSettings(true)} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', border: 'none', cursor: 'pointer', background: 'white' }}>
+                <Settings size={22} />
+             </button>
+             <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>IA Social Pulse</span>
+             </button>
+          </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.75rem 1.5rem', borderRadius: '3rem', border: '1px solid #8B5CF630' }}>
-              <Heart size={16} color="#8B5CF6" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#8B5CF6' }}>Cœur Social : 100% Connecté</span>
-           </div>
-           
-           <button onClick={() => setShowSettings(true)} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', border: 'none', cursor: 'pointer', background: 'white' }}>
-              <Settings size={22} />
-           </button>
-           <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>IA Social Pulse</span>
-           </button>
+      )}
+      {/* Header mobile minimaliste */}
+      {shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.3rem', color: 'var(--text)' }}>Connect+</h2>
+          <button onClick={() => setShowSettings(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.4rem' }}>
+            <Settings size={22} />
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Settings Modal */}
       <AnimatePresence>
@@ -114,7 +123,7 @@ const ConnectHub = ({ onOpenDetail }) => {
       </AnimatePresence>
 
       {/* Connectivity Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{ overflow: 'hidden' }}>
         <TabBar tabs={tabs} active={activeTab} onChange={(t) => { setActiveTab(t); setNavigationIntent(null); }} />
       </div>
 
