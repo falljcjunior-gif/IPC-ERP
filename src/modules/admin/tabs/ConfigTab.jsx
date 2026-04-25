@@ -106,16 +106,16 @@ const ConfigTab = () => {
                   <motion.div
                     key={preset.name}
                     whileHover={{ scale: 1.05 }}
-                    onClick={() => updateConfig({ theme: { ...config.theme, primary: preset.primary, accent: preset.accent } })}
+                    onClick={() => updateConfig({ theme: { ...(config?.theme || {}), primary: preset.primary, accent: preset.accent } })}
                     style={{ 
                       width: 'calc(50% - 0.5rem)', height: '100px', borderRadius: '1.5rem', background: preset.primary, 
                       cursor: 'pointer', position: 'relative', overflow: 'hidden',
-                      border: config.theme.primary === preset.primary ? '4px solid #3B82F6' : '1px solid var(--border)',
+                      border: config?.theme?.primary === preset.primary ? '4px solid #3B82F6' : '1px solid var(--border)',
                       boxShadow: 'var(--shadow-sm)'
                     }}
                   >
                     <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: preset.accent, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                       {config.theme.primary === preset.primary && <Check size={18} color="white" />}
+                       {config?.theme?.primary === preset.primary && <Check size={18} color="white" />}
                     </div>
                   </motion.div>
                 ))}

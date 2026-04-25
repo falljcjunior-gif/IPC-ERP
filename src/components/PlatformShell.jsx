@@ -148,8 +148,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   return (
     <div style={{ 
       display: 'flex', height: '100vh', background: 'var(--bg)',
-      '--primary': config.theme.primary, '--accent': config.theme.accent,
-      '--accent-hover': config.theme.accent + 'dd', '--radius': config.theme.borderRadius
+      '--primary': config?.theme?.primary || '#529990', '--accent': config?.theme?.accent || '#3d7870',
+      '--accent-hover': (config?.theme?.accent || '#3d7870') + 'dd', '--radius': config?.theme?.borderRadius || '1rem'
     }}>
       
       {/* ── SIDEBAR (Floating Glass Control) ── */}
