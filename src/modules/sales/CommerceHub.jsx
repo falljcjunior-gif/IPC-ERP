@@ -42,7 +42,6 @@ const CommerceHub = () => {
       processPOSOrder({ cart, customer, totalAmount, type: activeTab });
     } else {
       // Fallback if processPOSOrder isn't implemented yet
-      console.log('Checkout:', { cart, customer, totalAmount });
     }
     setCart([]); // Clear cart
   };

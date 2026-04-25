@@ -9,41 +9,12 @@ import { httpsCallable, getFunctions } from 'firebase/functions';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import './index.css';
+import ErrorBoundary from './components/ErrorBoundary';
+import { ToastProvider, useToast } from './components/ToastProvider';
 
-function App() {
-  const [view, setView] = useState('login'); // 'login', 'dashboard'
-  const [isInitializing, setIsInitializing] = useState(true);
+const AuthObserver = () => {
+  const { addToast } = useToast();
 
-  // Initialize Global Registry once at boot
-  useEffect(() => {
-    initRegistry();
-  }, []);
-  
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('daxcelor_theme') || 'light';
-    } catch (e) {
-      console.error("Erreur lecture thème:", e);
-      return 'light';
-    }
-  });
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setView('dashboard');
-      } else {
-        // Only set to landing if we were on dashboard or explicitly logged out
-        // to avoid flashing landing page if we are manually on login
-        setView('login');
-      }
-      setIsInitializing(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  /* ─── OAuth Callback Detection ─── */
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
@@ -51,19 +22,17 @@ function App() {
     if (code) {
       const handleCallback = async () => {
         try {
-          // 1. Appeler la Cloud Function pour l'échange de token
           const functions = getFunctions();
           const exchangeFunc = httpsCallable(functions, 'exchangeSocialToken');
           
           const result = await exchangeFunc({
-            provider: 'facebook', // On commence par FB/IG
+            provider: 'facebook',
             code: code,
             redirectUri: window.location.origin + '/'
           });
 
           const { accessToken } = result.data;
 
-          // 2. Enregistrer le compte connecté
           await setDoc(doc(db, 'marketing', 'accounts_live'), {
             facebook: {
               accessToken,
@@ -72,89 +41,79 @@ function App() {
             }
           }, { merge: true });
 
-          // 3. Nettoyer l'URL et alerter
           window.history.replaceState({}, document.title, "/");
-          alert("Compte connecté avec succès !");
+          addToast("Compte Marketing connecté avec succès !", 'success');
         } catch (error) {
           console.error("Erreur exchange token:", error);
-          alert("Échec de la connexion. Vérifiez vos identifiants API.");
+          addToast("Échec de la connexion API. Vérifiez vos accès.", 'error');
         }
       };
       
       handleCallback();
     }
+  }, [addToast]);
+
+  return null;
+};
+
+function App() {
+  const [view, setView] = useState('login');
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    initRegistry();
+  }, []);
+  
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('ipc_theme') || 'light';
+    } catch (e) {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) setView('dashboard');
+      else setView('login');
+      setIsInitializing(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    try {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('daxcelor_theme', theme);
-    } catch (e) {
-      console.error("Erreur persistence thème:", e);
-    }
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('ipc_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  const toggleTheme = () => setTheme(v => v === 'light' ? 'dark' : 'light');
 
-  const handleLoginSuccess = () => {
-    setView('dashboard');
-  };
-
-  if (isInitializing) {
-    return (
-      <div style={{ 
-        height: '100vh', 
-        display: 'flex', 
-        flexDirection: 'column',
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'var(--bg)',
-        color: 'var(--text)'
-      }}>
-        <div className="spinner" style={{ 
-          width: '50px', 
-          height: '50px', 
-          border: '4px solid var(--bg-subtle)', 
-          borderTop: '4px solid var(--accent)', 
-          borderRadius: '50%',
-          marginBottom: '1.5rem'
-        }} />
-        <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>BUSINESS OS</div>
-        <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Initialisation du noyau...</div>
-        <style>{`
-          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-          .spinner { animation: spin 1s linear infinite; }
-        `}</style>
-      </div>
-    );
-  }
+  if (isInitializing) return <InitializingView />;
 
   return (
-    <BusinessProvider>
-      <div className="app-container">
-        {view === 'login' && (
-          <Login onLogin={handleLoginSuccess} />
-        )}
-
-        {view === 'dashboard' && (
-          <React.Suspense fallback={
-            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', color: 'var(--text)' }}>
-              <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid var(--bg-subtle)', borderTop: '4px solid var(--accent)', borderRadius: '50%', marginBottom: '1.5rem' }} />
-              <div style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>Chargement du Noyau...</div>
-            </div>
-          }>
-            <PlatformShell 
-              toggleTheme={toggleTheme} 
-              theme={theme} 
-              setView={setView} 
-            />
-          </React.Suspense>
-        )}
-      </div>
-    </BusinessProvider>
+    <ErrorBoundary>
+      <BusinessProvider>
+        <ToastProvider>
+          <AuthObserver />
+          <div className="app-container">
+            {view === 'login' ? <Login onLogin={() => setView('dashboard')} /> : (
+              <React.Suspense fallback={<InitializingView label="Chargement du Noyau..." />}>
+                <PlatformShell toggleTheme={toggleTheme} theme={theme} setView={setView} />
+              </React.Suspense>
+            )}
+          </div>
+        </ToastProvider>
+      </BusinessProvider>
+    </ErrorBoundary>
   );
 }
 
+const InitializingView = ({ label = "Initialisation du noyau..." }) => (
+  <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', color: 'var(--text)' }}>
+    <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid var(--bg-subtle)', borderTop: '4px solid var(--accent)', borderRadius: '50%', marginBottom: '1.5rem' }} />
+    <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>BUSINESS OS</div>
+    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>{label}</div>
+    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spinner { animation: spin 1s linear infinite; }`}</style>
+  </div>
+);
 export default App;

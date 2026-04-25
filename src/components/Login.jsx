@@ -4,10 +4,11 @@ import { Mail, Lock, LogIn, ShieldCheck, ArrowRight, AlertCircle, Sparkles, Term
 import { auth, db } from '../firebase/config';
 import { signInWithEmailAndPassword, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { useBusiness } from '../BusinessContext';
+import { useToast } from './ToastProvider';
 
 const Login = ({ onLogin }) => {
   const { globalSettings } = useBusiness();
+  const { addToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -43,6 +44,7 @@ const Login = ({ onLogin }) => {
         }
       }
 
+      addToast(`Bienvenue, accès autorisé au Noyau Intelligence.`, 'success');
       onLogin();
     } catch (err) {
       console.error(err);
@@ -148,10 +150,10 @@ const Login = ({ onLogin }) => {
           transition={{ delay: 0.3 }}
         >
           <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.03em' }}>
-            {mustChange ? 'Sécurité' : 'Intelligence Engine'}
+            {mustChange ? 'Sécurité Access' : 'IPC Intelligence Engine'}
           </h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1.05rem', fontWeight: 500 }}>
-            {mustChange ? 'Protégez votre accès avec un nouveau code.' : 'Authentification requise pour accéder au cockpit.'}
+            {mustChange ? 'Protégez votre accès avec un nouveau code.' : 'Authentification requise pour accéder au cockpit Business OS.'}
           </p>
         </motion.div>
 

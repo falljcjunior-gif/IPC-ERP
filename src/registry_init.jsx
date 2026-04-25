@@ -15,39 +15,34 @@ const GlobalDashboard = lazy(() => import('./components/GlobalDashboard'));
 const PersonalWorkspace = lazy(() => import('./components/PersonalWorkspace'));
 const CRM = lazy(() => import('./modules/crm/CRM'));
 const Sales = lazy(() => import('./modules/sales/Sales'));
-const Inventory = lazy(() => import('./modules/logistics/LogisticsHub'));
-const Accounting = lazy(() => import('./modules/finance/AccountingCenter'));
-const Finance = lazy(() => import('./modules/finance/FinanceControlCenter'));
-const Budget = lazy(() => import('./modules/finance/FinanceControlCenter')); // Shared file
-const HR = lazy(() => import('./modules/HR'));
 const Production = lazy(() => import('./modules/production/Production'));
+const LogisticsHub = lazy(() => import('./modules/logistics/LogisticsHub'));
+const FinanceControlCenter = lazy(() => import('./modules/finance/FinanceControlCenter'));
+const EnterpriseHub = lazy(() => import('./modules/enterprise/EnterpriseHub'));
+const Connect = lazy(() => import('./modules/connect/ConnectHub'));
+const ControlHub = lazy(() => import('./modules/admin/ControlHub'));
+const WebsiteHub = lazy(() => import('./modules/website/WebsiteHub'));
+const CommerceHub = lazy(() => import('./modules/sales/CommerceHub'));
+const TalentHub = lazy(() => import('./modules/hr/TalentHub'));
+const HR = lazy(() => import('./modules/HR'));
 const Project = lazy(() => import('./modules/Project'));
-const Purchase = lazy(() => import('./modules/logistics/LogisticsHub')); // Shared file
 const LegalHub = lazy(() => import('./modules/legal/LegalHub'));
 const SignatureHub = lazy(() => import('./modules/signature/SignatureHub'));
 const Marketing = lazy(() => import('./modules/marketing/Marketing'));
 const BI = lazy(() => import('./modules/bi/BIHub'));
 const MasterData = lazy(() => import('./modules/MasterData'));
 const CalendarModule = lazy(() => import('./modules/Calendar'));
-const Helpdesk = lazy(() => import('./modules/enterprise/EnterpriseHub'));
 const Timesheets = lazy(() => import('./modules/Timesheets'));
-const Fleet = lazy(() => import('./modules/enterprise/EnterpriseHub')); // Shared file
 const Quality = lazy(() => import('./modules/Quality'));
 const Expenses = lazy(() => import('./modules/Expenses'));
 const DMS = lazy(() => import('./modules/DMS'));
 const Contracts = lazy(() => import('./modules/Contracts'));
-const Manufacturing = lazy(() => import('./modules/production/Production')); // Shared file
 const Planning = lazy(() => import('./modules/Planning'));
 const Analytics = lazy(() => import('./modules/Analytics'));
 const StaffPortal = lazy(() => import('./modules/StaffPortal'));
-const Connect = lazy(() => import('./modules/connect/ConnectHub'));
-const ControlHub = lazy(() => import('./modules/admin/ControlHub'));
 const History = lazy(() => import('./modules/History'));
 const Workflows = lazy(() => import('./modules/Workflows'));
 const Shipping = lazy(() => import('./modules/Shipping'));
-const WebsiteHub = lazy(() => import('./modules/website/WebsiteHub'));
-const CommerceHub = lazy(() => import('./modules/sales/CommerceHub'));
-const TalentHub = lazy(() => import('./modules/hr/TalentHub'));
 const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
@@ -136,7 +131,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'inventory', label: 'Stocks', icon: <Package size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: Inventory, priority: 10
+    component: LogisticsHub, priority: 10
   });
 
   registry.register({
@@ -148,7 +143,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'purchase', label: 'Achats', icon: <ShoppingBag size={18} />,
     category: 'operations', roles: ['ADMIN', 'FINANCE'],
-    component: Purchase, priority: 12
+    component: LogisticsHub, priority: 12
   });
 
   registry.register({
@@ -167,7 +162,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'finance', label: 'Finance', icon: <CreditCard size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: Finance, priority: 20
+    component: FinanceControlCenter, priority: 20
   });
 
   registry.register({
@@ -179,13 +174,13 @@ export const initRegistry = () => {
   registry.register({
     id: 'accounting', label: 'Comptabilité', icon: <LandmarkIcon size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: Accounting, priority: 21
+    component: lazy(() => import('./modules/finance/AccountingCenter')), priority: 21
   });
 
   registry.register({
     id: 'budget', label: 'Budget', icon: <PiggyBank size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: Budget, priority: 22
+    component: FinanceControlCenter, priority: 22
   });
 
   registry.register({

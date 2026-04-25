@@ -413,7 +413,6 @@ export const BusinessProvider = ({ children }) => {
       const functions = getFunctions();
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
       await deleteUserFunc({ uid });
-      console.log("Auth user deleted successfully");
     } catch (err) {
       console.error("Erreur suppression Auth:", err);
       if (addHint) {
