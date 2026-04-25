@@ -5,6 +5,7 @@ import { auth, db } from '../firebase/config';
 import { signInWithEmailAndPassword, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from './ToastProvider';
+import { useBusiness } from '../BusinessContext';
 
 const Login = ({ onLogin }) => {
   const { globalSettings } = useBusiness();
