@@ -103,9 +103,9 @@ addHint: (hint) => {
 
   getModuleAccess: (userId, moduleId) => {
     // 1. Super Admin Bypass
-    if (currentUser?.role === 'SUPER_ADMIN') return 'write';
+    if (get().currentUser?.role === 'SUPER_ADMIN') return 'write';
 
-    const userPerms = permissions[userId];
+    const userPerms = get().permissions?.[userId];
     if (!userPerms) return 'none';
     
     // Check for explicit SUPER_ADMIN role in matrix (redundant but safe)
