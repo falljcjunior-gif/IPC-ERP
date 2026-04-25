@@ -4,12 +4,12 @@ import {
   Globe, Palette, ShoppingBag, Store, Search, LayoutTemplate, Smartphone, Monitor, ShoppingCart, Package,
   MessageCircle, FileText, User, CreditCard, Send, CheckCircle2
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import EnterpriseView from '../../components/EnterpriseView';
 import { websiteSchema } from '../../schemas/website.schema';
 
 const WebsiteHub = () => {
-  const { data, updateRecord, addRecord, formatCurrency, addAccountingEntry, currentUser } = useBusiness();
+  const { data, updateRecord, addRecord, formatCurrency, addAccountingEntry, currentUser } = useStore();
   const [activeTab, setActiveTab] = useState('theme'); // 'theme', 'catalog', 'inbox'
   const [previewMode, setPreviewMode] = useState('desktop');
   const [portalTab, setPortalTab] = useState('catalog'); // 'catalog', 'account', 'support'

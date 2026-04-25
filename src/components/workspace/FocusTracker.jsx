@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Clock, CheckCircle2 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 const FocusTracker = () => {
-  const { addRecord, currentUser } = useBusiness();
+  const { addRecord, currentUser } = useStore();
   const [duration, setDuration] = useState(25);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);

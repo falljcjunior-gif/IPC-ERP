@@ -5,7 +5,7 @@ import {
   Tag, Activity, Share2, Settings, Download, 
   TrendingUp, Target, FileText
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import { salesSchema } from '../../schemas/sales.schema';
 
 // Components
@@ -18,7 +18,7 @@ import OrdersTab from './tabs/OrdersTab';
 import CatalogTab from './tabs/CatalogTab';
 
 const Sales = ({ onOpenDetail, accessLevel }) => {
-  const { data, addRecord, formatCurrency, userRole } = useBusiness();
+  const { data, addRecord, formatCurrency, userRole } = useStore();
   const [view, setView] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('orders');

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Clock, Send, User, Tag, Mail, Info } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const Chatter = ({ targetId, targetType }) => {
-  const { data, addNote } = useBusiness();
+  const { data, addNote } = useStore();
   const [note, setNote] = useState('');
   const [filter, setFilter] = useState('all'); // all, notes, logs
 

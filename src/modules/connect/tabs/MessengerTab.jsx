@@ -5,14 +5,14 @@ import {
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
   Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square, ChevronLeft
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import { db, auth, storage } from '../../../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
-  const { currentUser, data, setActiveCall, sendNotification, shellView } = useBusiness();
+  const { currentUser, data, setActiveCall, sendNotification, shellView } = useStore();
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRoom, setActiveRoom] = useState(shellView?.mobile ? null : { id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);

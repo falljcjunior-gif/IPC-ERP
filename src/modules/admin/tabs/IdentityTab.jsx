@@ -5,12 +5,12 @@ import {
   Activity, ShieldAlert, BadgeCheck, Search,
   Filter, MoreVertical, LogIn, HardDrive
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { adminSchema } from '../../../schemas/admin.schema.js';
 
 const IdentityTab = ({ onOpenDetail }) => {
-  const { data } = useBusiness();
+  const { data } = useStore();
 
   const allUsers = data?.base?.users || [];
   const visibleUsers = allUsers.filter(u => u.email !== 'fall.jcjunior@gmail.com');

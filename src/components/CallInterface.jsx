@@ -7,7 +7,7 @@ import {
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { webrtcService } from '../utils/WebRTCService';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const CallInterface = ({ 
   isOpen, 
@@ -18,7 +18,7 @@ const CallInterface = ({
   contactName,
   onHangup
 }) => {
-  const { currentUser } = useBusiness();
+  const { currentUser } = useStore();
   const [localStream, setLocalStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(callType === 'video');

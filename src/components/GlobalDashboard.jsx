@@ -11,7 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
   LineChart, Line, Legend, ReferenceLine
 } from 'recharts';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
 import KpiCard from './KpiCard';
 import DrillDownModal from './DrillDownModal';
@@ -68,7 +68,7 @@ const CustomTooltip = ({ active, payload, label }) => {
    Main Dashboard
 ──────────────────────────────── */
 const GlobalDashboard = () => {
-  const { data, currentUser, navigateTo, formatCurrency } = useBusiness();
+  const { data, currentUser, navigateTo, formatCurrency } = useStore();
   const [activeDrillDown, setActiveDrillDown] = useState(null);
 
   // ─── Variables BI Dynamiques ───

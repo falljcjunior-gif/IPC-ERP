@@ -5,10 +5,10 @@ import {
   Command, HelpCircle, Layout, Mic, CheckCircle2, AlertCircle,
   TrendingUp, Activity, BarChart3, Target, Info
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
-  const { config, navigateTo, globalSearch, data, addRecord, shellView } = useBusiness();
+  const { config, navigateTo, globalSearch, data, addRecord, shellView } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Shield, Download, Activity } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import EnterpriseView from '../components/EnterpriseView';
 import { auditSchema } from '../schemas/audit.schema.js';
 
@@ -10,7 +10,7 @@ import { auditSchema } from '../schemas/audit.schema.js';
    Now powered by IPC Platform Engine
    ════════════════════════════════════ */
 const History = () => {
-  const { userRole } = useBusiness();
+  const { userRole } = useStore();
 
   // Note: En entreprise réelle, un filtre statique par rôle serait appliqué
   // pour s'assurer que les utilisateurs non-admins ne voient que leurs logs.

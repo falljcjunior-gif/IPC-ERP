@@ -5,13 +5,13 @@ import { auth, db } from '../firebase/config';
 import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from './ToastProvider';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
 import heroImage from '../assets/login_hero.png';
 
 const Login = ({ onLogin }) => {
   const { t } = useTranslation();
-  const { globalSettings } = useBusiness();
+  const { globalSettings } = useStore();
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

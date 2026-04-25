@@ -6,7 +6,7 @@ import {
   MoreHorizontal, ChevronRight, LayoutGrid, List, Target, Zap,
   Calendar, Tag, BarChart2, ArrowUpRight
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
@@ -29,7 +29,7 @@ const TYPE_COLORS = {
 };
 
 const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
-  const { userRole, currentUser, updateRecord } = useBusiness();
+  const { userRole, currentUser, updateRecord } = useStore();
   const [view, setView] = useState('cards'); // cards | list
   const [filterStatut, setFilterStatut] = useState('all');
   const [search, setSearch] = useState('');

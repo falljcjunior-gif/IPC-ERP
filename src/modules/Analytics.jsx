@@ -8,13 +8,13 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 const Analytics = () => {
-  const { data, formatCurrency, seedDemoData } = useBusiness();
+  const { data, formatCurrency, seedDemoData } = useStore();
   // Option pour facilement désactiver les courbes lissées factices dans le futur
   const [enableDemoHistory, setEnableDemoHistory] = useState(false);
 

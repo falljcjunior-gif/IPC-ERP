@@ -11,7 +11,7 @@ import {
   Cell, ComposedChart, Line, Legend, PieChart, Pie
 } from 'recharts';
 import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import EnterpriseView from '../components/EnterpriseView';
 import KpiCard from '../components/KpiCard';
 import { financeSchema } from '../schemas/finance.schema.js';
@@ -27,7 +27,7 @@ const containerVariants = {
    Now powered by IPC Platform Engine
    ════════════════════════════════════ */
 const Expenses = ({ onOpenDetail }) => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const [view, setView] = useState('dashboard'); // 'dashboard', 'expenses'
 
   const allExpenses = useMemo(() => data?.hr?.expenses || [], [data?.hr?.expenses]);

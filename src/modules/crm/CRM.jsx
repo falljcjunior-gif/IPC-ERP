@@ -5,7 +5,7 @@ import {
   Target, Briefcase, Zap, Activity, Share2, 
   Settings, Download, UserPlus
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import { crmSchema } from '../../schemas/crm.schema';
 
 // Components
@@ -19,7 +19,7 @@ import LeadsTab from './tabs/LeadsTab';
 import CustomerTab from './tabs/CustomerTab';
 
 const CRM = ({ onOpenDetail, accessLevel }) => {
-  const { data, addRecord, formatCurrency, userRole, shellView } = useBusiness();
+  const { data, addRecord, formatCurrency, userRole, shellView } = useStore();
   const [mainTab, setMainTab] = useState('analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('leads');

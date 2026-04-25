@@ -5,7 +5,7 @@ import {
   MapPin, Building2, Briefcase, MessageCircle, 
   Star, UserCheck
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
@@ -17,7 +17,7 @@ const DEPT_COLORS = {
 };
 
 const DirectoryTab = ({ data, onOpenDetail }) => {
-  const { currentUser, setNavigationIntent } = useBusiness();
+  const { currentUser, setNavigationIntent } = useStore();
   const [search, setSearch] = useState('');
   const [filter, setFilter]  = useState('Tous');
   const employees = data?.hr?.employees || [];

@@ -5,7 +5,7 @@ import {
   FileText, PiggyBank, ShieldCheck, Wallet, 
   Settings, Download, Share2, TrendingUp, History, Sparkles
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
 import AnalyticsTab from './tabs/AnalyticsTab';
@@ -15,7 +15,7 @@ import BudgetTab from './tabs/BudgetTab';
 import BankReconTab from './tabs/BankReconTab';
 
 const FinanceControlCenter = ({ onOpenDetail, appId }) => {
-  const { data, addRecord, formatCurrency, addAccountingEntry, userRole, shellView } = useBusiness();
+  const { data, addRecord, formatCurrency, addAccountingEntry, userRole, shellView } = useStore();
   const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('invoices');

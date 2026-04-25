@@ -4,7 +4,7 @@ import {
   MessageCircle, LayoutGrid, Users, Calendar, 
   Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -14,7 +14,7 @@ import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
-  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useBusiness();
+  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useStore();
   const [activeTab, setActiveTab] = useState('wall');
   const [showSettings, setShowSettings] = useState(false);
   const [connectSettings, setConnectSettings] = useState({

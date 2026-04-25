@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, TrendingUp, Zap, Target } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 const VictoryHeartbeat = () => {
-  const { data } = useBusiness();
+  const { data } = useStore();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Derive feed from data

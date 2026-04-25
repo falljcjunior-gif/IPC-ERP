@@ -5,7 +5,7 @@ import {
   ArrowRight, Phone, Mail, Building2, Tag, Zap, CheckCircle2,
   AlertCircle, ChevronRight, Users2, TrendingUp, Star
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
@@ -33,7 +33,7 @@ const SOURCE_COLORS = {
 };
 
 const LeadsEntrantsTab = ({ leads, onNew, onOpenDetail, navigateToCrm }) => {
-  const { addRecord, updateRecord } = useBusiness();
+  const { addRecord, updateRecord } = useStore();
   const [search, setSearch] = useState('');
   const [filterInteret, setFilterInteret] = useState('all');
 

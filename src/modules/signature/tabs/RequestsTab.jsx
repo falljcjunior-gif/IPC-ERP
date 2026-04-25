@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, Clock, CheckCircle2, User, Send, Plus, X, Upload, ShieldCheck, Lock
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import SignaturePad from '../../../components/SignaturePad';
 
 const RequestsTab = () => {
-  const { data, addRecord, updateRecord, formatCurrency, logAction } = useBusiness();
+  const { data, addRecord, updateRecord, formatCurrency, logAction } = useStore();
   const requests = data.signature?.requests || [];
   const salesOrders = data.sales?.orders || [];
 

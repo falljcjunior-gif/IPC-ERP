@@ -4,13 +4,13 @@ import {
   Calendar, Clock, MapPin, Users, Star, 
   Video, Coffee, PartyPopper, Zap, LayoutGrid, X, Trash2, ChevronLeft, ChevronRight
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const EventsTab = ({ data }) => {
-  const { participateInEvent, addHint, deleteRecord, addRecord, currentUser } = useBusiness();
+  const { participateInEvent, addHint, deleteRecord, addRecord, currentUser } = useStore();
   const [showCalendar, setShowCalendar] = useState(false);
   const [calDate, setCalDate] = useState(new Date());
   const [showCreate, setShowCreate] = useState(false);

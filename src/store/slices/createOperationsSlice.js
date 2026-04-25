@@ -1,144 +1,35 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { mockData } from './utils/data-factory';
-import { auth, db, storage, firebaseConfig } from './firebase/config';
 import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
-import { initializeApp, deleteApp } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { useStore } from './store';
+import { db, storage, auth, firebaseConfig } from '../../firebase/config';
 
-const BusinessContext = createContext();
-
-// Utility for safe localStorage parsing
-const safeParse = (key, defaultValue) => {
-  try {
-    const saved = localStorage.getItem(key);
-    if (!saved) return defaultValue;
-    return JSON.parse(saved);
-  } catch (error) {
-    console.error(`Erreur lors de la lecture de ${key} dans localStorage:`, error);
-    return defaultValue;
-  }
-};
-
-export const BusinessProvider = ({ children }) => {
-  /* ══════════════════════════════════════════════════════════════════════════
-     1. SHARED STATE (Declarations Must Be First to Avoid TDZ Errors)
-     ══════════════════════════════════════════════════════════════════════════ */
-  
-  const store = useStore();
-  const { 
-    user: currentUser, setUser: setCurrentUser, 
-    permissions, setPermissions, 
-    activeApp, setActiveApp, 
-    globalSettings, setGlobalSettings 
-  } = store;
-
-  const data = store.data; const setData = store.setData;
-  const config = store.config; const setConfig = store.setConfig;
-  const hints = store.hints; const setHints = store.setHints;
-  const searchResults = store.searchResults; const setSearchResults = store.setSearchResults;
-  const workflows = store.workflows; const setWorkflows = store.setWorkflows;
-  const activeCall = store.activeCall; const setActiveCall = store.setActiveCall;
-  const notifications = store.notifications; const setNotifications = store.setNotifications;
-  const navigationIntent = store.navigationIntent; const setNavigationIntent = store.setNavigationIntent;
-  const schemaOverrides = store.schemaOverrides; const setSchemaOverrides = store.setSchemaOverrides;
-
-  const BRANDS = [
-    { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
-    { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },
-    { id: 'B2B_LOG', name: 'B2B Logistics', short: 'B2B' }
-  ];
-  const activeBrand = store.globalSettings?.brand || 'ALL';
-  const setActiveBrand = (brand) => store.setGlobalSettings({ brand });
-
-  
-  // Derived State
-  const userRole = currentUser?.role || 'GUEST';
-  const switchRole = null;
-  const switchUser = null;
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     2. PERSISTENCE EFFECTS
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  useEffect(() => { localStorage.setItem('ipc_erp_permissions', JSON.stringify(permissions)); }, [permissions]);
-  useEffect(() => { localStorage.setItem('ipc_erp_config', JSON.stringify(config)); }, [config]);
-  useEffect(() => { localStorage.setItem('ipc_erp_global_settings', JSON.stringify(globalSettings)); }, [globalSettings]);
-  useEffect(() => { localStorage.setItem('ipc_erp_schemas', JSON.stringify(schemaOverrides)); }, [schemaOverrides]);
-  useEffect(() => { localStorage.setItem('ipc_erp_active_brand', activeBrand); }, [activeBrand]);
-  useEffect(() => { localStorage.setItem('daxcelor_data', JSON.stringify(data)); }, [data]);
-
-
-  useEffect(() => {
-    localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
-    localStorage.setItem('daxcelor_user_role', currentUser.role);
-    
-    // Cloud Sync for User settings (ONLY sync config/theme, NEVER permissions which are admin-controlled)
-    if (auth.currentUser) {
-      const userDoc = doc(db, 'users', auth.currentUser.uid);
-      setDoc(userDoc, { config }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
-    }
-  }, [currentUser, config]);
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     3. UTILITY LOGIC (Stable Helpers)
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  const formatCurrency = useCallback((val, compact = false) => {
-    if (typeof val !== 'number') return val;
-    if (compact) {
-      const formatter = new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1 });
-      return formatter.format(val).replace('B', 'Md') + ' ' + (globalSettings.currency || 'FCFA');
-    }
-    return val.toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' ' + (globalSettings.currency || 'FCFA');
-  }, [globalSettings.currency]);
-
-  const getNextSequence = useCallback((key) => {
-    const seq = data.base?.sequences?.[key];
-    if (!seq) return "";
-    const numStr = seq.next.toString().padStart(seq.padding, '0');
-    const nextNum = `${seq.prefix}${new Date().getFullYear()}-${numStr}`;
-    
-    setData(prev => {
-      const s = prev.base?.sequences?.[key];
-      if (!s) return prev;
-      return { ...prev, base: { ...prev.base, sequences: { ...prev.base.sequences, [key]: { ...s, next: s.next + 1 } } } };
-    });
-    return nextNum;
-  }, [data.base?.sequences]);
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     4. CORE ACTIONS (Low-level hooks)
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  const addHint = useCallback((hint) => {
+export const createOperationsSlice = (set, get) => ({
+addHint: (hint) => {
     setTimeout(() => {
       const id = Date.now().toString();
       setHints(prev => [{ ...hint, id }, ...prev]);
     }, 0);
-  }, []);
+  },
 
-  const dismissHint = useCallback((id) => {
+  dismissHint: (id) => {
     setHints(prev => prev.filter(h => h.id !== id));
-  }, []);
+  },
 
-  const logAction = useCallback((action, detail, appId = 'system', targetId = null) => {
+  logAction: (action, detail, appId = 'system', targetId = null) => {
     const activity = {
       id: Math.random().toString(36).substr(2, 9),
       action,
       detail,
       appId,
       targetId,
-      user: currentUser.nom,
+      user: get().user.nom,
       timestamp: new Date().toISOString(),
       type: 'log',
-      brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
+      brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
     };
     
     setTimeout(() => {
-      setData(prev => ({
+      set(prev => ({
         ...prev,
         activities: [activity, ...(prev.activities || [])]
       }));
@@ -147,10 +38,10 @@ export const BusinessProvider = ({ children }) => {
         setDoc(doc(db, 'activities', activity.id), activity);
       }
     }, 0);
-  }, [currentUser.nom, activeBrand]);
+  },
 
 
-  const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null, targetUserId = null) => {
+  sendNotification: async (targetRole, title, message, type = 'info', actionApp = null, targetUserId = null) => {
     const notifyDoc = {
       id: Date.now().toString(),
       targetRole,
@@ -167,13 +58,13 @@ export const BusinessProvider = ({ children }) => {
     } catch (e) {
       console.error("sendNotification Error:", e);
     }
-  }, []);
+  },
 
   /* ══════════════════════════════════════════════════════════════════════════
      ADMIN LOGIC (User Management)
      ══════════════════════════════════════════════════════════════════════════ */
 
-  const updateUserRole = useCallback((userId, newRole) => {
+  updateUserRole: (userId, newRole) => {
     setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newPerms = { ...userPerms, roles: [newRole] };
@@ -184,9 +75,9 @@ export const BusinessProvider = ({ children }) => {
       }
       return { ...prev, [userId]: newPerms };
     });
-  }, []);
+  },
 
-  const setModuleAccessLevel = useCallback((userId, moduleId, level) => {
+  setModuleAccessLevel: (userId, moduleId, level) => {
     setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
@@ -208,9 +99,9 @@ export const BusinessProvider = ({ children }) => {
       }
       return { ...prev, [userId]: newPerms };
     });
-  }, []);
+  },
 
-  const getModuleAccess = useCallback((userId, moduleId) => {
+  getModuleAccess: (userId, moduleId) => {
     // 1. Super Admin Bypass
     if (currentUser?.role === 'SUPER_ADMIN') return 'write';
 
@@ -234,9 +125,9 @@ export const BusinessProvider = ({ children }) => {
     }
     
     return 'none';
-  }, [permissions, currentUser]);
+  },
 
-  const createFullUser = useCallback(async (userData, source = 'admin') => {
+  createFullUser: async (userData, source = 'admin') => {
     let secondaryApp;
     try {
       secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
@@ -288,9 +179,9 @@ export const BusinessProvider = ({ children }) => {
 
       return { success: true, uid };
     } finally { if (secondaryApp) deleteApp(secondaryApp); }
-  }, [sendNotification]);
+  },
  
-  const toggleUserStatus = useCallback(async (userId, newStatus) => {
+  toggleUserStatus: async (userId, newStatus) => {
     const uid = String(userId);
     try {
       if (auth.currentUser) {
@@ -303,10 +194,10 @@ export const BusinessProvider = ({ children }) => {
       console.error("toggleUserStatus error:", e);
       throw e;
     }
-  }, [logAction]);
+  },
 
 
-  const permanentlyDeleteUserRecord = useCallback(async (userId) => {
+  permanentlyDeleteUserRecord: async (userId) => {
     const uid = String(userId);
     
     // Call Cloud Function to delete from Firebase Authentication
@@ -329,21 +220,21 @@ export const BusinessProvider = ({ children }) => {
       await deleteDoc(doc(db, 'users', uid));
       await deleteDoc(doc(db, 'hr', uid));
     }
-    setData(prev => ({ 
+    set(prev => ({ 
       ...prev, 
       hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
       base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
     }));
     setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
     logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
-  }, [logAction, addHint]);
+  },
 
   /* ══════════════════════════════════════════════════════════════════════════
      5. DATA MUTATION LOGIC (Topological Order)
      ══════════════════════════════════════════════════════════════════════════ */
 
   // A. Accounting Basics
-  const addAccountingEntry = useCallback((entry, lines) => {
+  addAccountingEntry: (entry, lines) => {
     const totalDebit = lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
     const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
     
@@ -356,7 +247,7 @@ export const BusinessProvider = ({ children }) => {
     const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
     const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
 
-    setData(prev => ({
+    set(prev => ({
       ...prev,
       finance: {
         ...prev.finance,
@@ -372,10 +263,10 @@ export const BusinessProvider = ({ children }) => {
 
     logAction('Écriture Comptable', entry.libelle, 'finance');
     return true;
-  }, [logAction, addHint]);
+  },
 
   // B. Specialized Generators
-  const generateInvoiceEntry = useCallback((invoice) => {
+  generateInvoiceEntry: (invoice) => {
     const entry = {
       libelle: `Facture Client ${invoice.num}`,
       date: invoice.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -389,10 +280,10 @@ export const BusinessProvider = ({ children }) => {
     ];
 
     addAccountingEntry(entry, lines);
-  }, [addAccountingEntry]);
+  },
 
-  const generateProductionEntry = useCallback((mo) => {
-    const bom = data.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+  generateProductionEntry: (mo) => {
+    const bom = get().data.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
     if (!bom) return;
     const totalCost = (bom.coutEstime || 500) * (mo.qte || 0);
     const entry = {
@@ -406,9 +297,9 @@ export const BusinessProvider = ({ children }) => {
       { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
     ];
     addAccountingEntry(entry, lines);
-  }, [data.production?.boms, addAccountingEntry]);
+  },
 
-  const generateExpenseEntry = useCallback((expense) => {
+  generateExpenseEntry: (expense) => {
     const isPaie = expense.type === 'Salaires';
     const entry = {
       libelle: isPaie ? `Décaissement Salaires: ${expense.title || expense.libelle}` : `Règlement Achat: ${expense.title || expense.libelle || expense.fournisseur}`,
@@ -421,9 +312,9 @@ export const BusinessProvider = ({ children }) => {
       { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.amount || expense.montant, profitCenter: 'Administration' }
     ];
     addAccountingEntry(entry, lines);
-  }, [addAccountingEntry]);
+  },
 
-  const generateLitigationEntry = useCallback((litigation, isProvision = true) => {
+  generateLitigationEntry: (litigation, isProvision = true) => {
     const entry = {
       libelle: isProvision ? `Provision Risque : ${litigation.objet}` : `Annulation Provision : ${litigation.objet}`,
       date: new Date().toISOString().split('T')[0],
@@ -436,14 +327,14 @@ export const BusinessProvider = ({ children }) => {
       { accountId: '151000', label: 'Provisions pour litiges', debit: isProvision ? 0 : amount, credit: isProvision ? amount : 0 }
     ];
     addAccountingEntry(entry, lines);
-  }, [addAccountingEntry]);
+  },
 
 
   // C. Physical Moves
-  const applyStockMove = useCallback((movementData) => {
+  applyStockMove: (movementData) => {
     const { productId, qte, type, ref, source, dest } = movementData;
     const qteNum = parseFloat(qte);
-    setData(prev => {
+    set(prev => {
       const products = prev.inventory?.products || [];
       const product = products.find(p => p.id === productId || p.code === productId);
       if (!product) {
@@ -498,10 +389,10 @@ export const BusinessProvider = ({ children }) => {
       }
       return nextState;
     });
-  }, [getNextSequence, addHint, logAction]);
+  },
 
-  const applyMOTransformation = useCallback((moId) => {
-    setData(prev => {
+  applyMOTransformation: (moId) => {
+    set(prev => {
       const mo = prev.production?.workOrders?.find(o => o.id === moId);
       if (!mo) return prev;
       const bom = prev.production?.boms?.find(b => b.produit === mo.produit || b.product === mo.produit || b.productId === mo.produitId);
@@ -523,19 +414,19 @@ export const BusinessProvider = ({ children }) => {
       addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
       return prev;
     });
-  }, [addHint, applyStockMove]);
+  },
 
   // D. Higher-level Workflows
-  const processOrderValidation = useCallback((order) => {
+  processOrderValidation: (order) => {
     const invoiceNum = getNextSequence('finance_invoices');
     const newInvoice = { id: Date.now().toString(), num: invoiceNum, client: order.client, montant: order.montant, statut: 'À Payer', orderId: order.id, createdAt: new Date().toISOString() };
-    setData(prev => ({ ...prev, finance: { ...prev.finance, invoices: [newInvoice, ...(prev.finance?.invoices || [])] } }));
+    set(prev => ({ ...prev, finance: { ...prev.finance, invoices: [newInvoice, ...(prev.finance?.invoices || [])] } }));
     addHint({ title: "Flux Cascade Activé", message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, type: 'info', appId: 'finance' });
     logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
-  }, [getNextSequence, addHint, logAction]);
+  },
 
-  const convertOppToSalesOrder = useCallback((oppId) => {
-    setData(prev => {
+  convertOppToSalesOrder: (oppId) => {
+    set(prev => {
       const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
       if (!opp) return prev;
       const orderNum = getNextSequence('sales_orders');
@@ -544,29 +435,29 @@ export const BusinessProvider = ({ children }) => {
       logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
       return { ...prev, sales: { ...prev.sales, orders: [newOrder, ...(prev.sales?.orders || [])] } };
     });
-  }, [getNextSequence, addHint, logAction]);
+  },
 
   // E. Record Operations (Final Handlers)
-  const addRecord = useCallback((appId, subModule, inputData) => {
+  addRecord: (appId, subModule, inputData) => {
     let processedRecord = { ...inputData };
     if (!processedRecord.num || processedRecord.num === "") {
       const seqKey = `${appId}__${subModule}`;
-      if (data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
+      if (get().data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
     }
     const newRecord = { 
       ...processedRecord, 
       id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
       createdAt: processedRecord.createdAt || new Date().toISOString(),
-      brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
+      brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
     };
-    setData(prev => {
+    set(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
       
       setTimeout(() => {
          logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser.uid }, { merge: true });
+         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.get().user.uid }, { merge: true });
       }, 0);
 
       return nextState;
@@ -580,7 +471,7 @@ export const BusinessProvider = ({ children }) => {
     if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
 
     // --- I.P.C. Automator (BPM Engine) onCreate ---
-    const safeWorkflowsCreate = Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || []);
+    const safeWorkflowsCreate = Array.isArray(get().data.workflows) ? get().data.workflows : (get().data.workflows?.[''] || get().data.workflows?.workflows || []);
     const activeWorkflowsCreate = safeWorkflowsCreate.filter(w => w.active && w.targetModule === `${appId}.${subModule}` && w.triggerEvent === 'onCreate');
     activeWorkflowsCreate.forEach(wf => {
        const recordFieldVal = newRecord[wf.conditionField];
@@ -602,11 +493,11 @@ export const BusinessProvider = ({ children }) => {
            addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
        }
     });
-  }, [data.base?.sequences, getNextSequence, applyStockMove, logAction, activeBrand, generateLitigationEntry]);
+  },
 
 
-  const updateRecord = useCallback((appId, subModule, id, newData) => {
-    setData(prev => {
+  updateRecord: (appId, subModule, id, newData) => {
+    set(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
       const oldRecord = prev[appId][subModule].find(i => i.id === id);
       if (!oldRecord) return prev;
@@ -797,16 +688,16 @@ export const BusinessProvider = ({ children }) => {
       });
     return nextState;
     });
-  }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence, generateLitigationEntry, sendNotification]);
+  },
 
-  const deleteRecord = useCallback((appId, subModule, id) => {
+  deleteRecord: (appId, subModule, id) => {
     // Special handling for user deletion to ensure Auth is also cleaned up
     if ((appId === 'admin' && subModule === 'users') || (appId === 'hr' && subModule === 'employees')) {
       permanentlyDeleteUserRecord(id);
       return;
     }
 
-    setData(prev => {
+    set(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
       const updatedList = subModuleData.filter(item => item.id !== id);
@@ -817,9 +708,9 @@ export const BusinessProvider = ({ children }) => {
       }, 0);
       return nextState;
     });
-  }, [logAction, permanentlyDeleteUserRecord]);
+  },
 
-  const processPOSOrder = useCallback((order) => {
+  processPOSOrder: (order) => {
     const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
     const dateStr = new Date().toISOString().split('T')[0];
 
@@ -843,7 +734,7 @@ export const BusinessProvider = ({ children }) => {
     });
 
     // Decrement stock for each item in the cart
-    setData(prev => {
+    set(prev => {
       const invProducts = prev.inventory?.products || [];
       const updatedProducts = invProducts.map(p => {
          const cartItem = order.cart.find(c => c.id === p.id);
@@ -860,16 +751,16 @@ export const BusinessProvider = ({ children }) => {
        message: `Ticket ${newId} encaissé avec succès. Stock mis à jour.`,
        type: 'success'
     });
-  }, [addRecord, addHint]);
+  },
 
-  const generatePayrollEntry = useCallback(() => {
-    const activeEmployees = (data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
+  generatePayrollEntry: () => {
+    const activeEmployees = (get().data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
     if (activeEmployees.length === 0) {
       addHint({ title: "Masse Salariale Nulle", message: "Aucun salaire à générer pour les collaborateurs actifs.", type: 'warning' });
       return;
     }
 
-    const { leaves = [] } = data.hr || {};
+    const { leaves = [] } = get().data.hr || {};
     
     // First, let's process each employee to find unpaid leave deductions
     const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-04"
@@ -967,10 +858,10 @@ export const BusinessProvider = ({ children }) => {
 
     addHint({ title: "Paie Exécutée", message: `La masse salariale de ${massTotal.toLocaleString('fr-FR')} a été comptabilisée et les fiches de paie ont été archivées.`, type: 'success', appId: 'hr' });
     logAction('Génération Paie', `Calcul de ${activeEmployees.length} salaires et fiches de paie pour ${mois}`, 'hr');
-  }, [data.hr?.employees, data.hr?.leaves, addAccountingEntry, addRecord, addHint, logAction]);
+  },
 
-  const launchProductionOrder = useCallback((order) => {
-    const bom = (data.production?.boms || []).find(b => b.id === order.bomId || b.produitId === order.produitId);
+  launchProductionOrder: (order) => {
+    const bom = (get().data.production?.boms || []).find(b => b.id === order.bomId || b.produitId === order.produitId);
     if (!bom) {
       addHint({ title: "Nomenclature Manquante", message: `Aucune BOM trouvée pour ${order.produit}. Créez d'abord la nomenclature.`, type: 'warning' });
       return;
@@ -980,7 +871,7 @@ export const BusinessProvider = ({ children }) => {
     const shortages = [];
 
     // Deduct components from stock
-    setData(prev => {
+    set(prev => {
       const nextProducts = (prev.inventory?.products || []).map(p => {
         const comp = composants.find(c => c.articleId === p.id);
         if (!comp) return p;
@@ -1020,7 +911,7 @@ export const BusinessProvider = ({ children }) => {
       addHint({ title: "✅ OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
     }
     logAction('Production', `Lancement OF ${order.num} — ${order.qte} × ${order.produit}`, 'production');
-  }, [data.production?.boms, data.inventory?.products, updateRecord, addRecord, addHint, logAction]);
+  },
 
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -1028,7 +919,7 @@ export const BusinessProvider = ({ children }) => {
      ══════════════════════════════════════════════════════════════════════════ */
 
 
-  const globalSearch = useCallback((query) => {
+  globalSearch: (query) => {
     if (!query || query.length < 2) return setSearchResults([]);
     const q = query.toLowerCase();
     const results = [];
@@ -1045,43 +936,43 @@ export const BusinessProvider = ({ children }) => {
     apps.filter(app => app.label.toLowerCase().includes(q)).forEach(app => results.push({ type: 'Module', name: app.label, appId: app.id }));
 
     // 2. Base Data
-    if (data.base?.contacts) data.base.contacts.forEach(c => (c.nom.toLowerCase().includes(q)) && results.push({ type: 'Contact', name: c.nom, appId: 'base' }));
+    if (get().data.base?.contacts) get().data.base.contacts.forEach(c => (c.nom.toLowerCase().includes(q)) && results.push({ type: 'Contact', name: c.nom, appId: 'base' }));
     
     // 3. HR
-    if (data.hr?.employees) data.hr.employees.forEach(e => (e.nom.toLowerCase().includes(q)) && results.push({ type: 'Collaborateur', name: e.nom, appId: 'hr' }));
+    if (get().data.hr?.employees) get().data.hr.employees.forEach(e => (e.nom.toLowerCase().includes(q)) && results.push({ type: 'Collaborateur', name: e.nom, appId: 'hr' }));
     
     // 4. CRM
-    if (data.crm?.leads) data.crm.leads.forEach(l => (l.nom.toLowerCase().includes(q) || l.entreprise.toLowerCase().includes(q)) && results.push({ type: 'Lead', name: `${l.nom} (${l.entreprise})`, appId: 'crm' }));
-    if (data.crm?.opportunities) data.crm.opportunities.forEach(o => (o.titre.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Opportunité', name: o.titre, appId: 'crm' }));
+    if (get().data.crm?.leads) get().data.crm.leads.forEach(l => (l.nom.toLowerCase().includes(q) || l.entreprise.toLowerCase().includes(q)) && results.push({ type: 'Lead', name: `${l.nom} (${l.entreprise})`, appId: 'crm' }));
+    if (get().data.crm?.opportunities) get().data.crm.opportunities.forEach(o => (o.titre.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Opportunité', name: o.titre, appId: 'crm' }));
     
     // 5. Finance/Sales
-    if (data.finance?.invoices) data.finance.invoices.forEach(i => (i.num.toLowerCase().includes(q) || i.client.toLowerCase().includes(q)) && results.push({ type: 'Facture', name: `${i.num} - ${i.client}`, appId: 'finance' }));
-    if (data.sales?.orders) data.sales.orders.forEach(o => (o.num.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Bon de Commande', name: `${o.num} - ${o.client}`, appId: 'sales' }));
+    if (get().data.finance?.invoices) get().data.finance.invoices.forEach(i => (i.num.toLowerCase().includes(q) || i.client.toLowerCase().includes(q)) && results.push({ type: 'Facture', name: `${i.num} - ${i.client}`, appId: 'finance' }));
+    if (get().data.sales?.orders) get().data.sales.orders.forEach(o => (o.num.toLowerCase().includes(q) || o.client.toLowerCase().includes(q)) && results.push({ type: 'Bon de Commande', name: `${o.num} - ${o.client}`, appId: 'sales' }));
     
     // 6. Inventory
-    if (data.inventory?.products) data.inventory.products.forEach(p => (p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) && results.push({ type: 'Article', name: p.nom, appId: 'inventory' }));
+    if (get().data.inventory?.products) get().data.inventory.products.forEach(p => (p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) && results.push({ type: 'Article', name: p.nom, appId: 'inventory' }));
 
     setSearchResults(results.slice(0, 12));
-  }, [data]);
+  },
 
-  const updateConfig = useCallback((newConfig) => setConfig(prev => ({ ...prev, ...newConfig })), []);
-  const addCustomField = useCallback((appId, field) => setConfig(prev => ({ ...prev, customFields: { ...prev.customFields, [appId]: [...(prev.customFields[appId] || []), field] } })), []);
-  const updateGlobalSettings = useCallback(async (newGlobal) => {
+  updateConfig: (newConfig) => setConfig(prev => ({ ...prev, ...newConfig })),
+  addCustomField: (appId, field) => setConfig(prev => ({ ...prev, customFields: { ...prev.customFields,
+  updateGlobalSettings: async (newGlobal) => {
     if (userRole !== 'SUPER_ADMIN') return;
     setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
     if (auth.currentUser) setDoc(doc(db, 'settings', 'global'), { ...newGlobal }, { merge: true });
-  }, [userRole]);
+  },
 
-  const togglePinnedModule = useCallback((moduleId) => {
+  togglePinnedModule: (moduleId) => {
     if (userRole !== 'SUPER_ADMIN') return;
     setGlobalSettings(prev => {
       const currentPinned = prev.pinnedModules || [];
       const newPinned = currentPinned.includes(moduleId) ? currentPinned.filter(m => m !== moduleId) : [...currentPinned, moduleId];
       return { ...prev, pinnedModules: newPinned };
     });
-  }, [userRole]);
+  },
 
-  const uploadLogo = useCallback(async (file) => {
+  uploadLogo: async (file) => {
     if (userRole !== 'SUPER_ADMIN') throw new Error("Accès refusé");
     const storageRef = ref(storage, `brand/logos/master_logo_${Date.now()}`);
     try {
@@ -1093,57 +984,57 @@ export const BusinessProvider = ({ children }) => {
       console.error("Erreur lors de l'upload du logo:", error);
       throw error;
     }
-  }, [userRole, updateGlobalSettings]);
+  },
 
 
 
 
 
 
-  const approveRequest = useCallback((appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
+  approveRequest: (appId, subModule, id) => {
+    updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
     addHint({ title: "Demande Approuvée", type: 'success', appId });
-  }, [updateRecord, addHint, currentUser.nom]);
+  },
 
-  const rejectRequest = useCallback((appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
-  }, [updateRecord, currentUser.nom]);
+  rejectRequest: (appId, subModule, id) => {
+    updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
+  },
 
 
   // --- IPC CONNECT SOCIAL HELPERS ---
-  const addConnectPost = useCallback((post) => {
+  addConnectPost: (post) => {
     const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
-    setData(prev => ({
+    set(prev => ({
       ...prev,
       connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
     }));
     logAction('Publication Sociale', post.title, 'connect');
-  }, [logAction]);
+  },
 
-  const likeConnectPost = useCallback((postId) => {
-    setData(prev => {
+  likeConnectPost: (postId) => {
+    set(prev => {
       const posts = prev?.connect?.posts || [];
       const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
       return { ...prev, connect: { ...prev.connect, posts: updated } };
     });
-  }, []);
+  },
 
-  const addConnectComment = useCallback((postId, comment) => {
-    setData(prev => {
+  addConnectComment: (postId, comment) => {
+    set(prev => {
       const posts = prev?.connect?.posts || [];
       const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
       return { ...prev, connect: { ...prev.connect, posts: updated } };
     });
-  }, []);
+  },
 
-  const participateInEvent = useCallback((eventId) => {
-    setData(prev => {
+  participateInEvent: (eventId) => {
+    set(prev => {
       const events = prev?.connect?.events || [];
       const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
       return { ...prev, connect: { ...prev.connect, events: updated } };
     });
     addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
-  }, [addHint]);
+  },
 
   /* ══════════════════════════════════════════════════════════════════════════
      7. CALLING & REALTIME NOTIFICATIONS
@@ -1233,16 +1124,16 @@ export const BusinessProvider = ({ children }) => {
       }
     });
     return () => unsubscribe();
-  }, []);
+  },
 
   // WebRTC Call Listener
   useEffect(() => {
     if (!currentUser) return; 
-    if (currentUser.id === 'guest') return;
+    if (get().user.id === 'guest') return;
 
     const q = query(
       collection(db, 'calls'), 
-      where('receiverId', '==', currentUser.id), 
+      where('receiverId', '==', get().user.id), 
       where('status', '==', 'ringing')
     );
 
@@ -1279,10 +1170,10 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [currentUser]);
+  },
 
   useEffect(() => {
-    if (!currentUser || currentUser.id === 'guest' || !auth.currentUser) return;
+    if (!currentUser || get().user.id === 'guest' || !auth.currentUser) return;
 
     const COLLECTIONS = [
       'crm', 'sales', 'inventory', 'production',
@@ -1298,9 +1189,9 @@ export const BusinessProvider = ({ children }) => {
       return onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs
           .map(d => ({ ...d.data(), id: d.id }))
-          .filter(d => activeBrand === 'ALL' || !d.brandId || d.brandId === activeBrand);
+          .filter(d => get().globalSettings.brand === 'ALL' || !d.brandId || d.brandId === get().globalSettings.brand);
 
-        setData(prev => {
+        set(prev => {
           // Detect if change is meaningful
           const newState = { ...prev };
           if (colName === 'audit_logs') {
@@ -1339,19 +1230,19 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [currentUser.id, activeBrand]);
+  },
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION
      ══════════════════════════════════════════════════════════════════════════ */
 
-  const logout = useCallback(async () => {
+  logout: async () => {
     await auth.signOut();
     localStorage.removeItem('ipc_erp_current_user');
     localStorage.removeItem('daxcelor_data');
-  }, []);
+  },
 
-  const resetAllData = useCallback(async () => {
+  resetAllData: async () => {
     // Collections métier à purger dans Firestore
     const businessCollections = [
       'crm', 'sales', 'inventory', 'finance', 'hr',
@@ -1391,9 +1282,9 @@ export const BusinessProvider = ({ children }) => {
     // Reset état React
     setData(mockData);
     addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
-  }, [addHint]);
+  },
 
-  const seedDemoData = useCallback(async () => {
+  seedDemoData: async () => {
     const months = 6;
     const now = new Date();
     
@@ -1448,16 +1339,10 @@ export const BusinessProvider = ({ children }) => {
     addRecord('talent', 'appraisals', { empId: 'E001', nom: 'Jean Kouassi', period: 'Q1 2026', scores: skills.map(s => ({ key: s.name, val: s.alice })) });
 
     addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: 'success' });
-  }, [addRecord, addHint]);
+  },
 
-  const navigateTo = useCallback((appId) => setActiveApp(appId), []);
+  navigateTo: (appId) => setActiveApp(appId),
 
-  // Context is now bypassed in favor of Zustand, but we preserve listeners.
-  return (
-    <>
-      {children}
-    </>
-  );
-};
-
-export const useBusiness = () => useStore();
+  // 10. Memoized Context Value to avoid redundant re-renders
+  
+});

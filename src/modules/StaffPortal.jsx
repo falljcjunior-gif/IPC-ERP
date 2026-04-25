@@ -12,13 +12,13 @@ import {
   LayoutDashboard,
   Briefcase
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 import { generatePDF } from '../utils/PDFExporter';
 
 const StaffPortal = ({ embedded }) => {
-  const { data, currentUser, addRecord, formatCurrency, navigateTo } = useBusiness();
+  const { data, currentUser, addRecord, formatCurrency, navigateTo } = useStore();
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'leaves', 'expenses', 'payslips'
   const [isModalOpen, setIsModalOpen] = useState(false);
   

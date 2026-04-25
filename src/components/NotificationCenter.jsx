@@ -11,10 +11,10 @@ import {
   Clock,
   MessageSquare
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const NotificationCenter = ({ isOpen, onClose }) => {
-  const { notifications, currentUser, navigateTo } = useBusiness();
+  const { notifications, currentUser, navigateTo } = useStore();
   
   // Filter notifications by role
   const filteredNotifications = notifications.filter(n => 

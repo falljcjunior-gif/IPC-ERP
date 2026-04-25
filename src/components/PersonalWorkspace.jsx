@@ -4,7 +4,7 @@ import {
   Zap, Clock, Briefcase, CheckCircle2, AlertCircle, 
   Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check 
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import GPSWorkspace from './GPSWorkspace';
 import FocusTracker from './workspace/FocusTracker';
 import VictoryHeartbeat from './workspace/VictoryHeartbeat';
@@ -17,7 +17,7 @@ const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transiti
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 
 const PersonalWorkspace = () => {
-  const { data, currentUser, navigateTo } = useBusiness();
+  const { data, currentUser, navigateTo } = useStore();
   const [activeTab, setActiveTab] = useState('overview');
 
   const [isEditingName, setIsEditingName] = useState(false);

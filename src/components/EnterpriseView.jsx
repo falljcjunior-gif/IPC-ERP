@@ -6,7 +6,7 @@ import {
   ChevronRight, MoreVertical, Download, 
   ArrowUpRight, Target, Users, DollarSign
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import ViewSwitcher from './ViewSwitcher';
 import AdvancedSearch from './AdvancedSearch';
 import KanbanBoard from './KanbanBoard';
@@ -23,7 +23,7 @@ const EnterpriseView = ({
   schema, 
   onOpenDetail 
 }) => {
-  const { data, addRecord, deleteRecord, updateRecord, formatCurrency, schemaOverrides } = useBusiness();
+  const { data, addRecord, deleteRecord, updateRecord, formatCurrency, schemaOverrides } = useStore();
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
@@ -46,6 +46,21 @@ const EnterpriseView = ({
   if (!modelSchema) {
     return <div style={{ padding: '2rem', textAlign: 'center', color: '#EF4444', fontWeight: 600 }}>Vue indisponible : le modèle {modelId} n'existe pas dans le schéma {moduleId}.</div>;
   }
+
+  // --- RBAC Field Logic ---
+  const ROLE_HIERARCHY = { 'GUEST': 0, 'EMPLOYEE': 1, 'MANAGER': 2, 'ADMIN': 3, 'SUPER_ADMIN': 4 };
+  const userRolePath = useStore(state => state.userRole);
+  const userRoleWeight = ROLE_HIERARCHY[userRolePath] ?? 0;
+  
+  const isFieldVisible = (fieldSchema) => {
+    if (!fieldSchema) return false;
+    if (fieldSchema.hidden) return false;
+    if (fieldSchema.readAccessRule) {
+      if (typeof fieldSchema.readAccessRule === 'string' && ROLE_HIERARCHY[fieldSchema.readAccessRule] > userRoleWeight) return false;
+    }
+    return true;
+  };
+
   const dataPath = modelSchema.dataPath || `${moduleId}.${modelId}`;
   const rawData = useMemo(() => {
     let raw = getNestedValue(data, dataPath) || [];

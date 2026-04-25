@@ -10,11 +10,11 @@ import {
   ChevronRight,
   Filter
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
 
 const Quality = ({ onOpenDetail }) => {
-  const { data, addRecord } = useBusiness();
+  const { data, addRecord } = useStore();
   const [view, setView] = useState('controls'); // 'controls', 'non-conformities', 'plans'
   const [isModalOpen, setIsModalOpen] = useState(false);
 

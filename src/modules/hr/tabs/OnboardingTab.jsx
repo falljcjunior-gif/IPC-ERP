@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import { db } from '../../../firebase/config';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { 
@@ -43,7 +43,7 @@ const moduleCategories = [
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const { permissions, setPermissions, addHint } = useBusiness();
+  const { permissions, setPermissions, addHint } = useStore();
 
   const userPerms = permissions[employee.id] || { roles: [], moduleAccess: {} };
   
@@ -180,7 +180,7 @@ const EditAccessPanel = ({ employee, onClose }) => {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────
 const OnboardingTab = ({ accessLevel }) => {
-  const { createFullUser, data, permissions } = useBusiness();
+  const { createFullUser, data, permissions } = useStore();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');

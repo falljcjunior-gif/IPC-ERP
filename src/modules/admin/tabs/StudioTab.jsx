@@ -6,7 +6,7 @@ import {
   Eye, Info, Sparkles, Box, LayoutGrid, FileText, Settings,
   RefreshCcw, Save, Trash, MousePointer2
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import { registry } from '../../../services/Registry';
 
 const TabBar = ({ tabs, active, onChange }) => (
@@ -20,7 +20,7 @@ const TabBar = ({ tabs, active, onChange }) => (
 );
 
 const StudioTab = () => {
-  const { schemaOverrides, updateSchemaOverride } = useBusiness();
+  const { schemaOverrides, updateSchemaOverride } = useStore();
   const [selectedSchemaId, setSelectedSchemaId] = useState('crm');
   const [selectedModelId, setSelectedModelId] = useState('opportunities');
   const [activeTab, setActiveTab] = useState('fields');

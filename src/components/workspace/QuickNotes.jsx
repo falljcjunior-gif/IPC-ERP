@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Edit3, Check } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 const QuickNotes = () => {
-  const { currentUser } = useBusiness();
+  const { currentUser } = useStore();
   const storageKey = `ipc_quicknotes_${currentUser?.id || 'guest'}`;
   const [note, setNote] = useState('');
   const [saved, setSaved] = useState(false);

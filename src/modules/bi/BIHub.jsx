@@ -5,7 +5,7 @@ import {
   Target, Globe, ShieldCheck, Download, 
   Calendar, Settings, Share2, Sparkles, TrendingUp
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -15,7 +15,7 @@ import FinancialTab from './tabs/FinancialTab';
 import GrowthTab from './tabs/GrowthTab';
 
 const BIHub = () => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const [activeTab, setActiveTab] = useState('executive');
 
   const tabs = [

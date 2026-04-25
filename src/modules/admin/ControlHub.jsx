@@ -5,7 +5,7 @@ import {
   Sparkles, Zap, Lock, Bell, Search,
   Power, Terminal, Cpu, Layout, Activity
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -18,7 +18,7 @@ import MasterData from '../MasterData';
 import History from '../History';
 
 const ControlHub = ({ onOpenDetail }) => {
-  const { userRole, config, currentUser, resetAllData } = useBusiness();
+  const { userRole, config, currentUser, resetAllData } = useStore();
   const [activeTab, setActiveTab] = useState('identity');
 
   // Security Check : Tactical Firewall

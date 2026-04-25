@@ -5,7 +5,7 @@ import {
   Target, Truck, Link, Settings, Clock, 
   History, Download, Share2, ShieldCheck, Activity, Sparkles
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -17,7 +17,7 @@ import PurchaseTab from './tabs/PurchaseTab';
 import ProjectTab from './tabs/ProjectTab';
 
 const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
-  const { data, addRecord, updateRecord, formatCurrency, shellView } = useBusiness();
+  const { data, addRecord, updateRecord, formatCurrency, shellView } = useStore();
   const [mainTab, setMainTab] = useState(appId === 'purchase' ? 'purchase' : 'inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); 

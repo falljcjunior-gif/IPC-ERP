@@ -5,7 +5,7 @@ import {
   Settings, Download, Share2, History,
   ShieldCheck, Briefcase, Activity
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -17,7 +17,7 @@ import FleetTab from './tabs/FleetTab';
 import SupportTab from './tabs/SupportTab';
 
 const EnterpriseHub = ({ onOpenDetail, appId }) => {
-  const { data, addRecord, updateRecord, formatCurrency } = useBusiness();
+  const { data, addRecord, updateRecord, formatCurrency } = useStore();
   const [mainTab, setMainTab] = useState(
     appId === 'fleet' ? 'fleet' : 
     appId === 'helpdesk' ? 'support' : 

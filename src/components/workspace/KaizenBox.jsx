@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Lightbulb, Send } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 const KaizenBox = () => {
-  const { currentUser, addRecord } = useBusiness();
+  const { currentUser, addRecord } = useStore();
   const [idea, setIdea] = useState('');
   const [sent, setSent] = useState(false);
 

@@ -14,10 +14,10 @@ import {
   ChevronRight,
   MoreVertical
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const Manufacturing = ({ onOpenDetail }) => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
 
   const workOrders = data.production?.workOrders || [];

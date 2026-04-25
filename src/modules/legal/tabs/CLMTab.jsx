@@ -6,10 +6,10 @@ import {
 } from 'lucide-react';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { legalSchema } from '../../../schemas/legal.schema';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const CLMTab = ({ onOpenDetail }) => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const contracts = data.legal?.contracts || [];
 
   // Logic for alert: Expiration < 30 days

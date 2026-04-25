@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { X, MapPin, Clock, PlayCircle, StopCircle, Fingerprint, Activity } from 'lucide-react';
 
 const PointageWidget = ({ onClose }) => {
-  const { addRecord, currentUser } = useBusiness();
+  const { addRecord, currentUser } = useStore();
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState(null);
   const [projet, setProjet] = useState('');

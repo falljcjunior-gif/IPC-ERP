@@ -4,7 +4,7 @@ import {
   Zap, Plus, Trash2, ToggleLeft, ToggleRight, 
   ArrowRight, Settings2, Bell, FileText, Activity, Save, X
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const MODULES_MAP = {
   'sales.orders': 'Ventes (Devis / Commandes)',
@@ -16,7 +16,7 @@ const MODULES_MAP = {
 };
 
 const Workflows = () => {
-  const { data, addRecord, updateRecord, deleteRecord } = useBusiness();
+  const { data, addRecord, updateRecord, deleteRecord } = useStore();
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   
   const workflows = Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || []);

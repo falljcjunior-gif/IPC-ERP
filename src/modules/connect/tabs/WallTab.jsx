@@ -4,7 +4,7 @@ import {
   Trophy, Megaphone, Target, Heart, MessageCircle, Plus,
   Sparkles, Zap, ShieldCheck, HeartHandshake, Send, X, TrendingUp
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -18,7 +18,7 @@ const POST_TYPES = [
 const INITIAL_FEED = [];
 
 const WallTab = ({ data, currentUser }) => {
-  const { addConnectPost, addConnectComment } = useBusiness();
+  const { addConnectPost, addConnectComment } = useStore();
 
   // Local feed state so likes update immediately in the UI
   const [feed, setFeed] = useState(() =>

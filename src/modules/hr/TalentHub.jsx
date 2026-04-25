@@ -8,7 +8,7 @@ import {
   MessageSquare, ThumbsUp, CheckCircle2, AlertCircle, GitBranch
 } from 'lucide-react';
 
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import KpiCard from '../../components/KpiCard';
 import RecordModal from '../../components/RecordModal';
 
@@ -171,7 +171,7 @@ const DashboardTab = ({ data }) => {
    TAB 2 — Pipeline Recrutement
 ══════════════════════════════════════ */
 const RecrutementTab = () => {
-  const { data, addRecord, updateRecord, deleteRecord } = useBusiness();
+  const { data, addRecord, updateRecord, deleteRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
   const candidates = data.talent?.candidates || [];
@@ -272,7 +272,7 @@ const RecrutementTab = () => {
    TAB 3 — Évaluations 360°
 ══════════════════════════════════════ */
 const EvaluationsTab = () => {
-  const { data, addRecord, updateRecord } = useBusiness();
+  const { data, addRecord, updateRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const employees = data.hr?.employees || [];
   const appraisals = data.talent?.appraisals || [];
@@ -355,7 +355,7 @@ const EvaluationsTab = () => {
    TAB 4 — Formations & Learning
 ══════════════════════════════════════ */
 const FormationsTab = () => {
-  const { data, addRecord } = useBusiness();
+  const { data, addRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const employees = data.hr?.employees || [];
   const formations = data.talent?.formations || [];
@@ -426,7 +426,7 @@ const FormationsTab = () => {
    TAB 5 — Bien-être & Engagement
 ══════════════════════════════════════ */
 const BienEtreTab = () => {
-  const { data, addRecord } = useBusiness();
+  const { data, addRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const surveys = data.talent?.surveys || [];
 
@@ -583,7 +583,7 @@ const OrgaTab = ({ data }) => {
    MAIN MODULE
 ══════════════════════════════════════ */
 const PeopleAndCulture = () => {
-  const { data, userRole, seedDemoData, addRecord } = useBusiness();
+  const { data, userRole, seedDemoData, addRecord } = useStore();
   const [tab, setTab] = useState('dashboard');
   const [showUat, setShowUat] = useState(false);
 

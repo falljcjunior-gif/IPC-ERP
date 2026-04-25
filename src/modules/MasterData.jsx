@@ -4,7 +4,7 @@ import {
   Users, Package, Plus, Globe, Building2, Database,
   Search, Filter, ChevronRight, LayoutGrid, List
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import EnterpriseView from '../components/EnterpriseView';
 import { baseSchema } from '../schemas/base.schema.js';
 

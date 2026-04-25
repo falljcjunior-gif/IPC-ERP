@@ -27,13 +27,13 @@ import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { t } = useTranslation();
   const { hasPermission, userRole } = useStore();
-  const { config, navigateTo, deleteRecord, data, logAction } = useBusiness();
+  const { config, navigateTo, deleteRecord, data, logAction } = useStore();
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);

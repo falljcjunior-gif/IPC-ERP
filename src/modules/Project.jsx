@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Briefcase, CheckSquare, Target, Plus, ChevronLeft, LayoutGrid, Kanban, Calendar as CalendarIcon, PieChart, Table as TableIcon, Copy } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 import TrelloBoard from '../components/workspace/TrelloBoard';
 import TrelloCardModal from '../components/workspace/TrelloCardModal';
@@ -12,7 +12,7 @@ import RecordModal from '../components/RecordModal';
 import { projectSchema } from '../schemas/project.schema';
 
 const ProjectHub = ({ onOpenDetail }) => {
-  const { data, addRecord, updateRecord, currentUser } = useBusiness();
+  const { data, addRecord, updateRecord, currentUser } = useStore();
   const [activeProject, setActiveProject] = useState(null);
   const [activeView, setActiveView] = useState('board'); // 'board', 'calendar', 'dashboard'
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -5,7 +5,7 @@ import {
   Building, BookOpen, AlertCircle, History,
   Search, Plus, Filter, Download
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import TabBar from '../marketing/components/TabBar';
 
 // Tabs
@@ -15,7 +15,7 @@ import LitigationTab from './tabs/LitigationTab';
 import CorporateTab from './tabs/CorporateTab';
 
 const LegalHub = ({ onOpenDetail }) => {
-  const { data, formatCurrency, userRole, currentUser } = useBusiness();
+  const { data, formatCurrency, userRole, currentUser } = useStore();
   const [activeTab, setActiveTab] = useState('clm');
 
   const tabs = [

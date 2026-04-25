@@ -9,7 +9,7 @@ import {
   ComposedChart, Legend
 } from 'recharts';
 import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 
@@ -41,7 +41,7 @@ const TT = ({ active, payload, label }) => {
    TIMESHEETS MODULE — Full Enterprise
 ════════════════════════════════════ */
 const Timesheets = () => {
-  const { data, addRecord, updateRecord, userRole } = useBusiness();
+  const { data, addRecord, updateRecord, userRole } = useStore();
   const [tab, setTab] = useState('dashboard');
   const [modal, setModal] = useState(false);
 

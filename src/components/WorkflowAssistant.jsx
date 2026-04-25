@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowRight, X, Info } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const WorkflowAssistant = () => {
-  const { hints, dismissHint, navigateTo } = useBusiness();
+  const { hints, dismissHint, navigateTo } = useStore();
 
   if (hints.length === 0) return null;
 

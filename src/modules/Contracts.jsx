@@ -13,11 +13,11 @@ import {
   Search,
   ArrowRight
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { BarChartComp } from '../components/BusinessCharts';
 
 const Contracts = () => {
-  const { data } = useBusiness();
+  const { data } = useStore();
 
   const contractsData = [];
 

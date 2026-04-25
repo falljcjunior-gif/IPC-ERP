@@ -6,7 +6,7 @@ import {
   Download, Play, ClipboardList, Sparkles, TrendingUp
 } from 'lucide-react';
 import { useStore } from '../../store';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import { useTranslation } from 'react-i18next';
 import { productionSchema } from '../../schemas/production.schema';
 import PermissionGuard from '../../components/PermissionGuard';
@@ -27,7 +27,7 @@ const Production = ({ onOpenDetail, appId }) => {
   const { 
     data, setData, formatCurrency, userRole, shellView 
   } = useStore();
-  const { addRecord } = useBusiness();
+  const { addRecord } = useStore();
   const [mainTab, setMainTab] = useState(appId === 'manufacturing' ? 'execution' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');

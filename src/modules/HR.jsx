@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, CheckSquare, Briefcase, Activity, UserPlus, Sparkles, TrendingUp
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 import TabBar from './marketing/components/TabBar';
 import PeopleTab from './enterprise/tabs/PeopleTab';
@@ -11,7 +11,7 @@ import ApprovalsTab from './hr/tabs/ApprovalsTab';
 import OnboardingTab from './hr/tabs/OnboardingTab';
 
 const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
-  const { data, shellView } = useBusiness();
+  const { data, shellView } = useStore();
   const [mainTab, setMainTab] = useState('people');
 
   // Badge count for approvals

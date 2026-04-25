@@ -15,12 +15,12 @@ import {
   MoreHorizontal,
   FolderPlus
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { generatePDF } from '../utils/PDFExporter';
 import { X } from 'lucide-react';
 
 const DMS = () => {
-  const { data } = useBusiness();
+  const { data } = useStore();
   const [viewMode, setViewMode] = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
   const [previewFile, setPreviewFile] = useState(null);

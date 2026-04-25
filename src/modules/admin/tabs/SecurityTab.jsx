@@ -6,10 +6,10 @@ import {
   Database, AlertTriangle, CheckCircle2,
   Users, LogIn, Activity, ChevronRight
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const SecurityTab = () => {
-  const { config, updateConfig } = useBusiness();
+  const { config, updateConfig } = useStore();
 
   const auditLogs = [
     { id: 1, user: 'admin@ipc.ci', action: 'Accès Module Finance', time: '10:45', status: 'success' },

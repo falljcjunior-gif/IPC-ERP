@@ -9,13 +9,13 @@ import {
 import KpiCard from '../../../components/KpiCard';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { hrSchema } from '../../../schemas/hr.schema';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const PeopleTab = ({ data, onOpenDetail }) => {
-  const { generatePayrollEntry } = useBusiness();
+  const { generatePayrollEntry } = useStore();
   const employees = data?.hr?.employees || [];
   
   const stats = useMemo(() => {

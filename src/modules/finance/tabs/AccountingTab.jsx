@@ -8,12 +8,12 @@ import {
 import EnterpriseView from '../../../components/EnterpriseView';
 import { accountingSchema } from '../../../schemas/accounting.schema';
 
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 
 const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
-  const { data } = useBusiness();
+  const { data } = useStore();
   const accounts = data?.finance?.accounts || [];
   const lines = data?.finance?.lines || [];
   const [view, setView] = useState('ledger'); // 'ledger', 'saisie', 'coe', 'balance', 'bilan_sheet', 'pnl'

@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Store, UtensilsCrossed, Trash2, Plus, Minus, CreditCard, Receipt, HandCoins, UserX } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 
 const CommerceHub = () => {
   const [activeTab, setActiveTab] = useState('pos_boutique');
   const [cart, setCart] = useState([]);
   const [customer, setCustomer] = useState('Passager');
-  const { data, processPOSOrder } = useBusiness();
+  const { data, processPOSOrder } = useStore();
 
   // Using inventory products, filtering out those with no stock if needed, or just all.
   const inventory = useMemo(() => data?.inventory?.products || [], [data]);

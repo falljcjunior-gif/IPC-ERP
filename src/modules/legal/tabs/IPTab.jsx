@@ -6,10 +6,10 @@ import {
 } from 'lucide-react';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { legalSchema } from '../../../schemas/legal.schema';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const IPTab = ({ onOpenDetail }) => {
-  const { data } = useBusiness();
+  const { data } = useStore();
   const assets = data.legal?.ip || [];
 
   return (

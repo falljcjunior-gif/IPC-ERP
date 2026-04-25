@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History, FileText, Upload, Plus, CheckCircle2, Lock } from 'lucide-react';
 import Chatter from './Chatter';
 import SmartButtons from './SmartButtons';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { useToast } from './ToastProvider';
 
 const RecordModal = ({ 
@@ -20,7 +20,7 @@ const RecordModal = ({
   smartButtons = [],
   isLoading = false 
 }) => {
-  const { data, getModuleAccess, currentUser } = useBusiness();
+  const { data, getModuleAccess, currentUser } = useStore();
   const { addToast } = useToast();
   const [formData, setFormData] = useState(initialData || {});
   
@@ -176,8 +176,8 @@ const RecordModal = ({
                                 required={field.required}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                 className="glass"
-                                disabled={!isEditMode || isReadOnly}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
+                                disabled={!isEditMode || isFieldReadonly(field)}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
                               >
                                 <option value="">Sélectionner...</option>
                                 {field.options && field.options.map(opt => {
@@ -193,8 +193,8 @@ const RecordModal = ({
                                 placeholder={field.placeholder}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                 className="glass"
-                                disabled={!isEditMode || isReadOnly}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical', opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
+                                disabled={!isEditMode || isFieldReadonly(field)}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical', opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
                               />
                             ) : (
                               <input
@@ -204,8 +204,8 @@ const RecordModal = ({
                                 placeholder={field.placeholder}
                                 onChange={(e) => handleChange(field.name, (field.type === 'number' || field.type === 'money') ? Number(e.target.value) : e.target.value)}
                                 className="glass"
-                                disabled={!isEditMode || isReadOnly}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isReadOnly) ? 1 : 0.7 }}
+                                disabled={!isEditMode || isFieldReadonly(field)}
+                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
                               />
                             )
                           )}

@@ -12,7 +12,7 @@ import {
   Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +40,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     globalSettings, currentUser, permissions, getModuleAccess, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
     activeBrand, setActiveBrand, BRANDS
-  } = useBusiness();
+  } = useStore();
 
   // Unified UI Flags
   const [shellView, setShellView] = useState({

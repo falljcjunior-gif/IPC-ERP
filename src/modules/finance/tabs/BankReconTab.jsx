@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link, Cpu } from 'lucide-react';
 
 const BankReconTab = () => {
-  const { data, formatCurrency, updateRecord, addHint } = useBusiness();
+  const { data, formatCurrency, updateRecord, addHint } = useStore();
   const [bankLines, setBankLines] = useState([]);
   const [reconciledIds, setReconciledIds] = useState([]);
   const [selectedBankLine, setSelectedBankLine] = useState(null);

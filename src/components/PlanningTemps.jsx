@@ -5,7 +5,7 @@ import {
   X, BarChart3, Target, AlertCircle, Briefcase, Users,
   CheckCircle2, XCircle, TrendingUp, Timer, ClipboardList
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import RecordModal from './RecordModal';
 import KpiCard from './KpiCard';
 
@@ -32,7 +32,7 @@ const Tabs = ({ tabs, active, onChange }) => (
    PLANNING CALENDAR VIEW
 ════════════════════════════════════════════ */
 const PlanningView = () => {
-  const { data, currentUser, addRecord } = useBusiness();
+  const { data, currentUser, addRecord } = useStore();
   const [today] = useState(new Date());
   const [viewDate, setViewDate] = useState(new Date());
   const [showModal, setShowModal] = useState(false);
@@ -187,7 +187,7 @@ const PlanningView = () => {
    TIMESHEETS (TEMPS) VIEW
 ════════════════════════════════════════════ */
 const TempsView = () => {
-  const { data, currentUser, addRecord, updateRecord, userRole } = useBusiness();
+  const { data, currentUser, addRecord, updateRecord, userRole } = useStore();
   const [tab, setTab] = useState('my');
   const [showModal, setShowModal] = useState(false);
 

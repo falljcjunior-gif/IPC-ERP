@@ -4,7 +4,7 @@ import {
   FileSignature, Send, CopyPlus, History, 
   CheckCircle2, Folder
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import RequestsTab from './tabs/RequestsTab';
 // We will import TabBar safely
 
@@ -14,7 +14,7 @@ const TABS = [
 ];
 
 const SignatureHub = () => {
-  const { data } = useBusiness();
+  const { data } = useStore();
   const [activeTab, setActiveTab] = useState('requests');
 
   const renderTab = () => {

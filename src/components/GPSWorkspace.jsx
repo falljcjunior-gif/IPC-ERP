@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Flag, Zap, Plus, X, Save, CheckCircle2, Circle, Search, Users2 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 
 const GPSWorkspace = () => {
-  const { data, currentUser, addRecord, updateRecord, userRole } = useBusiness();
+  const { data, currentUser, addRecord, updateRecord, userRole } = useStore();
   const [gpsData, setGpsData] = useState({ goals: [] });
   const [recordId, setRecordId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);

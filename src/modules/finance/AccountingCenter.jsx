@@ -4,7 +4,7 @@ import {
   BookOpen, Calculator, Scale, BookMarked, 
   BookCopy, ShieldCheck, Download
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
 import AccountingTab from './tabs/AccountingTab';
 
 /**
@@ -13,7 +13,7 @@ import AccountingTab from './tabs/AccountingTab';
  * le Plan de Comptes OHADA et la Balance Générale.
  */
 const AccountingCenter = ({ onOpenDetail }) => {
-  const { addAccountingEntry } = useBusiness();
+  const { addAccountingEntry } = useStore();
 
   return (
     <div style={{

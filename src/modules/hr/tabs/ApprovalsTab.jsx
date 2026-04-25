@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 import { Check, X, Calendar, DollarSign, Clock, FileText, History } from 'lucide-react';
 
 const ApprovalsTab = () => {
-  const { data, updateRecord, currentUser, formatCurrency } = useBusiness();
+  const { data, updateRecord, currentUser, formatCurrency } = useStore();
   const [viewMode, setViewMode] = React.useState('pending'); // 'pending' | 'history'
 
   // Combine leaves and expenses

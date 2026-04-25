@@ -20,13 +20,13 @@ import {
   Settings,
   Image as ImageIcon
 } from 'lucide-react';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import { db, auth } from '../firebase/config';
 import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
 import { webrtcService } from '../utils/WebRTCService';
 
 const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
-  const { currentUser, data, formatCurrency, activeCall, setActiveCall } = useBusiness();
+  const { currentUser, data, formatCurrency, activeCall, setActiveCall } = useStore();
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);

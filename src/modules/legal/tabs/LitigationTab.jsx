@@ -6,10 +6,10 @@ import {
 } from 'lucide-react';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { legalSchema } from '../../../schemas/legal.schema';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const LitigationTab = ({ onOpenDetail }) => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const litigations = data.legal?.litigations || [];
 
   const totalRisk = litigations.reduce((acc, curr) => acc + (curr.risqueFinancier || 0), 0);

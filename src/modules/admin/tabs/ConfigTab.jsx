@@ -6,10 +6,10 @@ import {
   Type, Hash, CreditCard, Layout,
   Monitor, Sidebar, Sparkles, Check, Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const ConfigTab = () => {
-  const { config, updateConfig, globalSettings, updateGlobalSettings, uploadLogo } = useBusiness();
+  const { config, updateConfig, globalSettings, updateGlobalSettings, uploadLogo } = useStore();
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef();
 

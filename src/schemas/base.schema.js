@@ -48,7 +48,7 @@ export const baseSchema = {
         nom: { label: 'Désignation', type: 'text', required: true, search: true },
         type: { label: 'Type', type: 'selection', options: ['Bien', 'Service'], required: true },
         categorie: { label: 'Catégorie', type: 'selection', options: ['Matériel', 'Software', 'Prestation', 'Formation'], search: true },
-        prixMoyen: { label: 'Prix de Vente', type: 'money', currency: 'FCFA', search: true },
+        prixMoyen: { label: 'Prix de Vente', type: 'money', currency: 'FCFA', search: true, writeAccessRule: 'MANAGER' },
         unit: { label: 'Unité', type: 'selection', options: ['Unité', 'Heure', 'Jour', 'Licence', 'Forfait'] }
       },
       views: {

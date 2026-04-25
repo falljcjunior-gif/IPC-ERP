@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Package, Plus, Trash2, Save, Box, Search
 } from 'lucide-react';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const BomBuilderModal = ({ isOpen, onClose, onSave }) => {
-  const { data, formatCurrency } = useBusiness();
+  const { data, formatCurrency } = useStore();
   const products = data.inventory?.products || [];
 
   const [targetProduct, setTargetProduct] = useState('');

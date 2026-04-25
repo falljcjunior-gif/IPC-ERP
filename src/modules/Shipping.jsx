@@ -10,7 +10,7 @@ import {
   Cell, LineChart, Line, ComposedChart, Legend, PieChart, Pie, AreaChart, Area
 } from 'recharts';
 import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
-import { useBusiness } from '../BusinessContext';
+import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
 import KpiCard from '../components/KpiCard';
 
@@ -58,7 +58,7 @@ const SHIP_STATUS = {
    SHIPPING MODULE
 ════════════════════════════════════ */
 const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
-  const { data, addRecord, getModuleAccess, currentUser } = useBusiness();
+  const { data, addRecord, getModuleAccess, currentUser } = useStore();
   const accessLevel = getModuleAccess(currentUser?.id, appId);
   const isReadOnly = accessLevel === 'read';
 

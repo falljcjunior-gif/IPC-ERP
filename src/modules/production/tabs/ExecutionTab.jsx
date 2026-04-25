@@ -6,13 +6,13 @@ import {
   Search, Filter, Play, ChevronRight, ShoppingCart
 } from 'lucide-react';
 import Chip from '../../marketing/components/Chip';
-import { useBusiness } from '../../../BusinessContext';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
 
 const ExecutionTab = ({ data, onOpenDetail, onNewWorkOrder }) => {
-  const { launchProductionOrder, updateRecord } = useBusiness();
+  const { launchProductionOrder, updateRecord } = useStore();
   const workOrders = data?.production?.workOrders || [];
   const products = data?.inventory?.products || [];
   const [expandedId, setExpandedId] = useState(null);
