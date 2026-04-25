@@ -4,6 +4,7 @@ import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History
 import Chatter from './Chatter';
 import SmartButtons from './SmartButtons';
 import { useStore } from '../store';
+import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastProvider';
 
 const RecordModal = ({ 
@@ -21,6 +22,7 @@ const RecordModal = ({
   isLoading = false 
 }) => {
   const { data, getModuleAccess, currentUser } = useStore();
+  const { t } = useTranslation();
   const { addToast } = useToast();
   const [formData, setFormData] = useState(initialData || {});
   
@@ -163,7 +165,7 @@ const RecordModal = ({
                       {fields.map(field => (
                         <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                           <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {field.label}
+                            {t(field.label)}
                           </label>
                           {!isEditMode ? (
                             <div style={{ padding: '0.75rem 0', fontWeight: 700, fontSize: '1rem', borderBottom: '1px solid var(--border)' }}>
@@ -190,7 +192,7 @@ const RecordModal = ({
                               <textarea
                                 value={formData[field.name] || ''}
                                 required={field.required}
-                                placeholder={field.placeholder}
+                                placeholder={field.placeholder ? t(field.placeholder) : ''}
                                 onChange={(e) => handleChange(field.name, e.target.value)}
                                 className="glass"
                                 disabled={!isEditMode || isFieldReadonly(field)}
@@ -201,7 +203,7 @@ const RecordModal = ({
                                 value={formData[field.name] || ''}
                                 type={field.type === 'money' ? 'number' : (field.type || 'text')}
                                 required={field.required}
-                                placeholder={field.placeholder}
+                                placeholder={field.placeholder ? t(field.placeholder) : ''}
                                 onChange={(e) => handleChange(field.name, (field.type === 'number' || field.type === 'money') ? Number(e.target.value) : e.target.value)}
                                 className="glass"
                                 disabled={!isEditMode || isFieldReadonly(field)}

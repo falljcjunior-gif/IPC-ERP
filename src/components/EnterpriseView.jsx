@@ -7,6 +7,7 @@ import {
   ArrowUpRight, Target, Users, DollarSign
 } from 'lucide-react';
 import { useStore } from '../store';
+import { useTranslation } from 'react-i18next';
 import ViewSwitcher from './ViewSwitcher';
 import AdvancedSearch from './AdvancedSearch';
 import KanbanBoard from './KanbanBoard';
@@ -23,6 +24,7 @@ const EnterpriseView = ({
   schema, 
   onOpenDetail 
 }) => {
+  const { t } = useTranslation();
   const { data, addRecord, deleteRecord, updateRecord, formatCurrency, schemaOverrides } = useStore();
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -162,7 +164,7 @@ const EnterpriseView = ({
             <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
               {columns.map(col => (
                 <th key={col} style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {modelSchema.fields?.[col]?.label || col}
+                  {t(modelSchema.fields?.[col]?.label || col)}
                 </th>
               ))}
               <th style={{ width: '50px' }} />
