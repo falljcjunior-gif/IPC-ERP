@@ -28,3 +28,20 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
       - name: Deploy to Firebase
         run: npx firebase-tools deploy --project ipc-erp --non-interactive --force
+        continue-on-error: true
+        id: firebase_deploy
+
+      - name: Fix IAM — nexusChat invoker (Cloud Run Gen 2)
+        run: |
+          gcloud run services add-iam-policy-binding nexuschat \
+            --region=us-central1 \
+            --member=allUsers \
+            --role=roles/run.invoker \
+            --project=ipc-erp \
+            --quiet || echo "IAM already set or skipped"
+
+      - name: Fail if deploy failed (non-IAM error)
+        if: steps.firebase_deploy.outcome == 'failure'
+        run: |
+          echo "Deploy failed. Check logs above for non-IAM errors."
+          exit 1
