@@ -170,15 +170,17 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           display: 'flex',
           flexDirection: 'column',
           transition: 'var(--transition)',
-          backgroundColor: 'var(--primary)',
+          backgroundColor: 'rgba(255, 255, 255, 0.45)',
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.08)',
           overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.05)'
+          border: '1px solid rgba(255, 255, 255, 0.5)'
         }}
       >
         {/* Sidebar Header / Logo */}
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
           <div style={{ 
             minWidth: '40px', 
             height: '40px', 
@@ -192,9 +194,9 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             <Box size={24} color="white" />
           </div>
           {shellView.sidebar && (
-            <div style={{ color: 'white' }}>
+            <div style={{ color: '#1F363D' }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginTop: '4px' }}>Control Center</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', marginTop: '4px' }}>Control Center</div>
             </div>
           )}
         </div>
@@ -212,7 +214,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             return (
               <div key={cat.label} style={{ marginBottom: '1.5rem' }}>
                 {shellView.sidebar && (
-                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px' }}>
                     {cat.label}
                   </div>
                 )}
@@ -230,8 +232,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
-                        color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                        background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                        color: isActive ? '#1F363D' : 'rgba(31, 54, 61, 0.6)',
+                        background: isActive ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
+                        boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.03)' : 'none',
+                        border: isActive ? '1px solid rgba(255,255,255,0.8)' : '1px solid transparent',
                         transition: 'var(--transition)',
                         position: 'relative'
                       }}
@@ -252,18 +256,18 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         </div>
 
         {/* User Profile / Bottom */}
-        <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ padding: '1rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem' }}>
              <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: 'white' }}>
                 {currentUser?.nom?.charAt(0)}
              </div>
              {shellView.sidebar && (
-               <div style={{ color: 'white', flex: 1, overflow: 'hidden' }}>
+               <div style={{ color: '#1F363D', flex: 1, overflow: 'hidden' }}>
                  <div style={{ fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser?.nom}</div>
-                 <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>{userRole}</div>
+                 <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{userRole}</div>
                </div>
              )}
-             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'rgba(31, 54, 61, 0.4)', cursor: 'pointer' }}>
                 <LogOut size={18} />
              </button>
           </div>
