@@ -5,8 +5,10 @@ import {
   Layers, Wrench, Database, Zap, ShieldCheck, 
   Download, Play, ClipboardList, Sparkles, TrendingUp
 } from 'lucide-react';
-import { useBusiness } from '../../BusinessContext';
+import { useStore } from '../../store';
+import { useTranslation } from 'react-i18next';
 import { productionSchema } from '../../schemas/production.schema';
+import PermissionGuard from '../../components/PermissionGuard';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -20,17 +22,20 @@ import DesignTab from './tabs/DesignTab';
 import MaintenanceTab from './tabs/MaintenanceTab';
 
 const Production = ({ onOpenDetail, appId }) => {
-  const { data, addRecord, formatCurrency, userRole, shellView } = useBusiness();
+  const { t } = useTranslation();
+  const { 
+    data, setData, formatCurrency, userRole, shellView 
+  } = useStore();
   const [mainTab, setMainTab] = useState(appId === 'manufacturing' ? 'execution' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
 
   const tabs = [
-    { id: 'analytics', label: 'Efficacité OEE', icon: <BarChart3 size={16} /> },
-    { id: 'execution', label: 'Exécution (OF)', icon: <Factory size={16} /> },
-    { id: 'design', label: 'Nomenclatures', icon: <Layers size={16} /> },
-    { id: 'maintenance', label: 'Maintenance', icon: <Wrench size={16} /> },
+    { id: 'analytics', label: t('nav.bi', { defaultValue: 'Efficacité OEE' }), icon: <BarChart3 size={16} /> },
+    { id: 'execution', label: t('nav.production', { defaultValue: 'Exécution (OF)' }), icon: <Factory size={16} /> },
+    { id: 'design', label: t('inventory.products', { defaultValue: 'Nomenclatures' }), icon: <Layers size={16} /> },
+    { id: 'maintenance', label: t('nav.maintenance', { defaultValue: 'Maintenance' }), icon: <Wrench size={16} /> },
   ];
 
   const modalConfig = {
@@ -84,11 +89,13 @@ const Production = ({ onOpenDetail, appId }) => {
              <Download size={20} />
            </button>
            
-           <button className="btn-primary" 
-              onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }}
-              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4' }}>
-              <Plus size={20} /> <span style={{ fontWeight: 800 }}>Lancer Ordre</span>
-           </button>
+            <PermissionGuard module="production" level="write">
+               <button className="btn-primary" 
+                  onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }}
+                  style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4' }}>
+                  <Plus size={20} /> <span style={{ fontWeight: 800 }}>{t('production.launch_order', { defaultValue: 'Lancer Ordre' })}</span>
+               </button>
+            </PermissionGuard>
         </div>
       </div>
 

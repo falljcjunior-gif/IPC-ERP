@@ -6,6 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, createUserWithEmailAndPassword, getAuth } from 'firebase/auth';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { useStore } from './store';
 
 const BusinessContext = createContext();
 
@@ -26,18 +27,24 @@ export const BusinessProvider = ({ children }) => {
      1. SHARED STATE (Declarations Must Be First to Avoid TDZ Errors)
      ══════════════════════════════════════════════════════════════════════════ */
   
+  const store = useStore();
+  const { 
+    user: currentUser, setUser: setCurrentUser, 
+    permissions, setPermissions, 
+    activeApp, setActiveApp, 
+    globalSettings, setGlobalSettings 
+  } = store;
+
   const [data, setData] = useState(() => {
+    // ... logic remains for now to ensure safe merge
     try {
       const saved = localStorage.getItem('daxcelor_data');
       if (!saved) return mockData;
-      
       const parsed = JSON.parse(saved);
       if (!parsed || typeof parsed !== 'object') return mockData;
-
       const deepMerge = (target, source) => {
         const result = { ...target };
         if (!source || typeof source !== 'object') return result;
-
         Object.keys(source).forEach(key => {
           if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
             result[key] = deepMerge(target[key] || {}, source[key]);
@@ -47,94 +54,34 @@ export const BusinessProvider = ({ children }) => {
         });
         return result;
       };
-
       const merged = deepMerge(mockData, parsed);
+      // Ensure complex ERP structures are initialized
       if (!merged.base) merged.base = mockData.base;
-      if (!merged.base.taxes || merged.base.taxes.length === 0) merged.base.taxes = mockData.base.taxes;
-      if (!merged.base.sequences) merged.base.sequences = mockData.base.sequences;
-
-      if (merged.inventory) {
-        if (!merged.inventory.products || merged.inventory.products.length === 0) {
-          merged.inventory.products = merged.base.catalog.map(p => ({
-            ...p,
-            id: p.id || p.code,
-            code: p.code || p.sku,
-            stock: p.stock || 0,
-            alerte: p.alerte || 5,
-            coutUnit: p.prixAch || p.prix || 0
-          }));
-        }
-        if (merged.inventory.moves && (!merged.inventory.movements || merged.inventory.movements.length === 0)) {
-          merged.inventory.movements = merged.inventory.moves;
-        }
-        if (!merged.inventory.movements) merged.inventory.movements = [];
-      }
-
-      if (merged.production) {
-        if (!merged.production.boms) {
-          merged.production.boms = [];
-        }
-        if (!merged.production.workOrders) merged.production.workOrders = [];
-      }
-
+      if (!merged.inventory) merged.inventory = { products: [], movements: [] };
+      if (!merged.finance) merged.finance = { accounts: [], entries: [], lines: [], journals: [] };
+      if (!merged.hr) merged.hr = { employees: [], payroll: [] };
       if (!merged.dms) merged.dms = { files: [], categories: ['Finances', 'RH', 'Technique', 'Légal'] };
       if (!merged.planning) merged.planning = { events: [] };
-      const ohadaAccounts = [
-        { code: '411100', label: 'Clients Locaux', type: 'Actif', nature: 'Bilan' },
-        { code: '401100', label: 'Fournisseurs', type: 'Passif', nature: 'Bilan' },
-        { code: '701100', label: 'Vente de Produits Finis', type: 'Produit', nature: 'Gestion' },
-        { code: '601100', label: 'Achat de Matières Premières', type: 'Charge', nature: 'Gestion' },
-        { code: '603100', label: 'Variations des stocks de MP', type: 'Charge', nature: 'Gestion' },
-        { code: '713100', label: 'Variations des stocks de PF', type: 'Produit', nature: 'Gestion' },
-        { code: '521100', label: 'Banques', type: 'Actif', nature: 'Bilan' },
-        { code: '571100', label: 'Caisse', type: 'Actif', nature: 'Bilan' }
-      ];
-
-      if (!merged.finance.accounts || merged.finance.accounts.length === 0) merged.finance.accounts = ohadaAccounts;
-      if (!merged.finance.journals) merged.finance.journals = mockData.finance.journals;
-      if (!merged.finance.entries) merged.finance.entries = [];
-      if (!merged.finance.lines) merged.finance.lines = [];
+      if (!merged.connect) merged.connect = { events: [], messages: [] };
       if (!merged.activities) merged.activities = [];
-      
-      if (!merged.connect) merged.connect = {};
-      if (!merged.connect.events) {
-        merged.connect.events = [];
-      }
-
       return merged;
     } catch (e) {
-      console.error("Erreur critique daxcelor_data, retour aux mockData:", e);
       return mockData;
     }
   });
 
   const [config, setConfig] = useState(() => {
     return safeParse('ipc_erp_config', {
-      theme: { primary: '#1F363D', accent: '#529990', borderRadius: '1.25rem', isCompact: false, logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40 },
-      company: { name: 'I.P.C', website: 'https://ipc-erp.web.app', address: '', taxId: '' },
+      theme: { primary: '#1F363D', accent: '#529990', borderRadius: '1.25rem', isCompact: false },
+      company: { name: 'I.P.C', website: 'https://ipc-erp.web.app' },
       localization: { currency: 'FCFA', dateFormat: 'DD/MM/YYYY', timezone: 'UTC+1', language: 'FR' },
       security: { tfaEnabled: false, sessionTimeout: 60 },
       notifications: { systemAlerts: true, emailDigest: false, chatSound: true },
-      customFields: {},
       aiPreference: 'floating',
       aiName: 'Smart Intelligence'
     });
   });
 
-  const [globalSettings, setGlobalSettings] = useState(() => {
-    return safeParse('ipc_erp_global_settings', {
-      logoUrl: '/logo.png', logoWidth: 40, logoHeight: 40, companyName: 'GREEN BLOCKS', website: 'https://ipc-erp.web.app', currency: 'FCFA',
-      pinnedModules: ['home', 'crm', 'hr', 'dms'] // Default pinned modules
-    });
-  });
-
-  const [permissions, setPermissions] = useState(() => safeParse('ipc_erp_permissions', {}));
-  
-  const [currentUser, setCurrentUser] = useState(() => {
-    return safeParse('ipc_erp_current_user', { id: 'admin', nom: 'Administrateur', role: 'SUPER_ADMIN' });
-  });
-
-  const [activeApp, setActiveApp] = useState('home');
   const BRANDS = [
     { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
     { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },

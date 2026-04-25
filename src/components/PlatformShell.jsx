@@ -9,11 +9,13 @@ import {
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
   Folder, Activity as ActivityIcon, Zap, Cpu, MessageCircle,
-  Pin, PinOff, CreditCard, Landmark, Key, Camera
+  Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
+import { useStore } from '../store';
+import { useTranslation } from 'react-i18next';
 
 // Lazy loaded components
 const DetailOverlay = lazy(() => import('./DetailOverlay'));
@@ -31,6 +33,8 @@ import PointageWidget from './PointageWidget';
    PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
+  const { t, i18n } = useTranslation();
+  const store = useStore();
   const { 
     globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
     globalSettings, currentUser, permissions, getModuleAccess, logout, activeApp, 
@@ -238,7 +242,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                       <div style={{ marginRight: shellView.sidebar ? '1rem' : 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                          {React.cloneElement(item.icon, { size: 20 })}
                       </div>
-                      {shellView.sidebar && <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.label}</span>}
+                      {shellView.sidebar && <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{t(`nav.${item.id}`, { defaultValue: item.label })}</span>}
                     </motion.div>
                   );
                 })}
@@ -306,6 +310,17 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                 onClick={toggleTheme}
                 className="btn-glass" style={{ width: '40px', height: '40px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                  {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+              </button>
+              <button 
+                onClick={() => {
+                  const newLng = i18n.language === 'fr' ? 'en' : 'fr';
+                  i18n.changeLanguage(newLng);
+                }}
+                className="btn-glass" style={{ width: '40px', height: '40px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <Globe size={18} />
+                 <span style={{ fontSize: '0.6rem', fontWeight: 900, position: 'absolute', bottom: -5, background: 'var(--accent)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                   {i18n.language.substring(0, 2)}
+                 </span>
               </button>
               <div style={{ position: 'relative' }}>
                 <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />

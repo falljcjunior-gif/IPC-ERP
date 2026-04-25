@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "home": "Cockpit",
+    "crm": "CRM & Sales",
+    "hr": "Human Resources",
+    "finance": "Finance & Accounting",
+    "inventory": "Inventory & Logistics",
+    "production": "Production & Factory",
+    "project": "Projects & Sites",
+    "dms": "Cloud Documents",
+    "planning": "Planning & Events",
+    "marketing": "Digital Marketing",
+    "settings": "Settings"
+  },
+  "common": {
+    "welcome": "Welcome to the Intelligence Engine",
+    "save": "Save Changes",
+    "cancel": "Cancel Action",
+    "delete": "Permanently Delete",
+    "loading": "Analysing core...",
+    "search": "Search data, folder, or command...",
+    "notifications": "System Notifications",
+    "profile": "User Profile"
+  },
+  "auth": {
+    "login": "Desktop Authentication",
+    "logout": "Exit Cockpit",
+    "security_header": "Security Protocol Active",
+    "cloud_id": "Cloud ID",
+    "access_key": "Access Key",
+    "new_key": "New Access Key",
+    "confirm": "Confirm Key",
+    "authenticate": "UNLOCK SYSTEM"
+  },
+  "finance": {
+    "totals": "Financial Totals",
+    "revenue": "Revenue",
+    "expenses": "Expenses & Charges",
+    "margin": "Gross Margin",
+    "ledger": "General Ledger",
+    "balance": "Trial Balance"
+  },
+  "inventory": {
+    "products": "Product Catalog",
+    "stock": "Stock Levels",
+    "warehouse": "Warehouses",
+    "movements": "Logistics Flows"
+  }
+}

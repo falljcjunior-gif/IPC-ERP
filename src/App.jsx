@@ -11,6 +11,7 @@ import { db } from './firebase/config';
 import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider, useToast } from './components/ToastProvider';
+import { useStore } from './store';
 
 const AuthObserver = () => {
   const { addToast } = useToast();
@@ -59,18 +60,13 @@ const AuthObserver = () => {
 function App() {
   const [view, setView] = useState('login');
   const [isInitializing, setIsInitializing] = useState(true);
+  const { _hasHydrated, globalSettings, setGlobalSettings } = useStore();
 
   useEffect(() => {
     initRegistry();
   }, []);
   
-  const [theme, setTheme] = useState(() => {
-    try {
-      return localStorage.getItem('ipc_theme') || 'light';
-    } catch (e) {
-      return 'light';
-    }
-  });
+  const theme = globalSettings.theme || 'dark';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -83,12 +79,12 @@ function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('ipc_theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => setTheme(v => v === 'light' ? 'dark' : 'light');
+  const toggleTheme = () => setGlobalSettings({ theme: theme === 'light' ? 'dark' : 'light' });
 
-  if (isInitializing) return <InitializingView />;
+  // 🛡️ REHYDRATION GUARD: Wait for store to be ready
+  if (isInitializing || !_hasHydrated) return <InitializingView />;
 
   return (
     <ErrorBoundary>
@@ -111,9 +107,10 @@ function App() {
 const InitializingView = ({ label = "Initialisation du noyau..." }) => (
   <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', color: 'var(--text)' }}>
     <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid var(--bg-subtle)', borderTop: '4px solid var(--accent)', borderRadius: '50%', marginBottom: '1.5rem' }} />
-    <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>BUSINESS OS</div>
+    <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>IPC INTELLIGENCE</div>
     <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>{label}</div>
     <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spinner { animation: spin 1s linear infinite; }`}</style>
   </div>
 );
+
 export default App;

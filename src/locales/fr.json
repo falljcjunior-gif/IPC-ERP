@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "dashboard": "Tableau de Bord",
+    "home": "Cockpit",
+    "crm": "CRM & Ventes",
+    "hr": "Ressources Humaines",
+    "finance": "Finance & Comptabilité",
+    "inventory": "Stocks & Logistique",
+    "production": "Production & Usine",
+    "project": "Projets & Chantiers",
+    "dms": "Documents Cloud",
+    "planning": "Planning & Événements",
+    "marketing": "Marketing Digital",
+    "settings": "Configuration"
+  },
+  "common": {
+    "welcome": "Bienvenue sur l'Intelligence Engine",
+    "save": "Enregistrer les modifications",
+    "cancel": "Annuler l'action",
+    "delete": "Supprimer définitivement",
+    "loading": "Analyse du noyau en cours...",
+    "search": "Rechercher une donnée, un dossier ou une commande...",
+    "notifications": "Notifications système",
+    "profile": "Profil Utilisateur"
+  },
+  "auth": {
+    "login": "Authentification Bureau",
+    "logout": "Quitter le cockpit",
+    "security_header": "Protocole de Sécurité Actif",
+    "cloud_id": "Identifiant Cloud",
+    "access_key": "Clé d'Accès",
+    "new_key": "Nouvelle Clé d'Accès",
+    "confirm": "Confirmer la Clé",
+    "authenticate": "DÉVERROUILLER LE SYSTÈME"
+  },
+  "finance": {
+    "totals": "Totaux Financiers",
+    "revenue": "Chiffre d'Affaires",
+    "expenses": "Charges & Dépenses",
+    "margin": "Marge Brute",
+    "ledger": "Grand Livre",
+    "balance": "Balance des Comptes"
+  },
+  "inventory": {
+    "products": "Catalogue Produits",
+    "stock": "Niveau des Stocks",
+    "warehouse": "Entrepôts",
+    "movements": "Flux Logistiques"
+  }
+}

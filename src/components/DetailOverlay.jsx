@@ -25,11 +25,14 @@ import {
 import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
-import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
+import { useTranslation } from 'react-i18next';
+import { useStore } from '../store';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
-  const { config, navigateTo, deleteRecord, data, logAction, getModuleAccess, currentUser } = useBusiness();
+  const { t } = useTranslation();
+  const { hasPermission, userRole } = useStore();
+  const { config, navigateTo, deleteRecord, data, logAction } = useBusiness();
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);
@@ -39,10 +42,9 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
   // Règle d'or SSOT : Verrouillage total si le document est signé/gagné.
   const isLockedByStatus = (appId === 'sales' || appId === 'crm') && (formData.statut === 'Signé' || formData.etape === 'Gagné' || formData.statut === 'Gagné');
   
-  // Vérification des habilitations granulaires
-  const accessLevel = getModuleAccess(currentUser?.id, appId);
-  const isReadOnly = accessLevel === 'read';
-  const isLocked = isLockedByStatus || isReadOnly;
+  // Vérification des habilitations granulaires via leStore
+  const isWriteAllowed = userRole === 'SUPER_ADMIN' || hasPermission(appId, 'write');
+  const isLocked = isLockedByStatus || !isWriteAllowed;
 
   // Synchronize formData with record prop safely
   React.useEffect(() => {
@@ -529,8 +531,8 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: isLockedByStatus ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-subtle)', color: isLockedByStatus ? '#EF4444' : 'var(--accent)', padding: '1rem', borderRadius: '1rem', fontWeight: 700, fontSize: '0.85rem', border: '1px solid var(--border)' }}>
                   <Lock size={20} />
                   {isLockedByStatus 
-                    ? "Document verrouillé (SSOT Axelor). Les modifications nécessitent un Avenant officiel."
-                    : "Accès en lecture seule. Vous n'avez pas les habilitations pour modifier cet enregistrement."
+                    ? t('security.locked_status', { defaultValue: "Document verrouillé (SSOT Axelor). Les modifications nécessitent un Avenant officiel." })
+                    : t('security.read_only_mode', { defaultValue: "Accès en lecture seule. Vous n'avez pas les habilitations pour modifier cet enregistrement." })
                   }
                 </div>
               ) : (

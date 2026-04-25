@@ -6,9 +6,11 @@ import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useToast } from './ToastProvider';
 import { useBusiness } from '../BusinessContext';
+import { useTranslation } from 'react-i18next';
 import heroImage from '../assets/login_hero.png';
 
 const Login = ({ onLogin }) => {
+  const { t } = useTranslation();
   const { globalSettings } = useBusiness();
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
@@ -130,10 +132,10 @@ const Login = ({ onLogin }) => {
           </div>
 
           <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.04em', color: 'var(--text)' }}>
-             {mustChange ? 'Nouveau Code' : 'Connexion Bureau'}
+             {mustChange ? t('auth.new_key') : t('auth.login')}
           </h1>
           <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1rem', lineHeight: 1.6 }}>
-             {mustChange ? 'Veuillez définir votre clé d’accès personnelle pour sécuriser le noyau.' : 'Identifiez-vous pour accéder au cockpit de pilotage de l’entreprise.'}
+             {mustChange ? t('auth.new_key_desc', { defaultValue: 'Veuillez définir votre clé d’accès personnelle.' }) : t('auth.login_desc', { defaultValue: 'Identifiez-vous pour accéder au cockpit de pilotage.' })}
           </p>
 
           <form onSubmit={mustChange ? handleChangePassword : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -157,7 +159,7 @@ const Login = ({ onLogin }) => {
             {!mustChange && (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>Identifiant Cloud</label>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.cloud_id')}</label>
                   <div className="input-field" style={{ position: 'relative' }}>
                     <Mail size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                     <input 
@@ -178,8 +180,8 @@ const Login = ({ onLogin }) => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>Clé Access</label>
-                    <a href="#" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}>Oubliée ?</a>
+                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.access_key')}</label>
+                    <a href="#" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}>{t('auth.forgot_key', { defaultValue: 'Oubliée ?' })}</a>
                   </div>
                   <div className="input-field" style={{ position: 'relative' }}>
                     <Lock size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -251,7 +253,7 @@ const Login = ({ onLogin }) => {
                 <div className="spinner" style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
               ) : (
                 <>
-                  DÉVERROUILLER LE SYSTÈME <ArrowRight size={20} />
+                  {t('auth.authenticate')} <ArrowRight size={20} />
                 </>
               )}
             </motion.button>
