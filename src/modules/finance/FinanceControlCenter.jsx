@@ -3,15 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Landmark, BarChart3, Calculator, 
   FileText, PiggyBank, ShieldCheck, Wallet, 
-  Settings, Download, Share2, TrendingUp, History
+  Settings, Download, Share2, TrendingUp, History, Sparkles
 } from 'lucide-react';
 import { useBusiness } from '../../BusinessContext';
-
-// Components
 import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
-
-// Tabs
 import AnalyticsTab from './tabs/AnalyticsTab';
 import AccountingTab from './tabs/AccountingTab';
 import InvoicingTab from './tabs/InvoicingTab';
@@ -19,7 +15,7 @@ import BudgetTab from './tabs/BudgetTab';
 import BankReconTab from './tabs/BankReconTab';
 
 const FinanceControlCenter = ({ onOpenDetail, appId }) => {
-  const { data, addRecord, formatCurrency, addAccountingEntry, userRole } = useBusiness();
+  const { data, addRecord, formatCurrency, addAccountingEntry, userRole, shellView } = useBusiness();
   const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('invoices');
@@ -35,58 +31,74 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const isBudgetContext = appId === 'budget';
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(99, 102, 241, 0.02) 100%)' }}>
-      {/* Header Specialized Experience */}
+    <div style={{ 
+      padding: shellView?.mobile ? '1rem' : '2.5rem', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: shellView?.mobile ? '1.5rem' : '3rem', 
+      minHeight: '100%',
+      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
+    }}>
+      
+      {/* --- NEXT GEN FINANCE HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#6366F1', marginBottom: '0.75rem' }}>
-            <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 4 }} style={{ background: '#6366F120', padding: '6px', borderRadius: '8px' }}>
-              <Landmark size={18} />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.1, 1],
+                boxShadow: ['0 0 0px rgba(99, 102, 241, 0)', '0 0 20px rgba(99, 102, 241, 0.3)', '0 0 0px rgba(99, 102, 241, 0)']
+              }} 
+              transition={{ repeat: Infinity, duration: 5 }} 
+              style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+            >
+              <Landmark size={20} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>
-              {isBudgetContext ? 'IPC Budgeting & FP&A' : 'IPC Financial OS'}
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
+              {isBudgetContext ? 'IPC Strategic Planning' : 'IPC Institutional Finance'}
             </span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>
+          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
             {isBudgetContext ? 'Gestion Budgétaire' : 'Finance Excellence'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '700px', lineHeight: 1.6 }}>
             {isBudgetContext 
-              ? 'Planification stratégique et suivi de la performance financière. Optimisez vos allocations de ressources.'
-              : 'Cockpit de pilotage stratégique : Maîtrisez vos flux, votre comptabilité et vos budgets avec une précision institutionnelle.'}
+              ? 'Pilotage stratégique des ressources et analyse prévisionnelle de la performance.'
+              : 'Cockpit financier haute fidélité : Maîtrisez vos flux de trésorerie et votre santé comptable en temps réel.'}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #6366F130' }}>
-              <ShieldCheck size={16} color="#6366F1" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6366F1' }}>Clôture : Période Ouverte</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #6366F140', background: 'rgba(99, 102, 241, 0.05)' }}>
+              <ShieldCheck size={18} color="#6366F1" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#6366F1' }}>Période Active : Q2 2024</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <History size={20} />
            </button>
-          <button className="btn-primary" 
-            onClick={() => { setMainTab('accounting'); }}
-            style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
-            <TrendingUp size={20} /> <span style={{ fontWeight: 800 }}>Vue Comptabilité</span>
-          </button>
+           
+           <button className="btn-primary" 
+              onClick={() => { setMainTab('accounting'); }}
+              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>Vue Ledger</span>
+           </button>
         </div>
       </div>
 
-      {/* Main Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+      {/* --- PREMIUM TAB NAVIGATION --- */}
+      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* Dynamic Content Frame */}
+      {/* --- CONTENT FRAME --- */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          initial={{ opacity: 0, y: 15, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -15, scale: 0.98 }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{ position: 'relative' }}
         >
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
@@ -96,16 +108,6 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
           {mainTab === 'banque' && <BankReconTab />}
         </motion.div>
       </AnimatePresence>
-
-      <RecordModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Opération Financière"
-        fields={[]} // Dynamic fields based on schema would go here
-        onSave={(f) => {
-          setIsModalOpen(false);
-        }}
-      />
     </div>
   );
 };

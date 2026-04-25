@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Package, ShoppingBag, Briefcase, 
   Target, Truck, Link, Settings, Clock, 
-  History, Download, Share2, ShieldCheck, Activity
+  History, Download, Share2, ShieldCheck, Activity, Sparkles
 } from 'lucide-react';
 import { useBusiness } from '../../BusinessContext';
 
@@ -17,10 +17,10 @@ import PurchaseTab from './tabs/PurchaseTab';
 import ProjectTab from './tabs/ProjectTab';
 
 const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
-  const { data, addRecord, updateRecord, formatCurrency } = useBusiness();
+  const { data, addRecord, updateRecord, formatCurrency, shellView } = useBusiness();
   const [mainTab, setMainTab] = useState(appId === 'purchase' ? 'purchase' : 'inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); // movement | purchase | project
+  const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); 
 
   const tabs = [
     { id: 'inventory', label: 'Stocks & Entrepôts', icon: <Package size={16} /> },
@@ -31,65 +31,82 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const isPurchaseContext = appId === 'purchase';
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(79, 70, 229, 0.02) 100%)' }}>
-      {/* Header Supply Chain Intelligence */}
+    <div style={{ 
+      padding: shellView?.mobile ? '1rem' : '2.5rem', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: shellView?.mobile ? '1.5rem' : '3rem', 
+      minHeight: '100%',
+      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.05) 0%, transparent 50%)'
+    }}>
+      
+      {/* --- NEXT GEN LOGISTICS HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#4F46E5', marginBottom: '0.75rem' }}>
-            <motion.div animate={{ rotate: [0, 90, 180, 270, 360] }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }} style={{ background: '#4F46E520', padding: '6px', borderRadius: '8px' }}>
-              <Link size={18} />
+            <motion.div 
+              animate={{ 
+                rotate: [0, 90, 180, 270, 360],
+                boxShadow: ['0 0 0px rgba(79, 70, 229, 0)', '0 0 20px rgba(79, 70, 229, 0.3)', '0 0 0px rgba(79, 70, 229, 0)']
+              }} 
+              transition={{ repeat: Infinity, duration: 10, ease: "linear" }} 
+              style={{ background: 'rgba(79, 70, 229, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(79, 70, 229, 0.2)' }}
+            >
+              <Link size={20} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>
-              {isPurchaseContext ? 'IPC Procurement Core' : 'IPC Supply Chain & Project Hub'}
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
+              {isPurchaseContext ? 'IPC Procurement Core' : 'IPC Unified Logistics'}
             </span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: '#0F172A' }}>
-            {isPurchaseContext ? 'Gestion des Achats' : 'Logistics & Delivery'}
+          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
+            {isPurchaseContext ? 'Gestion des Achats' : 'Supply Chain Hub'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
             {isPurchaseContext 
-              ? 'Pilotage stratégique des approvisionnements et relations fournisseurs. Maximisez votre rentabilité opérationnelle.'
-              : 'Gestion intégrée des flux physiques et opérationnels. Pilotez vos stocks, fournisseurs et projets avec une précision industrielle.'}
+              ? 'Pilotage stratégique des approvisionnements et optimisation de la chaîne fournisseur.'
+              : 'Maîtrisez vos flux physiques, la traçabilité des stocks et la livraison de vos projets en temps réel.'}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #4F46E530' }}>
-              <Target size={16} color="#4F46E5" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#4F46E5' }}>Performance OTIF : 94.2%</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #4F46E540', background: 'rgba(79, 70, 229, 0.05)' }}>
+              <Target size={18} color="#4F46E5" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#4F46E5' }}>OTIF Rate : 94.2%</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <History size={20} />
            </button>
+           
            {accessLevel === 'write' && (
             <button className="btn-primary" onClick={() => { 
-              setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
-              setIsModalOpen(true); 
-            }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
+                setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
+                setIsModalOpen(true); 
+              }} 
+              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#4F46E5' }}>
               <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
-                mainTab === 'purchase' ? 'Nouvelle Commande Achat' : 
+                mainTab === 'purchase' ? 'Nouveau PO' : 
                 mainTab === 'project' ? 'Nouvelle Tâche' : 
-                'Entrée/Sortie Stock'
+                'Action Stock'
               }</span>
             </button>
-          )}
+           )}
         </div>
       </div>
 
-      {/* Main Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+      {/* --- PREMIUM TAB NAVIGATION --- */}
+      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* Dynamic Content Frame */}
+      {/* --- CONTENT FRAME --- */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
-          transition={{ duration: 0.3, ease: "easeOut" }}
+          initial={{ opacity: 0, y: 15, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -15, scale: 0.98 }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{ position: 'relative' }}
         >
           {mainTab === 'inventory' && <InventoryTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}

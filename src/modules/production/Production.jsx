@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Settings, Factory, BarChart3, Activity, 
   Layers, Wrench, Database, Zap, ShieldCheck, 
-  Download, Play, ClipboardList
+  Download, Play, ClipboardList, Sparkles, TrendingUp
 } from 'lucide-react';
 import { useBusiness } from '../../BusinessContext';
 import { productionSchema } from '../../schemas/production.schema';
@@ -20,14 +20,14 @@ import DesignTab from './tabs/DesignTab';
 import MaintenanceTab from './tabs/MaintenanceTab';
 
 const Production = ({ onOpenDetail, appId }) => {
-  const { data, addRecord, formatCurrency, userRole } = useBusiness();
+  const { data, addRecord, formatCurrency, userRole, shellView } = useBusiness();
   const [mainTab, setMainTab] = useState(appId === 'manufacturing' ? 'execution' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
 
   const tabs = [
-    { id: 'analytics', label: 'Performance', icon: <BarChart3 size={16} /> },
+    { id: 'analytics', label: 'Efficacité OEE', icon: <BarChart3 size={16} /> },
     { id: 'execution', label: 'Exécution (OF)', icon: <Factory size={16} /> },
     { id: 'design', label: 'Nomenclatures', icon: <Layers size={16} /> },
     { id: 'maintenance', label: 'Maintenance', icon: <Wrench size={16} /> },
@@ -39,50 +39,72 @@ const Production = ({ onOpenDetail, appId }) => {
   };
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(6, 182, 212, 0.02) 100%)' }}>
-      {/* Header Industrial Experience */}
+    <div style={{ 
+      padding: shellView?.mobile ? '1rem' : '2.5rem', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: shellView?.mobile ? '1.5rem' : '3rem', 
+      minHeight: '100%',
+      backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%)'
+    }}>
+      
+      {/* --- NEXT GEN INDUSTRIAL HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#06B6D4', marginBottom: '0.75rem' }}>
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ background: '#06B6D420', padding: '6px', borderRadius: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#06B6D4' }} />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.1, 1],
+                boxShadow: ['0 0 0px rgba(6, 182, 212, 0)', '0 0 20px rgba(6, 182, 212, 0.3)', '0 0 0px rgba(6, 182, 212, 0)']
+              }} 
+              transition={{ repeat: Infinity, duration: 3 }} 
+              style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(6, 182, 212, 0.2)' }}
+            >
+              <Factory size={20} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Industrial OS</span>
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
+              IPC Manufacturing Suite
+            </span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Command Center</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Maîtrisez votre chaîne de production en temps réel, de la gestion des nomenclatures à la maintenance prédictive.
+          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
+            Industrial Engine
+          </h1>
+          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
+            Centre de commandement industriel : Optimisation des flux de production, maintenance prédictive et gestion intelligente des ordres.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #06B6D430' }}>
-              <Activity size={16} color="#06B6D4" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#06B6D4' }}>Usine : Opérationnelle</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #06B6D440', background: 'rgba(6, 182, 212, 0.05)' }}>
+              <Activity size={18} color="#06B6D4" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#06B6D4' }}>Usine : 98% OEE</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <Download size={20} />
            </button>
-          <button className="btn-primary" onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4', borderColor: '#06B6D4' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Lancer Production</span>
-          </button>
+           
+           <button className="btn-primary" 
+              onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }}
+              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4' }}>
+              <Plus size={20} /> <span style={{ fontWeight: 800 }}>Lancer Ordre</span>
+           </button>
         </div>
       </div>
 
-      {/* Main Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+      {/* --- PREMIUM TAB NAVIGATION --- */}
+      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* Dynamic Content Frame */}
+      {/* --- CONTENT FRAME --- */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-          exit={{ opacity: 0, y: -10, filter: 'blur(10px)' }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          initial={{ opacity: 0, y: 15, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -15, scale: 0.98 }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{ position: 'relative' }}
         >
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
