@@ -35,11 +35,15 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { t, i18n } = useTranslation();
   const store = useStore();
   const { 
-    globalSearch, searchResults, updateRecord, addRecord, data, userRole, config, 
-    globalSettings, currentUser, permissions, getModuleAccess, logout, activeApp, 
+    globalSearch, searchResults, updateRecord, addRecord, data, config, 
+    globalSettings, permissions, getModuleAccess, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
     activeBrand, setActiveBrand, BRANDS
   } = useStore();
+
+  // currentUser comes from the auth slice as 'user'; derive userRole from it
+  const currentUser = store.user;
+  const userRole = currentUser?.role || 'GUEST';
 
   // Unified UI Flags
   const [shellView, setShellView] = useState({
@@ -205,8 +209,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           {appsPool.map((cat) => {
             const visibleItems = (cat.items || []).filter(item => {
               if (item.hidden) return false;
+              // Always show all modules to SUPER_ADMIN or if user has no permission entries yet (fresh account)
               if (userRole === 'SUPER_ADMIN') return true;
-              return getModuleAccess(currentUser?.id, item.id) !== 'none';
+              if (!currentUser || currentUser.id === 'guest') return item.id === 'home';
+              const access = getModuleAccess(currentUser?.id, item.id);
+              // If no permission matrix set up yet for this user, show all modules
+              if (!permissions || Object.keys(permissions).length === 0) return true;
+              return access !== 'none';
             });
             if (visibleItems.length === 0) return null;
 
