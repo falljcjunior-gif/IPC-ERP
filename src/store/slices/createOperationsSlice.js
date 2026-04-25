@@ -26,8 +26,7 @@ addHint: (hint) => {
       timestamp: new Date().toISOString(),
       type: 'log',
       brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
-    };
-    
+  },
     setTimeout(() => {
       set(prev => ({
         ...prev,
@@ -52,7 +51,7 @@ addHint: (hint) => {
       actionApp,
       readBy: [],
       createdAt: new Date().toISOString()
-    };
+  },
     try {
       if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
     } catch (e) {
@@ -145,15 +144,13 @@ addHint: (hint) => {
         statut: source === 'admin' ? 'À compléter' : 'Actif',
         active: true,
         createdAt: new Date().toISOString() 
-      };
-
+  },
       const permissionsData = {
         roles: userData.roles || [role],
         moduleAccess: userData.moduleAccess || { home: 'write' },
         // Legacy fallback
         allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
-      };
-
+  },
       // 1. Create User Document
       await setDoc(doc(db, 'users', uid), { 
         profile: profileData, 
@@ -272,8 +269,7 @@ addHint: (hint) => {
       date: invoice.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
       journalCode: 'J-VT',
       piece: invoice.num
-    };
-
+  },
     const lines = [
       { accountId: '411100', label: invoice.client, debit: invoice.montant, credit: 0 },
       { accountId: '701100', label: 'Vente de marchandises', debit: 0, credit: invoice.montant }
@@ -291,7 +287,7 @@ addHint: (hint) => {
       date: new Date().toISOString().split('T')[0],
       journalCode: 'J-PROD',
       piece: mo.num || mo.id
-    };
+  },
     const lines = [
       { accountId: '713100', label: 'Entrée Stock PF', debit: totalCost, credit: 0, profitCenter: 'Usine' },
       { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
@@ -306,7 +302,7 @@ addHint: (hint) => {
       date: expense.date || new Date().toISOString().split('T')[0],
       journalCode: isPaie ? 'J-BQ' : 'J-ACH',
       piece: expense.num || expense.id
-    };
+  },
     const lines = [
       { accountId: isPaie ? '421000' : '601100', label: expense.title || expense.libelle, debit: expense.amount || expense.montant, credit: 0, profitCenter: expense.dept || 'Administration' },
       { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.amount || expense.montant, profitCenter: 'Administration' }
@@ -320,7 +316,7 @@ addHint: (hint) => {
       date: new Date().toISOString().split('T')[0],
       journalCode: 'J-OD',
       piece: litigation.id
-    };
+  },
     const amount = litigation.risqueFinancier || 0;
     const lines = [
       { accountId: '686000', label: 'Dotations aux provisions', debit: isProvision ? amount : 0, credit: isProvision ? 0 : amount },
@@ -372,7 +368,7 @@ addHint: (hint) => {
                statut: 'Brouillon',
                date: new Date().toISOString().split('T')[0],
                createdAt: new Date().toISOString()
-            };
+  },
             get().addHint({ title: "Réassort Automatique", message: `Stock projeté critique (${stockProjete}). Brouillon d'achat ${poNum} généré pour ${qteACommander} unitées.`, type: 'warning', appId: 'purchase' });
          } else if (newStock <= pointDeCommande) {
             get().addHint({ title: "Alerte Stock Bas", message: `Stock critique (${newStock}) mais réassort déjà en cours (Projeté: ${stockProjete}).`, type: 'info', appId: 'inventory' });
@@ -449,7 +445,7 @@ addHint: (hint) => {
       id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
       createdAt: processedRecord.createdAt || new Date().toISOString(),
       brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
-    };
+  },
     set(prev => {
       const moduleData = prev[appId] || {};
       const subModuleData = moduleData[subModule] || [];
@@ -560,7 +556,7 @@ addHint: (hint) => {
            modifie: false,
            visaJuridique: true,
            hash: record.auditTrail?.hashDocument
-         };
+  },
          nextState = { ...nextState, legal: { ...nextState.legal, contracts: [legalContract, ...(nextState.legal?.contracts || [])] } };
          get().addHint({ title: "Archivage Souverain", message: "Le document scellé a été archivé en sécurité dans le module juridique.", type: 'success', appId: 'legal' });
          
@@ -600,7 +596,7 @@ addHint: (hint) => {
             libelle: `Imputation Analytique - ${record.collaborateur} (${heures}h sur ${record.projet})`,
             journal: 'OD',
             statut: 'Brouillon',
-         };
+  },
          const lines = [
             { accountId: '641100', label: 'Frais de Personnel', debit: coutTotal, credit: 0, profitCenter: record.projet || 'Général' },
             { accountId: '421000', label: 'Personnel - Rémunérations dues', debit: 0, credit: coutTotal, profitCenter: 'Administration' }
@@ -646,7 +642,7 @@ addHint: (hint) => {
              qteFacturee,
              anomalie: !threeWayMatch,
              createdAt: new Date().toISOString()
-           };
+  },
            nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
            
            if (!threeWayMatch) {
@@ -798,7 +794,7 @@ addHint: (hint) => {
         salaireBaseBrut: emp.salaire,
         deductionSansSolde,
         salaireAjuste: salaireFinale
-      };
+  },
     });
 
     const mois = new Date().toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
@@ -809,8 +805,7 @@ addHint: (hint) => {
       date: new Date().toISOString().split('T')[0],
       journalCode: 'J-OD',
       piece: `PAIE-${mois.replace(' ', '-').toUpperCase()}`
-    };
-    
+  },
     const lines = [
       { accountId: '641100', label: `Salaires Bruts - ${mois}`, debit: massTotal, credit: 0, profitCenter: 'Administration' },
       { accountId: '421000', label: `Rémunérations Dues au Personnel`, debit: 0, credit: massTotal, profitCenter: 'Administration' }
@@ -826,8 +821,7 @@ addHint: (hint) => {
       type: 'Salaires',
       employee: 'Masse Salariale',
       statut: 'En attente'
-    };
-
+  },
     get().addRecord('hr', 'expenses', payrollExpense);
 
     processedEmployees.forEach(emp => {
@@ -838,8 +832,7 @@ addHint: (hint) => {
         absencesDeduites: emp.deductionSansSolde,
         netAPayer: emp.salaireAjuste * 0.78, // Simplified deduction roughly 22% social charges
         datePaiement: new Date().toISOString().split('T')[0]
-      };
-
+  },
       const dmsFile = {
         id: `FP-${emp.id}-${Date.now()}`,
         name: `Fiche_Paie_${mois.replace(' ', '_')}_${emp.nom.replace(' ', '_')}.pdf`,
@@ -852,7 +845,7 @@ addHint: (hint) => {
            _subModule: 'payslip',
            ...payslipRecord
         }
-      };
+  },
       get().addRecord('dms', 'files', dmsFile);
     });
 
@@ -901,7 +894,7 @@ addHint: (hint) => {
         total: 0,
         statut: 'Brouillon',
         origine: `Auto-réappro OF ${order.num}`
-      };
+  },
       get().addRecord('purchase', 'orders', po);
     });
 
@@ -920,7 +913,7 @@ addHint: (hint) => {
 
 
   globalSearch: (query) => {
-    if (!query || query.length < 2) return setSearchResults([]);
+    if (!query || query.length < 2) return get().setSearchResults([]);
     const q = query.toLowerCase();
     const results = [];
     
@@ -952,20 +945,20 @@ addHint: (hint) => {
     // 6. Inventory
     if (get().data.inventory?.products) get().data.inventory.products.forEach(p => (p.nom.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)) && results.push({ type: 'Article', name: p.nom, appId: 'inventory' }));
 
-    setSearchResults(results.slice(0, 12));
+    get().setSearchResults(results.slice(0, 12));
   },
 
-  updateConfig: (newConfig) => setConfig(prev => ({ ...prev, ...newConfig })),
-  addCustomField: (appId, field) => setConfig(prev => ({ ...prev, customFields: { ...prev.customFields,
+  updateConfig: (newConfig) => get().setConfig(prev => ({ ...prev, ...newConfig })),
+  addCustomField: (appId, field) => get().setConfig(prev => ({ ...prev, customFields: { ...prev.customFields, [appId]: [...(prev.customFields?.[appId] || []), field] } })),
   updateGlobalSettings: async (newGlobal) => {
-    if (userRole !== 'SUPER_ADMIN') return;
-    setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
+    if ((get().currentUser?.role) !== 'SUPER_ADMIN') return;
+    get().setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
     if (auth.currentUser) setDoc(doc(db, 'settings', 'global'), { ...newGlobal }, { merge: true });
   },
 
   togglePinnedModule: (moduleId) => {
-    if (userRole !== 'SUPER_ADMIN') return;
-    setGlobalSettings(prev => {
+    if ((get().currentUser?.role) !== 'SUPER_ADMIN') return;
+    get().setGlobalSettings(prev => {
       const currentPinned = prev.pinnedModules || [];
       const newPinned = currentPinned.includes(moduleId) ? currentPinned.filter(m => m !== moduleId) : [...currentPinned, moduleId];
       return { ...prev, pinnedModules: newPinned };
@@ -973,7 +966,7 @@ addHint: (hint) => {
   },
 
   uploadLogo: async (file) => {
-    if (userRole !== 'SUPER_ADMIN') throw new Error("Accès refusé");
+    if ((get().currentUser?.role) !== 'SUPER_ADMIN') throw new Error("Accès refusé");
     const storageRef = ref(storage, `brand/logos/master_logo_${Date.now()}`);
     try {
       const snapshot = await uploadBytes(storageRef, file);
@@ -1054,8 +1047,7 @@ addHint: (hint) => {
       gain.connect(audioCtx.destination);
       osc.start(time);
       osc.stop(time + duration);
-    };
-
+  },
     // "Classic but soft" sequence
     for (let i = 0; i < 4; i++) {
         const offset = i * 2;
@@ -1063,25 +1055,21 @@ addHint: (hint) => {
         playNote(660, startTime + offset + 0.5, 0.4); 
         playNote(660, startTime + offset + 1.2, 0.6); 
     }
-  };
+  },
   acceptCall: async () => {
-    if (!activeCall) return;
+    if (!get().activeCall) return;
     try {
       get().setActiveCall(prev => ({ ...prev, accepted: true }));
-      await updateDoc(doc(db, 'calls', activeCall.id), { status: 'accepted' });
+      await updateDoc(doc(db, 'calls', get().activeCall.id), { status: 'accepted' });
     } catch (err) { console.error("Accept Error:", err); }
-  };
+  },
   rejectCall: async () => {
-    if (!activeCall) return;
+    if (!get().activeCall) return;
     try {
-      await updateDoc(doc(db, 'calls', activeCall.id), { status: 'rejected' });
+      await updateDoc(doc(db, 'calls', get().activeCall.id), { status: 'rejected' });
       get().setActiveCall(null);
     } catch (err) { console.error("Reject Error:", err); }
-  };
-
-
-  
-
+  },
   resetAllData: async () => {
     // Collections métier à purger dans Firestore
     const businessCollections = [
