@@ -26,8 +26,9 @@ import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { registry } from '../services/Registry';
-import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
+import { useBusiness } from '../BusinessContext';
+import { useTranslation } from 'react-i18next';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { t } = useTranslation();
