@@ -5,7 +5,7 @@ import {
   ArrowUpRight, ArrowDownRight, Activity as ActivityIcon, Calendar,
   Zap, Briefcase, AlertTriangle, BrainCircuit, Package, Truck,
   HeartPulse, CheckCircle2, XCircle, Minus, ChevronRight, BarChart2,
-  Globe, Sparkles, MessageSquare, ShieldAlert
+  Globe, Cpu, MessageSquare, ShieldAlert
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
@@ -119,14 +119,14 @@ const GlobalDashboard = () => {
       { 
         type: 'FINANCE',
         title: "Cash-Flow Prédictif",
-        content: `Marge nette stable à **18.5%**. Les projections Q2 indiquent une capacité d'investissement de **${formatCurrency(caRealise * 0.15, true)}**.`,
+        content: `Marge nette stable à 18.5%. Les projections Q2 indiquent une capacité d'investissement de ${formatCurrency(caRealise * 0.15, true)}.`,
         icon: <TrendingUp size={16} />,
         color: '#10B981'
       },
       { 
         type: 'LOGISTICS',
         title: "Optimisation Supply",
-        content: `L'OTIF de **${otif}%** est nominal. Nexus suggère de renégocier les contrats de fret sur l'axe Nord pour gagner 3% de marge.`,
+        content: `L'OTIF de ${otif}% est nominal. Nexus suggère de renégocier les contrats de fret sur l'axe Nord pour gagner 3% de marge.`,
         icon: <Zap size={16} />,
         color: '#F59E0B'
       },

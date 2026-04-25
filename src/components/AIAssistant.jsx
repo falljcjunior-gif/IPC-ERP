@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, Send, X, Search, Zap, ArrowRight, MessageSquare,
+  Cpu, Send, X, Search, Zap, ArrowRight, MessageSquare,
   Command, HelpCircle, Layout, Mic, CheckCircle2, AlertCircle,
   TrendingUp, Activity, BarChart3, Target, Info
 } from 'lucide-react';
@@ -83,7 +83,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
           response = "Facturation identifiée. Je peux initialiser un brouillon de facture pour vous.";
         }
       } else if (lowInput.includes('analyse') || lowInput.includes('bi') || lowInput.includes('santé')) {
-         response = "Analyse systémique en cours... La santé globale de l'ERP est excellente. L'OTIF est à **94.2%** et la marge nette consolidée à **18.5%**.";
+         response = "Analyse systémique en cours... La santé globale de l'ERP est excellente. L'OTIF est à 94.2% et la marge nette consolidée à 18.5%.";
       } else if (lowInput.includes('va vers') || lowInput.includes('ouvre')) {
          const appMap = { 'rh': 'hr', 'finance': 'finance', 'vente': 'sales', 'crm': 'crm', 'prod': 'production' };
          const matched = Object.keys(appMap).find(k => lowInput.includes(k));
@@ -141,7 +141,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
             <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--accent), #06B6D4)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '10px' }}>
-                   <Sparkles size={18} />
+                   <Cpu size={18} />
                 </div>
                 <div>
                    <div style={{ fontWeight: 800, fontSize: '1rem' }}>Nexus Intelligence</div>
@@ -232,7 +232,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
            transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
            style={{ position: 'absolute', width: '150%', height: '150%', background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%)' }}
         />
-        <Sparkles size={32} style={{ position: 'relative', zIndex: 1 }} />
+        <Cpu size={32} style={{ position: 'relative', zIndex: 1 }} />
       </motion.button>
     </div>
   );
@@ -261,7 +261,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
               <div style={{ position: 'relative', marginRight: '1.5rem' }}>
                  <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 2 }} 
                     style={{ position: 'absolute', inset: -8, background: 'var(--accent)', borderRadius: '50%', filter: 'blur(12px)' }} />
-                 <Sparkles size={28} color="var(--accent)" style={{ position: 'relative' }} />
+                 <Cpu size={28} color="var(--accent)" style={{ position: 'relative' }} />
               </div>
               <input 
                 ref={inputRef}

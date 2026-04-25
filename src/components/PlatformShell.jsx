@@ -8,7 +8,7 @@ import {
   Factory, Briefcase, ShoppingBag, Mail, ArrowRight, ShieldCheck,
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
-  Folder, Activity as ActivityIcon, Zap, Sparkles, MessageCircle,
+  Folder, Activity as ActivityIcon, Zap, Cpu, MessageCircle,
   Pin, PinOff, CreditCard, Landmark, Key, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -308,8 +308,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                 <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
                 <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
               </div>
-              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="btn-primary" style={{ padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.8rem' }}>
-                 <Sparkles size={16} /> Nexus
+              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="btn-primary" style={{ padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                 <Cpu size={16} /> Nexus
               </button>
            </div>
         </header>
