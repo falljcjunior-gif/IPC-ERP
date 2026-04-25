@@ -5,6 +5,8 @@ import { createUiSlice } from './slices/createUiSlice';
 import { createFinanceStore } from './slices/createFinanceStore';
 import { createInventorySlice } from './slices/createInventorySlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
+import { auth } from '../firebase/config';
+import { signOut } from 'firebase/auth';
 
 // ══════════════════════════════════════════════════════════════════════════
 // 🚀 IPC INTELLIGENCE ENGINE: CENTRAL STORE
@@ -54,6 +56,34 @@ export const useStore = create(
         const newData = typeof fn === 'function' ? fn(state.data) : fn;
         return { data: { ...state.data, ...newData } };
       }),
+
+      // ── Brand / Multi-entity ─────────────────────────────────────────────
+      BRANDS: [
+        { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
+        { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },
+        { id: 'B2B_LOG', name: 'B2B Logistics', short: 'B2B' }
+      ],
+      get activeBrand() { return this.globalSettings?.brand || 'ALL'; },
+      setActiveBrand: (brand) => set((state) => ({ globalSettings: { ...state.globalSettings, brand } })),
+
+      // ── Auth helpers ─────────────────────────────────────────────────────
+      // Alias: currentUser mirrors the auth slice 'user' for backward compatibility
+      get currentUser() { return get().user; },
+      userRole: undefined, // resolved dynamically in components via currentUser?.role
+
+      logout: async () => {
+        try {
+          await signOut(auth);
+        } catch (e) {
+          console.warn('Logout error:', e);
+        }
+        localStorage.removeItem('ipc_erp_current_user');
+        localStorage.removeItem('daxcelor_data');
+        set({ user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' } });
+      },
+
+      // ── Navigation ───────────────────────────────────────────────────────
+      navigateTo: (appId) => set({ activeApp: appId }),
     }),
     {
       name: 'ipc-intelligence-store',
