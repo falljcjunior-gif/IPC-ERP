@@ -322,4 +322,4 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
   );
 };
 
-export default AIAssistant;
+export default React.memo(AIAssistant);

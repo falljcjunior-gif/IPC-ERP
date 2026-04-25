@@ -1382,7 +1382,6 @@ export const BusinessProvider = ({ children }) => {
   }, [currentUser]);
 
   useEffect(() => {
-    // Déclencher les listeners uniquement quand un vrai utilisateur est authentifié
     if (!currentUser || currentUser.id === 'guest' || !auth.currentUser) return;
 
     const COLLECTIONS = [
@@ -1392,17 +1391,23 @@ export const BusinessProvider = ({ children }) => {
     ];
 
     const unsubscribes = COLLECTIONS.map(colName => {
-      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(200));
+      // Opti: Limit hydration of heavy logs for initial load
+      const isHeavy = ['audit_logs', 'activities', 'notifications'].includes(colName);
+      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(isHeavy ? 100 : 200));
+      
       return onSnapshot(q, (snapshot) => {
         const docs = snapshot.docs
           .map(d => ({ ...d.data(), id: d.id }))
           .filter(d => activeBrand === 'ALL' || !d.brandId || d.brandId === activeBrand);
+
         setData(prev => {
+          // Detect if change is meaningful
           const newState = { ...prev };
           if (colName === 'audit_logs') {
             newState.audit = { ...newState.audit, logs: docs };
+          } else if (colName === 'activities') {
+            newState.activities = docs;
           } else if (colName === 'users') {
-            // Synchroniser les profils utilisateurs dans la liste RH ET les permissions
             const userPermissions = {};
             const employeeProfiles = docs
               .filter(u => u.profile || u.permissions)
@@ -1412,19 +1417,10 @@ export const BusinessProvider = ({ children }) => {
               })
               .filter(Boolean);
 
-            if (Object.keys(userPermissions).length > 0) {
-              setPermissions(prev => ({ ...prev, ...userPermissions }));
-            }
-
+            if (Object.keys(userPermissions).length > 0) setPermissions(p => ({ ...p, ...userPermissions }));
             if (employeeProfiles.length > 0) {
-              const existingIds = new Set((prev.hr?.employees || []).map(e => e.id));
-              const newEmployees = employeeProfiles.filter(e => !existingIds.has(e.id));
-              if (newEmployees.length > 0) {
-                newState.hr = { ...prev.hr, employees: [...(prev.hr?.employees || []), ...newEmployees] };
-              }
+              newState.hr = { ...prev.hr, employees: employeeProfiles };
             }
-          } else if (colName === 'activities') {
-            newState.activities = docs;
           } else {
             const grouped = {};
             docs.forEach(d => {
@@ -1432,43 +1428,18 @@ export const BusinessProvider = ({ children }) => {
               if (!grouped[sub]) grouped[sub] = [];
               grouped[sub].push(d);
             });
-            // Fusionner pour ne pas écraser les données locales non encore sync
-            Object.keys(grouped).forEach(sub => {
-              const firestoreIds = new Set(grouped[sub].map(d => d.id));
-              const localOnly = (prev[colName]?.[sub] || []).filter(d => !firestoreIds.has(d.id));
-              grouped[sub] = [...grouped[sub], ...localOnly];
-            });
             newState[colName] = { ...prev[colName], ...grouped };
           }
-          if (colName === 'notifications') {
-             const now = Date.now();
-             const newChatNotifs = docs.filter(d => d.type === 'chat' && d.targetUserId === currentUser.id && (now - new Date(d.createdAt).getTime()) < 10000);
-             if (newChatNotifs.length > 0 && notifications?.length > 0) {
-                 const isActuallyNew = !notifications.some(old => old.id === newChatNotifs[0].id);
-                 if (isActuallyNew) {
-                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                     const osc = audioCtx.createOscillator();
-                     const gain = audioCtx.createGain();
-                     osc.type = 'sine';
-                     osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                     osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                     gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                     osc.connect(gain);
-                     gain.connect(audioCtx.destination);
-                     osc.start();
-                     osc.stop(audioCtx.currentTime + 0.15);
-                 }
-             }
-             setNotifications(docs);
-          }
+          
+          if (colName === 'notifications') setNotifications(docs);
+          
           return newState;
         });
       });
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [currentUser.id, activeBrand]); // Re-run quand l'utilisateur ou la marque courante change
+  }, [currentUser.id, activeBrand]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION
@@ -1581,25 +1552,34 @@ export const BusinessProvider = ({ children }) => {
 
   const navigateTo = useCallback((appId) => setActiveApp(appId), []);
 
-  return (
-    <BusinessContext.Provider value={{
-      data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
-      config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
-      updateUserRole, setModuleAccessLevel, getModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
-      setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
-      addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
-      processPOSOrder, uploadLogo,
-      schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
-        setSchemaOverrides(prev => ({
-           ...prev,
-           [`${moduleId}.${modelId}`]: {
-             ...(prev[`${moduleId}.${modelId}`] || {}),
-             ...newConfig
-           }
-        }));
-     }
-    }}>
+  // 10. Memoized Context Value to avoid redundant re-renders
+  const contextValue = useMemo(() => ({
+    data, userRole, switchRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
+    config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, switchUser, permissions, setPermissions,
+    updateUserRole, setModuleAccessLevel, getModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
+    setActiveApp, activeBrand, setActiveBrand, BRANDS, navigationIntent, setNavigationIntent, navigateTo, formatCurrency, activeCall, setActiveCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
+    addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
+    processPOSOrder, uploadLogo,
+    schemaOverrides, updateSchemaOverride: (moduleId, modelId, newConfig) => {
+      setSchemaOverrides(prev => ({
+         ...prev,
+         [`${moduleId}.${modelId}`]: {
+           ...(prev[`${moduleId}.${modelId}`] || {}),
+           ...newConfig
+         }
+      }));
+   }
+  }), [
+    data, userRole, addRecord, updateRecord, deleteRecord, globalSearch, searchResults, hints, dismissHint,
+    config, updateConfig, globalSettings, updateGlobalSettings, addCustomField, currentUser, permissions,
+    updateUserRole, setModuleAccessLevel, getModuleAccess, approveRequest, rejectRequest, createFullUser, permanentlyDeleteUserRecord, toggleUserStatus, logout, activeApp,
+    activeBrand, BRANDS, navigationIntent, navigateTo, formatCurrency, activeCall, acceptCall, rejectCall, sendNotification, notifications, togglePinnedModule, logAction,
+    addAccountingEntry, generateInvoiceEntry, generatePayrollEntry, launchProductionOrder, addConnectPost, likeConnectPost, addConnectComment, participateInEvent, resetAllData, seedDemoData,
+    processPOSOrder, uploadLogo, schemaOverrides
+  ]);
 
+  return (
+    <BusinessContext.Provider value={contextValue}>
       {children}
     </BusinessContext.Provider>
   );

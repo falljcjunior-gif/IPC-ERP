@@ -123,4 +123,4 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
   );
 };
 
-export default CRM;
+export default React.memo(CRM);

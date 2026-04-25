@@ -94,7 +94,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   }, []);
 
   useEffect(() => {
-    globalSearch(search.query);
+    const handler = setTimeout(() => {
+      globalSearch(search.query);
+    }, 300);
+    return () => clearTimeout(handler);
   }, [search.query, globalSearch]);
 
   const renderContent = () => {

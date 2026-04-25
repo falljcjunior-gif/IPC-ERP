@@ -115,4 +115,4 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
   );
 };
 
-export default HRControlCenter;
+export default React.memo(HRControlCenter);
