@@ -46,12 +46,12 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const employees = data.hr?.employees || [];
   const filteredContacts = useMemo(() => {
     return employees
-      .filter(e => e.id !== currentUser.id)
+      .filter(e => e.id !== currentUser?.id)
       .filter(e => e.nom.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [employees, currentUser.id, searchQuery]);
+  }, [employees, currentUser?.id, searchQuery]);
 
   const getDmRoomId = (userId) => {
-    const ids = [currentUser.id, userId].sort();
+    const ids = [currentUser?.id, userId].sort();
     return `dm_${ids[0]}_${ids[1]}`;
   };
 
@@ -88,7 +88,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
          const unreadDocs = snapshot.docs.filter(d => {
             const mData = d.data();
-            return mData.userId !== currentUser.id && (!mData.readBy || !mData.readBy.includes(currentUser.id));
+            return mData.userId !== currentUser?.id && (!mData.readBy || !mData.readBy.includes(currentUser?.id));
          });
 
          if (unreadDocs.length > 0) {
@@ -96,7 +96,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                 const batch = writeBatch(db);
                 unreadDocs.forEach(d => {
                    batch.update(doc(db, 'messages', d.id), {
-                      readBy: [...(d.data().readBy || []), currentUser.id]
+                      readBy: [...(d.data().readBy || []), currentUser?.id]
                    });
                 });
                 batch.commit().catch(()=>{});
@@ -127,14 +127,14 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     const roomsQ = query(
       collection(db, 'rooms'),
       where('type', '==', 'group'),
-      where('members', 'array-contains', currentUser.id)
+      where('members', 'array-contains', currentUser?.id)
     );
     const unsub = onSnapshot(roomsQ, (snap) => {
        const fetched = snap.docs.map(d => ({ ...d.data(), id: d.id }));
        setCustomRooms(fetched);
     });
     return () => unsub();
-  }, [currentUser.id]);
+  }, [currentUser?.id]);
 
   const startRecording = async () => {
     try {
@@ -191,15 +191,15 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         fileName: 'vocal.webm',
         fileType: 'audio/webm',
         roomId: activeRoom.id,
-        userId: currentUser.id,
-        userName: currentUser.nom,
+        userId: currentUser?.id,
+        userName: currentUser?.nom,
         createdAt: serverTimestamp()
       });
 
       if (activeRoom.type === 'direct' && sendNotification) {
          const parts = activeRoom.id.split('_');
-         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
-         if (receiverId) sendNotification('ALL', `Vocal de ${currentUser.nom}`, '▶ Mémo vocal', 'chat', 'connect', receiverId);
+         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
+         if (receiverId) sendNotification('ALL', `Vocal de ${currentUser?.nom}`, '▶ Mémo vocal', 'chat', 'connect', receiverId);
       }
     } catch (err) {
       console.error("Audio Upload Error", err);
@@ -211,11 +211,11 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const handleCreateGroup = async () => {
     if (!newGroupData.label.trim()) return;
     try {
-       const members = Array.from(new Set([...newGroupData.members, currentUser.id]));
+       const members = Array.from(new Set([...newGroupData.members, currentUser?.id]));
        await addDoc(collection(db, 'rooms'), {
           label: newGroupData.label,
           type: 'group',
-          createdBy: currentUser.id,
+          createdBy: currentUser?.id,
           members: members,
           createdAt: serverTimestamp()
        });
@@ -233,17 +233,17 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       await addDoc(collection(db, 'messages'), {
         text: newMessage,
         roomId: activeRoom.id,
-        userId: currentUser.id,
-        userName: currentUser.nom,
+        userId: currentUser?.id,
+        userName: currentUser?.nom,
         createdAt: serverTimestamp()
       });
 
       // Send Global Notification
       if (activeRoom.type === 'direct' && sendNotification) {
          const parts = activeRoom.id.split('_');
-         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
          if (receiverId) {
-             sendNotification('ALL', `Message de ${currentUser.nom}`, newMessage, 'chat', 'connect', receiverId);
+             sendNotification('ALL', `Message de ${currentUser?.nom}`, newMessage, 'chat', 'connect', receiverId);
          }
       } else if (activeRoom.type === 'team' && sendNotification) {
          // Optionally notify team members, skipping for now to avoid spam
@@ -258,10 +258,10 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     let targetUsers = [];
     if (activeRoom.type === 'direct') {
       const parts = activeRoom.id.split('_');
-      const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+      const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
       targetUsers = [receiverId];
     } else {
-      targetUsers = employees.filter(e => e.id !== currentUser.id).map(e => e.id);
+      targetUsers = employees.filter(e => e.id !== currentUser?.id).map(e => e.id);
     }
     
     try {
@@ -269,8 +269,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         addDoc(collection(db, 'calls'), {
           roomId: activeRoom.id,
           roomLabel: activeRoom.label,
-          callerId: currentUser.id,
-          callerName: currentUser.nom,
+          callerId: currentUser?.id,
+          callerName: currentUser?.nom,
           receiverId: uid, 
           type,
           status: 'ringing',
@@ -310,8 +310,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         fileName: file.name,
         fileType: file.type,
         roomId: activeRoom.id,
-        userId: currentUser.id,
-        userName: currentUser.nom,
+        userId: currentUser?.id,
+        userName: currentUser?.nom,
         createdAt: serverTimestamp()
       });
     } catch (err) {
@@ -487,7 +487,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                     style={{ width: '100%', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', marginBottom: '1rem', fontSize: '0.9rem' }}
                   />
                   <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '1rem', border: '1px solid var(--border)', borderRadius: '1rem', padding: '0.5rem' }}>
-                     {employees.filter(e => e.id !== currentUser.id).map(emp => (
+                     {employees.filter(e => e.id !== currentUser?.id).map(emp => (
                         <label key={emp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid var(--border-subtle)' }}>
                            <input type="checkbox" checked={newGroupData.members.includes(emp.id)} onChange={(e) => {
                                setNewGroupData(p => ({
@@ -510,7 +510,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
          {/* Chat Messages */}
          <div ref={scrollRef} style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'linear-gradient(to bottom, transparent, var(--bg-subtle))' }}>
             {messages.map((msg, i) => {
-              const isMe = msg.userId === currentUser.id;
+              const isMe = msg.userId === currentUser?.id;
               return (
                 <div key={msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
                    <div style={{ padding: '1rem 1.25rem', borderRadius: '1.75rem', background: isMe ? '#8B5CF6' : 'white', color: isMe ? 'white' : 'var(--text)', border: isMe ? 'none' : '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.5, position: 'relative' }}>

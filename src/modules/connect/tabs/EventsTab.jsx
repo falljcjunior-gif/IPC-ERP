@@ -35,7 +35,7 @@ const EventsTab = ({ data }) => {
       color: colors[newEvent.category] || '#8B5CF6',
       attendees: 0,
       participated: false,
-      createdBy: currentUser.nom,
+      createdBy: currentUser?.nom,
     });
     addHint({ title: 'Événement créé !', message: `${newEvent.title} ajouté au calendrier IPC Life.`, type: 'success' });
     setShowCreate(false);

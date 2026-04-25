@@ -39,12 +39,12 @@ const CallInterface = ({
     const roomRef = doc(db, 'rooms', callId);
     const unsub = onSnapshot(roomRef, (docSnap) => {
       if (docSnap.exists() && docSnap.data().status === 'ended') {
-         webrtcService.hangup(callId, currentUser.id);
+         webrtcService.hangup(callId, currentUser?.id);
          if (onHangupRef.current) onHangupRef.current();
       }
     });
     return () => unsub();
-  }, [isOpen, callId, currentUser.id]);
+  }, [isOpen, callId, currentUser?.id]);
 
   useEffect(() => {
     if (!isOpen || !callId) return;
@@ -83,7 +83,7 @@ const CallInterface = ({
         };
         checkVolume();
 
-        await webrtcService.joinRoom(callId, currentUser.id, currentUser.nom, (streams) => {
+        await webrtcService.joinRoom(callId, currentUser?.id, currentUser?.nom, (streams) => {
           setRemoteParticipants({ ...streams });
         });
 
@@ -103,9 +103,9 @@ const CallInterface = ({
       if (cleanup && typeof cleanup.then === 'function') {
          cleanup.then(clean => clean && clean());
       }
-      webrtcService.hangup(callId, currentUser.id);
+      webrtcService.hangup(callId, currentUser?.id);
     };
-  }, [isOpen, callId, currentUser.id, currentUser.nom, callType]);
+  }, [isOpen, callId, currentUser?.id, currentUser?.nom, callType]);
 
   const toggleMic = () => {
     if (webrtcService.localStream) {
@@ -128,7 +128,7 @@ const CallInterface = ({
   };
 
   const handleHangup = () => {
-    webrtcService.hangup(callId, currentUser.id);
+    webrtcService.hangup(callId, currentUser?.id);
     onHangup();
   };
 

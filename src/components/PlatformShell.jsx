@@ -206,7 +206,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             const visibleItems = (cat.items || []).filter(item => {
               if (item.hidden) return false;
               if (userRole === 'SUPER_ADMIN') return true;
-              return getModuleAccess(currentUser.id, item.id) !== 'none';
+              return getModuleAccess(currentUser?.id, item.id) !== 'none';
             });
             if (visibleItems.length === 0) return null;
 
@@ -379,7 +379,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <TeamChat isOpen={shellView.chat} onClose={() => setShellView(p => ({ ...p, chat: false }))} theme={theme} />
       <AIAssistant spotlightOpen={shellView.ai} setSpotlightOpen={(val) => setShellView(p => ({ ...p, ai: val }))} activeModule={activeApp} />
       
-      {shellView.mobile && <MobileNavbar activeApp={activeApp} setActiveApp={setActiveApp} hasCrmAccess={getModuleAccess(currentUser.id, 'crm') !== 'none'} onOpenSettings={() => setShellView(p => ({ ...p, profile: true }))} />}
+      {shellView.mobile && <MobileNavbar activeApp={activeApp} setActiveApp={setActiveApp} hasCrmAccess={getModuleAccess(currentUser?.id, 'crm') !== 'none'} onOpenSettings={() => setShellView(p => ({ ...p, profile: true }))} />}
 
       <AnimatePresence>
         {pwdModal.open && (
@@ -415,7 +415,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                     setPwdModal(p => ({ ...p, loading: true, error: '' }));
                     try {
                       await updatePassword(auth.currentUser, pwdModal.newPwd);
-                      if (currentUser?.id) await updateDoc(doc(db, 'users', currentUser.id), { 'profile.mustChangePassword': false });
+                      if (currentUser?.id) await updateDoc(doc(db, 'users', currentUser?.id), { 'profile.mustChangePassword': false });
                       setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
                       setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
                     } catch (err) {

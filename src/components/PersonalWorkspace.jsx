@@ -29,24 +29,24 @@ const PersonalWorkspace = () => {
   };
   
   // --- 1. Compute User Specific Data ---
-  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser.nom);
-  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser.nom);
+  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser?.nom);
+  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser?.nom);
   
   // Projects & Tasks
   const myProjects = (data.projects?.projects || []).filter(p => 
-    p.team?.some(t => t.nom === currentUser.nom) || p.chefProjet === currentUser.nom
+    p.team?.some(t => t.nom === currentUser?.nom) || p.chefProjet === currentUser?.nom
   );
   
   // Production
-  const myWorkOrders = (data.production?.workOrders || []).filter(wo => wo.assignee === currentUser.nom || wo.statut === 'En cours'); 
+  const myWorkOrders = (data.production?.workOrders || []).filter(wo => wo.assignee === currentUser?.nom || wo.statut === 'En cours'); 
   // Note: fallback on 'En cours' for demo if no assignee is set. Ideally, we filter properly.
   
   // Sales
-  const myLeads = (data.crm?.leads || []).filter(l => l.assignee === currentUser.nom);
-  const myOpportunities = (data.crm?.opportunities || []).filter(o => o.assignee === currentUser.nom);
+  const myLeads = (data.crm?.leads || []).filter(l => l.assignee === currentUser?.nom);
+  const myOpportunities = (data.crm?.opportunities || []).filter(o => o.assignee === currentUser?.nom);
   
-  const isSuperAdmin = currentUser.role === 'SUPER_ADMIN';
-  const role = currentUser.role || 'STAFF';
+  const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN';
+  const role = currentUser?.role || 'STAFF';
 
   // --- 2. Compute "En Retard" (Delays & Alerts) ---
   const today = new Date().toISOString().split('T')[0];
@@ -65,7 +65,7 @@ const PersonalWorkspace = () => {
   });
 
   // Approvals waiting ONLY for managers/admins
-  if (['HR_MANAGER', 'SUPER_ADMIN'].includes(role) || currentUser.dept === 'RH') {
+  if (['HR_MANAGER', 'SUPER_ADMIN'].includes(role) || currentUser?.dept === 'RH') {
     const pendingLeaves = (data.hr?.leaves || []).filter(l => l.statut === 'En attente');
     if (pendingLeaves.length > 0) {
       delays.push({ id: 'leaves', type: 'Validation RH', label: `${pendingLeaves.length} congés en attente de validation`, date: 'Urgent', link: 'hr' });
@@ -84,7 +84,7 @@ const PersonalWorkspace = () => {
   });
 
   // Track timesheets count as some progress generically (example behavior)
-  const myTimesheets = (data.hr?.timesheets || []).filter(t => t.employe === currentUser.nom);
+  const myTimesheets = (data.hr?.timesheets || []).filter(t => t.employe === currentUser?.nom);
   if (myTimesheets.length > 0) {
     totalTasks += 20; 
     completedTasks += Math.min(myTimesheets.length * 2, 20); // up to 20 pts for filled timesheets
@@ -248,7 +248,7 @@ const PersonalWorkspace = () => {
         <FocusTracker />
         <VictoryHeartbeat />
         <QuickNotes />
-        <GamificationBadges score={successScore} timesheets={(data.hr?.timesheets || []).filter(t => t.employe === currentUser.nom).length || 0} leads={myLeads?.length || 0} />
+        <GamificationBadges score={successScore} timesheets={(data.hr?.timesheets || []).filter(t => t.employe === currentUser?.nom).length || 0} leads={myLeads?.length || 0} />
         <KaizenBox />
       </motion.div>
 

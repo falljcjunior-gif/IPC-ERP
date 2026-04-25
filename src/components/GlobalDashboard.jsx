@@ -168,7 +168,7 @@ const GlobalDashboard = () => {
             </span>
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.04em' }}>
-            Bonjour, <span className="text-gradient" style={{ background: 'linear-gradient(to right, var(--text), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{currentUser.nom}</span> 👋
+            Bonjour, <span className="text-gradient" style={{ background: 'linear-gradient(to right, var(--text), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{currentUser?.nom}</span> 👋
           </h1>
           <p style={{ color:'var(--text-muted)', fontSize:'1.1rem', margin:'0.6rem 0 0 0', fontWeight: 500 }}>
              {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}

@@ -18,11 +18,11 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   
   // Filter notifications by role
   const filteredNotifications = notifications.filter(n => 
-    n.targetUserId === currentUser.id || 
+    n.targetUserId === currentUser?.id || 
     ( !n.targetUserId && (
       n.targetRole === 'ALL' || 
-      n.targetRole === currentUser.role ||
-      (currentUser.role === 'SUPER_ADMIN' && (n.targetRole === 'ADMIN' || n.targetRole === 'RH'))
+      n.targetRole === currentUser?.role ||
+      (currentUser?.role === 'SUPER_ADMIN' && (n.targetRole === 'ADMIN' || n.targetRole === 'RH'))
     ))
   ).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 

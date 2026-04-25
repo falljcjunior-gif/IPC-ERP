@@ -51,9 +51,9 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   // Contacts filtered by search
   const filteredContacts = useMemo(() => {
     return employees
-      .filter(e => e.id !== currentUser.id)
+      .filter(e => e.id !== currentUser?.id)
       .filter(e => e.nom.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [employees, currentUser.id, searchQuery]);
+  }, [employees, currentUser?.id, searchQuery]);
 
   // Handle room switching
   const handleSelectRoom = (room) => {
@@ -66,7 +66,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   // Logic for Private Room IDs (DMs)
   // We sort IDs alphabetically to ensure both users point to the same room
   const getDmRoomId = (userId) => {
-    const ids = [currentUser.id, userId].sort();
+    const ids = [currentUser?.id, userId].sort();
     return `dm_${ids[0]}_${ids[1]}`;
   };
 
@@ -103,8 +103,8 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
       await addDoc(collection(db, 'messages'), {
         text: newMessage,
         roomId: activeRoom.id,
-        userId: currentUser.id,
-        userName: currentUser.nom,
+        userId: currentUser?.id,
+        userName: currentUser?.nom,
         createdAt: serverTimestamp()
       });
       setNewMessage('');
@@ -119,13 +119,13 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
     
     // Determine receiverId from dm room ID
     const parts = activeRoom.id.split('_');
-    const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
+    const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
 
     try {
       // Create call document and set up PeerConnection
       const callId = await webrtcService.createCall(
-        currentUser.id, 
-        currentUser.nom,
+        currentUser?.id, 
+        currentUser?.nom,
         receiverId, 
         type, 
         null // Stream handling is done in CallInterface
@@ -306,7 +306,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
                   </div>
                 )}
                 {messages.map((msg, i) => {
-                  const isMe = msg.userId === currentUser.id;
+                  const isMe = msg.userId === currentUser?.id;
                   return (
                     <div key={msg.id || i} style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start' }}>
                       <div style={{ 

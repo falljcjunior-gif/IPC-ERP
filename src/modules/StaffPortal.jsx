@@ -23,18 +23,18 @@ const StaffPortal = ({ embedded }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Filter data for the current user
-  const myEmployeeRecord = data.hr?.employees?.find(e => e.id === currentUser.id || e.email === currentUser.email);
-  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser.nom);
-  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser.nom);
+  const myEmployeeRecord = data.hr?.employees?.find(e => e.id === currentUser?.id || e.email === currentUser?.email);
+  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser?.nom);
+  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser?.nom);
   const myProjects = (data.projects?.projects || []).filter(p => 
-    p.team?.some(t => t.nom === currentUser.nom) || p.chefProjet === currentUser.nom
+    p.team?.some(t => t.nom === currentUser?.nom) || p.chefProjet === currentUser?.nom
   );
-  const myPayslips = (data.dms?.files || []).filter(f => f.owner === currentUser.nom && f.metadata?._subModule === 'payslip');
+  const myPayslips = (data.dms?.files || []).filter(f => f.owner === currentUser?.nom && f.metadata?._subModule === 'payslip');
 
   const handleSave = (formData) => {
     const subModule = activeTab === 'leaves' ? 'leaves' : 'expenses';
     // Force the employee name to current user
-    addRecord('hr', subModule, { ...formData, employe: currentUser.nom, statut: 'En attente' });
+    addRecord('hr', subModule, { ...formData, employe: currentUser?.nom, statut: 'En attente' });
     setIsModalOpen(false);
   };
 
@@ -157,7 +157,7 @@ const StaffPortal = ({ embedded }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         {!embedded && (
         <div>
-          <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Bienvenue, {currentUser.nom}</h1>
+          <h1 style={{ fontSize: '2.25rem', marginBottom: '0.5rem' }}>Bienvenue, {currentUser?.nom}</h1>
           <p style={{ color: 'var(--text-muted)' }}>Votre espace collaborateur I.P.C</p>
         </div>
         )}

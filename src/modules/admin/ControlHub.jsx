@@ -31,7 +31,7 @@ const ControlHub = ({ onOpenDetail }) => {
           <div>
             <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0F172A', margin: 0 }}>Périmètre Sécurisé</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '500px', margin: '1rem auto' }}>
-              Désolé, **{currentUser.nom}**. Votre niveau d'accréditation actuel ne vous permet pas d'accéder à la Tour de Contrôle globale.
+              Désolé, **{currentUser?.nom}**. Votre niveau d'accréditation actuel ne vous permet pas d'accéder à la Tour de Contrôle globale.
             </p>
           </div>
           <button onClick={() => window.history.back()} className="btn-primary" style={{ padding: '1rem 2rem', borderRadius: '1.25rem', background: '#0F172A' }}>Retour au Dashboard</button>

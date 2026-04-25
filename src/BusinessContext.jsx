@@ -73,7 +73,7 @@ export const BusinessProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
-    localStorage.setItem('daxcelor_user_role', currentUser.role);
+    localStorage.setItem('daxcelor_user_role', currentUser?.role);
     
     // Cloud Sync for User settings (ONLY sync config/theme, NEVER permissions which are admin-controlled)
     if (auth.currentUser) {
@@ -131,7 +131,7 @@ export const BusinessProvider = ({ children }) => {
       detail,
       appId,
       targetId,
-      user: currentUser.nom,
+      user: currentUser?.nom,
       timestamp: new Date().toISOString(),
       type: 'log',
       brandId: activeBrand !== 'ALL' ? activeBrand : 'IPC_CORE'
@@ -147,7 +147,7 @@ export const BusinessProvider = ({ children }) => {
         setDoc(doc(db, 'activities', activity.id), activity);
       }
     }, 0);
-  }, [currentUser.nom, activeBrand]);
+  }, [currentUser?.nom, activeBrand]);
 
 
   const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null, targetUserId = null) => {
@@ -1101,13 +1101,13 @@ export const BusinessProvider = ({ children }) => {
 
 
   const approveRequest = useCallback((appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
+    updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser?.nom, validatedAt: new Date().toISOString() });
     addHint({ title: "Demande Approuvée", type: 'success', appId });
-  }, [updateRecord, addHint, currentUser.nom]);
+  }, [updateRecord, addHint, currentUser?.nom]);
 
   const rejectRequest = useCallback((appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
-  }, [updateRecord, currentUser.nom]);
+    updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser?.nom, validatedAt: new Date().toISOString() });
+  }, [updateRecord, currentUser?.nom]);
 
 
   // --- IPC CONNECT SOCIAL HELPERS ---
@@ -1238,11 +1238,11 @@ export const BusinessProvider = ({ children }) => {
   // WebRTC Call Listener
   useEffect(() => {
     if (!currentUser) return; 
-    if (currentUser.id === 'guest') return;
+    if (currentUser?.id === 'guest') return;
 
     const q = query(
       collection(db, 'calls'), 
-      where('receiverId', '==', currentUser.id), 
+      where('receiverId', '==', currentUser?.id), 
       where('status', '==', 'ringing')
     );
 
@@ -1282,7 +1282,7 @@ export const BusinessProvider = ({ children }) => {
   }, [currentUser]);
 
   useEffect(() => {
-    if (!currentUser || currentUser.id === 'guest' || !auth.currentUser) return;
+    if (!currentUser || currentUser?.id === 'guest' || !auth.currentUser) return;
 
     const COLLECTIONS = [
       'crm', 'sales', 'inventory', 'production',
@@ -1339,7 +1339,7 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [currentUser.id, activeBrand]);
+  }, [currentUser?.id, activeBrand]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION

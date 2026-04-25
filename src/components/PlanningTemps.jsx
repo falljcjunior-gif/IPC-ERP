@@ -49,7 +49,7 @@ const PlanningView = () => {
     const events = [];
 
     // My leaves (approved)
-    (data.hr?.leaves || []).filter(l => l.employe === currentUser.nom && l.statut === 'Validé').forEach(l => {
+    (data.hr?.leaves || []).filter(l => l.employe === currentUser?.nom && l.statut === 'Validé').forEach(l => {
       const start = new Date(l.du || l.date_debut);
       const end = new Date(l.au || l.date_fin);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -58,12 +58,12 @@ const PlanningView = () => {
     });
 
     // My timesheets
-    (data.hr?.timesheets || []).filter(t => t.collaborateur === currentUser.nom).forEach(t => {
+    (data.hr?.timesheets || []).filter(t => t.collaborateur === currentUser?.nom).forEach(t => {
       if (t.date) events.push({ date: t.date, title: `⏱ ${t.projet} – ${t.heures}h`, color: '#3B82F6', type: 'timesheet' });
     });
 
     // Projects I'm on (deadline)
-    (data.projects?.projects || []).filter(p => p.team?.some(tm => tm.nom === currentUser.nom) || p.chefProjet === currentUser.nom).forEach(p => {
+    (data.projects?.projects || []).filter(p => p.team?.some(tm => tm.nom === currentUser?.nom) || p.chefProjet === currentUser?.nom).forEach(p => {
       if (p.echeance || p.dateFin) {
         events.push({ date: p.echeance || p.dateFin, title: `📌 Échéance: ${p.nom}`, color: '#EF4444', type: 'project' });
       }
@@ -75,7 +75,7 @@ const PlanningView = () => {
     });
 
     return events;
-  }, [data, currentUser.nom]);
+  }, [data, currentUser?.nom]);
 
   const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
   const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
@@ -175,7 +175,7 @@ const PlanningView = () => {
         ]}
         initialData={{ date: selectedDay || '' }}
         onSave={(f) => {
-          addRecord('planning', 'events', { ...f, createdBy: currentUser.nom });
+          addRecord('planning', 'events', { ...f, createdBy: currentUser?.nom });
           setShowModal(false);
         }}
       />
@@ -192,7 +192,7 @@ const TempsView = () => {
   const [showModal, setShowModal] = useState(false);
 
   const allTimesheets = data.hr?.timesheets || [];
-  const myTimesheets = allTimesheets.filter(t => t.collaborateur === currentUser.nom);
+  const myTimesheets = allTimesheets.filter(t => t.collaborateur === currentUser?.nom);
   const pendingAll = allTimesheets.filter(t => t.statut === 'En attente');
   const isManager = ['ADMIN', 'HR', 'SUPER_ADMIN'].includes(userRole);
 
@@ -214,7 +214,7 @@ const TempsView = () => {
 
   const maxH = Math.max(...weeklyData.map(w => w.h), 1);
 
-  const handleValidate = (id, status) => updateRecord('hr', 'timesheets', id, { statut: status, validatedBy: currentUser.nom, validatedAt: new Date().toISOString() });
+  const handleValidate = (id, status) => updateRecord('hr', 'timesheets', id, { statut: status, validatedBy: currentUser?.nom, validatedAt: new Date().toISOString() });
 
   const statusColor = (s) => s === 'Validé' ? '#10B981' : s === 'Refusé' ? '#EF4444' : '#F59E0B';
 
@@ -328,9 +328,9 @@ const TempsView = () => {
           { name: 'facturable', label: 'Facturable ?', type: 'select', options: ['Oui', 'Non'] },
           { name: 'commentaire', label: 'Commentaire' },
         ]}
-        initialData={{ collaborateur: currentUser.nom }}
+        initialData={{ collaborateur: currentUser?.nom }}
         onSave={(f) => {
-          addRecord('hr', 'timesheets', { ...f, collaborateur: currentUser.nom, statut: 'En attente', facturable: f.facturable === 'Oui' });
+          addRecord('hr', 'timesheets', { ...f, collaborateur: currentUser?.nom, statut: 'En attente', facturable: f.facturable === 'Oui' });
           setShowModal(false);
         }}
       />
