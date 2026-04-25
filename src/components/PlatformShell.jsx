@@ -170,13 +170,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           display: 'flex',
           flexDirection: 'column',
           transition: 'var(--transition)',
-          backgroundColor: 'rgba(255, 255, 255, 0.45)',
-          backdropFilter: 'blur(30px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          backgroundColor: 'transparent',
+          backdropFilter: 'blur(20px) saturate(120%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(120%)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.08)',
+          boxShadow: 'none',
           overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.5)'
+          border: '1px solid rgba(255, 255, 255, 0.15)'
         }}
       >
         {/* Sidebar Header / Logo */}
