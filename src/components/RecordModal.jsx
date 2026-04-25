@@ -4,6 +4,7 @@ import { X, Save, Edit3, Trash2, Printer, MoreHorizontal, MessageSquare, History
 import Chatter from './Chatter';
 import SmartButtons from './SmartButtons';
 import { useBusiness } from '../BusinessContext';
+import { useToast } from './ToastProvider';
 
 const RecordModal = ({ 
   isOpen, 
@@ -20,6 +21,7 @@ const RecordModal = ({
   isLoading = false 
 }) => {
   const { data, getModuleAccess, currentUser } = useBusiness();
+  const { addToast } = useToast();
   const [formData, setFormData] = useState(initialData || {});
   
   const accessLevel = getModuleAccess(currentUser?.id, appId);
@@ -29,10 +31,6 @@ const RecordModal = ({
   const [activeTab, setActiveTab] = useState('data'); 
   const [showSuccessAnim, setShowSuccessAnim] = useState(false);
 
-  // If newly opening a creation modal but user is read-only, we should probably close it or show error.
-  // But standard enforcement here is to just disable the save button.
-
-
   const handleChange = (name, value) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -41,10 +39,9 @@ const RecordModal = ({
     e.preventDefault();
     if (isLoading) return;
     
-    // Native-like validation for 'required' fields since footer button bypasses form submit
     const missingFields = fields.filter(f => f.required && !formData[f.name]);
     if (missingFields.length > 0) {
-        alert("Attention : Veuillez remplir les champs obligatoires suivants : " + missingFields.map(f => f.label).join(', '));
+        addToast("Veuillez remplir les champs obligatoires : " + missingFields.map(f => f.label).join(', '), 'error');
         return;
     }
 
@@ -306,4 +303,4 @@ const RecordModal = ({
   );
 };
 
-export default RecordModal;
+export default React.memo(RecordModal);

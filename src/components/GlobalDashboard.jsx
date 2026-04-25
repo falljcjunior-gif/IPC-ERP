@@ -323,4 +323,4 @@ const GlobalDashboard = () => {
   );
 };
 
-export default GlobalDashboard;
+export default React.memo(GlobalDashboard);

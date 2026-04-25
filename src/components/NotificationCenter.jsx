@@ -122,4 +122,4 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   );
 };
 
-export default NotificationCenter;
+export default React.memo(NotificationCenter);
