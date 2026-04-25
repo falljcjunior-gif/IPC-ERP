@@ -38,7 +38,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     globalSearch, searchResults, updateRecord, addRecord, data, config, 
     globalSettings, permissions, getModuleAccess, logout, activeApp, 
     setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
-    activeBrand, setActiveBrand, BRANDS
+    setActiveBrand, BRANDS
   } = useStore();
 
   // currentUser comes from the auth slice as 'user'; derive userRole and activeBrand locally
