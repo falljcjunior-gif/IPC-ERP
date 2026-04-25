@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, LogIn, ShieldCheck, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, LogIn, ShieldCheck, ArrowRight, AlertCircle, Sparkles, Terminal } from 'lucide-react';
 import { auth, db } from '../firebase/config';
 import { signInWithEmailAndPassword, updatePassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -39,7 +39,6 @@ const Login = ({ onLogin }) => {
       }
       const user = userCredential.user;
       
-      // Check for account status in Firestore
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
@@ -82,12 +81,9 @@ const Login = ({ onLogin }) => {
 
     try {
       await updatePassword(auth.currentUser, newPassword);
-      
-      // Update Firestore flag
       await updateDoc(doc(db, 'users', userId), {
         'profile.mustChangePassword': false
       });
-
       onLogin();
     } catch (err) {
       console.error(err);
@@ -104,156 +100,182 @@ const Login = ({ onLogin }) => {
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
-      background: 'radial-gradient(circle at top right, #3B82F615, transparent), radial-gradient(circle at bottom left, #10B98115, transparent)',
+      background: 'var(--bg)',
       overflow: 'hidden',
       position: 'relative'
     }}>
-      {/* Background Shapes */}
-      <motion.div 
-        animate={{ 
-          scale: [1, 1.2, 1],
-          rotate: [0, 90, 0]
-        }}
-        transition={{ duration: 20, repeat: Infinity }}
-        style={{ position: 'absolute', top: '10%', right: '15%', width: '300px', height: '300px', borderRadius: '50%', background: 'var(--accent)', filter: 'blur(100px)', opacity: 0.1 }}
-      />
-      <motion.div 
-        animate={{ 
-          scale: [1.2, 1, 1.2],
-          rotate: [0, -90, 0]
-        }}
-        transition={{ duration: 15, repeat: Infinity }}
-        style={{ position: 'absolute', bottom: '10%', left: '15%', width: '250px', height: '250px', borderRadius: '50%', background: 'var(--primary)', filter: 'blur(80px)', opacity: 0.1 }}
-      />
+      {/* Immersive Background Effects */}
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+        <motion.div 
+          animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          style={{ position: 'absolute', top: '-20%', right: '-10%', width: '60vw', height: '60vw', background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)', opacity: 0.15, filter: 'blur(100px)' }}
+        />
+        <motion.div 
+          animate={{ scale: [1.2, 1, 1.2], rotate: [0, -90, 0] }}
+          transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+          style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, var(--primary) 0%, transparent 70%)', opacity: 0.15, filter: 'blur(100px)' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+      </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="glass"
         style={{
           width: '100%',
-          maxWidth: '450px',
-          padding: '3rem',
+          maxWidth: '500px',
+          padding: '4rem 3rem',
           borderRadius: '2.5rem',
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: '0 40px 100px -20px rgba(0, 0, 0, 0.4)',
           zIndex: 10,
-          textAlign: 'center'
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden'
         }}
       >
+        {/* Glow behind logo */}
+        <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '150px', height: '2px', background: 'linear-gradient(90deg, transparent, var(--accent), transparent)', opacity: 0.5 }} />
+
         <div style={{ 
           width: '80px', 
           height: '80px', 
-          margin: '0 auto 1.5rem',
+          margin: '0 auto 2rem',
+          background: 'var(--accent)',
+          borderRadius: '20px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          boxShadow: '0 0 30px var(--accent-glow)',
+          transform: 'rotate(-5deg)'
         }}>
-          <img src={globalSettings.logoUrl || "/logo.png"} alt="Logo" className="logo-img" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+           <Sparkles size={40} color="white" />
         </div>
 
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
-          {mustChange ? 'Sécurité' : `Espace ${globalSettings.companyName || 'Pro'}`}
-        </h1>
-        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-          {mustChange ? 'Vous devez changer votre mot de passe pour continuer.' : 'Ravi de vous revoir. Connectez-vous à votre cockpit.'}
-        </p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.03em' }}>
+            {mustChange ? 'Sécurité' : 'Intelligence Engine'}
+          </h1>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1.05rem', fontWeight: 500 }}>
+            {mustChange ? 'Protégez votre accès avec un nouveau code.' : 'Authentification requise pour accéder au cockpit.'}
+          </p>
+        </motion.div>
 
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               style={{ 
-                background: '#EF444415', 
+                background: 'rgba(239, 68, 68, 0.1)', 
                 color: '#EF4444', 
-                padding: '0.75rem', 
-                borderRadius: '0.75rem', 
-                marginBottom: '1.5rem',
-                fontSize: '0.85rem',
+                padding: '1rem', 
+                borderRadius: '1rem', 
+                marginBottom: '2rem',
+                fontSize: '0.9rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                border: '1px solid #EF444430'
+                gap: '0.75rem',
+                border: '1px solid rgba(239, 68, 68, 0.2)',
+                fontWeight: 600,
+                textAlign: 'left'
               }}
             >
-              <AlertCircle size={16} /> {error}
+              <AlertCircle size={20} /> {error}
             </motion.div>
           )}
         </AnimatePresence>
 
         {!mustChange ? (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'left' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Email Professionnel</label>
-              <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)' }}>
-                <Mail size={20} color="var(--text-muted)" />
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Identifiant Cloud</label>
+              <div style={{ 
+                display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.1rem 1.25rem', 
+                borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', 
+                border: '1px solid rgba(255,255,255,0.08)',
+                transition: 'var(--transition)'
+              }}>
+                <Mail size={20} color="var(--accent)" />
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="contact@votre-erp.com" 
-                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%', fontSize: '1rem' }}
+                  placeholder="name@ipc-ops.com" 
+                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%', fontSize: '1rem', fontWeight: 500 }}
                   required
                 />
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Mot de passe</label>
-                <a href="#" style={{ fontSize: '0.75rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 600 }}>Oublié ?</a>
+                <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Clé de Sécurité</label>
+                <a href="#" style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 700 }}>Oubliée ?</a>
               </div>
-              <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)' }}>
-                <Lock size={20} color="var(--text-muted)" />
+              <div style={{ 
+                display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.1rem 1.25rem', 
+                borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', 
+                border: '1px solid rgba(255,255,255,0.08)'
+              }}>
+                <Lock size={20} color="var(--accent)" />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••" 
-                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%', fontSize: '1rem' }}
+                  style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%', fontSize: '1rem', fontWeight: 500 }}
                   required
                 />
               </div>
             </div>
 
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="btn btn-primary"
               style={{ 
                 padding: '1.25rem', 
                 borderRadius: '1.25rem', 
-                fontSize: '1rem', 
-                fontWeight: 700, 
-                marginTop: '1.5rem',
+                fontSize: '1.1rem', 
+                fontWeight: 800, 
+                marginTop: '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.75rem',
-                position: 'relative',
-                overflow: 'hidden'
+                background: 'var(--accent)',
+                color: 'white',
+                border: 'none',
+                cursor: isLoading ? 'wait' : 'pointer',
+                boxShadow: '0 15px 30px var(--accent-glow)',
+                transition: 'var(--transition)'
               }}
             >
               {isLoading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }}
-                />
+                <div className="spinner" style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
               ) : (
                 <>
-                  Accéder au Dashboard <ArrowRight size={20} />
+                  Connecter <ArrowRight size={22} />
                 </>
               )}
-            </button>
+            </motion.button>
           </form>
         ) : (
-          <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'left' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Nouveau mot de passe</label>
-              <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)' }}>
-                <Lock size={20} color="var(--text-muted)" />
+          <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.25rem' }}>Nouveau mot de passe</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.1rem 1.25rem', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <Lock size={20} color="var(--accent)" />
                 <input 
                   type="password" 
                   value={newPassword}
@@ -265,10 +287,10 @@ const Login = ({ onLogin }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', marginLeft: '0.5rem' }}>Confirmer le mot de passe</label>
-              <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)' }}>
-                <Lock size={20} color="var(--text-muted)" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginLeft: '0.25rem' }}>Confirmer le mot de passe</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.1rem 1.25rem', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <Lock size={20} color="var(--accent)" />
                 <input 
                   type="password" 
                   value={confirmPassword}
@@ -280,43 +302,54 @@ const Login = ({ onLogin }) => {
               </div>
             </div>
 
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={isLoading}
-              className="btn btn-primary"
               style={{ 
                 padding: '1.25rem', 
                 borderRadius: '1.25rem', 
-                fontSize: '1rem', 
-                fontWeight: 700, 
-                marginTop: '1.5rem',
+                fontSize: '1.1rem', 
+                fontWeight: 800, 
+                marginTop: '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '0.75rem',
-                position: 'relative',
-                overflow: 'hidden'
+                background: 'var(--accent)',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer'
               }}
             >
               {isLoading ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                  style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }}
-                />
+                <div className="spinner" style={{ width: '24px', height: '24px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
               ) : (
                 <>
-                  Changer le mot de passe <ShieldCheck size={20} />
+                  Sécuriser l'accès <ShieldCheck size={22} />
                 </>
               )}
-            </button>
+            </motion.button>
           </form>
         )}
 
-        <div style={{ marginTop: '2.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Pas encore de compte ? <a href="#" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'none' }}>Demander un accès démo</a>
+        <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Terminal size={14} /> Core V4.2
+              </div>
+              <span>•</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <ShieldCheck size={14} color="#10B981" /> Encrypted
+              </div>
+           </div>
         </div>
       </motion.div>
+      <style>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+        .spinner { animation: spin 0.8s linear infinite; }
+      `}</style>
     </div>
   );
 };

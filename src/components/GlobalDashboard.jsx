@@ -255,190 +255,132 @@ const GlobalDashboard = () => {
     >
 
       {/* ── Header ── */}
-      <motion.div variants={itemVariants} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'1rem' }}>
+      <motion.div variants={itemVariants} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'2rem' }}>
         <div>
-          <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', color:'var(--accent)', marginBottom:'0.5rem' }}>
-            <Zap size={18} fill="var(--accent)" />
-            <span style={{ fontWeight:800, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'1.5px' }}>Command Center ERP — Vue 360°</span>
+          <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', color:'var(--accent)', marginBottom:'0.75rem' }}>
+            <Zap size={20} fill="var(--accent)" />
+            <span style={{ fontWeight:800, fontSize:'0.8rem', textTransform:'uppercase', letterSpacing:'2.5px', fontFamily: 'var(--font-heading)' }}>IPC Operations • v4.0 Quantum</span>
           </div>
-          <h1 style={{ fontSize:'2.5rem', fontWeight:800, margin:0 }}>Bonjour, {currentUser.nom} 👋</h1>
-          <p style={{ color:'var(--text-muted)', fontSize:'1rem', margin:'0.4rem 0 0 0' }}>
-            {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })} — 
-            {' '}<strong style={{ color:'var(--accent)' }}>Rôle: {role.replace('_', ' ')}</strong>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.04em' }}>
+            Bonjour, <span className="text-gradient">{currentUser.nom}</span> 👋
+          </h1>
+          <p style={{ color:'var(--text-muted)', fontSize:'1.1rem', margin:'0.6rem 0 0 0', fontWeight: 500 }}>
+            {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
           </p>
         </div>
-        <div style={{ display:'flex', gap:'0.75rem', flexWrap:'wrap' }}>
-          <button onClick={() => navigateTo('bi')} className="glass" style={{ padding:'0.65rem 1.25rem', borderRadius:'0.75rem', border:'1px solid var(--border)', fontWeight:600, display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', fontSize:'0.85rem' }}>
-            <BarChart2 size={16} /> Rapports BI
+        <div style={{ display:'flex', gap:'1rem', flexWrap:'wrap' }}>
+          <button onClick={() => navigateTo('bi')} className="btn btn-glass" style={{ borderRadius: '1rem' }}>
+            <BarChart2 size={18} /> Rapports Stratégiques
           </button>
-          <button onClick={() => navigateTo('analytics')} style={{ padding:'0.65rem 1.25rem', borderRadius:'0.75rem', border:'none', background:'var(--accent)', color:'white', fontWeight:600, display:'flex', alignItems:'center', gap:'0.5rem', cursor:'pointer', fontSize:'0.85rem' }}>
-            <Globe size={16} /> Analytics Globaux <ArrowUpRight size={16} />
+          <button onClick={() => navigateTo('analytics')} className="btn btn-primary" style={{ borderRadius: '1rem' }}>
+             Analytics <ArrowUpRight size={18} />
           </button>
         </div>
       </motion.div>
 
-      {/* ── AI Action Center ── */}
-      <motion.div variants={itemVariants} className="glass" style={{ padding:'2rem', borderRadius:'1.5rem', border:'1px solid rgba(139,92,246,0.3)', position:'relative', overflow:'hidden' }}>
-        <div style={{ position:'absolute', top:'-60px', right:'-40px', width:'300px', height:'300px', background:'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)', filter:'blur(40px)', pointerEvents:'none' }} />
-        <div style={{ position:'absolute', bottom:'-40px', left:'-20px', width:'200px', height:'200px', background:'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%)', filter:'blur(30px)', pointerEvents:'none' }} />
+      {/* ── BENTO GRID MAIN ── */}
+      <div className="bento-grid">
         
-        <div style={{ position:'relative', zIndex:1 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', marginBottom:'1.5rem' }}>
-            <BrainCircuit size={22} color="#8B5CF6" />
-            <h2 style={{ fontSize:'1.15rem', fontWeight:800, margin:0 }}>Cockpit IA — Anticipation & Alertes Stratégiques</h2>
-            <span style={{ marginLeft:'auto', fontSize:'0.72rem', color:'var(--text-muted)', padding:'3px 8px', background:'var(--bg-subtle)', borderRadius:'999px' }}>
-              Mis à jour il y a 2 min
-            </span>
+        {/* 1. AI Spotlight (Large) */}
+        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 8', gridRow: 'span 2', padding: 0, border: '1px solid var(--accent-glow)', background: 'var(--bg-dark)' }}>
+          <div className="shimmer-effect" style={{ position: 'absolute', inset: 0, opacity: 0.1 }} />
+          <div style={{ padding: '2.5rem', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', zIndex: 1, color: 'white' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+               <BrainCircuit size={28} color="var(--accent)" />
+               <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white' }}>Nexus AI <span style={{ color: 'var(--accent)', opacity: 0.6 }}>Insight</span></h2>
+               <div style={{ marginLeft: 'auto', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--accent)', padding: '4px 12px', borderRadius: '50px', fontSize: '0.75rem', fontWeight: 800 }}>LIVE ANALYSIS</div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', flex: 1 }}>
+               <div className="glass" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem' }}>
+                  <div style={{ color: 'var(--accent)', fontWeight: 800, marginBottom: '0.5rem', fontSize: '0.9rem' }}>ANTICIPATION FINANCIÈRE</div>
+                  <p style={{ fontSize: '0.9rem', opacity: 0.8, lineHeight: 1.6 }}>Le cash-flow projette une croissance de 12% sur le prochain trimestre basée sur les bons de commande actuels.</p>
+               </div>
+               <div className="glass" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem' }}>
+                  <div style={{ color: '#F59E0B', fontWeight: 800, marginBottom: '0.5rem', fontSize: '0.9rem' }}>OPTIMISATION SUPPLY</div>
+                  <p style={{ fontSize: '0.9rem', opacity: 0.8, lineHeight: 1.6 }}>Réduction possible de 4% des coûts de transport en groupant les livraisons de la zone Nord.</p>
+               </div>
+            </div>
+
+            <button className="btn" style={{ marginTop: '2rem', alignSelf: 'flex-start', background: 'white', color: 'black', padding: '0.6rem 1.5rem' }}>
+              Consulter le Rapport Complet <ChevronRight size={16} />
+            </button>
           </div>
-          
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap:'1rem' }}>
-            {[
-              {
-                level:'green', icon:<CheckCircle2 size={16} />, color:'#10B981',
-                title:'Système Prêt',
-                body:`Toutes les fonctions critiques sont opérationnelles. L'IA attend vos premières données pour générer des analyses prédictives.`,
-                action: null, link: null
-              },
-            ].map((alert, i) => (
-              <motion.div key={i} whileHover={{ scale:1.015 }} className="glass" style={{ padding:'1.25rem', borderRadius:'1rem', borderLeft:`4px solid ${alert.color}`, background:'var(--bg)', cursor:'pointer' }}
-                onClick={() => alert.link && handleDrillDown(alert.link)}>
-                <div style={{ display:'flex', alignItems:'center', gap:'0.5rem', color:alert.color, fontWeight:700, marginBottom:'0.6rem', fontSize:'0.85rem' }}>
-                  {alert.icon} {alert.title}
+        </motion.div>
+
+        {/* 2. Main KPI (C.A) (Medium) */}
+        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 4', gridRow: 'span 2', background: 'linear-gradient(135deg, var(--accent) 0%, #059669 100%)', color: 'white', border: 'none' }}>
+           <div style={{ padding: '2rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.75rem', borderRadius: '1rem' }}><DollarSign size={24} /></div>
+                <div style={{ textAlign: 'right' }}>
+                   <div style={{ fontSize: '0.8rem', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase' }}>C.A. Réalisé</div>
+                   <div style={{ fontSize: '2.5rem', fontWeight: 900 }}>{formatCurrency(metrics.sales.caRealise, true)}</div>
                 </div>
-                <p style={{ fontSize:'0.8rem', color:'var(--text-muted)', margin:'0 0 0.75rem 0', lineHeight:1.5 }}>{alert.body}</p>
-                {alert.link && (
-                  <span style={{ fontSize:'0.75rem', fontWeight:700, color:alert.color, display:'flex', alignItems:'center', gap:'4px' }}>
-                    {alert.action} <ChevronRight size={12} />
-                  </span>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
+             </div>
+             <div style={{ height: '80px', marginTop: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Simplified Sparkline representation */}
+                <div style={{ width: '80%', height: '40px', borderBottom: '2px solid white', position: 'relative' }}>
+                   <div style={{ position: 'absolute', top: 0, left: '20%', width: '10px', height: '10px', background: 'white', borderRadius: '50%' }} />
+                   <div style={{ position: 'absolute', top: '-10px', left: '50%', width: '10px', height: '10px', background: 'white', borderRadius: '50%' }} />
+                   <div style={{ position: 'absolute', top: '10px', left: '80%', width: '10px', height: '10px', background: 'white', borderRadius: '50%' }} />
+                </div>
+             </div>
+             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700 }}>
+                <span>Objectif: 2.8Md</span>
+                <span style={{ color: '#000', background: 'white', padding: '2px 8px', borderRadius: '4px' }}>+8.4%</span>
+             </div>
+           </div>
+        </motion.div>
 
-      {/* ── Department Health Scorecards ── */}
-      <motion.div variants={itemVariants}>
-        <h3 style={{ fontSize:'1.15rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-          <ActivityIcon size={18} color="var(--accent)" /> Santé des Départements
-        </h3>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap:'1rem' }}>
-          {deptHealth.map((dept, i) => (
-            <motion.div key={i} variants={itemVariants} whileHover={{ y:-4 }} onClick={() => navigateTo(dept.link)} className="glass"
-              style={{ padding:'1.25rem', borderRadius:'1.25rem', cursor:'pointer', display:'flex', flexDirection:'column', gap:'0.75rem' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div style={{ color:dept.color, background:`${dept.color}15`, padding:'0.5rem', borderRadius:'0.6rem' }}>{dept.icon}</div>
+        {/* 3. Dept Health Grid (Small Cards) */}
+        {deptHealth.map((dept, i) => (
+          <motion.div key={i} variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 3', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }} onClick={() => navigateTo(dept.link)}>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ color: dept.color, background: `${dept.color}15`, padding: '0.5rem', borderRadius: '0.75rem' }}>{dept.icon}</div>
                 <RagBadge status={dept.rag} />
-              </div>
-              <div>
-                <div style={{ fontWeight:700, fontSize:'0.9rem', marginBottom:'0.25rem' }}>{dept.dept}</div>
-                <div style={{ fontSize:'1.75rem', fontWeight:800 }}>{dept.score}<span style={{ fontSize:'0.9rem', color:'var(--text-muted)' }}>/100</span></div>
-              </div>
-              {/* Score Bar */}
-              <div style={{ height:'6px', background:'var(--bg-subtle)', borderRadius:'999px', overflow:'hidden' }}>
-                <motion.div
-                  initial={{ width:0 }} animate={{ width:`${dept.score}%` }}
-                  transition={{ duration:1, delay: i * 0.1 }}
-                  style={{ height:'100%', background:dept.rag === 'red' ? '#EF4444' : dept.rag === 'amber' ? '#F59E0B' : '#10B981', borderRadius:'999px' }}
-                />
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:'4px', fontSize:'0.75rem', color: dept.trend > 0 ? '#10B981' : '#EF4444' }}>
-                {dept.trend > 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                {dept.trend > 0 ? '+' : ''}{dept.trend}% ce mois
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
+             </div>
+             <div>
+                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{dept.dept}</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{dept.score}%</div>
+             </div>
+             <div style={{ height: '4px', background: 'var(--bg-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
+                <motion.div initial={{ width: 0 }} animate={{ width: `${dept.score}%` }} style={{ height: '100%', background: dept.color }} />
+             </div>
+          </motion.div>
+        ))}
 
-      {/* ── CA Réalisé vs Prévisions Chart ── */}
-      {isSales && (
-        <motion.div variants={itemVariants} className="glass" style={{ padding:'2rem', borderRadius:'1.5rem' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem', flexWrap:'wrap', gap:'1rem' }}>
+        {/* 4. Real-time Activity / Charts (Wide) */}
+        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 12', padding: '2rem' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'2rem' }}>
             <div>
-              <h3 style={{ fontSize:'1.15rem', fontWeight:700, margin:0 }}>C.A. Réalisé vs Prévisions</h3>
-              <p style={{ color:'var(--text-muted)', fontSize:'0.85rem', margin:'0.25rem 0 0 0' }}>Performance commerciale sur 12 mois glissants</p>
+              <h3 style={{ fontSize:'1.25rem', fontWeight:900, margin:0 }}>Flux de Performance Mensuel</h3>
+              <p style={{ color:'var(--text-muted)', fontSize:'0.9rem', margin:'0.4rem 0 0 0' }}>Analyse comparative C.A. vs Prévisions</p>
             </div>
-            <div style={{ display:'flex', gap:'1.5rem', fontSize:'0.8rem' }}>
-              <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', height:'3px', background:'var(--accent)', display:'inline-block', borderRadius:'2px' }} /> Réalisé</span>
-              <span style={{ display:'flex', alignItems:'center', gap:'6px' }}><span style={{ width:'12px', background:'#8B5CF6', display:'inline-block', borderRadius:'2px', borderTop:'3px dashed #8B5CF6', height:'0' }} /> Prévisions</span>
+            <div style={{ display:'flex', gap:'1.5rem', fontWeight: 800, fontSize: '0.8rem' }}>
+              <span style={{ display:'flex', alignItems:'center', gap:'8px' }}><span style={{ width:'12px', height:'12px', background:'var(--accent)', borderRadius:'3px' }} /> Réalisé</span>
+              <span style={{ display:'flex', alignItems:'center', gap:'8px' }}><span style={{ width:'12px', height:'12px', border:'2px dashed #8B5CF6', borderRadius:'3px' }} /> Prévisions</span>
             </div>
           </div>
-          <SafeResponsiveChart minHeight={280} fallbackHeight={280}>
-            <LineChart data={caComparaisonData} margin={{ top:5, right:20, left:0, bottom:5 }}>
+          <SafeResponsiveChart minHeight={300} fallbackHeight={300}>
+            <LineChart data={caComparaisonData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill:'var(--text-muted)', fontSize:12 }} />
+              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill:'var(--text-muted)', fontSize:12, fontWeight: 700 }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill:'var(--text-muted)', fontSize:11 }} tickFormatter={v => `${(v/1e9).toFixed(1)}Md`} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize:'0.8rem', paddingTop:'1rem' }} />
-              <ReferenceLine y={2800000000} stroke="#EF444430" strokeDasharray="4 4" label={{ value:'Objectif Annuel', position:'right', fill:'#EF4444', fontSize:10 }} />
-              <Line type="monotone" dataKey="prevu"   name="Prévisions" stroke="#8B5CF6" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls />
-              <Line type="monotone" dataKey="realise" name="Réalisé"    stroke="var(--accent)" strokeWidth={3} dot={{ r:4, fill:'var(--accent)', strokeWidth:0 }} connectNulls />
+              <Line type="monotone" dataKey="prevu" stroke="#8B5CF6" strokeWidth={3} strokeDasharray="8 5" dot={false} />
+              <Line type="monotone" dataKey="realise" stroke="var(--accent)" strokeWidth={4} dot={{ r:6, fill:'var(--accent)', strokeWidth:3, stroke: 'white' }} />
             </LineChart>
           </SafeResponsiveChart>
         </motion.div>
-      )}
 
-      {/* ── KPI Rows by Department (Role-Based) ── */}
-      <div style={{ display:'flex', flexDirection:'column', gap:'2.5rem' }}>
-        
-        {/* VENTES */}
-        {isSales && (
-          <motion.div variants={itemVariants}>
-            <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-              <Target size={18} color="#3B82F6" /> Direction Commerciale
-            </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Chiffre d'Affaires Réalisé" value={formatCurrency(metrics.sales.caRealise, true)} trend={0} trendType="up" icon={<DollarSign size={22} />} color="#3B82F6" sparklineData={[]} onDrillDown={() => handleDrillDown('sales_ca')} onClick={() => navigateTo('sales')} />
-              <KpiCard title="Évolution Pipeline"         value={`+${metrics.sales.pipelineEvo}%`}             trend={0} trendType="up"   icon={<Briefcase size={22} />} color="#8B5CF6" sparklineData={[]} onClick={() => navigateTo('crm')} />
-              <KpiCard title="Coût d'Acquisition (CAC)"  value={formatCurrency(metrics.sales.cac)}             trend={0}  trendType="up"   icon={<ShoppingCart size={22} />} color="#10B981" sparklineData={[]} onClick={() => navigateTo('marketing')} />
-              <KpiCard title="Valeur Vie Client (LTV)"   value={formatCurrency(metrics.sales.ltv, true)}       trend={0}  trendType="up"   icon={<Users size={22} />} color="#F43F5E" sparklineData={[]}  onClick={() => navigateTo('crm')} />
-            </div>
-          </motion.div>
-        )}
+      </div>
 
-        {/* FINANCE */}
-        {isCFO && (
-          <motion.div variants={itemVariants}>
-            <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-              <DollarSign size={18} color="#10B981" /> Direction Financière (CFO)
-            </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Cash-flow Opérationnel" value={formatCurrency(metrics.finance.cashFlow, true)} trend={0}  trendType="up"   icon={<ActivityIcon size={22} />} color="#10B981" sparklineData={[]} onDrillDown={() => handleDrillDown('finance_cashflow')} />
-              <KpiCard title="DSO (Délai Recouvrement)" value={`${metrics.finance.dso} Jours`}             trend={0} trendType="down" icon={<Calendar size={22} />}  color="#EF4444" sparklineData={[]}   onDrillDown={() => handleDrillDown('finance_dso')} />
-              <KpiCard title="Marge Nette Globale"     value={`${metrics.finance.margeNette}%`}             trend={0}  trendType="up"   icon={<ArrowUpRight size={22} />} color="#06B6D4" sparklineData={[]} />
-            </div>
-          </motion.div>
-        )}
-
-        {/* SUPPLY CHAIN */}
-        {isSupply && (
-          <motion.div variants={itemVariants}>
-            <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-              <Truck size={18} color="#F59E0B" /> Supply Chain & Logistique
-            </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Taux de Service (OTIF)"      value={`${metrics.supply.otif}%`}             trend={0}  trendType="down" icon={<Target size={22} />}    color="#F59E0B" sparklineData={[]} onDrillDown={() => handleDrillDown('supply_otif')} />
-              <KpiCard title="Rotation des Stocks"          value={`${metrics.supply.rotationStocks}x/an`} trend={0}  trendType="up"   icon={<Package size={22} />}   color="#8B5CF6" sparklineData={[]} />
-              <KpiCard title="Coût Logistique / Commande"  value={formatCurrency(metrics.supply.coutLogistique)} trend={0} trendType="up" icon={<ArrowDownRight size={22} />} color="#10B981" sparklineData={[]} />
-            </div>
-          </motion.div>
-        )}
-
-        {/* RESSOURCES HUMAINES */}
-        {isHR && (
-          <motion.div variants={itemVariants}>
-            <h3 style={{ fontSize:'1.1rem', fontWeight:700, marginBottom:'1.25rem', display:'flex', alignItems:'center', gap:'0.5rem' }}>
-              <HeartPulse size={18} color="#F43F5E" /> Ressources Humaines
-            </h3>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap:'1.5rem' }}>
-              <KpiCard title="Masse Salariale"    value={formatCurrency(metrics.hr.masseSalariale, true)} trend={0}  trendType="down" icon={<Users size={22} />}         color="#3B82F6" sparklineData={[]} onClick={() => navigateTo('hr')} />
-              <KpiCard title="Taux de Turnover"   value={`${metrics.hr.turnover}%`}                       trend={0}  trendType="up"   icon={<ActivityIcon size={22} />}   color="#10B981" sparklineData={[]} onClick={() => navigateTo('hr')} />
-              <KpiCard title="Taux d'Absentéisme" value={`${metrics.hr.absenteisme}%`}                    trend={0}  trendType="down" icon={<AlertTriangle size={22} />}  color="#F43F5E" sparklineData={[]} onClick={() => navigateTo('hr')} />
-              <KpiCard title="Effectif Total"     value={metrics.hr.effectif}                      trend={0}  trendType="up"   icon={<Users size={22} />}          color="#8B5CF6" sparklineData={[]} onClick={() => navigateTo('hr')} />
-            </div>
-          </motion.div>
-        )}
+      {/* ── Secondary KPI Grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+         <KpiCard title="Masse Salariale" value={formatCurrency(metrics.hr.masseSalariale, true)} trend={+2} trendType="up" icon={<Users size={22} />} color="#3B82F6" />
+         <KpiCard title="OTIF Logistique" value={`${metrics.supply.otif}%`} trend={-1} trendType="down" icon={<Truck size={22} />} color="#F59E0B" />
+         <KpiCard title="Marge Nette" value={`${metrics.finance.margeNette}%`} trend={+0.5} trendType="up" icon={<TrendingUp size={22} />} color="#10B981" />
       </div>
 
       {/* ── Quick Actions ── */}

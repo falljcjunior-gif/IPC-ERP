@@ -4,7 +4,7 @@ import { updatePassword } from 'firebase/auth';
 import { doc, updateDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
-  Moon, Sun, Grid, Home, ShoppingCart, Package, FileText, Users2,
+  Moon, Sun, Grid, Home, ShoppingCart, Package as Box, FileText, Users2,
   Factory, Briefcase, ShoppingBag, Mail, ArrowRight, ShieldCheck,
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
@@ -14,6 +14,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useBusiness } from '../BusinessContext';
 import { registry } from '../services/Registry';
+
+// Lazy loaded components
 const DetailOverlay = lazy(() => import('./DetailOverlay'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
@@ -26,7 +28,7 @@ import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   PLATFORM SHELL (V1.2 - CLEAN)
+   PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { 
@@ -58,9 +60,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   // Pointage RH State
   const [showPointage, setShowPointage] = useState(false);
 
-  // Navigation State (UNQIUE NAMES)
+  // Navigation State
   const [appsPool, setAppsPool] = useState([]);
-  const [openSections, setOpenSections] = useState(['Cœur de Métier', 'Opérations & Logistique', 'Finance & Stratégie', 'RH & Collaboration', 'Configuration']);
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,16 +90,8 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
 
   useEffect(() => {
-    // Registry is now initialized at App level. 
-    // We just need to sync the appsPool here.
     setAppsPool(registry.getModulesByCategory());
   }, []);
-
-  const toggleSection = (label) => {
-    setOpenSections(prev => 
-      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
-    );
-  };
 
   useEffect(() => {
     globalSearch(search.query);
@@ -112,15 +105,15 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       appId: activeApp,
       accessLevel
     };
-    // 1. Check Registry First (Primary)
+    
     const regModule = registry.getModule(activeApp);
     if (regModule && regModule.component) {
       const RegComponent = regModule.component;
       return (
         <Suspense fallback={
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-subtle)' }}>
+          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
              <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--accent)', borderRadius: '50%', marginBottom: '1rem' }} />
-             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Initialisation du module...</div>
+             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cerveau analytique en cours d'activation...</div>
           </div>
         }>
           <RegComponent {...commonProps} />
@@ -128,12 +121,11 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       );
     }
 
-    // 2. Fallback / Loading
     return (
       <div style={{ 
         height: '100%', display: 'flex', flexDirection: 'column', 
         alignItems: 'center', justifyContent: 'center', gap: '1.5rem',
-        opacity: 0.6
+        opacity: 0.6, minHeight: '400px'
       }}>
         <div className="spinner" style={{ 
           width: '40px', height: '40px', border: '3px solid var(--border)', 
@@ -143,160 +135,196 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>Initialisation du Module {activeApp}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Moteur de plateforme IPC Intelligence en cours de chargement...</p>
         </div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spinner { animation: spin 0.8s linear infinite; }`}</style>
       </div>
     );
   };
 
   return (
     <div style={{ 
-      display: 'flex', height: '100vh', background: 'var(--bg-subtle)',
+      display: 'flex', height: '100vh', background: 'var(--bg)',
       '--primary': config.theme.primary, '--accent': config.theme.accent,
       '--accent-hover': config.theme.accent + 'dd', '--radius': config.theme.borderRadius
     }}>
-      {shellView.mobile && shellView.sidebar && (
-        <div onClick={() => setShellView(p => ({ ...p, sidebar: false }))} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 999 }} />
-      )}
-
-      <motion.aside
-        initial={false}
+      
+      {/* ── SIDEBAR (Floating Glass Control) ── */}
+      <motion.aside 
+        initial={{ x: -100, opacity: 0 }}
         animate={{ 
-          width: config.theme.isCompact ? (shellView.sidebar ? '180px' : '60px') : (shellView.sidebar ? '260px' : '80px'),
-          x: shellView.mobile && !shellView.sidebar ? -280 : 0
+          x: shellView.mobile && !shellView.sidebar ? -280 : 0,
+          opacity: 1,
+          width: shellView.sidebar ? '280px' : '80px'
         }}
-        className="glass"
-        style={{ height: '100%', display: 'flex', flexDirection: 'column', zIndex: 1000, borderRight: '1px solid var(--border)', position: shellView.mobile ? 'fixed' : 'relative', background: 'var(--bg)' }}
+        style={{
+          width: shellView.sidebar ? '280px' : '80px',
+          height: 'calc(100vh - 2rem)',
+          margin: '1rem',
+          position: shellView.mobile ? 'fixed' : 'relative',
+          zIndex: 1000,
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'var(--transition)',
+          backgroundColor: 'var(--primary)',
+          borderRadius: 'var(--radius-lg)',
+          boxShadow: 'var(--shadow-lg)',
+          overflow: 'hidden',
+          border: '1px solid rgba(255,255,255,0.05)'
+        }}
       >
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'center' }}>
-          <div style={{ minWidth: `${globalSettings.logoWidth || 40}px`, height: `${globalSettings.logoHeight || 40}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={globalSettings.logoUrl || "/logo.png"} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        {/* Sidebar Header / Logo */}
+        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ 
+            minWidth: '40px', 
+            height: '40px', 
+            background: 'var(--accent)', 
+            borderRadius: '12px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            boxShadow: '0 0 20px var(--accent-glow)'
+          }}>
+            <Box size={24} color="white" />
           </div>
+          {shellView.sidebar && (
+            <div style={{ color: 'white' }}>
+              <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase', marginTop: '4px' }}>Control Center</div>
+            </div>
+          )}
         </div>
 
-        <nav style={{ flex: 1, padding: '0.5rem', overflowY: 'auto' }}>
+        {/* Navigation Section */}
+        <div style={{ flex: 1, padding: '1rem 0.5rem', overflowY: 'auto' }}>
           {appsPool.map((cat) => {
             const visibleItems = (cat.items || []).filter(item => {
               if (item.hidden) return false;
               if (userRole === 'SUPER_ADMIN') return true;
-              
-              const access = getModuleAccess(currentUser.id, item.id);
-              return access !== 'none';
+              return getModuleAccess(currentUser.id, item.id) !== 'none';
             });
             if (visibleItems.length === 0) return null;
-            const isExpanded = openSections.includes(cat?.label);
 
             return (
-              <div key={cat?.label || index} style={{ marginBottom: '0.5rem' }}>
+              <div key={cat.label} style={{ marginBottom: '1.5rem' }}>
                 {shellView.sidebar && (
-                  <div onClick={() => toggleSection(cat?.label)} style={{ padding: '0.5rem 1rem', fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                    {cat?.label}
-                    <ChevronDown size={12} style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: '0.2s' }} />
+                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px' }}>
+                    {cat.label}
                   </div>
                 )}
-                <AnimatePresence initial={false}>
-                  {(isExpanded || !shellView.sidebar) && (
-                    <motion.div initial={shellView.sidebar ? { height: 0, opacity: 0 } : {}} animate={shellView.sidebar ? { height: 'auto', opacity: 1 } : {}} exit={shellView.sidebar ? { height: 0, opacity: 0 } : {}} style={{ overflow: 'hidden' }}>
-                      {visibleItems.map((item) => (
-                        <motion.div key={item.id} whileHover={{ x: 5 }} onClick={() => setActiveApp(item.id)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.6rem 1rem', marginBottom: '0.25rem', borderRadius: '0.6rem', cursor: 'pointer', color: activeApp === item.id ? 'var(--accent)' : 'var(--text-muted)', background: activeApp === item.id ? 'var(--bg)' : 'transparent', fontSize: '0.9rem' }}>
-                          {item.icon}
-                          {shellView.sidebar && <span style={{ fontWeight: activeApp === item.id ? 700 : 500 }}>{item.label}</span>}
-                        </motion.div>
-                      ))}
+                {visibleItems.map((item) => {
+                  const isActive = activeApp === item.id;
+                  return (
+                    <motion.div
+                      key={item.id}
+                      whileHover={{ x: 4 }}
+                      onClick={() => setActiveApp(item.id)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0.85rem 1rem',
+                        borderRadius: '1rem',
+                        cursor: 'pointer',
+                        marginBottom: '0.25rem',
+                        color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
+                        background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                        transition: 'var(--transition)',
+                        position: 'relative'
+                      }}
+                    >
+                      {isActive && (
+                        <motion.div layoutId="active-nav" style={{ position: 'absolute', left: 0, width: '4px', height: '60%', background: 'var(--accent)', borderRadius: '0 4px 4px 0' }} />
+                      )}
+                      <div style={{ marginRight: shellView.sidebar ? '1rem' : 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         {React.cloneElement(item.icon, { size: 20 })}
+                      </div>
+                      {shellView.sidebar && <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.label}</span>}
                     </motion.div>
-                  )}
-                </AnimatePresence>
+                  );
+                })}
               </div>
             );
           })}
-        </nav>
+        </div>
 
-        <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
-          <div onClick={() => { logout(); setView('login'); }} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-            <LogOut size={20} />
-            {shellView.sidebar && <span>Déconnexion</span>}
+        {/* User Profile / Bottom */}
+        <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem' }}>
+             <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: 'white' }}>
+                {currentUser?.nom?.charAt(0)}
+             </div>
+             {shellView.sidebar && (
+               <div style={{ color: 'white', flex: 1, overflow: 'hidden' }}>
+                 <div style={{ fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser?.nom}</div>
+                 <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>{userRole}</div>
+               </div>
+             )}
+             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+                <LogOut size={18} />
+             </button>
           </div>
         </div>
       </motion.aside>
 
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <header className="glass" style={{ padding: shellView.mobile ? '0.8rem 1rem' : '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', height: '70px', borderBottom: '1px solid var(--border)', zIndex: 50 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: shellView.mobile ? '0.5rem' : '1.25rem' }}>
-            <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)', display: 'flex', alignItems: 'center' }}>
-              {shellView.sidebar ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
-            </button>
-            <div style={{ position: 'relative', flex: 1, minWidth: shellView.mobile ? '40px' : '300px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg)', padding: '0.5rem 1rem', borderRadius: '0.75rem', border: search.focused ? '1px solid var(--accent)' : '1px solid var(--border)', width: '100%' }}>
+      {/* ── MAIN CONTENT AREA ── */}
+      <main style={{ 
+        flex: 1, 
+        padding: '2rem',
+        transition: 'var(--transition)',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        overflowY: 'auto'
+      }}>
+        {/* Topbar (Actions) */}
+        <header style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '2.5rem',
+          padding: '0.75rem 1.5rem',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '1.5rem',
+          border: '1px solid var(--border)',
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
+              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {shellView.sidebar ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', padding: '0.5rem 1rem', gap: '0.75rem', flex: 1, maxWidth: '400px' }}>
                 <Search size={18} color="var(--text-muted)" />
-                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} onFocus={() => setSearch(p => ({ ...p, focused: true }))} onBlur={() => setTimeout(() => setSearch(p => ({ ...p, focused: false })), 200)} placeholder="Rechercher ou scanner..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', width: '100%' }} />
-                <button onClick={() => setShowScanner(true)} title="Scanner un Code-Barres / QR" style={{ background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--accent)' }}>
-                  <Camera size={20} />
+                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} placeholder="Rechercher ou scanner..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: '0.85rem', width: '100%' }} />
+                <button onClick={() => setShowScanner(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)' }}>
+                  <Camera size={18} />
                 </button>
               </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            {userRole === 'SUPER_ADMIN' && (
-              <select 
-                 value={activeBrand} 
-                 onChange={(e) => setActiveBrand(e.target.value)} 
-                 className="glass"
-                 title="Changer de Marque / Société"
-                 style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border)', fontWeight: 600, outline: 'none', cursor: 'pointer', background: 'var(--bg-subtle)', color: 'var(--text)', fontSize: '0.8rem' }}
-              >
-                 {BRANDS.map(b => (
-                   <option key={b.id} value={b.id}>{b.name}</option>
-                 ))}
-              </select>
-            )}
-            <button onClick={() => setShellView(p => ({ ...p, ai: true }))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600, fontSize: '0.85rem' }}>
-              <Sparkles size={20} /> <span className="hide-mobile">Intelligence Cloud</span>
-            </button>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text)' }}>{theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}</button>
-            <div style={{ position: 'relative' }}>
-               <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
-               <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
-            </div>
-            <button 
-              onClick={() => setShowPointage(true)} 
-              title="Pointage RH (Check-in/Check-out)" 
-              style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#10B981', display: 'flex', alignItems: 'center' }}
-            >
-               <Clock size={22} />
-            </button>
-            <div onClick={() => setShellView(p => ({ ...p, chat: true }))} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--accent)20', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '2rem', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}><MessageCircle size={18} /> Chat</div>
-            <div style={{ position: 'relative' }}>
-              <div onClick={() => setShellView(p => ({ ...p, profile: !p.profile }))} style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 600, cursor: 'pointer' }}>{currentUser.nom[0]}</div>
-              <AnimatePresence>
-                {shellView.profile && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="glass"
-                    style={{ position: 'absolute', top: '120%', right: 0, minWidth: '220px', padding: '1rem', borderRadius: '1.25rem', border: '1px solid var(--border)', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', zIndex: 100 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)', marginBottom: '0.75rem' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>{currentUser.nom[0]}</div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{currentUser.nom}</div>
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{userRole}</div>
-                      </div>
-                    </div>
-                    <button onClick={() => { setShellView(p => ({...p, profile: false})); setPwdModal(p => ({...p, open: true})) }}
-                      style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, borderRadius: '0.5rem' }}>
-                      <Key size={16} /> Changer le mot de passe
-                    </button>
-                    <button onClick={() => { logout(); setView('login'); }}
-                      style={{ width: '100%', padding: '0.5rem', background: 'transparent', border: 'none', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, borderRadius: '0.5rem', marginTop: '4px' }}>
-                      <LogOut size={16} /> Déconnexion
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </div>
+           </div>
+           
+           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button 
+                onClick={toggleTheme}
+                className="btn-glass" style={{ width: '40px', height: '40px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+              </button>
+              <div style={{ position: 'relative' }}>
+                <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
+                <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
+              </div>
+              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="btn-primary" style={{ padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.8rem' }}>
+                 <Sparkles size={16} /> Nexus
+              </button>
+           </div>
         </header>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-           <AnimatePresence mode="wait">
-            <motion.div key={activeApp} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>{renderContent()}</motion.div>
-           </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeApp}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       <Suspense fallback={null}>
@@ -317,10 +345,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         recordType={details.context.subModule}
         appId={details.context.appId}
         fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => {
-          // Dynamic Injection for Campaign Source
-          if (name === 'campagne_id') {
-            return { ...f, name, type: 'selection', options: activeCampaigns };
-          }
+          if (name === 'campagne_id') return { ...f, name, type: 'selection', options: activeCampaigns };
           return { ...f, name };
         })}
         onSave={(formData) => {
@@ -333,19 +358,11 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <TeamChat isOpen={shellView.chat} onClose={() => setShellView(p => ({ ...p, chat: false }))} theme={theme} />
       <AIAssistant spotlightOpen={shellView.ai} setSpotlightOpen={(val) => setShellView(p => ({ ...p, ai: val }))} />
       
-      {shellView.mobile && (
-        <MobileNavbar 
-          activeApp={activeApp} 
-          setActiveApp={setActiveApp} 
-          hasCrmAccess={getModuleAccess(currentUser.id, 'crm') !== 'none'}
-          onOpenSettings={() => setShellView(p => ({ ...p, profile: true }))}
-        />
-      )}
+      {shellView.mobile && <MobileNavbar activeApp={activeApp} setActiveApp={setActiveApp} hasCrmAccess={getModuleAccess(currentUser.id, 'crm') !== 'none'} onOpenSettings={() => setShellView(p => ({ ...p, profile: true }))} />}
 
-      {/* Password Change Modal */}
       <AnimatePresence>
         {pwdModal.open && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass" style={{ width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
               <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={20} color="var(--accent)" /> Changer de mot de passe</h3>
               
@@ -377,16 +394,11 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                     setPwdModal(p => ({ ...p, loading: true, error: '' }));
                     try {
                       await updatePassword(auth.currentUser, pwdModal.newPwd);
-                      // Update DB flag if exists
-                      if (currentUser?.id) {
-                        await updateDoc(doc(db, 'users', currentUser.id), {
-                          'profile.mustChangePassword': false
-                        }).catch(e => console.warn("Mise à jour drapeau échouée:", e));
-                      }
+                      if (currentUser?.id) await updateDoc(doc(db, 'users', currentUser.id), { 'profile.mustChangePassword': false });
                       setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
                       setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
                     } catch (err) {
-                      setPwdModal(p => ({ ...p, error: 'Erreur: Veuillez vous reconnecter puis réessayer. (' + err.message + ')', loading: false }));
+                      setPwdModal(p => ({ ...p, error: 'Erreur: Veuillez vous reconnecter.', loading: false }));
                     }
                   }}
                   disabled={pwdModal.loading || pwdModal.newPwd === ''}
@@ -399,46 +411,6 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         )}
       </AnimatePresence>
 
-      {/* --- CALL SYSTEM --- */}
-      <AnimatePresence>
-        {activeCall && activeCall.status === 'ringing' && !activeCall.accepted && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50, scale: 0.9 }} 
-            animate={{ opacity: 1, y: 0, scale: 1 }} 
-            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-            style={{ 
-              position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 5000, 
-              width: '320px', padding: '1.5rem', borderRadius: '1.5rem',
-              background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.1)', color: 'white',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.5)', textAlign: 'center'
-            }}
-          >
-            {/* Animated Pulse Ring */}
-            <div className="call-pulse" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent)', margin: '0 auto 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-               <MessageCircle size={40} />
-            </div>
-            
-            <h4 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, fontSize: '1.1rem' }}>{activeCall.contactName}</h4>
-            <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', fontWeight: 600 }}>Appel {activeCall.type === 'video' ? 'Vidéo' : 'Audio'} Entrant...</p>
-
-            <div style={{ display: 'flex', gap: '1rem' }}>
-               <button onClick={rejectCall} style={{ flex: 1, padding: '0.8rem', borderRadius: '1rem', border: 'none', background: '#EF4444', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Refuser</button>
-               <button onClick={acceptCall} style={{ flex: 1, padding: '0.8rem', borderRadius: '1rem', border: 'none', background: '#10B981', color: 'white', fontWeight: 800, cursor: 'pointer' }}>Répondre</button>
-            </div>
-
-            <style>{`
-              @keyframes callPulse {
-                0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7); transform: scale(0.95); }
-                70% { box-shadow: 0 0 0 20px rgba(139, 92, 246, 0); transform: scale(1); }
-                100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); transform: scale(0.95); }
-              }
-              .call-pulse { animation: callPulse 1.5s infinite; }
-            `}</style>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <CallInterface 
         isOpen={activeCall && activeCall.accepted} 
         onClose={() => setActiveCall(null)}
@@ -446,38 +418,17 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
         role={activeCall?.role}
         callType={activeCall?.type}
         contactName={activeCall?.contactName}
-        onHangup={async () => {
-          const roomId = activeCall?.roomId || activeCall?.id;
-          if (roomId) {
-            try {
-               // 1. Cancel any ringing receivers
-               const q = query(collection(db, 'calls'), where('roomId', '==', roomId), where('status', '==', 'ringing'));
-               const snap = await getDocs(q);
-               snap.forEach(d => updateDoc(d.ref, { status: 'ended' }).catch(()=>{}));
-               
-               // 2. Instruct any active participants in the room to hang up via a room signal
-               await setDoc(doc(db, 'rooms', roomId), { status: 'ended', endedAt: new Date().toISOString() }, { merge: true });
-            } catch (e) {
-               console.warn("Error ending call globally:", e);
-            }
-          }
-          setActiveCall(null);
-        }}
       />
       <AnimatePresence>
-        {showScanner && (
-           <BarcodeScanner 
-             onClose={() => setShowScanner(false)} 
-             onScan={(text) => {
-               setSearch(p => ({ ...p, query: text }));
-               setShowScanner(false);
-             }} 
-           />
-        )}
+        {showScanner && <BarcodeScanner onClose={() => setShowScanner(false)} onScan={(text) => { setSearch(p => ({ ...p, query: text })); setShowScanner(false); }} />}
       </AnimatePresence>
       <AnimatePresence>
         {showPointage && <PointageWidget onClose={() => setShowPointage(false)} />}
       </AnimatePresence>
+      <style>{`
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
+        .spinner { animation: spin 0.8s linear infinite; }
+      `}</style>
     </div>
   );
 };
