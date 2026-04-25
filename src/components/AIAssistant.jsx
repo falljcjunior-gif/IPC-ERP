@@ -323,4 +323,3 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 };
 
 export default AIAssistant;
- Greenland;
