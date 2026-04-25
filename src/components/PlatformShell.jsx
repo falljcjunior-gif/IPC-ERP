@@ -41,9 +41,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
     activeBrand, setActiveBrand, BRANDS
   } = useStore();
 
-  // currentUser comes from the auth slice as 'user'; derive userRole from it
+  // currentUser comes from the auth slice as 'user'; derive userRole and activeBrand locally
   const currentUser = store.user;
   const userRole = currentUser?.role || 'GUEST';
+  const activeBrand = store.globalSettings?.brand || 'ALL';
 
   // Unified UI Flags
   const [shellView, setShellView] = useState({

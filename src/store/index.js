@@ -63,14 +63,9 @@ export const useStore = create(
         { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },
         { id: 'B2B_LOG', name: 'B2B Logistics', short: 'B2B' }
       ],
-      get activeBrand() { return this.globalSettings?.brand || 'ALL'; },
       setActiveBrand: (brand) => set((state) => ({ globalSettings: { ...state.globalSettings, brand } })),
 
       // ── Auth helpers ─────────────────────────────────────────────────────
-      // Alias: currentUser mirrors the auth slice 'user' for backward compatibility
-      get currentUser() { return get().user; },
-      userRole: undefined, // resolved dynamically in components via currentUser?.role
-
       logout: async () => {
         try {
           await signOut(auth);
