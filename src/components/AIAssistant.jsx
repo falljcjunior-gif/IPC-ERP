@@ -1,312 +1,447 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Cpu, Send, X, Search, Zap, ArrowRight, MessageSquare,
-  Command, HelpCircle, Layout, Mic, CheckCircle2, AlertCircle,
-  TrendingUp, Activity, BarChart3, Target, Info
+  Cpu, Send, X, Zap, MessageSquare,
+  HelpCircle, Mic, TrendingUp, Activity, BarChart3, Target,
+  AlertCircle, CheckCircle2, Sparkles, Loader2, Settings
 } from 'lucide-react';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useStore } from '../store';
 
+const functions = getFunctions();
+const nexusChatFn = httpsCallable(functions, 'nexusChat');
+
+// ══ Typing animation component ═══════════════════════════════
+const TypingDots = () => (
+  <div style={{ display: 'flex', gap: '4px', padding: '4px 0' }}>
+    {[0, 1, 2].map(i => (
+      <motion.div key={i}
+        animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
+        transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}
+        style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }}
+      />
+    ))}
+  </div>
+);
+
+// ══ Message bubble ════════════════════════════════════════════
+const MessageBubble = ({ m, onExecuteAction }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    style={{
+      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+      maxWidth: '87%',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    }}
+  >
+    <div style={{
+      background: m.role === 'user'
+        ? 'linear-gradient(135deg, var(--accent), var(--accent-hover))'
+        : 'rgba(255,255,255,0.06)',
+      color: m.role === 'user' ? 'white' : '#e2e8f0',
+      padding: '0.9rem 1.1rem',
+      borderRadius: m.role === 'user'
+        ? '1.5rem 1.5rem 0.3rem 1.5rem'
+        : '1.5rem 1.5rem 1.5rem 0.3rem',
+      fontSize: '0.88rem',
+      lineHeight: 1.65,
+      boxShadow: m.role === 'user' ? '0 4px 15px rgba(16,185,129,0.3)' : 'none',
+      border: m.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+      whiteSpace: 'pre-wrap',
+    }}>
+      {m.content}
+    </div>
+
+    {/* Action card */}
+    {m.action && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        style={{
+          padding: '1rem 1.1rem',
+          borderRadius: '1.2rem',
+          border: '1px solid rgba(16,185,129,0.3)',
+          background: 'rgba(16,185,129,0.07)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.6rem' }}>
+          <Zap size={13} /> Action Nexus disponible
+        </div>
+        <button
+          onClick={() => onExecuteAction(m.action)}
+          style={{
+            width: '100%',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
+            color: 'white', border: 'none',
+            padding: '0.65rem 1rem',
+            borderRadius: '0.85rem',
+            fontWeight: 800, fontSize: '0.82rem',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
+          }}
+        >
+          <CheckCircle2 size={14} />
+          {m.action.type === 'NAVIGATE' ? `Aller vers ${m.action.appId}` : `Créer : ${m.action.label}`}
+        </button>
+      </motion.div>
+    )}
+
+    {/* Error badge */}
+    {m.error && (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#F87171', fontWeight: 600 }}>
+        <AlertCircle size={13} /> {m.error}
+      </div>
+    )}
+  </motion.div>
+);
+
+// ══ MAIN COMPONENT ════════════════════════════════════════════
 const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
-  const { config, navigateTo, globalSearch, data, addRecord, shellView } = useStore();
+  const { config, navigateTo, globalSearch, data, addRecord, shellView, currentUser, userRole, formatCurrency } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const aiName = config.aiName || 'Nexus AI';
-  
-  const [messages, setMessages] = useState([
-    { 
-      role: 'assistant', 
-      content: `Système Nexus en ligne. Je suis votre copilote stratégique. Comment puis-je optimiser vos opérations aujourd'hui ?` 
-    }
-  ]);
-  
+  const [apiConfigured, setApiConfigured] = useState(true); // optimistic
+  const aiName = config?.aiName || 'Nexus AI';
+
+  const [messages, setMessages] = useState([{
+    role: 'assistant',
+    content: `Système Nexus en ligne ✦ Alimenté par Gemini 2.0\n\nBonjour ! Je suis votre copilote stratégique. Posez-moi une question sur vos données, demandez une analyse ou naviguez dans les modules avec ma voix.`
+  }]);
+
   const inputRef = useRef(null);
   const chatEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  const scrollToBottom = () => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    if (spotlightOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (spotlightOpen && inputRef.current) inputRef.current.focus();
   }, [spotlightOpen]);
 
-  // Command+K listener
+  // Cmd+K listener
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setSpotlightOpen(prev => !prev);
-      }
-      if (e.key === 'Escape') {
-        setSpotlightOpen(false);
-        setIsOpen(false);
-      }
+    const handleKey = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); setSpotlightOpen(p => !p); }
+      if (e.key === 'Escape') { setSpotlightOpen(false); setIsOpen(false); }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
   }, [setSpotlightOpen]);
 
-  const startVoice = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'fr-FR';
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onend = () => setIsRecording(false);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setQuery(transcript);
-      processIntent(transcript);
+  // Build live ERP context to send to AI
+  const buildERPContext = useCallback(() => {
+    const counts = {};
+    if (data?.crm?.leads) counts['Leads CRM'] = data.crm.leads.length;
+    if (data?.hr?.employees) counts['Employés'] = data.hr.employees.length;
+    if (data?.base) {
+      Object.entries(data.base).forEach(([key, val]) => {
+        if (Array.isArray(val) && val.length > 0) counts[key] = val.length;
+      });
+    }
+
+    return {
+      activeModule: activeModule || 'dashboard',
+      userRole: userRole || currentUser?.role || 'STAFF',
+      userName: currentUser?.nom || currentUser?.email?.split('@')[0] || 'Utilisateur',
+      recordCounts: counts,
+      kpis: {}, // Could be populated from Analytics store
     };
-    recognition.start();
-  };
+  }, [data, activeModule, userRole, currentUser]);
 
-  const processIntent = (input) => {
+  const processMessage = useCallback(async (input) => {
+    if (!input?.trim() || isProcessing) return;
+    const userInput = input.trim();
+    setQuery('');
     setIsProcessing(true);
-    const lowInput = input.toLowerCase();
-    
-    setTimeout(() => {
-      let response = "";
-      let proposedAction = null;
 
-      if (lowInput.includes('crée') || lowInput.includes('ajoute') || lowInput.includes('nouveau')) {
-        if (lowInput.includes('facture')) {
-          proposedAction = { type: 'CREATE_RECORD', appId: 'finance', subModule: 'invoices', label: 'Facture Client' };
-          response = "Facturation identifiée. Je peux initialiser un brouillon de facture pour vous.";
-        }
-      } else if (lowInput.includes('analyse') || lowInput.includes('bi') || lowInput.includes('santé')) {
-         response = "Analyse systémique en cours... La santé globale de l'ERP est excellente. L'OTIF est à 94.2% et la marge nette consolidée à 18.5%.";
-      } else if (lowInput.includes('va vers') || lowInput.includes('ouvre')) {
-         const appMap = { 'rh': 'hr', 'finance': 'finance', 'vente': 'sales', 'crm': 'crm', 'prod': 'production' };
-         const matched = Object.keys(appMap).find(k => lowInput.includes(k));
-         if (matched) { navigateTo(appMap[matched]); setSpotlightOpen(false); setIsOpen(false); return; }
-      } else {
-         response = "Nexus prêt. Je peux analyser vos KPIs, naviguer entre les modules ou automatiser vos saisies de données.";
-      }
+    setMessages(prev => [...prev, { role: 'user', content: userInput }]);
 
-      setMessages(prev => [...prev, { role: 'user', content: input }, { role: 'assistant', content: response, action: proposedAction }]);
-      setQuery('');
+    // Optimistic: Check for local navigation shortcuts first
+    const lowInput = userInput.toLowerCase();
+    const NAV_MAP = {
+      'crm': 'crm', 'rh': 'hr', 'hr': 'hr', 'finance': 'finance',
+      'vente': 'sales', 'production': 'production', 'logistique': 'logistics',
+      'marketing': 'marketing', 'juridique': 'legal', 'admin': 'admin',
+      'dashboard': 'dashboard', 'tableau de bord': 'dashboard'
+    };
+    const navKey = Object.keys(NAV_MAP).find(k => lowInput.startsWith('va vers ' + k) || lowInput === k || lowInput === 'ouvre ' + k);
+    if (navKey) {
+      navigateTo(NAV_MAP[navKey]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Navigation vers le module ${navKey.toUpperCase()} effectuée.` }]);
+      setSpotlightOpen(false);
+      setIsOpen(false);
       setIsProcessing(false);
-    }, 800);
+      return;
+    }
+
+    try {
+      const chatHistory = messages.filter(m => m.role && m.content && !m.error).slice(-8);
+      const result = await nexusChatFn({
+        message: userInput,
+        history: chatHistory,
+        erpContext: buildERPContext()
+      });
+
+      const { response, action, success } = result.data;
+
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: response || 'Désolé, aucune réponse reçue.',
+        action: action || null,
+        error: !success ? '⚠️ Réponse partielle' : null
+      }]);
+
+    } catch (err) {
+      console.error('Nexus AI call failed:', err);
+      const errorMsg = err.code === 'functions/failed-precondition'
+        ? 'Clé API Gemini non configurée. Contactez votre administrateur.'
+        : err.code === 'functions/unauthenticated'
+        ? 'Vous devez être connecté pour utiliser Nexus AI.'
+        : 'Connexion Nexus interrompue. Vérifiez votre connexion internet.';
+
+      if (err.code === 'functions/failed-precondition') setApiConfigured(false);
+      setMessages(prev => [...prev, { role: 'assistant', content: errorMsg, error: err.code }]);
+    }
+
+    setIsProcessing(false);
+  }, [isProcessing, messages, buildERPContext, navigateTo, setSpotlightOpen]);
+
+  const executeAction = useCallback((action) => {
+    if (action.type === 'NAVIGATE') {
+      navigateTo(action.appId);
+      setSpotlightOpen(false);
+      setIsOpen(false);
+      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Navigation vers "${action.appId}" effectuée.` }]);
+    } else if (action.type === 'CREATE_RECORD') {
+      addRecord?.(action.appId, action.subModule, {});
+      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Création de "${action.label}" initiée dans ${action.appId}.` }]);
+    }
+  }, [navigateTo, addRecord, setSpotlightOpen]);
+
+  const startVoice = () => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.lang = 'fr-FR';
+    rec.onstart = () => setIsRecording(true);
+    rec.onend = () => setIsRecording(false);
+    rec.onresult = (e) => {
+      const t = e.results[0][0].transcript;
+      setQuery(t);
+      processMessage(t);
+    };
+    rec.start();
   };
 
-  const executeAction = (action) => {
-     if (action.type === 'CREATE_RECORD') {
-        setMessages(prev => [...prev, { role: 'assistant', content: `✅ Action exécutée : Création de ${action.label} initiée.` }]);
-     }
-  };
-
-  const currentModuleContext = useMemo(() => {
-     const contexts = {
-        'dashboard': "Analyse globale cross-domaine.",
-        'crm': "Optimisation du tunnel de vente et conversion leads.",
-        'hr': "Gestion des talents et conformité sociale.",
-        'finance': "Sécurisation des flux et pilotage du ROI.",
-        'production': "Optimisation de l'OEE et maintenance prédictive."
-     };
-     return contexts[activeModule] || "Soutien opérationnel standard.";
+  const contextLabel = useMemo(() => {
+    const map = {
+      dashboard: 'Vue Globale', crm: 'CRM', hr: 'RH', finance: 'Finance',
+      sales: 'Commerce', production: 'Production', logistics: 'Logistique',
+      marketing: 'Marketing', legal: 'Juridique', bi: 'BI', admin: 'Admin'
+    };
+    return map[activeModule] || 'Global';
   }, [activeModule]);
 
+  // ── Bubble (floating chat) ────────────────────────────────
   const renderBubble = () => (
     <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1rem' }}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.9, filter: 'blur(10px)' }}
+            initial={{ opacity: 0, y: 20, scale: 0.92, filter: 'blur(8px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: 20, scale: 0.9, filter: 'blur(10px)' }}
-            className="glass"
+            exit={{ opacity: 0, y: 20, scale: 0.92, filter: 'blur(8px)' }}
+            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             style={{
-              width: shellView?.mobile ? 'calc(100vw - 2rem)' : '400px',
-              height: '600px',
+              width: shellView?.mobile ? 'calc(100vw - 2rem)' : '420px',
+              height: '620px',
               borderRadius: '2rem',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              border: '1px solid var(--accent-glow)',
-              background: 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(20px)'
+              display: 'flex', flexDirection: 'column', overflow: 'hidden',
+              boxShadow: '0 30px 60px -12px rgba(0,0,0,0.6)',
+              border: '1px solid rgba(16,185,129,0.2)',
+              background: 'rgba(9, 16, 32, 0.97)',
+              backdropFilter: 'blur(24px)',
             }}
           >
             {/* Header */}
-            <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, var(--accent), #06B6D4)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{
+              padding: '1.25rem 1.5rem',
+              background: 'linear-gradient(135deg, #0d9468 0%, #0891b2 100%)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              flexShrink: 0,
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '6px', borderRadius: '10px' }}>
-                   <Cpu size={18} />
+                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '7px', borderRadius: '12px', display: 'flex' }}>
+                  <Cpu size={18} />
                 </div>
                 <div>
-                   <div style={{ fontWeight: 800, fontSize: '1rem' }}>Nexus Intelligence</div>
-                   <div style={{ fontSize: '0.65rem', opacity: 0.8, fontWeight: 600 }}>CONTEXTE : {currentModuleContext}</div>
+                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>Nexus Intelligence</div>
+                  <div style={{ fontSize: '0.65rem', opacity: 0.85, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>
+                    ✦ Gemini 2.0 · Module: {contextLabel}
+                  </div>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <X size={18} />
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!apiConfigured && (
+                  <div title="Clé API non configurée" style={{ color: '#FCA5A5', cursor: 'pointer' }}>
+                    <Settings size={18} />
+                  </div>
+                )}
+                <button onClick={() => setIsOpen(false)}
+                  style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={17} />
+                </button>
+              </div>
             </div>
 
-            {/* Chat Body */}
-            <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollbarWidth: 'none' }}>
-              {messages.map((m, i) => (
-                <div key={i} style={{ 
-                  alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '85%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.5rem'
-                }}>
-                  <div style={{ 
-                    background: m.role === 'user' ? 'var(--accent)' : 'var(--bg-subtle)',
-                    color: m.role === 'user' ? 'white' : 'var(--text)',
-                    padding: '1rem 1.25rem',
-                    borderRadius: m.role === 'user' ? '1.5rem 1.5rem 0.25rem 1.5rem' : '1.5rem 1.5rem 1.5rem 0.25rem',
-                    fontSize: '0.9rem',
-                    lineHeight: 1.6,
-                    boxShadow: m.role === 'user' ? '0 4px 15px var(--accent-glow)' : 'none',
-                    border: m.role === 'user' ? 'none' : '1px solid var(--border)'
-                  }}>
-                    {m.content}
+            {/* Chat messages */}
+            <div style={{ flex: 1, padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', scrollbarWidth: 'none' }}>
+              {messages.map((m, i) => <MessageBubble key={i} m={m} onExecuteAction={executeAction} />)}
+              {isProcessing && (
+                <div style={{ alignSelf: 'flex-start' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', padding: '0.9rem 1.2rem', borderRadius: '1.5rem 1.5rem 1.5rem 0.3rem' }}>
+                    <TypingDots />
                   </div>
-                  {m.action && (
-                    <div className="glass" style={{ padding: '1.25rem', borderRadius: '1.5rem', border: '1px solid var(--accent-glow)', background: 'rgba(16, 185, 129, 0.05)' }}>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.5rem' }}>
-                          <Zap size={14} /> Action Automatisée
-                       </div>
-                       <button 
-                         onClick={() => executeAction(m.action)}
-                         style={{ width: '100%', background: 'var(--accent)', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '0.85rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                       >
-                         Exécuter : {m.action.label}
-                       </button>
-                    </div>
-                  )}
                 </div>
-              ))}
+              )}
               <div ref={chatEndRef} />
             </div>
 
-            {/* Input Footer */}
-            <div style={{ padding: '1.25rem', borderTop: '1px solid var(--border)', background: 'rgba(0,0,0,0.1)' }}>
-               <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-subtle)', padding: '0.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)' }}>
-                 <input 
-                   value={query}
-                   onChange={(e) => setQuery(e.target.value)}
-                   onKeyDown={(e) => e.key === 'Enter' && processIntent(query)}
-                   placeholder="Commandez Nexus..."
-                   style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', padding: '0.5rem 0.75rem', fontSize: '0.95rem' }}
-                 />
-                 <button onClick={startVoice} style={{ color: isRecording ? '#EF4444' : 'var(--text-muted)', border: 'none', background: 'transparent', padding: '0.5rem', cursor: 'pointer' }}>
-                   <Mic size={20} />
-                 </button>
-                 <button onClick={() => processIntent(query)} style={{ background: 'var(--accent)', color: 'white', border: 'none', width: '38px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                   <Send size={18} />
-                 </button>
-               </div>
+            {/* Input */}
+            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '0.6rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <input
+                  value={query}
+                  onChange={e => setQuery(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processMessage(query); } }}
+                  placeholder="Interrogez Nexus..."
+                  disabled={isProcessing}
+                  style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#e2e8f0', padding: '0.5rem 0.75rem', fontSize: '0.9rem' }}
+                />
+                <button onClick={startVoice}
+                  style={{ color: isRecording ? '#EF4444' : 'rgba(255,255,255,0.4)', border: 'none', background: 'transparent', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <Mic size={19} />
+                </button>
+                <button
+                  onClick={() => processMessage(query)}
+                  disabled={isProcessing || !query.trim()}
+                  style={{ background: isProcessing ? 'rgba(16,185,129,0.4)' : 'linear-gradient(135deg, var(--accent), var(--accent-hover))', color: 'white', border: 'none', width: 38, height: 38, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isProcessing ? 'not-allowed' : 'pointer', flexShrink: 0 }}>
+                  {isProcessing ? <Loader2 size={17} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Send size={17} />}
+                </button>
+              </div>
+              <div style={{ textAlign: 'center', fontSize: '0.64rem', color: 'rgba(255,255,255,0.25)', marginTop: '0.5rem', fontWeight: 600 }}>
+                Nexus AI · Gemini 2.0 Flash · Données ERP en direct
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* FAB button */}
       <motion.button
-        whileHover={{ scale: 1.1, rotate: [0, 5, -5, 0] }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(p => !p)}
         style={{
-          width: '64px', height: '64px', borderRadius: '20px',
-          background: 'var(--accent)', color: 'white', border: 'none',
-          boxShadow: '0 10px 40px var(--accent-glow)',
+          width: 64, height: 64, borderRadius: '20px',
+          background: isOpen ? 'var(--accent-hover)' : 'linear-gradient(135deg, var(--accent), #06B6D4)',
+          color: 'white', border: 'none',
+          boxShadow: '0 10px 40px rgba(16,185,129,0.35)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          position: 'relative', overflow: 'hidden'
+          position: 'relative', overflow: 'hidden',
         }}
       >
         <motion.div
-           animate={{ rotate: 360 }}
-           transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-           style={{ position: 'absolute', width: '150%', height: '150%', background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%)' }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+          style={{ position: 'absolute', width: '150%', height: '150%', background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%)' }}
         />
-        <Cpu size={32} style={{ position: 'relative', zIndex: 1 }} />
+        {isProcessing
+          ? <Loader2 size={30} style={{ position: 'relative', zIndex: 1, animation: 'spin 0.8s linear infinite' }} />
+          : <Cpu size={30} style={{ position: 'relative', zIndex: 1 }} />}
       </motion.button>
     </div>
   );
 
+  // ── Spotlight (Cmd+K) ─────────────────────────────────────
   const renderSpotlight = () => (
     <AnimatePresence>
       {spotlightOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2000 }}>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setSpotlightOpen(false)}
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(15px)' }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(9,16,32,0.85)', backdropFilter: 'blur(16px)' }}
           />
           <motion.div
-            initial={{ opacity: 0, y: -40, scale: 0.98 }}
+            initial={{ opacity: 0, y: -30, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -40, scale: 0.98 }}
-            className="glass"
+            exit={{ opacity: 0, y: -30, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             style={{
-              position: 'relative', width: 'min(90vw, 800px)', margin: '15vh auto',
-              background: 'var(--bg)', borderRadius: '2rem', overflow: 'hidden',
-              boxShadow: '0 50px 100px -20px rgba(0,0,0,0.7)', border: '1px solid var(--accent-glow)'
+              position: 'relative', width: 'min(90vw, 780px)', margin: '12vh auto',
+              background: 'rgba(9, 16, 32, 0.98)', borderRadius: '2rem', overflow: 'hidden',
+              boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(16,185,129,0.2)'
             }}
           >
-            <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ position: 'relative', marginRight: '1.5rem' }}>
-                 <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 2 }} 
-                    style={{ position: 'absolute', inset: -8, background: 'var(--accent)', borderRadius: '50%', filter: 'blur(12px)' }} />
-                 <Cpu size={28} color="var(--accent)" style={{ position: 'relative' }} />
+            {/* Search bar */}
+            <div style={{ padding: '1.75rem 2rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ position: 'relative', marginRight: '1.25rem' }}>
+                <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 2 }}
+                  style={{ position: 'absolute', inset: -10, background: 'var(--accent)', borderRadius: '50%', filter: 'blur(14px)' }} />
+                <Sparkles size={26} color="var(--accent)" style={{ position: 'relative' }} />
               </div>
-              <input 
+              <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && processIntent(query)}
-                placeholder="Exploration Nexus : Demandez une analyse, un record ou un module..."
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && query.trim()) { processMessage(query); setSpotlightOpen(false); setIsOpen(true); } }}
+                placeholder="Demandez à Nexus une analyse, un KPI, une navigation..."
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f1f5f9', fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.02em' }}
               />
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
-                 <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', background: 'var(--bg-subtle)', padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border)' }}>CMD K</div>
-                 <X size={24} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setSpotlightOpen(false)} />
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', padding: '5px 10px', borderRadius: '8px' }}>⏎ Envoyer</span>
+                <X size={22} color="rgba(255,255,255,0.3)" style={{ cursor: 'pointer' }} onClick={() => setSpotlightOpen(false)} />
               </div>
             </div>
 
-            <div style={{ padding: '1.5rem', maxHeight: '500px', overflowY: 'auto' }}>
-               {query === "" && (
-                 <div>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '2px' }}>Parcours Prise de Décision</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
-                       {[
-                         { title: "Performance Supply Chain", icon: <Target size={18} />, tag: "OTIF ANALYSIS" },
-                         { title: "Santé Financière Q2", icon: <TrendingUp size={18} />, tag: "P&L OVERVIEW" },
-                         { title: "Masse Salariale & Turnover", icon: <Activity size={18} />, tag: "HR INSIGHTS" },
-                         { title: "Efficiency Industrielle", icon: <BarChart3 size={18} />, tag: "OEE REPORT" }
-                       ].map((s, i) => (
-                         <motion.div key={i} whileHover={{ y: -4, background: 'var(--bg-subtle)', borderColor: 'var(--accent)' }} 
-                            onClick={() => { setQuery(s.title); processIntent(s.title); }}
-                            style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s ease' }}>
-                            <div style={{ color: 'var(--accent)', marginBottom: '0.75rem' }}>{s.icon}</div>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 800, marginBottom: '0.25rem' }}>{s.title}</div>
-                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 700 }}>{s.tag}</div>
-                         </motion.div>
-                       ))}
-                    </div>
-                 </div>
-               )}
+            {/* Quick suggestions */}
+            <div style={{ padding: '1.5rem 2rem' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '2px' }}>
+                Analyses Rapides
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
+                {[
+                  { title: 'Performance Supply Chain', icon: <Target size={17} />, tag: 'OTIF ANALYSIS', q: 'Analyse ma performance supply chain et OTIF' },
+                  { title: 'Santé Financière', icon: <TrendingUp size={17} />, tag: 'P&L OVERVIEW', q: 'Donne-moi un bilan de la santé financière' },
+                  { title: 'Masse Salariale & RH', icon: <Activity size={17} />, tag: 'HR INSIGHTS', q: 'Analyse la masse salariale et le turnover' },
+                  { title: 'Efficacité Industrielle', icon: <BarChart3 size={17} />, tag: 'OEE REPORT', q: 'Quel est l\'OEE de production ce mois-ci?' },
+                ].map((s, i) => (
+                  <motion.div key={i}
+                    whileHover={{ y: -3, borderColor: 'rgba(16,185,129,0.5)', background: 'rgba(16,185,129,0.05)' }}
+                    onClick={() => { setQuery(s.q); processMessage(s.q); setSpotlightOpen(false); setIsOpen(true); }}
+                    style={{ padding: '1.1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                  >
+                    <div style={{ color: 'var(--accent)', marginBottom: '0.6rem' }}>{s.icon}</div>
+                    <div style={{ fontSize: '0.88rem', fontWeight: 800, marginBottom: '0.2rem', color: '#e2e8f0' }}>{s.title}</div>
+                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, letterSpacing: '0.5px' }}>{s.tag}</div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
 
-            <div style={{ padding: '1rem 2rem', background: 'var(--bg-subtle)', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-               <div style={{ display: 'flex', gap: '2rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><HelpCircle size={14} /> Guide de commandes</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><MessageSquare size={14} /> Support Nexus 24/7</span>
-               </div>
-               <div style={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--accent)' }}>NEXUS AI v2.0</div>
+            <div style={{ padding: '0.85rem 2rem', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><HelpCircle size={13} /> Cmd+K pour ouvrir</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><MessageSquare size={13} /> Réponses contextuelles ERP</span>
+              </div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 900, color: 'var(--accent)', letterSpacing: '1px' }}>
+                ✦ NEXUS AI · GEMINI 2.0
+              </div>
             </div>
           </motion.div>
         </div>

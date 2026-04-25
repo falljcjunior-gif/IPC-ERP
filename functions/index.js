@@ -235,3 +235,110 @@ exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
 });
 
 
+/**
+ * ══════════════════════════════════════════════════════════════
+ * NEXUS AI — Gemini 2.0 Flash Integration
+ * ══════════════════════════════════════════════════════════════
+ */
+const { GoogleGenerativeAI } = require('@google/generative-ai');
+
+exports.nexusChat = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'Authentification requise pour Nexus AI.');
+  }
+
+  const { message, history = [], erpContext = {} } = data;
+  if (!message || typeof message !== 'string') {
+    throw new functions.https.HttpsError('invalid-argument', 'Message invalide.');
+  }
+
+  // Fetch Gemini API key from Firestore system_config/ai_config
+  const configSnap = await db.collection('system_config').doc('ai_config').get();
+  const aiConfig = configSnap.exists ? configSnap.data() : {};
+  const apiKey = aiConfig.geminiApiKey || process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    throw new functions.https.HttpsError(
+      'failed-precondition',
+      'Clé API Gemini non configurée. Allez dans Admin → IA → Configurer la clé Gemini.'
+    );
+  }
+
+  const {
+    activeModule = 'dashboard',
+    userRole = 'STAFF',
+    userName = 'Utilisateur',
+    kpis = {},
+    recordCounts = {}
+  } = erpContext;
+
+  const moduleNames = {
+    dashboard: 'Tableau de Bord', crm: 'CRM', hr: 'RH',
+    finance: 'Finance', sales: 'Commerce', production: 'Production',
+    logistics: 'Logistique', marketing: 'Marketing', legal: 'Juridique',
+    bi: 'Business Intelligence', connect: 'Connect+', admin: 'Admin'
+  };
+
+  const systemPrompt = `Tu es Nexus, le copilote IA de l'ERP I.P.C (International Paving Company — fabricant de pavés en béton).
+Réponds en FRANÇAIS, de manière professionnelle et concise (max 300 mots).
+Tu es expert en gestion d'entreprise, finance, RH, production industrielle, CRM et supply chain.
+
+CONTEXTE ACTUEL:
+- Utilisateur: ${userName} (rôle: ${userRole})
+- Module actif: ${moduleNames[activeModule] || activeModule}
+- Heure: ${new Date().toLocaleString('fr-FR', { timeZone: 'Africa/Dakar' })}
+
+DONNÉES ERP EN DIRECT:
+${Object.entries(recordCounts).map(([k,v]) => `- ${k}: ${v} enregistrements`).join('\n') || '- Aucune donnée transmise'}
+${Object.entries(kpis).map(([k,v]) => `- ${k}: ${v}`).join('\n') || ''}
+
+COMMANDES DISPONIBLES (utilise-les dans ta réponse quand pertinent):
+- [NAV:module_id] pour naviguer vers un module
+- [CREATE:app:subModule:"description"] pour créer un enregistrement
+Exemple: "Je vous redirige vers le CRM. [NAV:crm]"`;
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: systemPrompt
+    });
+
+    const chatHistory = (history || [])
+      .filter(m => m.role && m.content)
+      .slice(-8)
+      .map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }]
+      }));
+
+    const chat = model.startChat({ history: chatHistory });
+    const result = await chat.sendMessage(message);
+    const responseText = result.response.text();
+
+    // Parse ERP action commands
+    const navMatch = responseText.match(/\[NAV:([a-z_]+)\]/);
+    const createMatch = responseText.match(/\[CREATE:([^:]+):([^:]+):"([^"]+)"\]/);
+    let action = null;
+    if (navMatch) action = { type: 'NAVIGATE', appId: navMatch[1] };
+    else if (createMatch) action = { type: 'CREATE_RECORD', appId: createMatch[1], subModule: createMatch[2], label: createMatch[3] };
+
+    const displayText = responseText.replace(/\[(NAV|CREATE|FILTER):[^\]]+\]/g, '').trim();
+
+    // Async usage log (non-blocking)
+    db.collection('ai_logs').add({
+      uid: context.auth.uid, userName, userRole, activeModule,
+      message: message.substring(0, 200), hasAction: !!action,
+      timestamp: admin.firestore.FieldValue.serverTimestamp()
+    }).catch(() => {});
+
+    return { success: true, response: displayText, action, model: 'gemini-2.0-flash' };
+
+  } catch (error) {
+    console.error('Nexus AI error:', error);
+    if (error.status === 429) {
+      return { success: false, response: 'Quota Gemini atteint. Réessayez dans quelques secondes.', action: null };
+    }
+    throw new functions.https.HttpsError('internal', `Erreur IA: ${error.message}`);
+  }
+});
