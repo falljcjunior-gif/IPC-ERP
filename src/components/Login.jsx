@@ -23,20 +23,7 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      let userCredential;
-      try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        if (email === 'fall.jcjunior@gmail.com') {
-           try {
-             userCredential = await createUserWithEmailAndPassword(auth, email, password);
-           } catch (createErr) {
-             throw err;
-           }
-        } else {
-          throw err;
-        }
-      }
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
       const userDoc = await getDoc(doc(db, 'users', user.uid));

@@ -208,8 +208,7 @@ exports.deleteUserAccount = functions.https.onCall(async (data, context) => {
   const callerSnap = await db.collection('users').doc(callerUid).get();
   const callerData = callerSnap.data();
   
-  const isSuperAdmin = callerData?.permissions?.roles?.includes('SUPER_ADMIN') || 
-                      ['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com', 'yoman.raphael@gmail.com'].includes(context.auth.token.email);
+  const isSuperAdmin = callerData?.permissions?.roles?.includes('SUPER_ADMIN');
 
   if (!isSuperAdmin) {
     throw new functions.https.HttpsError('permission-denied', 'Privilèges insuffisants pour cette opération.');

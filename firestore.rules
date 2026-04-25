@@ -8,25 +8,34 @@ service cloud.firestore {
 
     function isSuperAdmin() {
       return isAuthenticated() && (
-        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com' ||
-        request.auth.token.email == 'fall.jcjunior@gmail.com' ||
-        request.auth.token.email == 'yoman.raphael@gmail.com' ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN']))
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(['SUPER_ADMIN'])
       );
     }
     
     function hasRole(role) {
-      return isSuperAdmin() || (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role]));
+      return isSuperAdmin() || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny([role])
+      );
     }
 
     function hasAnyRole(roles) {
-      return isSuperAdmin() || (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles));
+      return isSuperAdmin() || (
+        isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.permissions.roles.hasAny(roles)
+      );
     }
     
     // ── Users ────────────────────────────────────────────────────────────────
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || hasAnyRole(['ADMIN', 'HR']));
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isSuperAdmin() || hasAnyRole(['ADMIN', 'HR']));
+      allow write: if isAuthenticated() && (isSuperAdmin() || hasAnyRole(['ADMIN', 'HR']));
+      // Users can only update their own profile, not permissions
+      allow update: if isAuthenticated() && request.auth.uid == userId && 
+                    !request.resource.data.diff(resource.data).affectedKeys().hasAny(['permissions']);
     }
     
     // ── System Config ────────────────────────────────────────────────────────
@@ -36,7 +45,12 @@ service cloud.firestore {
 
     // ── WebRTC Calls ─────────────────────────────────────────────────────────
     match /calls/{callId} {
-      allow read, write: if isAuthenticated();
+      // Access only if part of the call (sender or receiver)
+      allow read, write: if isAuthenticated() && (
+        resource == null || 
+        resource.data.participants.hasAny([request.auth.uid]) ||
+        request.resource.data.participants.hasAny([request.auth.uid])
+      );
       match /offerCandidates/{candId} {
         allow read, write: if isAuthenticated();
       }
@@ -47,22 +61,28 @@ service cloud.firestore {
 
     // ── Rooms (Chat Groups & WebRTC Mesh) ────────────────────────────────────
     match /rooms/{roomId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && (
+        resource == null || 
+        resource.data.members.hasAny([request.auth.uid]) ||
+        isSuperAdmin()
+      );
       match /participants/{participantId} {
-        allow read, write: if isAuthenticated();
+        allow read, write: if isAuthenticated() && (participantId == request.auth.uid || isSuperAdmin());
       }
       match /signals/{signalId} {
         allow read, write: if isAuthenticated();
       }
     }
 
-    // ── Audit Logs ───────────────────────────────────────────────────────────
+    // ── Audit Logs (Strict Write-Only) ───────────────────────────────────────
     match /audit_logs/{docId} {
-      allow read: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'FINANCE']);
-      allow write: if isAuthenticated();
+      allow read: if isSuperAdmin() || hasAnyRole(['ADMIN', 'FINANCE']);
+      // Prevent manual deletion or modification of audit trails
+      allow create: if isAuthenticated();
+      allow update, delete: if false; 
     }
 
-    // ── HR (Restricted - HR & Admin only) ────────────────────────────────────
+    // ── HR ───────────────────────────────────────────────────────────────────
     match /hr/{docId} {
       allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR']);
     }
@@ -101,16 +121,17 @@ service cloud.firestore {
 
     // ── Projects & Marketing ─────────────────────────────────────────────────
     match /projects/{docId} {
-      allow read, write: if isAuthenticated();
+      // Projects should only be visible to staff
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'STAFF']);
     }
     match /marketing/{docId} {
-      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'SALES']);
+      allow read, write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'SALES', 'MARKETING']);
     }
 
     // ── DMS (G.E.D) ──────────────────────────────────────────────────────────
     match /dms/{docId} {
       allow read: if isAuthenticated();
-      allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR', 'FINANCE']);
+      allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR', 'FINANCE', 'DMS_MANAGER']);
     }
 
     // ── Shared / Base ────────────────────────────────────────────────────────
@@ -119,13 +140,25 @@ service cloud.firestore {
       allow write: if hasAnyRole(['SUPER_ADMIN', 'ADMIN']);
     }
     match /messages/{docId} {
-      allow read, write: if isAuthenticated();
+      // Private messaging security
+      allow read, write: if isAuthenticated() && (
+        resource == null || 
+        resource.data.participants.hasAny([request.auth.uid]) ||
+        request.resource.data.participants.hasAny([request.auth.uid])
+      );
     }
     match /workflows/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin();
     }
     match /notifications/{docId} {
-      allow read, write: if isAuthenticated();
+      // Notifications belong to specific users or roles
+      allow read, write: if isAuthenticated() && (
+        resource == null || 
+        resource.data.targetUserId == request.auth.uid ||
+        resource.data.targetRole == null || 
+        isSuperAdmin()
+      );
     }
   }
 }
