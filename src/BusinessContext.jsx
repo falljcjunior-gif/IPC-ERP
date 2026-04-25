@@ -1223,6 +1223,9 @@ export const BusinessProvider = ({ children }) => {
         }
         
         setCurrentUser(profile);
+        // 🔄 Sync to Zustand store so all components using useStore() get the user
+        store.setCurrentUser?.(profile);
+        store.setUser?.(profile);
 
         // Auto landing logic: Everybody lands on their intelligent Personal Workspace ('home')
         setActiveApp('home');
@@ -1230,6 +1233,8 @@ export const BusinessProvider = ({ children }) => {
       } else {
         setData(mockData);
         setCurrentUser({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
+        store.setCurrentUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
+        store.setUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
       }
     });
     return () => unsubscribe();

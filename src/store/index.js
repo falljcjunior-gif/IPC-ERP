@@ -66,6 +66,13 @@ export const useStore = create(
       setActiveBrand: (brand) => set((state) => ({ globalSettings: { ...state.globalSettings, brand } })),
 
       // ── Auth helpers ─────────────────────────────────────────────────────
+      // currentUser: backward-compat alias for `user` — set via setUser (auth slice)
+      // Exposed as a plain setter so BusinessContext can sync it after Firebase auth
+      currentUser: null,
+      setCurrentUser: (u) => set({ currentUser: u, userRole: u?.role || 'GUEST' }),
+      userRole: 'GUEST',
+      setUserRole: (role) => set({ userRole: role }),
+
       logout: async () => {
         try {
           await signOut(auth);
@@ -74,11 +81,39 @@ export const useStore = create(
         }
         localStorage.removeItem('ipc_erp_current_user');
         localStorage.removeItem('daxcelor_data');
-        set({ user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' } });
+        set({ user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' }, currentUser: null, userRole: 'GUEST' });
       },
 
       // ── Navigation ───────────────────────────────────────────────────────
       navigateTo: (appId) => set({ activeApp: appId }),
+
+      // ── UI Shell State (global, used by multiple modules) ─────────────────
+      shellView: { sidebar: true, mobile: false, profile: false, ai: false, notifs: false, chat: false },
+      setShellView: (val) => set((state) => ({ shellView: typeof val === 'function' ? val(state.shellView) : { ...state.shellView, ...val } })),
+
+      // ── Currency Formatter ────────────────────────────────────────────────
+      formatCurrency: (val, compact = false) => {
+        if (val === null || val === undefined) return '—';
+        const num = parseFloat(val) || 0;
+        const currency = get().globalSettings?.currency || 'FCFA';
+        if (compact && num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M ${currency}`;
+        if (compact && num >= 1_000) return `${(num / 1_000).toFixed(0)}k ${currency}`;
+        return num.toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' ' + currency;
+      },
+
+      // ── Demo Data Seeder & Reset (delegated to operations slice if available) ─
+      seedDemoData: async () => {
+        const fn = get().seedDemoDataImpl;
+        if (typeof fn === 'function') return fn();
+        console.warn('[Store] seedDemoData not yet implemented');
+      },
+      resetAllData: async () => {
+        const fn = get().resetAllDataImpl;
+        if (typeof fn === 'function') return fn();
+        // Fallback: clear local data
+        set({ data: { base: {}, hr: { employees: [], payroll: [] }, crm: { leads: [], customers: [] }, activities: [], marketing: { campaigns: [] } } });
+        get().addHint?.({ title: '✅ Données réinitialisées', message: 'Toutes les données locales ont été effacées.', type: 'success' });
+      },
     }),
     {
       name: 'ipc-intelligence-store',

@@ -457,7 +457,7 @@ addHint: (hint) => {
       
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.get().user.uid }, { merge: true });
+         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser?.uid }, { merge: true });
       }, 0);
 
       return nextState;
