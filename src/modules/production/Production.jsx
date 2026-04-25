@@ -6,7 +6,6 @@ import {
   Download, Play, ClipboardList, Sparkles, TrendingUp
 } from 'lucide-react';
 import { useStore } from '../../store';
-import { useStore } from '../../store';
 import { useTranslation } from 'react-i18next';
 import { productionSchema } from '../../schemas/production.schema';
 import PermissionGuard from '../../components/PermissionGuard';

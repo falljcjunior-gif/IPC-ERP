@@ -12,7 +12,6 @@ import {
   Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore } from '../store';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';

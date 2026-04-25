@@ -27,7 +27,6 @@ import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
-import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {

@@ -172,9 +172,9 @@ addHint: (hint) => {
 
       // 3. Send Notification
       if (source === 'hr') {
-        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
+        await get().sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
       } else {
-        await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
+        await get().sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
       }
 
       return { success: true, uid };
@@ -188,7 +188,7 @@ addHint: (hint) => {
         await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
         await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
       }
-      logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
+      get().logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
       return { success: true };
     } catch (e) {
       console.error("toggleUserStatus error:", e);
@@ -208,7 +208,7 @@ addHint: (hint) => {
     } catch (err) {
       console.error("Erreur suppression Auth:", err);
       if (addHint) {
-        addHint({ 
+        get().addHint({ 
           title: "Suppression Auth Échouée", 
           message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
           type: 'warning' 
@@ -226,7 +226,7 @@ addHint: (hint) => {
       base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
     }));
     setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
-    logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
+    get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
   },
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -239,7 +239,7 @@ addHint: (hint) => {
     const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
     
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      addHint({ title: "Erreur d'équilibre", message: "Le total débit doit être égal au total crédit.", type: 'error' });
+      get().addHint({ title: "Erreur d'équilibre", message: "Le total débit doit être égal au total crédit.", type: 'error' });
       return false;
     }
 
@@ -261,7 +261,7 @@ addHint: (hint) => {
       newLines.forEach(l => setDoc(doc(db, 'finance', l.id), { ...l, subModule: 'lines' }));
     }
 
-    logAction('Écriture Comptable', entry.libelle, 'finance');
+    get().logAction('Écriture Comptable', entry.libelle, 'finance');
     return true;
   },
 
@@ -279,7 +279,7 @@ addHint: (hint) => {
       { accountId: '701100', label: 'Vente de marchandises', debit: 0, credit: invoice.montant }
     ];
 
-    addAccountingEntry(entry, lines);
+    get().addAccountingEntry(entry, lines);
   },
 
   generateProductionEntry: (mo) => {
@@ -296,7 +296,7 @@ addHint: (hint) => {
       { accountId: '713100', label: 'Entrée Stock PF', debit: totalCost, credit: 0, profitCenter: 'Usine' },
       { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
     ];
-    addAccountingEntry(entry, lines);
+    get().addAccountingEntry(entry, lines);
   },
 
   generateExpenseEntry: (expense) => {
@@ -311,7 +311,7 @@ addHint: (hint) => {
       { accountId: isPaie ? '421000' : '601100', label: expense.title || expense.libelle, debit: expense.amount || expense.montant, credit: 0, profitCenter: expense.dept || 'Administration' },
       { accountId: '521100', label: 'Règlement Banque', debit: 0, credit: expense.amount || expense.montant, profitCenter: 'Administration' }
     ];
-    addAccountingEntry(entry, lines);
+    get().addAccountingEntry(entry, lines);
   },
 
   generateLitigationEntry: (litigation, isProvision = true) => {
@@ -326,7 +326,7 @@ addHint: (hint) => {
       { accountId: '686000', label: 'Dotations aux provisions', debit: isProvision ? amount : 0, credit: isProvision ? 0 : amount },
       { accountId: '151000', label: 'Provisions pour litiges', debit: isProvision ? 0 : amount, credit: isProvision ? amount : 0 }
     ];
-    addAccountingEntry(entry, lines);
+    get().addAccountingEntry(entry, lines);
   },
 
 
@@ -338,14 +338,14 @@ addHint: (hint) => {
       const products = prev.inventory?.products || [];
       const product = products.find(p => p.id === productId || p.code === productId);
       if (!product) {
-        addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
+        get().addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
         return prev;
       }
       const isOut = ['Expédition', 'Consommation', 'Ajustement Sortie'].includes(type);
       const newStock = isOut ? (product.stock || 0) - qteNum : (product.stock || 0) + qteNum;
       const updatedProducts = products.map(p => (p.id === productId || p.code === productId) ? { ...p, stock: newStock } : p);
       const seqKey = 'inventory_movements';
-      const mvtNum = getNextSequence(seqKey);
+      const mvtNum = get().getNextSequence(seqKey);
       const newMove = { id: Date.now().toString(), num: mvtNum, date: new Date().toISOString(), produit: product.nom, produitId: product.id, type, qte: qteNum, ref: ref || 'Interne', source: source || 'Entrepôt Principal', dest: dest || 'Client/Transit', createdAt: new Date().toISOString() };
       
       // Auto-Replenishment Logic (SSOT)
@@ -373,15 +373,15 @@ addHint: (hint) => {
                date: new Date().toISOString().split('T')[0],
                createdAt: new Date().toISOString()
             };
-            addHint({ title: "Réassort Automatique", message: `Stock projeté critique (${stockProjete}). Brouillon d'achat ${poNum} généré pour ${qteACommander} unitées.`, type: 'warning', appId: 'purchase' });
+            get().addHint({ title: "Réassort Automatique", message: `Stock projeté critique (${stockProjete}). Brouillon d'achat ${poNum} généré pour ${qteACommander} unitées.`, type: 'warning', appId: 'purchase' });
          } else if (newStock <= pointDeCommande) {
-            addHint({ title: "Alerte Stock Bas", message: `Stock critique (${newStock}) mais réassort déjà en cours (Projeté: ${stockProjete}).`, type: 'info', appId: 'inventory' });
+            get().addHint({ title: "Alerte Stock Bas", message: `Stock critique (${newStock}) mais réassort déjà en cours (Projeté: ${stockProjete}).`, type: 'info', appId: 'inventory' });
          }
       } else if (newStock <= (product.alerte || 0)) {
-         addHint({ title: "Alerte Stock Bas", message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, type: 'warning', appId: 'inventory' });
+         get().addHint({ title: "Alerte Stock Bas", message: `Le stock de "${product.nom}" est critique (${newStock} unités).`, type: 'warning', appId: 'inventory' });
       }
 
-      logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
+      get().logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
       
       const nextState = { ...prev, inventory: { ...prev.inventory, products: updatedProducts, movements: [newMove, ...(prev.inventory?.movements || [])] } };
       if (newPoDraft) {
@@ -397,7 +397,7 @@ addHint: (hint) => {
       if (!mo) return prev;
       const bom = prev.production?.boms?.find(b => b.produit === mo.produit || b.product === mo.produit || b.productId === mo.produitId);
       if (!bom) {
-        addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
+        get().addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
         return prev;
       }
       let componentsList = [];
@@ -411,28 +411,28 @@ addHint: (hint) => {
       if (finalProductId) {
         applyStockMove({ productId: finalProductId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
       }
-      addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
+      get().addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
       return prev;
     });
   },
 
   // D. Higher-level Workflows
   processOrderValidation: (order) => {
-    const invoiceNum = getNextSequence('finance_invoices');
+    const invoiceNum = get().getNextSequence('finance_invoices');
     const newInvoice = { id: Date.now().toString(), num: invoiceNum, client: order.client, montant: order.montant, statut: 'À Payer', orderId: order.id, createdAt: new Date().toISOString() };
     set(prev => ({ ...prev, finance: { ...prev.finance, invoices: [newInvoice, ...(prev.finance?.invoices || [])] } }));
-    addHint({ title: "Flux Cascade Activé", message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, type: 'info', appId: 'finance' });
-    logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
+    get().addHint({ title: "Flux Cascade Activé", message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, type: 'info', appId: 'finance' });
+    get().logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
   },
 
   convertOppToSalesOrder: (oppId) => {
     set(prev => {
       const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
       if (!opp) return prev;
-      const orderNum = getNextSequence('sales_orders');
+      const orderNum = get().getNextSequence('sales_orders');
       const newOrder = { id: Date.now().toString(), num: orderNum, client: opp.client, clientContact: opp.nom || opp.titre, montant: opp.montant, statut: 'Brouillon', oppId: opp.id, createdAt: new Date().toISOString() };
-      addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
-      logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
+      get().addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
+      get().logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
       return { ...prev, sales: { ...prev.sales, orders: [newOrder, ...(prev.sales?.orders || [])] } };
     });
   },
@@ -442,7 +442,7 @@ addHint: (hint) => {
     let processedRecord = { ...inputData };
     if (!processedRecord.num || processedRecord.num === "") {
       const seqKey = `${appId}__${subModule}`;
-      if (get().data.base?.sequences?.[seqKey]) processedRecord.num = getNextSequence(seqKey);
+      if (get().data.base?.sequences?.[seqKey]) processedRecord.num = get().getNextSequence(seqKey);
     }
     const newRecord = { 
       ...processedRecord, 
@@ -456,7 +456,7 @@ addHint: (hint) => {
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
       
       setTimeout(() => {
-         logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
+         get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
          if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.get().user.uid }, { merge: true });
       }, 0);
 
@@ -486,11 +486,11 @@ addHint: (hint) => {
        if (conditionMet) {
            if (wf.actionType === 'SEND_NOTIFICATION') {
                const msg = wf.actionPayload.replace('{statut}', newRecord.statut || '').replace('{num}', newRecord.num || newRecord.id);
-               sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
+               get().sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
            } else if (wf.actionType === 'LOG_ACTION') {
-               logAction('I.P.C. Automator', wf.actionPayload, appId, newRecord.id);
+               get().logAction('I.P.C. Automator', wf.actionPayload, appId, newRecord.id);
            }
-           addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
+           get().addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
        }
     });
   },
@@ -506,7 +506,7 @@ addHint: (hint) => {
       let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
       const record = updatedList.find(o => o.id === id);
       setTimeout(() => {
-         logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
+         get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
          if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
       }, 0);
       
@@ -515,12 +515,12 @@ addHint: (hint) => {
         generateProductionEntry(record);
       }
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
-        addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => convertOppToSalesOrder(id) });
+        get().addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => convertOppToSalesOrder(id) });
       }
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
         // Workflow: Sales ↔ Legal (Lock if modified)
         if (record.modifieHorsTemplate) {
-           addHint({ 
+           get().addHint({ 
              title: "Visa Juridique Manquant", 
              message: "Ce contrat a été modifié hors template. Le statut est bloqué en attente de visa.", 
              type: 'error', 
@@ -529,7 +529,7 @@ addHint: (hint) => {
            // Revert Confirmé to 'Attente Visa'
            const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Attente Visa Juridique' } : item);
            nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
-           sendNotification('Juridique', 'Visa requis pour commande modifiée', 'warning', 'legal');
+           get().sendNotification('Juridique', 'Visa requis pour commande modifiée', 'warning', 'legal');
         } else {
            processOrderValidation(record);
         }
@@ -542,7 +542,7 @@ addHint: (hint) => {
 
       // Workflow: RH ↔ Juridique (Visa final)
       if (appId === 'hr' && subModule === 'employees' && newData.statut === 'Signé' && !record.visaJuridique) {
-         addHint({ title: "Visa Juridique Requis", message: "Le contrat de travail nécessite le visa du pôle juridique avant signature finale.", type: 'warning', appId: 'legal' });
+         get().addHint({ title: "Visa Juridique Requis", message: "Le contrat de travail nécessite le visa du pôle juridique avant signature finale.", type: 'warning', appId: 'legal' });
          const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Validation Juridique' } : item);
          nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
       }
@@ -562,7 +562,7 @@ addHint: (hint) => {
            hash: record.auditTrail?.hashDocument
          };
          nextState = { ...nextState, legal: { ...nextState.legal, contracts: [legalContract, ...(nextState.legal?.contracts || [])] } };
-         addHint({ title: "Archivage Souverain", message: "Le document scellé a été archivé en sécurité dans le module juridique.", type: 'success', appId: 'legal' });
+         get().addHint({ title: "Archivage Souverain", message: "Le document scellé a été archivé en sécurité dans le module juridique.", type: 'success', appId: 'legal' });
          
          // Domino 2: Validation du Devis (Sales)
          if (record.sourceId) {
@@ -573,15 +573,15 @@ addHint: (hint) => {
                  const updatedSalesList = [...salesList];
                  updatedSalesList[saleIndex] = { ...saleOld, statut: 'Confirmé' };
                  nextState = { ...nextState, sales: { ...nextState.sales, orders: updatedSalesList } };
-                 addHint({ title: "Contrat Confirmé", message: `Le devis ${saleOld.num} a été automatiquement confirmé suite à la signature P.K.I.`, type: 'success', appId: 'sales' });
-                 logAction('Effet Domino', `Devis ${saleOld.num} validé par signature P.K.I.`, 'sales', saleOld.id);
+                 get().addHint({ title: "Contrat Confirmé", message: `Le devis ${saleOld.num} a été automatiquement confirmé suite à la signature P.K.I.`, type: 'success', appId: 'sales' });
+                 get().logAction('Effet Domino', `Devis ${saleOld.num} validé par signature P.K.I.`, 'sales', saleOld.id);
                  processOrderValidation(saleOld);
              }
          }
       }
 
       if (appId === 'finance' && subModule === 'invoices' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
-        generateInvoiceEntry(record);
+        get().generateInvoiceEntry(record);
       }
       if (appId === 'hr' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
         generateExpenseEntry(record);
@@ -593,7 +593,7 @@ addHint: (hint) => {
          const heures = parseFloat(record.heures || 0);
          const coutTotal = Math.round(heures * tauxHoraire);
          
-         const entryNum = getNextSequence('finance_entries');
+         const entryNum = get().getNextSequence('finance_entries');
          const analyticalEntry = {
             num: entryNum,
             date: new Date().toISOString().split('T')[0],
@@ -605,9 +605,9 @@ addHint: (hint) => {
             { accountId: '641100', label: 'Frais de Personnel', debit: coutTotal, credit: 0, profitCenter: record.projet || 'Général' },
             { accountId: '421000', label: 'Personnel - Rémunérations dues', debit: 0, credit: coutTotal, profitCenter: 'Administration' }
          ];
-         addAccountingEntry(analyticalEntry, lines);
-         addHint({ title: "Comptabilité Analytique", message: `Pointage validé. Coût affecté: ${coutTotal} FCFA sur [${record.projet}].`, type: 'success', appId: 'finance' });
-         logAction('Imputation Analytique', `${coutTotal} FCFA pour ${heures}h affectés à ${record.projet}`, 'hr');
+         get().addAccountingEntry(analyticalEntry, lines);
+         get().addHint({ title: "Comptabilité Analytique", message: `Pointage validé. Coût affecté: ${coutTotal} FCFA sur [${record.projet}].`, type: 'success', appId: 'finance' });
+         get().logAction('Imputation Analytique', `${coutTotal} FCFA pour ${heures}h affectés à ${record.projet}`, 'hr');
       }
       if (appId === 'purchase' && subModule === 'orders') {
         if (newData.statut === 'Réceptionné' && oldRecord.statut !== 'Réceptionné') {
@@ -621,10 +621,10 @@ addHint: (hint) => {
             source: record.fournisseur,
             dest: 'Entrepôt Principal'
           });
-          addHint({ title: "Marchandise Réceptionnée", message: `La commande ${record.num || record.id} a été réceptionnée dans le stock (${actualQte} unités).`, type: 'success', appId: 'inventory' });
+          get().addHint({ title: "Marchandise Réceptionnée", message: `La commande ${record.num || record.id} a été réceptionnée dans le stock (${actualQte} unités).`, type: 'success', appId: 'inventory' });
         }
         if (newData.statut === 'Facturé' && oldRecord.statut !== 'Facturé') {
-           const billNum = getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
+           const billNum = get().getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
            
            // Three-Way Match Engine
            const qteCommandee = parseFloat(record.qte || 0);
@@ -650,11 +650,11 @@ addHint: (hint) => {
            nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
            
            if (!threeWayMatch) {
-             addHint({ title: "Alerte Fraude (3-Way Match)", message: `Facture bloquée ! Divergence QTE: Cmd(${qteCommandee}) ≠ Reçue(${qteRecue}) ≠ Fact(${qteFacturee})`, type: 'error', appId: 'finance' });
-             logAction('Alerte Financière', `Blocage Facture ${newBill.num} (Anomalie 3-Way Match)`, 'finance');
+             get().addHint({ title: "Alerte Fraude (3-Way Match)", message: `Facture bloquée ! Divergence QTE: Cmd(${qteCommandee}) ≠ Reçue(${qteRecue}) ≠ Fact(${qteFacturee})`, type: 'error', appId: 'finance' });
+             get().logAction('Alerte Financière', `Blocage Facture ${newBill.num} (Anomalie 3-Way Match)`, 'finance');
            } else {
-             addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est validée (Match Parfait).`, type: 'success', appId: 'finance' });
-             logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
+             get().addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est validée (Match Parfait).`, type: 'success', appId: 'finance' });
+             get().logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
            }
         }
       }
@@ -675,15 +675,15 @@ addHint: (hint) => {
          if (conditionMet) {
              if (wf.actionType === 'SEND_NOTIFICATION') {
                  const msg = wf.actionPayload.replace('{statut}', newData.statut || record.statut || '').replace('{num}', record.num || id);
-                 sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
+                 get().sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
              } else if (wf.actionType === 'UPDATE_STATUS') {
                  // Apply the status change on top of nextState directly
                  const finalUpdatedList = nextState[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
                  nextState = { ...nextState, [appId]: { ...nextState[appId], [subModule]: finalUpdatedList } };
              } else if (wf.actionType === 'LOG_ACTION') {
-                 logAction('I.P.C. Automator', wf.actionPayload, appId, id);
+                 get().logAction('I.P.C. Automator', wf.actionPayload, appId, id);
              }
-             addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée avec succès.`, type: 'info', appId });
+             get().addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée avec succès.`, type: 'info', appId });
          }
       });
     return nextState;
@@ -703,7 +703,7 @@ addHint: (hint) => {
       const updatedList = subModuleData.filter(item => item.id !== id);
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: updatedList } };
       setTimeout(() => {
-         logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
+         get().logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
          if (auth.currentUser) deleteDoc(doc(db, appId, id));
       }, 0);
       return nextState;
@@ -714,7 +714,7 @@ addHint: (hint) => {
     const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
     const dateStr = new Date().toISOString().split('T')[0];
 
-    addRecord('commerce', 'posOrders', {
+    get().addRecord('commerce', 'posOrders', {
       id: newId,
       client: order.customer || 'Passager',
       montant: order.totalAmount,
@@ -724,7 +724,7 @@ addHint: (hint) => {
       type: order.type || 'boutique'
     });
 
-    addRecord('finance', 'incomes', {
+    get().addRecord('finance', 'incomes', {
       id: `FAC-${newId}`,
       description: `Vente Caisse (${order.type}) - ${order.customer || 'Passager'}`,
       montant: order.totalAmount,
@@ -746,7 +746,7 @@ addHint: (hint) => {
       return { ...prev, inventory: { ...(prev.inventory || {}), products: updatedProducts } };
     });
 
-    addHint({
+    get().addHint({
        title: 'Vente Enregistrée',
        message: `Ticket ${newId} encaissé avec succès. Stock mis à jour.`,
        type: 'success'
@@ -756,7 +756,7 @@ addHint: (hint) => {
   generatePayrollEntry: () => {
     const activeEmployees = (get().data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
     if (activeEmployees.length === 0) {
-      addHint({ title: "Masse Salariale Nulle", message: "Aucun salaire à générer pour les collaborateurs actifs.", type: 'warning' });
+      get().addHint({ title: "Masse Salariale Nulle", message: "Aucun salaire à générer pour les collaborateurs actifs.", type: 'warning' });
       return;
     }
 
@@ -816,7 +816,7 @@ addHint: (hint) => {
       { accountId: '421000', label: `Rémunérations Dues au Personnel`, debit: 0, credit: massTotal, profitCenter: 'Administration' }
     ];
     
-    addAccountingEntry(entry, lines);
+    get().addAccountingEntry(entry, lines);
 
     const payrollExpense = {
       id: `EXP-PAYROLL-${Date.now()}`,
@@ -828,7 +828,7 @@ addHint: (hint) => {
       statut: 'En attente'
     };
 
-    addRecord('hr', 'expenses', payrollExpense);
+    get().addRecord('hr', 'expenses', payrollExpense);
 
     processedEmployees.forEach(emp => {
       const payslipRecord = {
@@ -853,17 +853,17 @@ addHint: (hint) => {
            ...payslipRecord
         }
       };
-      addRecord('dms', 'files', dmsFile);
+      get().addRecord('dms', 'files', dmsFile);
     });
 
-    addHint({ title: "Paie Exécutée", message: `La masse salariale de ${massTotal.toLocaleString('fr-FR')} a été comptabilisée et les fiches de paie ont été archivées.`, type: 'success', appId: 'hr' });
-    logAction('Génération Paie', `Calcul de ${activeEmployees.length} salaires et fiches de paie pour ${mois}`, 'hr');
+    get().addHint({ title: "Paie Exécutée", message: `La masse salariale de ${massTotal.toLocaleString('fr-FR')} a été comptabilisée et les fiches de paie ont été archivées.`, type: 'success', appId: 'hr' });
+    get().logAction('Génération Paie', `Calcul de ${activeEmployees.length} salaires et fiches de paie pour ${mois}`, 'hr');
   },
 
   launchProductionOrder: (order) => {
     const bom = (get().data.production?.boms || []).find(b => b.id === order.bomId || b.produitId === order.produitId);
     if (!bom) {
-      addHint({ title: "Nomenclature Manquante", message: `Aucune BOM trouvée pour ${order.produit}. Créez d'abord la nomenclature.`, type: 'warning' });
+      get().addHint({ title: "Nomenclature Manquante", message: `Aucune BOM trouvée pour ${order.produit}. Créez d'abord la nomenclature.`, type: 'warning' });
       return;
     }
 
@@ -886,7 +886,7 @@ addHint: (hint) => {
     });
 
     // Update OF status to En cours
-    updateRecord('production', 'workOrders', order.id, { ...order, statut: 'En cours' });
+    get().updateRecord('production', 'workOrders', order.id, { ...order, statut: 'En cours' });
 
     // Create draft purchase orders for shortages
     shortages.forEach(s => {
@@ -902,15 +902,15 @@ addHint: (hint) => {
         statut: 'Brouillon',
         origine: `Auto-réappro OF ${order.num}`
       };
-      addRecord('purchase', 'orders', po);
+      get().addRecord('purchase', 'orders', po);
     });
 
     if (shortages.length > 0) {
-      addHint({ title: "⚠️ Rupture détectée", message: `${shortages.length} article(s) en dessous du seuil. Commandes brouillon créées dans les Achats.`, type: 'warning', appId: 'production' });
+      get().addHint({ title: "⚠️ Rupture détectée", message: `${shortages.length} article(s) en dessous du seuil. Commandes brouillon créées dans les Achats.`, type: 'warning', appId: 'production' });
     } else {
-      addHint({ title: "✅ OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
+      get().addHint({ title: "✅ OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
     }
-    logAction('Production', `Lancement OF ${order.num} — ${order.qte} × ${order.produit}`, 'production');
+    get().logAction('Production', `Lancement OF ${order.num} — ${order.qte} × ${order.produit}`, 'production');
   },
 
 
@@ -992,12 +992,12 @@ addHint: (hint) => {
 
 
   approveRequest: (appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
-    addHint({ title: "Demande Approuvée", type: 'success', appId });
+    get().updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
+    get().addHint({ title: "Demande Approuvée", type: 'success', appId });
   },
 
   rejectRequest: (appId, subModule, id) => {
-    updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
+    get().updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: get().user.nom, validatedAt: new Date().toISOString() });
   },
 
 
@@ -1008,7 +1008,7 @@ addHint: (hint) => {
       ...prev,
       connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
     }));
-    logAction('Publication Sociale', post.title, 'connect');
+    get().logAction('Publication Sociale', post.title, 'connect');
   },
 
   likeConnectPost: (postId) => {
@@ -1033,14 +1033,13 @@ addHint: (hint) => {
       const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
       return { ...prev, connect: { ...prev.connect, events: updated } };
     });
-    addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
+    get().addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
   },
 
   /* ══════════════════════════════════════════════════════════════════════════
      7. CALLING & REALTIME NOTIFICATIONS
      ══════════════════════════════════════════════════════════════════════════ */
-  
-  const playRingtone = () => {
+  playRingtone: () => {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     const startTime = audioCtx.currentTime;
     
@@ -1065,182 +1064,23 @@ addHint: (hint) => {
         playNote(660, startTime + offset + 1.2, 0.6); 
     }
   };
-
-  const acceptCall = async () => {
+  acceptCall: async () => {
     if (!activeCall) return;
     try {
-      setActiveCall(prev => ({ ...prev, accepted: true }));
+      get().setActiveCall(prev => ({ ...prev, accepted: true }));
       await updateDoc(doc(db, 'calls', activeCall.id), { status: 'accepted' });
     } catch (err) { console.error("Accept Error:", err); }
   };
-
-  const rejectCall = async () => {
+  rejectCall: async () => {
     if (!activeCall) return;
     try {
       await updateDoc(doc(db, 'calls', activeCall.id), { status: 'rejected' });
-      setActiveCall(null);
+      get().setActiveCall(null);
     } catch (err) { console.error("Reject Error:", err); }
   };
 
 
-  /* ══════════════════════════════════════════════════════════════════════════
-     8. CLOUD LISTENERS
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        let role = 'STAFF';
-        if (['ra.yoman@ipcgreenblocks.com', 'fall.jcjunior@gmail.com', 'yoman.raphael@gmail.com'].includes(user.email)) role = 'SUPER_ADMIN';
-        const docSnap = await getDoc(doc(db, 'users', user.uid));
-        
-        let profile = { id: user.uid, nom: user.email.split('@')[0], email: user.email, role };
-
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          // NOTE: Ne pas écraser data avec userData.data — les collections Firestore
-          // ('hr', 'crm', etc.) sont la source de vérité, et le listener cloud
-          // les charge via onSnapshot. Écraser ici causerait des données obsolètes.
-
-          let fetchedRole = role;
-          if (userData.permissions && userData.permissions.roles && userData.permissions.roles.length > 0) {
-             fetchedRole = userData.permissions.roles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : userData.permissions.roles[0];
-          }
-          profile = { ...profile, ...userData.profile, role: fetchedRole };
-
-          if (userData.permissions) {
-             setPermissions(prev => ({ ...prev, [user.uid]: userData.permissions }));
-          }
-        }
-        
-        setCurrentUser(profile);
-
-        // Auto landing logic: Everybody lands on their intelligent Personal Workspace ('home')
-        setActiveApp('home');
-
-      } else {
-        setData(mockData);
-        setCurrentUser({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
-      }
-    });
-    return () => unsubscribe();
-  },
-
-  // WebRTC Call Listener
-  useEffect(() => {
-    if (!currentUser) return; 
-    if (get().user.id === 'guest') return;
-
-    const q = query(
-      collection(db, 'calls'), 
-      where('receiverId', '==', get().user.id), 
-      where('status', '==', 'ringing')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      if (!snapshot.empty) {
-        // Find the most recent call
-        let latestCallDoc = snapshot.docs[0];
-        snapshot.docs.forEach(doc => {
-           const d = doc.data();
-           const l = latestCallDoc.data();
-           if (d.startedAt && l.startedAt && d.startedAt.toMillis() > l.startedAt.toMillis()) {
-               latestCallDoc = doc;
-           }
-        });
-        const callDoc = latestCallDoc;
-        const callData = callDoc.data();
-        
-        // Prevent re-triggering if we already have an active call for this ID
-        if (activeCall?.id === callDoc.id) return;
-
-        // Automatically trigger incoming call UI
-        setActiveCall({ 
-          id: callDoc.id, 
-          roomId: callData.roomId || callDoc.id,
-          role: 'receiver', 
-          type: callData.type, 
-          contactName: callData.callerName || 'Collègue',
-          status: 'ringing'
-        });
-
-        // "Classique mais douce" Ringtone
-        playRingtone();
-      }
-    });
-
-    return () => unsubscribe();
-  },
-
-  useEffect(() => {
-    if (!currentUser || get().user.id === 'guest' || !auth.currentUser) return;
-
-    const COLLECTIONS = [
-      'crm', 'sales', 'inventory', 'production',
-      'accounting', 'projects', 'audit_logs', 'hr',
-      'base', 'workflows', 'notifications', 'users', 'activities'
-    ];
-
-    const unsubscribes = COLLECTIONS.map(colName => {
-      // Opti: Limit hydration of heavy logs for initial load
-      const isHeavy = ['audit_logs', 'activities', 'notifications'].includes(colName);
-      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(isHeavy ? 100 : 200));
-      
-      return onSnapshot(q, (snapshot) => {
-        const docs = snapshot.docs
-          .map(d => ({ ...d.data(), id: d.id }))
-          .filter(d => get().globalSettings.brand === 'ALL' || !d.brandId || d.brandId === get().globalSettings.brand);
-
-        set(prev => {
-          // Detect if change is meaningful
-          const newState = { ...prev };
-          if (colName === 'audit_logs') {
-            newState.audit = { ...newState.audit, logs: docs };
-          } else if (colName === 'activities') {
-            newState.activities = docs;
-          } else if (colName === 'users') {
-            const userPermissions = {};
-            const employeeProfiles = docs
-              .filter(u => u.profile || u.permissions)
-              .map(u => {
-                if (u.permissions) userPermissions[u.id] = u.permissions;
-                return u.profile ? { ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' } : null;
-              })
-              .filter(Boolean);
-
-            if (Object.keys(userPermissions).length > 0) setPermissions(p => ({ ...p, ...userPermissions }));
-            if (employeeProfiles.length > 0) {
-              newState.hr = { ...prev.hr, employees: employeeProfiles };
-            }
-          } else {
-            const grouped = {};
-            docs.forEach(d => {
-              const sub = d.subModule || 'others';
-              if (!grouped[sub]) grouped[sub] = [];
-              grouped[sub].push(d);
-            });
-            newState[colName] = { ...prev[colName], ...grouped };
-          }
-          
-          if (colName === 'notifications') setNotifications(docs);
-          
-          return newState;
-        });
-      });
-    });
-
-    return () => unsubscribes.forEach(unsub => unsub());
-  },
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     9. EXPORTS & NAVIGATION
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  logout: async () => {
-    await auth.signOut();
-    localStorage.removeItem('ipc_erp_current_user');
-    localStorage.removeItem('daxcelor_data');
-  },
+  
 
   resetAllData: async () => {
     // Collections métier à purger dans Firestore
@@ -1250,7 +1090,7 @@ addHint: (hint) => {
       'notifications', 'connect'
     ];
 
-    addHint({ title: "Purge en cours...", message: "Suppression des données Firestore et locales...", type: 'info' });
+    get().addHint({ title: "Purge en cours...", message: "Suppression des données Firestore et locales...", type: 'info' });
 
     try {
       if (auth.currentUser) {
@@ -1281,19 +1121,19 @@ addHint: (hint) => {
 
     // Reset état React
     setData(mockData);
-    addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
+    get().addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
   },
 
   seedDemoData: async () => {
     const months = 6;
     const now = new Date();
     
-    addHint({ title: "🌱 Seeding...", message: "Génération de 6 mois d'historique métier...", type: 'info' });
+    get().addHint({ title: "🌱 Seeding...", message: "Génération de 6 mois d'historique métier...", type: 'info' });
 
     // 1. Clients & Fournisseurs (Base)
     const clientNoms = ["Industries Ouest", "TechCorp Plus", "BTP Alpha", "Giga Mart", "Auto Pro"];
     const clients = clientNoms.map((nom, i) => ({ id: `CLI-00${i+1}`, nom, type: 'Client', email: `contact@${nom.toLowerCase().replace(' ', '')}.com`, categorie: 'B2B' }));
-    clients.forEach(c => addRecord('base', 'contacts', c));
+    clients.forEach(c => get().addRecord('base', 'contacts', c));
 
     // 2. Factures & Ventes (Finance)
     for (let m = 0; m < months; m++) {
@@ -1304,7 +1144,7 @@ addHint: (hint) => {
       const count = 5 + Math.floor(Math.random() * 4);
       for (let i = 0; i < count; i++) {
         const montant = 500000 + Math.floor(Math.random() * 2500000);
-        addRecord('finance', 'invoices', {
+        get().addRecord('finance', 'invoices', {
           client: clientNoms[i % 5],
           montant,
           statut: isPast ? 'Payé' : 'Envoyé',
@@ -1313,7 +1153,7 @@ addHint: (hint) => {
         });
 
         // Achats correspondants (40% du CA)
-        addRecord('finance', 'vendor_bills', {
+        get().addRecord('finance', 'vendor_bills', {
           fournisseur: "Grossiste Global",
           montant: montant * 0.4,
           statut: 'Payé',
@@ -1328,7 +1168,7 @@ addHint: (hint) => {
       { id: 'T-002', nom: 'Bob Dupont', poste: 'Sales Manager', source: 'Indeed', statut: 'Offre', score: 92 },
       { id: 'T-003', nom: 'Claire Lefebvre', poste: 'UX Designer', source: 'Portfolio', statut: 'Test Technique', score: 78 }
     ];
-    hrData.forEach(t => addRecord('talent', 'candidates', t));
+    hrData.forEach(t => get().addRecord('talent', 'candidates', t));
 
     // Évaluations 360
     const skills = [
@@ -1336,12 +1176,12 @@ addHint: (hint) => {
        { name: 'Com', alice: 7, bob: 10, claire: 9 },
        { name: 'Leadership', alice: 6, bob: 9, claire: 5 }
     ];
-    addRecord('talent', 'appraisals', { empId: 'E001', nom: 'Jean Kouassi', period: 'Q1 2026', scores: skills.map(s => ({ key: s.name, val: s.alice })) });
+    get().addRecord('talent', 'appraisals', { empId: 'E001', nom: 'Jean Kouassi', period: 'Q1 2026', scores: skills.map(s => ({ key: s.name, val: s.alice })) });
 
-    addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: 'success' });
+    get().addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: 'success' });
   },
 
-  navigateTo: (appId) => setActiveApp(appId),
+  navigateTo: (appId) => get().setActiveApp(appId),
 
   // 10. Memoized Context Value to avoid redundant re-renders
   
