@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { mockData } from './utils/data-factory';
 import { auth, db, storage, firebaseConfig } from './firebase/config';
 import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
@@ -8,19 +8,7 @@ import { initializeApp, deleteApp } from 'firebase/app';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useStore } from './store';
 
-const BusinessContext = createContext();
 
-// Utility for safe localStorage parsing
-const safeParse = (key, defaultValue) => {
-  try {
-    const saved = localStorage.getItem(key);
-    if (!saved) return defaultValue;
-    return JSON.parse(saved);
-  } catch (error) {
-    console.error(`Erreur lors de la lecture de ${key} dans localStorage:`, error);
-    return defaultValue;
-  }
-};
 
 export const BusinessProvider = ({ children }) => {
   /* ══════════════════════════════════════════════════════════════════════════
@@ -31,7 +19,7 @@ export const BusinessProvider = ({ children }) => {
   const setCurrentUser = useStore(state => state.setUser);
   const permissions = useStore(state => state.permissions);
   const setPermissions = useStore(state => state.setPermissions);
-  const activeApp = useStore(state => state.activeApp);
+  const _activeApp = useStore(state => state.activeApp);
   const setActiveApp = useStore(state => state.setActiveApp);
   const globalSettings = useStore(state => state.globalSettings);
   const setGlobalSettings = useStore(state => state.setGlobalSettings);
@@ -41,22 +29,24 @@ export const BusinessProvider = ({ children }) => {
   const setConfig = useStore(state => state.setConfig);
   const schemaOverrides = useStore(state => state.schemaOverrides);
 
+  // Additional state from store
+  const _hints = useStore(state => state.hints);
+  const setHints = useStore(state => state.setHints);
+  const _searchResults = useStore(state => state.searchResults);
+  const setSearchResults = useStore(state => state.setSearchResults);
+
+  const activeCall = useStore(state => state.activeCall);
+  const setActiveCall = useStore(state => state.setActiveCall);
+  const setNotifications = useStore(state => state.setNotifications);
+
   // Persistence Refs to prevent loops
   const lastSyncedConfig = React.useRef(null);
 
-  const BRANDS = [
-    { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
-    { id: 'IPC_CORE', name: 'IPC Core Service', short: 'IPC' },
-    { id: 'B2B_LOG', name: 'B2B Logistics', short: 'B2B' }
-  ];
-  const activeBrand = store.globalSettings?.brand || 'ALL';
-  const setActiveBrand = (brand) => store.setGlobalSettings({ brand });
+  const activeBrand = globalSettings?.brand || 'ALL';
 
-  
   // Derived State
   const userRole = currentUser?.role || 'GUEST';
-  const switchRole = null;
-  const switchUser = null;
+
 
   /* ══════════════════════════════════════════════════════════════════════════
      2. PERSISTENCE EFFECTS
@@ -92,14 +82,7 @@ export const BusinessProvider = ({ children }) => {
      3. UTILITY LOGIC (Stable Helpers)
      ══════════════════════════════════════════════════════════════════════════ */
 
-  const formatCurrency = useCallback((val, compact = false) => {
-    if (typeof val !== 'number') return val;
-    if (compact) {
-      const formatter = new Intl.NumberFormat('fr-FR', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1 });
-      return formatter.format(val).replace('B', 'Md') + ' ' + (globalSettings.currency || 'FCFA');
-    }
-    return val.toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' ' + (globalSettings.currency || 'FCFA');
-  }, [globalSettings.currency]);
+
 
   const getNextSequence = useCallback((key) => {
     const seq = data.base?.sequences?.[key];
@@ -113,22 +96,14 @@ export const BusinessProvider = ({ children }) => {
       return { ...prev, base: { ...prev.base, sequences: { ...prev.base.sequences, [key]: { ...s, next: s.next + 1 } } } };
     });
     return nextNum;
-  }, [data.base?.sequences]);
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     4. CORE ACTIONS (Low-level hooks)
-     ══════════════════════════════════════════════════════════════════════════ */
+  }, [data.base?.sequences, setData]);
 
   const addHint = useCallback((hint) => {
     setTimeout(() => {
       const id = Date.now().toString();
       setHints(prev => [{ ...hint, id }, ...prev]);
     }, 0);
-  }, []);
-
-  const dismissHint = useCallback((id) => {
-    setHints(prev => prev.filter(h => h.id !== id));
-  }, []);
+  }, [setHints]);
 
   const logAction = useCallback((action, detail, appId = 'system', targetId = null) => {
     const activity = {
@@ -156,6 +131,7 @@ export const BusinessProvider = ({ children }) => {
   }, [currentUser?.nom, activeBrand]);
 
 
+
   const sendNotification = useCallback(async (targetRole, title, message, type = 'info', actionApp = null, targetUserId = null) => {
     const notifyDoc = {
       id: Date.now().toString(),
@@ -179,7 +155,7 @@ export const BusinessProvider = ({ children }) => {
      ADMIN LOGIC (User Management)
      ══════════════════════════════════════════════════════════════════════════ */
 
-  const updateUserRole = useCallback((userId, newRole) => {
+  const _updateUserRole = useCallback((userId, newRole) => {
     setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newPerms = { ...userPerms, roles: [newRole] };
@@ -192,7 +168,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const setModuleAccessLevel = useCallback((userId, moduleId, level) => {
+  const _setModuleAccessLevel = useCallback((userId, moduleId, level) => {
     setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
@@ -216,7 +192,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const getModuleAccess = useCallback((userId, moduleId) => {
+  const _getModuleAccess = useCallback((userId, moduleId) => {
     // 1. Super Admin Bypass
     if (currentUser?.role === 'SUPER_ADMIN') return 'write';
 
@@ -242,14 +218,14 @@ export const BusinessProvider = ({ children }) => {
     return 'none';
   }, [permissions, currentUser]);
 
-  const createFullUser = useCallback(async (userData, source = 'admin') => {
+  const _createFullUser = useCallback(async (userData, initialRole = 'ADMIN') => {
     let secondaryApp;
     try {
       secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
       const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
       const uid = userCredential.user.uid;
       
-      const role = userData.role || 'STAFF';
+      const role = userData.role || initialRole;
       const profileData = { 
         nom: userData.nom, 
         email: userData.email, 
@@ -257,7 +233,7 @@ export const BusinessProvider = ({ children }) => {
         id: uid, 
         dept: userData.dept || '',
         avatar: userData.avatar || userData.nom[0],
-        statut: source === 'admin' ? 'À compléter' : 'Actif',
+        statut: 'Actif',
         active: true,
         createdAt: new Date().toISOString() 
       };
@@ -265,18 +241,15 @@ export const BusinessProvider = ({ children }) => {
       const permissionsData = {
         roles: userData.roles || [role],
         moduleAccess: userData.moduleAccess || { home: 'write' },
-        // Legacy fallback
         allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
       };
 
-      // 1. Create User Document
       await setDoc(doc(db, 'users', uid), { 
         profile: profileData, 
         permissions: permissionsData, 
         data: {} 
       });
 
-      // 2. Create HR Record with exact employee structure
       await setDoc(doc(db, 'hr', uid), { 
          ...profileData, 
          subModule: 'employees',
@@ -285,25 +258,18 @@ export const BusinessProvider = ({ children }) => {
          contratDuree: userData.contratDuree || '',
       });
 
-      // 3. Send Notification
-      if (source === 'hr') {
-        await sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
-      } else {
-        await sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
-      }
-
       return { success: true, uid };
     } finally { if (secondaryApp) deleteApp(secondaryApp); }
   }, [sendNotification]);
  
-  const toggleUserStatus = useCallback(async (userId, newStatus) => {
+  const _toggleUserStatus = useCallback(async (userId, activeStatus) => {
     const uid = String(userId);
     try {
       if (auth.currentUser) {
-        await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
-        await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
+        await setDoc(doc(db, 'users', uid), { profile: { active: activeStatus } }, { merge: true });
+        await setDoc(doc(db, 'hr', uid), { active: activeStatus }, { merge: true });
       }
-      logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
+      logAction(activeStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
       return { success: true };
     } catch (e) {
       console.error("toggleUserStatus error:", e);
@@ -516,7 +482,7 @@ export const BusinessProvider = ({ children }) => {
         return prev;
       }
       let componentsList = [];
-      try { componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); } catch (e) { componentsList = []; }
+      try { componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); } catch (_e) { componentsList = []; }
       
       // Appliquer la décrémentation des stocks des matières premières (MRP)
       componentsList.forEach(comp => applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
@@ -805,7 +771,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction, addHint, generateInvoiceEntry, generateProductionEntry, generateExpenseEntry, convertOppToSalesOrder, processOrderValidation, applyMOTransformation, applyStockMove, getNextSequence, generateLitigationEntry, sendNotification]);
 
-  const deleteRecord = useCallback((appId, subModule, id) => {
+  const _deleteRecord = useCallback(async (appId, subModule, id) => {
     // Special handling for user deletion to ensure Auth is also cleaned up
     if ((appId === 'admin' && subModule === 'users') || (appId === 'hr' && subModule === 'employees')) {
       permanentlyDeleteUserRecord(id);
@@ -825,24 +791,24 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [logAction, permanentlyDeleteUserRecord]);
 
-  const processPOSOrder = useCallback((order) => {
+  const _processPOSOrder = useCallback((cart, total, customerId) => {
     const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
     const dateStr = new Date().toISOString().split('T')[0];
 
     addRecord('commerce', 'posOrders', {
       id: newId,
-      client: order.customer || 'Passager',
-      montant: order.totalAmount,
-      items: `Ticket avec ${order.cart.length} ligne(s)`,
+      client: customerId || 'Passager',
+      montant: total,
+      items: `Ticket avec ${cart.length} ligne(s)`,
       statut: 'Payé',
       date: dateStr,
-      type: order.type || 'boutique'
+      type: 'boutique'
     });
 
     addRecord('finance', 'incomes', {
       id: `FAC-${newId}`,
-      description: `Vente Caisse (${order.type}) - ${order.customer || 'Passager'}`,
-      montant: order.totalAmount,
+      description: `Vente Caisse - ${customerId || 'Passager'}`,
+      montant: total,
       categorie: 'Ventes',
       statut: 'Payé',
       date: dateStr
@@ -852,7 +818,7 @@ export const BusinessProvider = ({ children }) => {
     setData(prev => {
       const invProducts = prev.inventory?.products || [];
       const updatedProducts = invProducts.map(p => {
-         const cartItem = order.cart.find(c => c.id === p.id);
+         const cartItem = cart.find(c => c.id === p.id);
          if (cartItem) {
             return { ...p, qte: Math.max(0, (p.qte || 0) - cartItem.qty) };
          }
@@ -868,7 +834,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [addRecord, addHint]);
 
-  const generatePayrollEntry = useCallback(() => {
+  const _generatePayrollEntry = useCallback((employeeId, month) => {
     const activeEmployees = (data.hr?.employees || []).filter(e => e.active !== false && e.salaire);
     if (activeEmployees.length === 0) {
       addHint({ title: "Masse Salariale Nulle", message: "Aucun salaire à générer pour les collaborateurs actifs.", type: 'warning' });
@@ -878,7 +844,7 @@ export const BusinessProvider = ({ children }) => {
     const { leaves = [] } = data.hr || {};
     
     // First, let's process each employee to find unpaid leave deductions
-    const currentMonthPrefix = new Date().toISOString().substring(0, 7); // e.g. "2026-04"
+    const currentMonthPrefix = month || new Date().toISOString().substring(0, 7); // e.g. "2026-04"
     let massTotal = 0;
     
     const processedEmployees = activeEmployees.map(emp => {
@@ -975,7 +941,7 @@ export const BusinessProvider = ({ children }) => {
     logAction('Génération Paie', `Calcul de ${activeEmployees.length} salaires et fiches de paie pour ${mois}`, 'hr');
   }, [data.hr?.employees, data.hr?.leaves, addAccountingEntry, addRecord, addHint, logAction]);
 
-  const launchProductionOrder = useCallback((order) => {
+  const _launchProductionOrder = useCallback((order) => {
     const bom = (data.production?.boms || []).find(b => b.id === order.bomId || b.produitId === order.produitId);
     if (!bom) {
       addHint({ title: "Nomenclature Manquante", message: `Aucune BOM trouvée pour ${order.produit}. Créez d'abord la nomenclature.`, type: 'warning' });
@@ -1034,7 +1000,7 @@ export const BusinessProvider = ({ children }) => {
      ══════════════════════════════════════════════════════════════════════════ */
 
 
-  const globalSearch = useCallback((query) => {
+  const _globalSearch = useCallback((query) => {
     if (!query || query.length < 2) return setSearchResults([]);
     const q = query.toLowerCase();
     const results = [];
@@ -1070,15 +1036,15 @@ export const BusinessProvider = ({ children }) => {
     setSearchResults(results.slice(0, 12));
   }, [data]);
 
-  const updateConfig = useCallback((newConfig) => setConfig(prev => ({ ...prev, ...newConfig })), []);
-  const addCustomField = useCallback((appId, field) => setConfig(prev => ({ ...prev, customFields: { ...prev.customFields, [appId]: [...(prev.customFields[appId] || []), field] } })), []);
+  const _updateConfig = useCallback((newConfig) => setConfig(prev => ({ ...prev, ...newConfig })), []);
+  const _addCustomField = useCallback((appId, field) => setConfig(prev => ({ ...prev, customFields: { ...prev.customFields, [appId]: [...(prev.customFields[appId] || []), field] } })), []);
   const updateGlobalSettings = useCallback(async (newGlobal) => {
     if (userRole !== 'SUPER_ADMIN') return;
     setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
     if (auth.currentUser) setDoc(doc(db, 'settings', 'global'), { ...newGlobal }, { merge: true });
   }, [userRole]);
 
-  const togglePinnedModule = useCallback((moduleId) => {
+  const _togglePinnedModule = useCallback((moduleId) => {
     if (userRole !== 'SUPER_ADMIN') return;
     setGlobalSettings(prev => {
       const currentPinned = prev.pinnedModules || [];
@@ -1087,7 +1053,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, [userRole]);
 
-  const uploadLogo = useCallback(async (file) => {
+  const _uploadLogo = useCallback(async (file) => {
     if (userRole !== 'SUPER_ADMIN') throw new Error("Accès refusé");
     const storageRef = ref(storage, `brand/logos/master_logo_${Date.now()}`);
     try {
@@ -1101,23 +1067,18 @@ export const BusinessProvider = ({ children }) => {
     }
   }, [userRole, updateGlobalSettings]);
 
-
-
-
-
-
-  const approveRequest = useCallback((appId, subModule, id) => {
+  const _approveRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Validé', validatedBy: currentUser?.nom, validatedAt: new Date().toISOString() });
     addHint({ title: "Demande Approuvée", type: 'success', appId });
   }, [updateRecord, addHint, currentUser?.nom]);
 
-  const rejectRequest = useCallback((appId, subModule, id) => {
+  const _rejectRequest = useCallback((appId, subModule, id) => {
     updateRecord(appId, subModule, id, { statut: 'Refusé', validatedBy: currentUser?.nom, validatedAt: new Date().toISOString() });
   }, [updateRecord, currentUser?.nom]);
 
 
   // --- IPC CONNECT SOCIAL HELPERS ---
-  const addConnectPost = useCallback((post) => {
+  const _addConnectPost = useCallback((post) => {
     const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
     setData(prev => ({
       ...prev,
@@ -1126,7 +1087,7 @@ export const BusinessProvider = ({ children }) => {
     logAction('Publication Sociale', post.title, 'connect');
   }, [logAction]);
 
-  const likeConnectPost = useCallback((postId) => {
+  const _likeConnectPost = useCallback((postId) => {
     setData(prev => {
       const posts = prev?.connect?.posts || [];
       const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
@@ -1134,7 +1095,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const addConnectComment = useCallback((postId, comment) => {
+  const _addConnectComment = useCallback((postId, comment) => {
     setData(prev => {
       const posts = prev?.connect?.posts || [];
       const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
@@ -1142,7 +1103,7 @@ export const BusinessProvider = ({ children }) => {
     });
   }, []);
 
-  const participateInEvent = useCallback((eventId) => {
+  const _participateInEvent = useCallback((eventId) => {
     setData(prev => {
       const events = prev?.connect?.events || [];
       const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
@@ -1181,21 +1142,21 @@ export const BusinessProvider = ({ children }) => {
     }
   };
 
-  const acceptCall = async () => {
+  const _acceptCall = useCallback(async () => {
     if (!activeCall) return;
     try {
       setActiveCall(prev => ({ ...prev, accepted: true }));
       await updateDoc(doc(db, 'calls', activeCall.id), { status: 'accepted' });
     } catch (err) { console.error("Accept Error:", err); }
-  };
+  }, [activeCall, setActiveCall]);
 
-  const rejectCall = async () => {
+  const _rejectCall = useCallback(async () => {
     if (!activeCall) return;
     try {
       await updateDoc(doc(db, 'calls', activeCall.id), { status: 'rejected' });
       setActiveCall(null);
     } catch (err) { console.error("Reject Error:", err); }
-  };
+  }, [activeCall, setActiveCall]);
 
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -1213,10 +1174,6 @@ export const BusinessProvider = ({ children }) => {
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
-          // NOTE: Ne pas écraser data avec userData.data — les collections Firestore
-          // ('hr', 'crm', etc.) sont la source de vérité, et le listener cloud
-          // les charge via onSnapshot. Écraser ici causerait des données obsolètes.
-
           let fetchedRole = role;
           if (userData.permissions && userData.permissions.roles && userData.permissions.roles.length > 0) {
              fetchedRole = userData.permissions.roles.includes('SUPER_ADMIN') ? 'SUPER_ADMIN' : userData.permissions.roles[0];
@@ -1229,9 +1186,9 @@ export const BusinessProvider = ({ children }) => {
         }
         
         setCurrentUser(profile);
-        // 🔄 Sync to Zustand store so all components using useStore() get the user
-        store.setCurrentUser?.(profile);
-        store.setUser?.(profile);
+        const s = useStore.getState();
+        s.setCurrentUser?.(profile);
+        s.setUser?.(profile);
 
         // Auto landing logic: Everybody lands on their intelligent Personal Workspace ('home')
         setActiveApp('home');
@@ -1239,8 +1196,9 @@ export const BusinessProvider = ({ children }) => {
       } else {
         setData(mockData);
         setCurrentUser({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
-        store.setCurrentUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
-        store.setUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
+        const s = useStore.getState();
+        s.setCurrentUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
+        s.setUser?.({ id: 'guest', nom: 'Utilisateur', role: 'GUEST' });
       }
     });
     return () => unsubscribe();
@@ -1383,13 +1341,13 @@ export const BusinessProvider = ({ children }) => {
      9. EXPORTS & NAVIGATION
      ══════════════════════════════════════════════════════════════════════════ */
 
-  const logout = useCallback(async () => {
+  const _logout = useCallback(async () => {
     await auth.signOut();
     localStorage.removeItem('ipc_erp_current_user');
     localStorage.removeItem('daxcelor_data');
   }, []);
 
-  const resetAllData = useCallback(async () => {
+  const _resetAllData = useCallback(async () => {
     // Collections métier à purger dans Firestore
     const businessCollections = [
       'crm', 'sales', 'inventory', 'finance', 'hr',
@@ -1431,7 +1389,7 @@ export const BusinessProvider = ({ children }) => {
     addHint({ title: "✅ ERP Vierge", message: "Toutes les données (Firestore + Local) ont été effacées. L'ERP repart de zéro.", type: 'success' });
   }, [addHint]);
 
-  const seedDemoData = useCallback(async () => {
+  const _seedDemoData = useCallback(async () => {
     const months = 6;
     const now = new Date();
     
@@ -1488,7 +1446,7 @@ export const BusinessProvider = ({ children }) => {
     addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: 'success' });
   }, [addRecord, addHint]);
 
-  const navigateTo = useCallback((appId) => setActiveApp(appId), []);
+  const _navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
 
   // Context is now bypassed in favor of Zustand, but we preserve listeners.
   return (

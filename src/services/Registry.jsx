@@ -1,11 +1,5 @@
 import React from 'react';
-import { 
-  Home, Users, ShoppingCart, Mail, Package, Truck, ShoppingBag, 
-  Factory, Layers, CreditCard, Landmark, Wallet, PiggyBank, 
-  FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
-  Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
-  Settings, MessageCircle, Pin, PinOff
-} from 'lucide-react';
+import { Package } from 'lucide-react';
 
 /**
  * I.P.C Platform Registry
