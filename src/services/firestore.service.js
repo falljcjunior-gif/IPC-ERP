@@ -133,10 +133,17 @@ export const FirestoreService = {
         _updatedAt: serverTimestamp(),
       });
       const docRef = await addDoc(collection(db, collectionName), safeData);
-      return docRef.id;
+      return { id: docRef.id };
     } catch (err) {
       throw wrapFirestoreError(err, `createDocument(${collectionName})`);
     }
+  },
+
+  /**
+   * Alias pour createDocument utilisé par certains services legacy.
+   */
+  async addDocument(collectionName, data) {
+    return this.createDocument(collectionName, data);
   },
 
   /**
