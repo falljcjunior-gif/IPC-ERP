@@ -66,9 +66,9 @@ service cloud.firestore {
     }
 
     // ── HR ─────────────────────────────────────────────────────────────────
-    match /hr_{sub}/{docId} {
-      allow read: if hasAnyRole(['HR', 'ADMIN', 'MANAGER']);
-      allow write: if hasAnyRole(['HR', 'ADMIN']);
+    match /{col}/{docId} {
+      allow read: if col.startsWith('hr_') && hasAnyRole(['HR', 'ADMIN', 'MANAGER']);
+      allow write: if col.startsWith('hr_') && hasAnyRole(['HR', 'ADMIN']);
     }
 
     // ── SYSTEM & AUDIT (Admin Only) ─────────────────────────────────────────
