@@ -60,7 +60,9 @@ const AuthObserver = () => {
 function App() {
   const [view, setView] = useState('login');
   const [isInitializing, setIsInitializing] = useState(true);
-  const { _hasHydrated, globalSettings, setGlobalSettings } = useStore();
+  const _hasHydrated = useStore(state => state._hasHydrated);
+  const globalSettings = useStore(state => state.globalSettings);
+  const setGlobalSettings = useStore(state => state.setGlobalSettings);
 
   useEffect(() => {
     initRegistry();

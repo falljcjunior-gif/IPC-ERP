@@ -5,6 +5,7 @@ import {
   Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check 
 } from 'lucide-react';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import GPSWorkspace from './GPSWorkspace';
 import FocusTracker from './workspace/FocusTracker';
 import VictoryHeartbeat from './workspace/VictoryHeartbeat';
@@ -17,7 +18,11 @@ const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transiti
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
 
 const PersonalWorkspace = () => {
-  const { data, currentUser, navigateTo } = useStore();
+  const { data, currentUser, navigateTo } = useStore(useShallow(state => ({
+    data: state.data,
+    currentUser: state.user,
+    navigateTo: state.navigateTo
+  })));
   const [activeTab, setActiveTab] = useState('overview');
 
   const [isEditingName, setIsEditingName] = useState(false);

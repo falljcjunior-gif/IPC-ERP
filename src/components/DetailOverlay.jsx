@@ -27,12 +27,22 @@ import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from 'react-i18next';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { t } = useTranslation();
-  const { hasPermission, userRole } = useStore();
-  const { config, navigateTo, deleteRecord, data, logAction } = useStore();
+  const { 
+    hasPermission, userRole, config, navigateTo, deleteRecord, data, logAction 
+  } = useStore(useShallow(state => ({
+    hasPermission: state.hasPermission,
+    userRole: state.userRole,
+    config: state.config,
+    navigateTo: state.navigateTo,
+    deleteRecord: state.deleteRecord,
+    data: state.data,
+    logAction: state.logAction
+  })));
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);

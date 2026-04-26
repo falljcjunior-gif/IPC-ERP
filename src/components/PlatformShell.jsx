@@ -12,6 +12,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from 'react-i18next';
 
 // Lazy loaded components
@@ -31,18 +32,35 @@ import PointageWidget from './PointageWidget';
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { t, i18n } = useTranslation();
-  const store = useStore();
   const { 
     globalSearch, searchResults, updateRecord, addRecord, data, config, 
     globalSettings, permissions, getModuleAccess, logout, activeApp, 
-    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, togglePinnedModule,
-    setActiveBrand, BRANDS
-  } = useStore();
+    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, 
+    setActiveBrand, BRANDS, user: currentUser
+  } = useStore(useShallow(state => ({
+    globalSearch: state.globalSearch,
+    searchResults: state.searchResults,
+    updateRecord: state.updateRecord,
+    addRecord: state.addRecord,
+    data: state.data,
+    config: state.config,
+    globalSettings: state.globalSettings,
+    permissions: state.permissions,
+    getModuleAccess: state.getModuleAccess,
+    logout: state.logout,
+    activeApp: state.activeApp,
+    setActiveApp: state.setActiveApp,
+    activeCall: state.activeCall,
+    setActiveCall: state.setActiveCall,
+    acceptCall: state.acceptCall,
+    rejectCall: state.rejectCall,
+    setActiveBrand: state.setActiveBrand,
+    BRANDS: state.BRANDS,
+    user: state.user
+  })));
 
-  // currentUser comes from the auth slice as 'user'; derive userRole and activeBrand locally
-  const currentUser = store.user;
   const userRole = currentUser?.role || 'GUEST';
-  const activeBrand = store.globalSettings?.brand || 'ALL';
+  const activeBrand = globalSettings?.brand || 'ALL';
 
   // Unified UI Flags
   const [shellView, setShellView] = useState({

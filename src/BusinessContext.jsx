@@ -16,6 +16,14 @@ export const BusinessProvider = ({ children }) => {
      ══════════════════════════════════════════════════════════════════════════ */
   
   const currentUser = useStore(state => state.user);
+  const activeBrand = useStore(state => state.globalSettings?.brand || 'ALL');
+  const activeBrandRef = React.useRef(activeBrand);
+  
+  // Keep ref up to date without triggering re-effects
+  React.useEffect(() => {
+    activeBrandRef.current = activeBrand;
+  }, [activeBrand]);
+
   const setCurrentUser = useStore(state => state.setUser);
   const permissions = useStore(state => state.permissions);
   const setPermissions = useStore(state => state.setPermissions);
@@ -42,7 +50,7 @@ export const BusinessProvider = ({ children }) => {
   // Persistence Refs to prevent loops
   const lastSyncedConfig = React.useRef(null);
 
-  const activeBrand = globalSettings?.brand || 'ALL';
+
 
   // Derived State
   const userRole = currentUser?.role || 'GUEST';
@@ -1265,9 +1273,10 @@ export const BusinessProvider = ({ children }) => {
       const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(isHeavy ? 100 : 200));
       
       return onSnapshot(q, (snapshot) => {
+        const currentBrand = activeBrandRef.current;
         const docs = snapshot.docs
           .map(d => ({ ...d.data(), id: d.id }))
-          .filter(d => activeBrand === 'ALL' || !d.brandId || d.brandId === activeBrand);
+          .filter(d => currentBrand === 'ALL' || !d.brandId || d.brandId === currentBrand);
 
         // Side-effects outside of main data state update
         if (colName === 'notifications') {
@@ -1335,7 +1344,7 @@ export const BusinessProvider = ({ children }) => {
     });
 
     return () => unsubscribes.forEach(unsub => unsub());
-  }, [currentUser?.id, activeBrand]);
+  }, [currentUser?.id, setData]); // Removed activeBrand to prevent re-subscription storm
 
   /* ══════════════════════════════════════════════════════════════════════════
      9. EXPORTS & NAVIGATION
