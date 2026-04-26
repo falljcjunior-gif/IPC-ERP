@@ -9,10 +9,10 @@ admin.initializeApp();
  * ══════════════════════════════════════════════════════════════
  */
 
-// 1. Social & Webhooks
-const social = require('./modules/social');
-exports.exchangeSocialToken = social.exchangeSocialToken;
-exports.metaWebhook = social.metaWebhook;
+// 1. Social & Webhooks (Disabled for now)
+// const social = require('./modules/social');
+// exports.exchangeSocialToken = social.exchangeSocialToken;
+// exports.metaWebhook = social.metaWebhook;
 
 // 2. Admin & Security
 const adminModule = require('./modules/admin');

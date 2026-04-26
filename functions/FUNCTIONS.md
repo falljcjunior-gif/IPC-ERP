@@ -33,25 +33,11 @@ Interaction with the Gemini 2.0 Flash engine for ERP assistance.
 
 ---
 
-## 2. Social & Webhooks
+## 2. Social & Webhooks [DISABLED]
+*Note: These endpoints are currently disabled to bypass secret requirements during initial setup.*
 
-### `exchangeSocialToken` (onCall)
-Exchanges OAuth authorization codes for long-lived tokens.
-
-- **Request Schema**:
-  ```typescript
-  {
-    provider: 'facebook' | 'instagram' | 'linkedin',
-    code: string,
-    redirectUri: string
-  }
-  ```
-- **RBAC**: Any authenticated user (intended for marketing staff).
-
-### `metaWebhook` (onRequest)
-Processes incoming messages from Meta (Instagram/FB) Business API.
-
-- **Secrets**: `META_WEBHOOK_VERIFY_TOKEN`.
+### `exchangeSocialToken` (onCall) - DISABLED
+### `metaWebhook` (onRequest) - DISABLED
 
 ---
 
