@@ -28,7 +28,7 @@ export const createProductionSlice = (set, get) => ({
       set(state => ({ 
         production: { 
           ...state.production, 
-          data: { ...state.production.data, orders }, 
+          data: { ...(state.production?.data || {}), orders }, 
           loading: false 
         } 
       }));
@@ -44,8 +44,8 @@ export const createProductionSlice = (set, get) => ({
         production: {
           ...state.production,
           data: {
-            ...state.production.data,
-            orders: [newOrder, ...state.production.data.orders]
+            ...(state.production?.data || {}),
+            orders: [newOrder, ...(state.production?.data?.orders || [])]
           }
         }
       }));

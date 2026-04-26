@@ -10,6 +10,9 @@ import { websiteSchema } from '../../schemas/website.schema';
 
 const WebsiteHub = () => {
   const { data, updateRecord, addRecord, formatCurrency, addAccountingEntry, currentUser } = useStore();
+  
+  if (!data) return null;
+
   const [activeTab, setActiveTab] = useState('theme'); // 'theme', 'catalog', 'inbox'
   const [previewMode, setPreviewMode] = useState('desktop');
   const [portalTab, setPortalTab] = useState('catalog'); // 'catalog', 'account', 'support'
