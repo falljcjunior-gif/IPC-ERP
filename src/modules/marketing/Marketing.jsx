@@ -7,6 +7,7 @@ import {
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useStore } from '../../store';
+import { useShallow } from 'zustand/react/shallow';
 import TabBar from './components/TabBar';
 import RecordModal from '../../components/RecordModal';
 import { marketingSchema } from '../../schemas/marketing.schema';
@@ -20,7 +21,12 @@ import LeadsEntrantsTab from './tabs/LeadsEntrantsTab';
 import BudgetTab from './tabs/BudgetTab';
 
 const Marketing = ({ onOpenDetail, navigateTo }) => {
-  const { data, addRecord, formatCurrency, shellView } = useStore();
+  const { data, addRecord, formatCurrency, shellView } = useStore(useShallow(state => ({
+    data: state.data,
+    addRecord: state.addRecord,
+    formatCurrency: state.formatCurrency,
+    shellView: state.shellView
+  })));
   const [tab, setTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('campaigns');

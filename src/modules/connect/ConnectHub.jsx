@@ -5,6 +5,7 @@ import {
   Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { useShallow } from 'zustand/react/shallow';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -14,7 +15,13 @@ import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
-  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useStore();
+  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useStore(useShallow(state => ({
+    data: state.data,
+    currentUser: state.user,
+    navigationIntent: state.navigationIntent,
+    setNavigationIntent: state.setNavigationIntent,
+    shellView: state.shellView
+  })));
   const [activeTab, setActiveTab] = useState('wall');
   const [showSettings, setShowSettings] = useState(false);
   const [connectSettings, setConnectSettings] = useState({
