@@ -12,7 +12,11 @@ const KaizenBox = () => {
     if (!idea.trim()) return;
     // Assuming basic storage via addRecord. 
     // In real app, there's a specialized schema. For now we just push logic.
-    try { addRecord('hr', 'kaizen', { auteur: currentUser?.nom, idee: idea, date: new Date().toISOString() }); } catch(err) {}
+    try { 
+      addRecord('hr', 'kaizen', { auteur: currentUser?.nom, idee: idea, date: new Date().toISOString() }); 
+    } catch(err) {
+      console.warn('Failed to submit Kaizen idea:', err);
+    }
     setSent(true);
     setIdea('');
     setTimeout(() => setSent(false), 3000);

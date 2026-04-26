@@ -57,7 +57,7 @@ const TabNav = ({ tabs, active, onChange }) => (
 /* ══════════════════════════════════════
    TAB 1 — Dashboard Culturel
 ══════════════════════════════════════ */
-const DashboardTab = ({ data }) => {
+const DashboardTab = ({ data, onSentiment }) => {
   const employees = data.hr?.employees || [];
   const leaves = data.hr?.leaves || [];
   const candidates = data.talent?.candidates || [];

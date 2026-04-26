@@ -1,3 +1,4 @@
+/* global global */
 import { vi } from 'vitest';
 
 // [SDET] Mock Global de Firebase pour isolation totale

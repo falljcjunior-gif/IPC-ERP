@@ -9,6 +9,8 @@ import {
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
   Eye, Pencil, ShieldOff
 } from 'lucide-react';
+import { FirestoreService } from '../../../services/firestore.service';
+import { logger } from '../../../utils/logger';
 
 
 const availableModules = [
@@ -43,7 +45,7 @@ const moduleCategories = [
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const permissions = usePermissions();
+  const { permissions } = useStore();
 
   const userPerms = permissions[employee?.id] || { roles: [], moduleAccess: {} };
   

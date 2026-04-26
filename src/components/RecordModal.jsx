@@ -37,6 +37,10 @@ const RecordModal = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const isFieldReadonly = (field) => {
+    return field.readonly || false;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLoading) return;

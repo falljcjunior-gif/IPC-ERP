@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import { createAuthSlice } from './slices/createAuthSlice';
 import { createUiSlice } from './slices/createUiSlice';
 import { createFinanceSlice } from './slices/finance/createFinanceSlice';

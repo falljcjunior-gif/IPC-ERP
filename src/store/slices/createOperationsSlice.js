@@ -1,6 +1,8 @@
 import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { initializeApp, deleteApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { db, storage, auth, firebaseConfig } from '../../firebase/config';
 
 export const createOperationsSlice = (set, get) => ({
@@ -72,7 +74,7 @@ export const createOperationsSlice = (set, get) => ({
      ══════════════════════════════════════════════════════════════════════════ */
 
   updateUserRole: (userId, newRole) => {
-    setPermissions(prev => {
+    get().setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newPerms = { ...userPerms, roles: [newRole] };
       
@@ -85,7 +87,7 @@ export const createOperationsSlice = (set, get) => ({
   },
 
   setModuleAccessLevel: (userId, moduleId, level) => {
-    setPermissions(prev => {
+    get().setPermissions(prev => {
       const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
       const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
       
@@ -214,7 +216,7 @@ export const createOperationsSlice = (set, get) => ({
       await deleteUserFunc({ uid });
     } catch (err) {
       console.error("Erreur suppression Auth:", err);
-      if (addHint) {
+      if (get().addHint) {
         get().addHint({ 
           title: "Suppression Auth Échouée", 
           message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
@@ -232,7 +234,7 @@ export const createOperationsSlice = (set, get) => ({
       hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
       base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
     }));
-    setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
+    get().setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
     get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
   },
 
@@ -271,6 +273,23 @@ export const createOperationsSlice = (set, get) => ({
     const lines = [
       { accountId: '686000', label: 'Dotations aux provisions', debit: isProvision ? amount : 0, credit: isProvision ? 0 : amount },
       { accountId: '151000', label: 'Provisions pour litiges', debit: isProvision ? 0 : amount, credit: isProvision ? amount : 0 }
+    ];
+    get().addAccountingEntry(entry, lines);
+  },
+
+  generateProductionEntry: (mo) => {
+    const bom = get().data.production?.boms?.find(b => b.product === mo.produit || b.productId === mo.produitId);
+    if (!bom) return;
+    const totalCost = (bom.coutEstime || 500) * (mo.qte || 0);
+    const entry = {
+      libelle: `Production OF ${mo.num || mo.id}`,
+      date: new Date().toISOString().split('T')[0],
+      journalCode: 'J-PROD',
+      piece: mo.num || mo.id
+    };
+    const lines = [
+      { accountId: '713100', label: 'Entrée Stock PF', debit: totalCost, credit: 0, profitCenter: 'Usine' },
+      { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
     ];
     get().addAccountingEntry(entry, lines);
   },
@@ -350,12 +369,12 @@ export const createOperationsSlice = (set, get) => ({
       try { componentsList = typeof bom.components === 'string' ? JSON.parse(bom.components) : (bom.components || []); } catch (e) { componentsList = []; }
       
       // Appliquer la décrémentation des stocks des matières premières (MRP)
-      componentsList.forEach(comp => applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
+      componentsList.forEach(comp => get().applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
       
       // Appliquer l'incrémentation du nouveau produit fini
       const finalProductId = bom.productId || mo.produitId || prev.inventory?.products?.find(p => p.nom === mo.produit)?.id;
       if (finalProductId) {
-        applyStockMove({ productId: finalProductId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
+        get().applyStockMove({ productId: finalProductId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
       }
       get().addHint({ title: "Production Terminée", message: `Transformation réussie : ${mo.qte} unités produites. Stocks mis à jour.`, type: 'success', appId: 'production' });
       return prev;
@@ -411,10 +430,10 @@ export const createOperationsSlice = (set, get) => ({
 
     // Workflow: Legal ↔ Finance (Provisions)
     if (appId === 'legal' && subModule === 'litigations' && processedRecord.risqueFinancier > 0) {
-      generateLitigationEntry(newRecord, true);
+      get().generateLitigationEntry(newRecord, true);
     }
 
-    if (appId === 'inventory' && subModule === 'movements') applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
+    if (appId === 'inventory' && subModule === 'movements') get().applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
 
     // --- I.P.C. Automator (BPM Engine) onCreate ---
     const safeWorkflowsCreate = Array.isArray(get().data.workflows) ? get().data.workflows : (get().data.workflows?.[''] || get().data.workflows?.workflows || []);
@@ -457,11 +476,11 @@ export const createOperationsSlice = (set, get) => ({
       }, 0);
       
       if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
-        applyMOTransformation(id);
-        generateProductionEntry(record);
+        get().applyMOTransformation(id);
+        get().generateProductionEntry(record);
       }
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
-        get().addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => convertOppToSalesOrder(id) });
+        get().addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => get().convertOppToSalesOrder(id) });
       }
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
         // Workflow: Sales ↔ Legal (Lock if modified)
@@ -477,13 +496,13 @@ export const createOperationsSlice = (set, get) => ({
            nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
            get().sendNotification('Juridique', 'Visa requis pour commande modifiée', 'warning', 'legal');
         } else {
-           processOrderValidation(record);
+           get().processOrderValidation(record);
         }
       }
 
       // Workflow: Legal ↔ Finance (Closing litigation)
       if (appId === 'legal' && subModule === 'litigations' && (newData.statut === 'Gagné' || newData.statut === 'Clos') && oldRecord.statut === 'En cours') {
-         generateLitigationEntry(record, false);
+         get().generateLitigationEntry(record, false);
       }
 
       // Workflow: RH ↔ Juridique (Visa final)
@@ -521,7 +540,7 @@ export const createOperationsSlice = (set, get) => ({
                  nextState = { ...nextState, sales: { ...nextState.sales, orders: updatedSalesList } };
                  get().addHint({ title: "Contrat Confirmé", message: `Le devis ${saleOld.num} a été automatiquement confirmé suite à la signature P.K.I.`, type: 'success', appId: 'sales' });
                  get().logAction('Effet Domino', `Devis ${saleOld.num} validé par signature P.K.I.`, 'sales', saleOld.id);
-                 processOrderValidation(saleOld);
+                 get().processOrderValidation(saleOld);
              }
          }
       }
@@ -530,7 +549,7 @@ export const createOperationsSlice = (set, get) => ({
         get().generateInvoiceEntry(record);
       }
       if (appId === 'hr' && subModule === 'expenses' && newData.statut === 'Payé' && oldRecord.statut !== 'Payé') {
-        generateExpenseEntry(record);
+        get().generateExpenseEntry(record);
       }
       if (appId === 'hr' && subModule === 'timesheets' && newData.statut === 'Validé' && oldRecord.statut !== 'Validé') {
          const employee = (prev.hr?.employees || []).find(e => e.nom === record.collaborateur);
@@ -559,7 +578,7 @@ export const createOperationsSlice = (set, get) => ({
         if (newData.statut === 'Réceptionné' && oldRecord.statut !== 'Réceptionné') {
           // Moteur SSOT: On incremente avec la qteRecue physiquement, pas celle de la commande théorique.
           const actualQte = parseFloat(record.qteRecue || record.qte || 0);
-          applyStockMove({ 
+          get().applyStockMove({ 
             productId: record.produitId, 
             qte: actualQte, 
             type: 'Réception', 
@@ -639,7 +658,7 @@ export const createOperationsSlice = (set, get) => ({
   deleteRecord: (appId, subModule, id) => {
     // Special handling for user deletion to ensure Auth is also cleaned up
     if ((appId === 'admin' && subModule === 'users') || (appId === 'hr' && subModule === 'employees')) {
-      permanentlyDeleteUserRecord(id);
+      get().permanentlyDeleteUserRecord(id);
       return;
     }
 
@@ -924,7 +943,7 @@ export const createOperationsSlice = (set, get) => ({
     try {
       const snapshot = await uploadBytes(storageRef, file);
       const url = await getDownloadURL(snapshot.ref);
-      await updateGlobalSettings({ logoUrl: url });
+      await get().get().updateGlobalSettings({ logoUrl: url });
       return url;
     } catch (error) {
       console.error("Erreur lors de l'upload du logo:", error);

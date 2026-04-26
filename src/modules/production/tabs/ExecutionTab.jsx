@@ -60,7 +60,7 @@ const ExecutionTab = ({ data, onOpenDetail, onNewWorkOrder }) => {
             variants={item}
           >
             {/* Main OF Row */}
-            <div
+            <motion.div
               whileHover={{ x: 4 }}
               onClick={() => setExpandedId(expandedId === of.id ? null : of.id)}
               className="glass" 
@@ -124,7 +124,7 @@ const ExecutionTab = ({ data, onOpenDetail, onNewWorkOrder }) => {
               <motion.div animate={{ rotate: expandedId === of.id ? 90 : 0 }}>
                 <ChevronRight size={20} color="var(--text-muted)" />
               </motion.div>
-            </div>
+            </motion.div>
 
             {/* Expanded Panel — Slider & Launch */}
             {expandedId === of.id && (

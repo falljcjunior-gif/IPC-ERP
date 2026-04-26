@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Edit3, Database, ChevronRight, Search,
   Type, Hash, Calendar, List as ListIcon, ToggleRight,
   Eye, Info, Sparkles, Box, LayoutGrid, FileText, Settings,
-  RefreshCcw, Save, Trash, MousePointer2
+  RefreshCcw, Save, Trash, MousePointer2, BadgeCheck
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { registry } from '../../../services/Registry';

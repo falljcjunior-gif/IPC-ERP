@@ -21,7 +21,9 @@ const PointageWidget = ({ onClose }) => {
             setIsCheckedIn(parsed.isCheckedIn);
             setCheckInTime(parsed.checkInTime);
             setProjet(parsed.projet || '');
-        } catch(e){}
+        } catch(e){
+            // Ignore parse errors on corrupted state
+        }
     }
     
     // Obtenir le GPS

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Scale, FileSignature, ShieldCheck, Gavel, 
   Building, BookOpen, AlertCircle, History,
-  Search, Plus, Filter, Download
+  Search, Plus, Filter, Download, Lock
 } from 'lucide-react';
 import { useStore } from '../../store';
 import TabBar from '../marketing/components/TabBar';
