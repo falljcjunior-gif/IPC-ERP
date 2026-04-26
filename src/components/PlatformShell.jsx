@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
-import { auth, db } from '../firebase/config';
-import { updatePassword } from 'firebase/auth';
-import { doc, updateDoc, collection, query, where, getDocs, setDoc } from 'firebase/firestore';
+import { AuthService } from '../services/auth.service';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
   Moon, Sun, Grid, Home, ShoppingCart, Package as Box, FileText, Users2,
@@ -424,12 +422,11 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                     if (pwdModal.newPwd.length < 6) { setPwdModal(p => ({ ...p, error: 'Le mot de passe doit faire au moins 6 caractères.' })); return; }
                     setPwdModal(p => ({ ...p, loading: true, error: '' }));
                     try {
-                      await updatePassword(auth.currentUser, pwdModal.newPwd);
-                      if (currentUser?.id) await updateDoc(doc(db, 'users', currentUser?.id), { 'profile.mustChangePassword': false });
+                      await AuthService.mandatoryPasswordUpdate(pwdModal.newPwd);
                       setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
                       setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
                     } catch (err) {
-                      setPwdModal(p => ({ ...p, error: 'Erreur: Veuillez vous reconnecter.', loading: false }));
+                      setPwdModal(p => ({ ...p, error: err.message || 'Erreur de sécurité.', loading: false }));
                     }
                   }}
                   disabled={pwdModal.loading || pwdModal.newPwd === ''}

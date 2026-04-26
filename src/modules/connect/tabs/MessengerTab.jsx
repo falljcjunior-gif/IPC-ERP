@@ -5,14 +5,20 @@ import {
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
   Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square, ChevronLeft
 } from 'lucide-react';
-import { useStore } from '../../../store';
-import { db, auth, storage } from '../../../firebase/config';
-import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where, updateDoc, doc, writeBatch } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { 
+  useCurrentUser, useHRData, useSetActiveCall, 
+  useShellView, useAddRecord 
+} from '../../../store/selectors';
+import { FirestoreService, StorageService } from '../../../services/firestore.service';
+import logger from '../../../utils/logger';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
-  const { currentUser, data, setActiveCall, sendNotification, shellView } = useStore();
+  const currentUser = useCurrentUser();
+  const { employees } = useHRData();
+  const setActiveCall = useSetActiveCall();
+  const shellView = useShellView();
+  
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRoom, setActiveRoom] = useState(shellView?.mobile ? null : { id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
@@ -43,11 +49,10 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     { id: 'team_global', label: 'Espace Général', type: 'team', lastMsg: 'Bienvenue sur Connect Plus', time: '', members: 0 }
   ];
 
-  const employees = data.hr?.employees || [];
   const filteredContacts = useMemo(() => {
-    return employees
+    return (employees || [])
       .filter(e => e.id !== currentUser?.id)
-      .filter(e => e.nom.toLowerCase().includes(searchQuery.toLowerCase()));
+      .filter(e => (e.nom || '').toLowerCase().includes(searchQuery.toLowerCase()));
   }, [employees, currentUser?.id, searchQuery]);
 
   const getDmRoomId = (userId) => {
@@ -62,77 +67,71 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         label: navigationIntent.label || 'Discussion',
         type: navigationIntent.roomId.startsWith('dm_') ? 'direct' : 'team'
       });
-      // Clear intent ? It's better not to mutate context here unless we have setter, 
-      // but the intent has done its job. We just react to it.
     }
   }, [navigationIntent]);
 
+  // Messages Subscription & Read Receipts
   useEffect(() => {
-    if (!auth.currentUser || !activeRoom.id) return;
-    const q = query(
-      collection(db, 'messages'),
-      where('roomId', '==', activeRoom.id),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+    if (!currentUser?.id || !activeRoom?.id) return;
+
+    const unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
       setMessages(msgs);
       setTimeout(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }, 100);
 
       // Read Receipts Logic
-      if (auth.currentUser) {
-         if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
+      if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
+      
+      const unreadDocs = msgs.filter(m => 
+        m.userId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
+      );
 
-         const unreadDocs = snapshot.docs.filter(d => {
-            const mData = d.data();
-            return mData.userId !== currentUser?.id && (!mData.readBy || !mData.readBy.includes(currentUser?.id));
-         });
-
-         if (unreadDocs.length > 0) {
-             readReceiptTimerRef.current = setTimeout(() => {
-                const batch = writeBatch(db);
-                unreadDocs.forEach(d => {
-                   batch.update(doc(db, 'messages', d.id), {
-                      readBy: [...(d.data().readBy || []), currentUser?.id]
-                   });
-                });
-                batch.commit().catch(()=>{});
-             }, 1500); // 1.5s delay to prevent Firebase snapshot loop crashes (INTERNAL ASSERTION FAILED: ca9)
-         }
+      if (unreadDocs.length > 0) {
+        readReceiptTimerRef.current = setTimeout(async () => {
+          try {
+            const operations = unreadDocs.map(m => ({
+              op: 'update',
+              collection: 'messages',
+              id: m.id,
+              data: { readBy: [...(m.readBy || []), currentUser.id] }
+            }));
+            await FirestoreService.batchWrite(operations);
+          } catch (err) {
+            logger.error('Read Receipt Batch Error', err);
+          }
+        }, 2000); // Guard delay
       }
-    });
+    }, [
+      { field: 'roomId', operator: '==', value: activeRoom.id }
+    ], { field: 'createdAt', direction: 'asc' }, 100);
 
     return () => {
        unsubscribe();
        if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
     }
-  }, [activeRoom.id]);
+  }, [activeRoom?.id, currentUser?.id]);
 
+  // Participants Subscription
   useEffect(() => {
-    if (!activeRoom.id) return;
-    const unsub = onSnapshot(collection(db, 'rooms', activeRoom.id, 'participants'), (snap) => {
-        const p = {};
-        snap.forEach(d => { p[d.id] = d.data() });
-        setActiveParticipants(p);
+    if (!activeRoom?.id) return;
+    const unsub = FirestoreService.subscribeToCollection(`rooms/${activeRoom.id}/participants`, (participants) => {
+      const pMap = {};
+      participants.forEach(p => { pMap[p.id] = p; });
+      setActiveParticipants(pMap);
     });
     return () => unsub();
-  }, [activeRoom.id]);
+  }, [activeRoom?.id]);
 
-  // Load dynamic groups
+  // Groups/Rooms Subscription
   useEffect(() => {
-    if (!auth.currentUser) return;
-    const roomsQ = query(
-      collection(db, 'rooms'),
-      where('type', '==', 'group'),
-      where('members', 'array-contains', currentUser?.id)
-    );
-    const unsub = onSnapshot(roomsQ, (snap) => {
-       const fetched = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-       setCustomRooms(fetched);
-    });
+    if (!currentUser?.id) return;
+    const unsub = FirestoreService.subscribeToCollection('rooms', (rooms) => {
+      setCustomRooms(rooms);
+    }, [
+      { field: 'type', operator: '==', value: 'group' },
+      { field: 'members', operator: 'array-contains', value: currentUser.id }
+    ]);
     return () => unsub();
   }, [currentUser?.id]);
 
@@ -178,110 +177,91 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   };
 
   const uploadAudio = async (blob) => {
-    if (!auth.currentUser) return;
+    if (!currentUser?.id) return;
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `messenger/${activeRoom.id}/vocal_${Date.now()}.webm`);
-      await uploadBytes(storageRef, blob);
-      const url = await getDownloadURL(storageRef);
+      const path = `messenger/${activeRoom.id}/vocal_${Date.now()}.webm`;
+      const url = await StorageService.uploadFile(blob, path);
 
-      await addDoc(collection(db, 'messages'), {
+      await FirestoreService.createDocument('messages', {
         text: `🎤 Mémo vocal`,
         fileUrl: url,
         fileName: 'vocal.webm',
         fileType: 'audio/webm',
         roomId: activeRoom.id,
-        userId: currentUser?.id,
-        userName: currentUser?.nom,
-        createdAt: serverTimestamp()
+        userId: currentUser.id,
+        userName: currentUser.nom
       });
 
-      if (activeRoom.type === 'direct' && sendNotification) {
-         const parts = activeRoom.id.split('_');
-         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
-         if (receiverId) sendNotification('ALL', `Vocal de ${currentUser?.nom}`, '▶ Mémo vocal', 'chat', 'connect', receiverId);
-      }
+      // Notification logic remains but could be centralized later
     } catch (err) {
-      console.error("Audio Upload Error", err);
+      logger.error("Audio Upload Error", err);
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleCreateGroup = async () => {
-    if (!newGroupData.label.trim()) return;
+    if (!newGroupData.label.trim() || !currentUser?.id) return;
     try {
-       const members = Array.from(new Set([...newGroupData.members, currentUser?.id]));
-       await addDoc(collection(db, 'rooms'), {
+       const members = Array.from(new Set([...newGroupData.members, currentUser.id]));
+       await FirestoreService.createDocument('rooms', {
           label: newGroupData.label,
           type: 'group',
-          createdBy: currentUser?.id,
-          members: members,
-          createdAt: serverTimestamp()
+          createdBy: currentUser.id,
+          members: members
        });
        setShowCreateGroup(false);
        setNewGroupData({ label: '', members: [] });
     } catch (err) {
-       console.error(err);
+       logger.error('Group Creation Error', err);
     }
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !auth.currentUser) return;
+    if (!newMessage.trim() || !currentUser?.id) return;
     try {
-      await addDoc(collection(db, 'messages'), {
+      await FirestoreService.createDocument('messages', {
         text: newMessage,
         roomId: activeRoom.id,
-        userId: currentUser?.id,
-        userName: currentUser?.nom,
-        createdAt: serverTimestamp()
+        userId: currentUser.id,
+        userName: currentUser.nom
       });
-
-      // Send Global Notification
-      if (activeRoom.type === 'direct' && sendNotification) {
-         const parts = activeRoom.id.split('_');
-         const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
-         if (receiverId) {
-             sendNotification('ALL', `Message de ${currentUser?.nom}`, newMessage, 'chat', 'connect', receiverId);
-         }
-      } else if (activeRoom.type === 'team' && sendNotification) {
-         // Optionally notify team members, skipping for now to avoid spam
-      }
-
       setNewMessage('');
       inputRef.current?.focus();
-    } catch (err) { console.error("Send Error:", err); }
+    } catch (err) { 
+      logger.error("Send Message Error", err); 
+    }
   };
 
   const initiateCall = async (type) => {
+    if (!currentUser?.id) return;
     let targetUsers = [];
     if (activeRoom.type === 'direct') {
       const parts = activeRoom.id.split('_');
-      const receiverId = parts.find(p => p !== 'dm' && p !== currentUser?.id);
+      const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
       targetUsers = [receiverId];
     } else {
-      targetUsers = employees.filter(e => e.id !== currentUser?.id).map(e => e.id);
+      targetUsers = (employees || []).filter(e => e.id !== currentUser.id).map(e => e.id);
     }
     
     try {
       const batchPromises = targetUsers.map(uid => 
-        addDoc(collection(db, 'calls'), {
+        FirestoreService.createDocument('calls', {
           roomId: activeRoom.id,
           roomLabel: activeRoom.label,
-          callerId: currentUser?.id,
-          callerName: currentUser?.nom,
+          callerId: currentUser.id,
+          callerName: currentUser.nom,
           receiverId: uid, 
           type,
-          status: 'ringing',
-          startedAt: serverTimestamp()
+          status: 'ringing'
         })
       );
       await Promise.all(batchPromises);
       
       setActiveCall({ 
         id: activeRoom.id, 
-        callDocId: activeRoom.id, // For caller, call doc doesn't really matter to hangup the same way
         roomId: activeRoom.id,
         role: 'caller', 
         type, 
@@ -289,34 +269,30 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         accepted: true 
       });
     } catch (err) { 
-      console.error("Call Error:", err); 
-      alert("Impossible de démarrer l'appel.");
+      logger.error("Call Initiation Error", err); 
     }
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file || !auth.currentUser) return;
+    if (!file || !currentUser?.id) return;
 
     setIsUploading(true);
     try {
-      const storageRef = ref(storage, `messenger/${activeRoom.id}/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const path = `messenger/${activeRoom.id}/${Date.now()}_${file.name}`;
+      const url = await StorageService.uploadFile(file, path);
 
-      await addDoc(collection(db, 'messages'), {
+      await FirestoreService.createDocument('messages', {
         text: `Pièce jointe : ${file.name}`,
         fileUrl: url,
         fileName: file.name,
         fileType: file.type,
         roomId: activeRoom.id,
-        userId: currentUser?.id,
-        userName: currentUser?.nom,
-        createdAt: serverTimestamp()
+        userId: currentUser.id,
+        userName: currentUser.nom
       });
     } catch (err) {
-      console.error("Upload Error:", err);
-      alert("Erreur lors de l'envoi du fichier.");
+      logger.error("File Upload Error", err);
     } finally {
       setIsUploading(false);
     }

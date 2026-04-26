@@ -43,18 +43,12 @@ const moduleCategories = [
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const { permissions, setPermissions, addHint } = useStore();
+  const permissions = usePermissions();
 
-  const userPerms = permissions[employee.id] || { roles: [], moduleAccess: {} };
+  const userPerms = permissions[employee?.id] || { roles: [], moduleAccess: {} };
   
   const [localAccess, setLocalAccess] = useState(() => {
     const access = { ...(userPerms.moduleAccess || {}) };
-    // Legacy support
-    if (userPerms.allowedModules) {
-      userPerms.allowedModules.forEach(m => {
-        if (!access[m]) access[m] = 'write';
-      });
-    }
     if (!access['home']) access['home'] = 'write';
     return access;
   });
@@ -85,22 +79,20 @@ const EditAccessPanel = ({ employee, onClose }) => {
       const rolesMap = {};
       Object.entries(localAccess).forEach(([modId, level]) => {
         const mod = availableModules.find(m => m.id === modId);
-        if (mod?.role) rolesMap[mod.role] = true;
+        if (mod?.role && level !== 'none') rolesMap[mod.role] = true;
       });
       const newRoles = Object.keys(rolesMap);
       if (newRoles.length === 0) newRoles.push('STAFF');
 
       const newPerms = { roles: newRoles, moduleAccess: localAccess };
 
-      setPermissions(prev => ({ ...prev, [employee.id]: newPerms }));
-      await setDoc(doc(db, 'users', employee.id), { permissions: newPerms }, { merge: true });
-      await setDoc(doc(db, 'hr', employee.id), { permissions: newPerms, role: newRoles[0], subModule: 'employees' }, { merge: true });
+      await FirestoreService.setDocument('users', employee.id, { permissions: newPerms });
+      await FirestoreService.setDocument('hr', employee.id, { permissions: newPerms, role: newRoles[0], subModule: 'employees' });
 
       setSaved(true);
-      addHint({ title: '✅ Accès mis à jour', message: `Habilitations de ${employee.nom} sauvegardées.`, type: 'success' });
       setTimeout(() => { setSaved(false); onClose(); }, 2000);
     } catch (err) {
-      console.error(err);
+      logger.error('Access Update Error', err);
       setSaveError(`Erreur : ${err.message}`);
     } finally {
       setSaving(false);

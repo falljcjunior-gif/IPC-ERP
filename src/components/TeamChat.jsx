@@ -1,32 +1,22 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Send, 
-  MessageSquare, 
-  X, 
-  Search, 
-  User, 
-  Users, 
-  Briefcase,
-  Paperclip,
-  Smile,
-  Phone,
-  Video,
-  MoreVertical,
-  Check,
-  CheckCheck,
-  Circle,
-  Plus,
-  Settings,
-  Image as ImageIcon
+  Send, MessageSquare, X, Search, User, Users, Briefcase,
+  Paperclip, Smile, Phone, Video, MoreVertical, Check,
+  CheckCheck, Circle, Plus, Settings, Image as ImageIcon
 } from 'lucide-react';
-import { useStore } from '../store';
-import { db, auth } from '../firebase/config';
-import { collection, addDoc, query, orderBy, onSnapshot, limit, serverTimestamp, where } from 'firebase/firestore';
+import { useCurrentUser, useHRData, useActiveCall, useSetActiveCall, useFormatCurrency } from '../store/selectors';
+import { FirestoreService } from '../services/firestore.service';
+import logger from '../utils/logger';
 import { webrtcService } from '../utils/WebRTCService';
 
 const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
-  const { currentUser, data, formatCurrency, activeCall, setActiveCall } = useStore();
+  const currentUser = useCurrentUser();
+  const { employees } = useHRData();
+  const activeCall = useActiveCall();
+  const setActiveCall = useSetActiveCall();
+  const formatCurrency = useFormatCurrency();
+
   const [activeTab, setActiveTab] = useState('chats'); // 'chats', 'contacts', 'groups'
   const [activeRoom, setActiveRoom] = useState({ id: 'team_global', label: 'Espace Général', type: 'team' });
   const [messages, setMessages] = useState([]);
@@ -45,26 +35,19 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
     { id: 'project_ipc', label: 'Projet I.P.C', type: 'project', lastMsg: 'Tests v2 validés.', time: 'Hier' },
   ];
 
-  // List of employees for Direct Messages
-  const employees = data.hr?.employees || [];
-  
   // Contacts filtered by search
   const filteredContacts = useMemo(() => {
-    return employees
+    return (employees || [])
       .filter(e => e.id !== currentUser?.id)
-      .filter(e => e.nom.toLowerCase().includes(searchQuery.toLowerCase()));
+      .filter(e => (e.nom || '').toLowerCase().includes(searchQuery.toLowerCase()));
   }, [employees, currentUser?.id, searchQuery]);
 
   // Handle room switching
   const handleSelectRoom = (room) => {
     setActiveRoom(room);
-    if (isMobile) {
-      // In a real full-screen mobile app, this would change state to hide the list
-    }
   };
 
   // Logic for Private Room IDs (DMs)
-  // We sort IDs alphabetically to ensure both users point to the same room
   const getDmRoomId = (userId) => {
     const ids = [currentUser?.id, userId].sort();
     return `dm_${ids[0]}_${ids[1]}`;
@@ -72,45 +55,37 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
 
   // Listen for messages in the active room
   useEffect(() => {
-    if (!auth.currentUser || !activeRoom.id) return;
+    if (!currentUser?.id || !activeRoom.id) return;
     
-    // In production, we filter by roomId
-    const q = query(
-      collection(db, 'messages'),
-      where('roomId', '==', activeRoom.id),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
+    // Using unified FirestoreService to handle listeners and security
+    const unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
       setMessages(msgs);
-      
       // Auto scroll
       setTimeout(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       }, 100);
-    });
+    }, [
+      { field: 'roomId', operator: '==', value: activeRoom.id }
+    ], { field: 'createdAt', direction: 'asc' }, 100);
 
     return () => unsubscribe();
-  }, [activeRoom.id]);
+  }, [activeRoom.id, currentUser?.id]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !auth.currentUser) return;
+    if (!newMessage.trim() || !currentUser?.id) return;
 
     try {
-      await addDoc(collection(db, 'messages'), {
+      await FirestoreService.addDocument('messages', {
         text: newMessage,
         roomId: activeRoom.id,
-        userId: currentUser?.id,
-        userName: currentUser?.nom,
-        createdAt: serverTimestamp()
+        userId: currentUser.id,
+        userName: currentUser.nom
       });
       setNewMessage('');
       inputRef.current?.focus();
     } catch (err) {
-      console.error("Erreur envoi message:", err);
+      logger.error("Erreur envoi message", err);
     }
   };
 

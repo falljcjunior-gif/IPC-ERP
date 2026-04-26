@@ -342,3 +342,100 @@ Exemple: "Je vous redirige vers le CRM. [NAV:crm]"`;
     throw new functions.https.HttpsError('internal', `Erreur IA: ${error.message}`);
   }
 });
+
+const { onDocumentWritten, onDocumentUpdated } = require('firebase-functions/v2/firestore');
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * SECURITY: GLOBAL AUDIT TRAIL (v2)
+ * ══════════════════════════════════════════════════════════════
+ */
+const SENSITIVE_COLLECTIONS = ['finance', 'inventory', 'users', 'hr', 'sales_leads', 'production_orders'];
+
+exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (event) => {
+  const { collection, docId } = event.params;
+  if (!SENSITIVE_COLLECTIONS.includes(collection)) return null;
+
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
+  const beforeData = event.data.before.exists ? event.data.before.data() : null;
+  const afterData = event.data.after.exists ? event.data.after.data() : null;
+  
+  let operation = 'UPDATE';
+  if (!beforeData) operation = 'CREATE';
+  if (!afterData) operation = 'DELETE';
+
+  try {
+    await db.collection('audit_logs').add({
+      timestamp, collection, docId, operation,
+      changedBy: afterData?._updatedBy || afterData?._createdBy || 'system_trigger',
+      summary: `${operation} on ${collection}/${docId}`
+    });
+  } catch (err) {
+    console.error('Audit Log Error:', err);
+  }
+  return null;
+});
+
+/**
+ * 💹 FINANCE: AUTOMATED ACCOUNTING (v2)
+ */
+exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoiceId}', async (event) => {
+  const newData = event.data.after.data();
+  const oldData = event.data.before.data();
+
+  if (newData.status === 'paid' && oldData.status !== 'paid') {
+    const { invoiceId } = event.params;
+    const amount = newData.amountTTC || newData.amount || 0;
+    
+    const entry = {
+      num: `ACC-${Date.now()}`,
+      libelle: `Règlement Facture #${newData.num || invoiceId}`,
+      date: admin.firestore.FieldValue.serverTimestamp(),
+      debit: amount,
+      credit: amount,
+      invoiceId: invoiceId,
+      _domain: 'finance',
+      _createdBy: 'nexus_engine_trigger'
+    };
+
+    try {
+      await db.collection('finance_accounting').add(entry);
+    } catch (err) {
+      console.error('Accounting Sync Error:', err);
+    }
+  }
+  return null;
+});
+
+/**
+ * 🧱 PRODUCTION: INVENTORY AUTO-SYNC (v2)
+ */
+exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{ofId}', async (event) => {
+  const newData = event.data.after.data();
+  const oldData = event.data.before.data();
+
+  if (newData.status === 'completed' && oldData.status !== 'completed') {
+    const productId = newData.productId;
+    const quantity = newData.quantityProduced || newData.quantity || 0;
+    if (!productId) return null;
+
+    try {
+      const productRef = db.collection('inventory_products').doc(productId);
+      await db.runTransaction(async (t) => {
+        const doc = await t.get(productRef);
+        if (!doc.exists) return;
+        const currentStock = doc.data().stockActuel || 0;
+        t.update(productRef, { 
+          stockActuel: currentStock + quantity,
+          lastRefillAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+      });
+    } catch (err) {
+      console.error('Stock Update Error:', err);
+    }
+  }
+  return null;
+});
+
+
+

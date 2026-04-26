@@ -2,15 +2,46 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createAuthSlice } from './slices/createAuthSlice';
 import { createUiSlice } from './slices/createUiSlice';
-import { createFinanceStore } from './slices/createFinanceStore';
-import { createInventorySlice } from './slices/createInventorySlice';
+import { createFinanceSlice } from './slices/finance/createFinanceSlice';
+import { createInventorySlice } from './slices/inventory/createInventorySlice';
+import { createSalesSlice } from './slices/sales/createSalesSlice';
+import { createHrSlice } from './slices/hr/createHrSlice';
+import { createProductionSlice } from './slices/production/createProductionSlice';
+import { createLogisticsSlice } from './slices/logistics/createLogisticsSlice';
+import { createMarketingSlice } from './slices/marketing/createMarketingSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
-import { auth } from '../firebase/config';
-import { signOut } from 'firebase/auth';
 
 // ══════════════════════════════════════════════════════════════════════════
 // 🚀 IPC INTELLIGENCE ENGINE: CENTRAL STORE
 // ══════════════════════════════════════════════════════════════════════════
+
+// 🔒 COUCHE DE SÉCURITÉ : CHIFFREMENT DU STOCKAGE LOCAL
+const ENCRYPTION_KEY = 'ipc-erp-secure-v4-2026'; // À déplacer en variable d'env
+
+const secureStorage = {
+  getItem: (name) => {
+    try {
+      const encrypted = localStorage.getItem(name);
+      if (!encrypted) return null;
+      // Déchiffrement simple pour l'audit, à renforcer avec SubtleCrypto pour la prod
+      const decrypted = atob(encrypted).split('').map((char, i) => 
+        String.fromCharCode(char.charCodeAt(0) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length))
+      ).join('');
+      return JSON.parse(decrypted);
+    } catch (e) {
+      console.error("Erreur de déchiffrement du store:", e);
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    const stringValue = JSON.stringify(value);
+    const encrypted = btoa(stringValue.split('').map((char, i) => 
+      String.fromCharCode(char.charCodeAt(0) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length))
+    ).join(''));
+    localStorage.setItem(name, encrypted);
+  },
+  removeItem: (name) => localStorage.removeItem(name),
+};
 
 export const useStore = create(
   persist(
@@ -20,8 +51,13 @@ export const useStore = create(
 
       ...createAuthSlice(set, get, ...args),
       ...createUiSlice(set, get, ...args),
-      ...createFinanceStore(set, get, ...args),
+      ...createFinanceSlice(set, get, ...args),
       ...createInventorySlice(set, get, ...args),
+      ...createSalesSlice(set, get, ...args),
+      ...createHrSlice(set, get, ...args),
+      ...createProductionSlice(set, get, ...args),
+      ...createLogisticsSlice(set, get, ...args),
+      ...createMarketingSlice(set, get, ...args),
       ...createOperationsSlice(set, get, ...args),
       
       
@@ -117,7 +153,7 @@ export const useStore = create(
     }),
     {
       name: 'ipc-intelligence-store',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => secureStorage), // [SÉCURISÉ] Chiffrement XOR actif
       onRehydrateStorage: () => (state) => {
         if (state) state.setHasHydrated(true);
       },

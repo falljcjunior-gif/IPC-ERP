@@ -1,29 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Zap, Plus, Trash2, ToggleLeft, ToggleRight, 
   ArrowRight, Settings2, Bell, FileText, Activity, Save, X
 } from 'lucide-react';
 import { useStore } from '../store';
-
-const MODULES_MAP = {
-  'sales.orders': 'Ventes (Devis / Commandes)',
-  'finance.invoices': 'Finance (Factures)',
-  'hr.leaves': 'RH (Congés)',
-  'purchase.orders': 'Achats (Commandes)',
-  'legal.contracts': 'Juridique (Contrats)',
-  'signature.requests': 'Signature (Demandes)'
-};
+// [AUDIT] Correction: Utilisation du Registry pour un couplage lâche
+import { registry } from '../services/Registry';
 
 const Workflows = () => {
-  const { data, addRecord, updateRecord, deleteRecord } = useStore();
+  // [AUIT] Correction: Sélecteur atomique pour éviter les re-renders massifs
+  const workflows = useStore(state => state.data.workflows || []);
+  const addRecord = useStore(state => state.addRecord);
+  const updateRecord = useStore(state => state.updateRecord);
+  const deleteRecord = useStore(state => state.deleteRecord);
+  const shellView = useStore(state => state.shellView);
+
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   
-  const workflows = Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || []);
+  // [AUDIT] Génération dynamique de la liste des modules
+  const MODULES_MAP = useMemo(() => {
+    const map = {};
+    registry.getIds().forEach(id => {
+      const config = registry.getConfig(id);
+      map[id] = config.label || id;
+    });
+    return map;
+  }, []);
 
   // Builder State
   const [wfName, setWfName] = useState('');
-  const [targetModule, setTargetModule] = useState('sales.orders');
+  const [targetModule, setTargetModule] = useState(Object.keys(MODULES_MAP)[0] || 'sales');
   const [triggerEvent, setTriggerEvent] = useState('onUpdate');
   const [conditionField, setConditionField] = useState('statut');
   const [operator, setOperator] = useState('==');
@@ -34,19 +41,26 @@ const Workflows = () => {
 
   const handleSaveWorkflow = (e) => {
     e.preventDefault();
-    addRecord('workflows', '', {
-      name: wfName,
+    
+    // [AUDIT] Sécurité: Sanitisation et validation
+    if (wfName.length < 3) return;
+    
+    const payload = {
+      name: wfName.trim(),
       targetModule,
       triggerEvent,
-      conditionField,
+      conditionField: conditionField.trim().replace(/[^a-zA-Z._]/g, ''), // Empêche l'injection de scripts dans les champs
       operator,
-      value: conditionValue,
+      value: conditionValue.trim(),
       actionType,
-      actionTargetRole,
-      actionPayload,
+      actionTargetRole: actionTargetRole.trim().toUpperCase(),
+      actionPayload: actionPayload.trim(),
       active: true,
+      _createdBy: 'user_flow',
       createdAt: new Date().toISOString()
-    });
+    };
+
+    addRecord('workflows', '', payload);
     setIsBuilderOpen(false);
     resetBuilder();
   };

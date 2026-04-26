@@ -4,10 +4,10 @@ import {
   X, Mic, MicOff, Video, VideoOff, PhoneOff, 
   Maximize2, Minimize2, User
 } from 'lucide-react';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { FirestoreService } from '../services/firestore.service';
+import logger from '../utils/logger';
 import { webrtcService } from '../utils/WebRTCService';
-import { useStore } from '../store';
+import { useCurrentUser } from '../store/selectors';
 
 const CallInterface = ({ 
   isOpen, 
@@ -18,7 +18,7 @@ const CallInterface = ({
   contactName,
   onHangup
 }) => {
-  const { currentUser } = useStore();
+  const currentUser = useCurrentUser();
   const [localStream, setLocalStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(callType === 'video');
@@ -36,13 +36,15 @@ const CallInterface = ({
 
   useEffect(() => {
     if (!isOpen || !callId) return;
-    const roomRef = doc(db, 'rooms', callId);
-    const unsub = onSnapshot(roomRef, (docSnap) => {
-      if (docSnap.exists() && docSnap.data().status === 'ended') {
+    
+    // Listen for room ending from any side
+    const unsub = FirestoreService.subscribeToDocument('rooms', callId, (docData) => {
+      if (docData?.status === 'ended') {
          webrtcService.hangup(callId, currentUser?.id);
          if (onHangupRef.current) onHangupRef.current();
       }
     });
+
     return () => unsub();
   }, [isOpen, callId, currentUser?.id]);
 
@@ -93,7 +95,7 @@ const CallInterface = ({
            if (audioCtx.state !== 'closed') audioCtx.close();
         };
       } catch (err) {
-        console.error("Group Call Setup Error:", err);
+        logger.error("Group Call Setup Error:", err);
       }
     };
 

@@ -11,13 +11,14 @@ import ApprovalsTab from './hr/tabs/ApprovalsTab';
 import OnboardingTab from './hr/tabs/OnboardingTab';
 
 const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
-  const { data, shellView } = useStore();
+  const hrData = useStore(state => state.data.hr || {});
+  const shellView = useStore(state => state.shellView);
   const [mainTab, setMainTab] = useState('people');
 
-  // Badge count for approvals
+  // Badge count for approvals - Sélecteur isolé pour la performance
   const pendingCount = [
-    ...(data.hr?.leaves || []).filter(l => l.statut === 'En attente' || l.statut === 'Brouillon'),
-    ...(data.hr?.expenses || []).filter(e => e.statut === 'En attente' || e.statut === 'Brouillon')
+    ...(hrData.leaves || []).filter(l => l.statut === 'En attente' || l.statut === 'Brouillon'),
+    ...(hrData.expenses || []).filter(e => e.statut === 'En attente' || e.statut === 'Brouillon')
   ].length;
 
   const tabs = [
@@ -102,7 +103,7 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{ position: 'relative' }}
         >
-          {mainTab === 'people' && <PeopleTab data={data} onOpenDetail={onOpenDetail} accessLevel={accessLevel} />}
+          {mainTab === 'people' && <PeopleTab data={hrData} onOpenDetail={onOpenDetail} accessLevel={accessLevel} />}
           {mainTab === 'approvals' && <ApprovalsTab accessLevel={accessLevel} />}
           {mainTab === 'onboarding' && <OnboardingTab accessLevel={accessLevel} />}
         </motion.div>

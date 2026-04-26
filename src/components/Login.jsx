@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, LogIn, ShieldCheck, ArrowRight, AlertCircle, Sparkles, Terminal, Cpu, Globe, Waves, CheckCircle2 } from 'lucide-react';
-import { auth, db } from '../firebase/config';
-import { signInWithEmailAndPassword, updatePassword } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { AuthService } from '../services/auth.service';
 import { useToast } from './ToastProvider';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
@@ -28,31 +26,19 @@ const Login = ({ onLogin }) => {
     setError('');
     
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const { user, userData } = await AuthService.login(email, password);
       
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.profile?.active === false) {
-          setError('Votre compte a été désactivé par l\'administrateur.');
-          setIsLoading(false);
-          return;
-        }
-        
-        if (userData.profile?.mustChangePassword) {
-          setMustChange(true);
-          setUserId(user.uid);
-          setIsLoading(false);
-          return;
-        }
+      if (userData.profile?.mustChangePassword) {
+        setMustChange(true);
+        setUserId(user.uid);
+        setIsLoading(false);
+        return;
       }
 
       addToast(`Noyau synchronisé. Connexion établie.`, 'success');
       onLogin();
     } catch (err) {
-      console.error(err);
-      setError('Accès refusé : Identifiants invalides.');
+      setError(err.message || 'Accès refusé : Identifiants invalides.');
     } finally {
       if (!mustChange) setIsLoading(false);
     }
@@ -73,14 +59,10 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      await updatePassword(auth.currentUser, newPassword);
-      await updateDoc(doc(db, 'users', userId), {
-        'profile.mustChangePassword': false
-      });
+      await AuthService.mandatoryPasswordUpdate(newPassword);
       onLogin();
     } catch (err) {
-      console.error(err);
-      setError('Échec de la mise à jour de sécurité.');
+      setError(err.message || 'Échec de la mise à jour de sécurité.');
     } finally {
       setIsLoading(false);
     }
