@@ -244,12 +244,6 @@ export const createOperationsSlice = (set, get) => ({
   // ont été déportés dans leurs Services de domaine respectifs pour
   // garantir un découplage total.
 
-    const lines = [
-      { accountId: '713100', label: 'Entrée Stock PF', debit: totalCost, credit: 0, profitCenter: 'Usine' },
-      { accountId: '603100', label: 'Consommation Stock MP', debit: 0, credit: totalCost, profitCenter: 'Usine' }
-    ];
-    get().addAccountingEntry(entry, lines);
-  },
 
   generateExpenseEntry: (expense) => {
     const isPaie = expense.type === 'Salaires';

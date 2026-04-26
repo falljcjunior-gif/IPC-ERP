@@ -1,37 +1,40 @@
 /**
  * ══════════════════════════════════════════════════════════════════
- * SALES & CRM DOMAIN SCHEMAS
+ * SALES DOMAIN SCHEMAS
  * ══════════════════════════════════════════════════════════════════
  */
-
 export const SalesSchemas = {
   
   /**
-   * LEAD / CLIENT
+   * LEAD / PROSPECT
    */
   lead: (data) => ({
     nom: data.nom || '',
     entreprise: data.entreprise || '',
     email: data.email || '',
-    tel: data.tel || '',
-    source: data.source || 'direct', 
-    statut: data.statut || 'prospect', // prospect | qualifié | client | perdu
-    score: Number(data.score) || 0,
-    history: [],
+    telephone: data.telephone || '',
+    source: data.source || 'direct',
+    statut: data.statut || 'nouveau', // nouveau | qualifié | proposition | gagné | perdu
+    priorite: data.priorite || 'moyenne',
+    observations: data.observations || '',
     _domain: 'sales'
   }),
 
   /**
-   * QUOTE (Devis)
+   * QUOTE / DEVIS
    */
   quote: (data) => ({
-    num: data.num || `DEV-${Date.now()}`,
-    clientId: data.clientId || '',
+    num: data.num || `QT-${Date.now()}`,
+    client: data.client || '',
     items: data.items || [],
-    totalHT: Number(data.totalHT) || 0,
-    remise: Number(data.remise) || 0,
+    totalHT: data.totalHT || 0,
+    tva: data.tva || 18,
+    totalTTC: (data.totalHT || 0) * 1.18,
     valideJusquau: data.valideJusquau || '',
     statut: 'en_attente', // en_attente | accepté | refusé | expiré
     _domain: 'sales'
   })
 };
+
+// [COMPAT] Alias pour compatibilité avec l'existant
+export const salesSchema = SalesSchemas;

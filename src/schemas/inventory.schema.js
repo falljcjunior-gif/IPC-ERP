@@ -34,3 +34,6 @@ export const InventorySchemas = {
     _timestamp: new Date().toISOString()
   })
 };
+
+// [COMPAT] Alias pour compatibilité avec l'existant
+export const inventorySchema = InventorySchemas;

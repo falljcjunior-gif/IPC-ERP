@@ -17,7 +17,7 @@ import {
   serverTimestamp, writeBatch
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage, auth } from './firebase/config';
+import { db, storage, auth } from '../firebase/config';
 
 // ── Type Guards internes ──────────────────────────────────────────────────────
 

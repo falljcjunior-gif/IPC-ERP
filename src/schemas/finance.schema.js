@@ -68,3 +68,6 @@ export const FinanceSchemas = {
     };
   }
 };
+
+// [COMPAT] Alias pour compatibilité avec l'existant
+export const financeSchema = FinanceSchemas;

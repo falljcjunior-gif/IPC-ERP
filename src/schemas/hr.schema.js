@@ -2,7 +2,7 @@
  * HR Module Schema
  * Defines the structure for Employees, Candidates, and Leaves
  */
-export const hrSchema = {
+export const HRSchemas = {
   id: 'hr',
   label: 'RH',
   models: {
@@ -116,3 +116,6 @@ export const hrSchema = {
     }
   }
 };
+
+// [COMPAT] Alias pour compatibilité avec l'existant
+export const hrSchema = HRSchemas;
