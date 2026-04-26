@@ -27,23 +27,22 @@ export const BusinessProvider = ({ children }) => {
      1. SHARED STATE (Declarations Must Be First to Avoid TDZ Errors)
      ══════════════════════════════════════════════════════════════════════════ */
   
-  const store = useStore();
-  const { 
-    user: currentUser, setUser: setCurrentUser, 
-    permissions, setPermissions, 
-    activeApp, setActiveApp, 
-    globalSettings, setGlobalSettings 
-  } = store;
+  const currentUser = useStore(state => state.user);
+  const setCurrentUser = useStore(state => state.setUser);
+  const permissions = useStore(state => state.permissions);
+  const setPermissions = useStore(state => state.setPermissions);
+  const activeApp = useStore(state => state.activeApp);
+  const setActiveApp = useStore(state => state.setActiveApp);
+  const globalSettings = useStore(state => state.globalSettings);
+  const setGlobalSettings = useStore(state => state.setGlobalSettings);
+  const data = useStore(state => state.data);
+  const setData = useStore(state => state.setData);
+  const config = useStore(state => state.config);
+  const setConfig = useStore(state => state.setConfig);
+  const schemaOverrides = useStore(state => state.schemaOverrides);
 
-  const data = store.data; const setData = store.setData;
-  const config = store.config; const setConfig = store.setConfig;
-  const hints = store.hints; const setHints = store.setHints;
-  const searchResults = store.searchResults; const setSearchResults = store.setSearchResults;
-  const workflows = store.workflows; const setWorkflows = store.setWorkflows;
-  const activeCall = store.activeCall; const setActiveCall = store.setActiveCall;
-  const notifications = store.notifications; const setNotifications = store.setNotifications;
-  const navigationIntent = store.navigationIntent; const setNavigationIntent = store.setNavigationIntent;
-  const schemaOverrides = store.schemaOverrides; const setSchemaOverrides = store.setSchemaOverrides;
+  // Persistence Refs to prevent loops
+  const lastSyncedConfig = React.useRef(null);
 
   const BRANDS = [
     { id: 'ALL', name: 'Vue Globale (Admin)', short: 'ALL' },
@@ -72,15 +71,22 @@ export const BusinessProvider = ({ children }) => {
 
 
   useEffect(() => {
+    if (!currentUser || !config) return;
+    
     localStorage.setItem('ipc_erp_current_user', JSON.stringify(currentUser));
     localStorage.setItem('daxcelor_user_role', currentUser?.role);
     
-    // Cloud Sync for User settings (ONLY sync config/theme, NEVER permissions which are admin-controlled)
+    // Cloud Sync for User settings (ONLY sync if changed AND authenticated)
     if (auth.currentUser) {
-      const userDoc = doc(db, 'users', auth.currentUser.uid);
-      setDoc(userDoc, { config }, { merge: true }).catch(e => console.warn("Cloud Sync Error:", e.message));
+      const configStr = JSON.stringify(config);
+      if (lastSyncedConfig.current !== configStr) {
+        lastSyncedConfig.current = configStr;
+        const userDoc = doc(db, 'users', auth.currentUser.uid);
+        setDoc(userDoc, { config }, { merge: true })
+          .catch(e => console.warn("Cloud Sync Error:", e.message));
+      }
     }
-  }, [currentUser, config]);
+  }, [currentUser?.id, config]);
 
   /* ══════════════════════════════════════════════════════════════════════════
      3. UTILITY LOGIC (Stable Helpers)
@@ -1305,26 +1311,51 @@ export const BusinessProvider = ({ children }) => {
           .map(d => ({ ...d.data(), id: d.id }))
           .filter(d => activeBrand === 'ALL' || !d.brandId || d.brandId === activeBrand);
 
-        setData(prev => {
-          // Detect if change is meaningful
-          const newState = { ...prev };
-          if (colName === 'audit_logs') {
-            newState.audit = { ...newState.audit, logs: docs };
-          } else if (colName === 'activities') {
-            newState.activities = docs;
-          } else if (colName === 'users') {
-            const userPermissions = {};
-            const employeeProfiles = docs
-              .filter(u => u.profile || u.permissions)
-              .map(u => {
-                if (u.permissions) userPermissions[u.id] = u.permissions;
-                return u.profile ? { ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' } : null;
-              })
-              .filter(Boolean);
+        // Side-effects outside of main data state update
+        if (colName === 'notifications') {
+          // Optimized: Only update if notifications actually changed
+          const currentNotifs = useStore.getState().notifications || [];
+          if (JSON.stringify(currentNotifs) !== JSON.stringify(docs)) {
+            setNotifications(docs);
+          }
+        }
 
-            if (Object.keys(userPermissions).length > 0) setPermissions(p => ({ ...p, ...userPermissions }));
-            if (employeeProfiles.length > 0) {
+        if (colName === 'users') {
+          const userPermissions = {};
+          docs.forEach(u => {
+            if (u.permissions) userPermissions[u.id] = u.permissions;
+          });
+          if (Object.keys(userPermissions).length > 0) {
+            // Functional Update with built-in dirty check
+            setPermissions(prev => {
+                const updated = { ...prev, ...userPermissions };
+                return JSON.stringify(prev) === JSON.stringify(updated) ? prev : updated;
+            });
+          }
+        }
+
+        setData(prev => {
+          const newState = { ...prev };
+          let changed = false;
+
+          if (colName === 'audit_logs') {
+            if (JSON.stringify(newState.audit?.logs) !== JSON.stringify(docs)) {
+              newState.audit = { ...newState.audit, logs: docs };
+              changed = true;
+            }
+          } else if (colName === 'activities') {
+            if (JSON.stringify(newState.activities) !== JSON.stringify(docs)) {
+              newState.activities = docs;
+              changed = true;
+            }
+          } else if (colName === 'users') {
+            const employeeProfiles = docs
+              .filter(u => u.profile)
+              .map(u => ({ ...u.profile, id: u.id || u.profile?.id, subModule: 'employees' }));
+            
+            if (JSON.stringify(newState.hr?.employees) !== JSON.stringify(employeeProfiles)) {
               newState.hr = { ...prev.hr, employees: employeeProfiles };
+              changed = true;
             }
           } else {
             const grouped = {};
@@ -1333,12 +1364,14 @@ export const BusinessProvider = ({ children }) => {
               if (!grouped[sub]) grouped[sub] = [];
               grouped[sub].push(d);
             });
-            newState[colName] = { ...prev[colName], ...grouped };
+            
+            if (JSON.stringify(newState[colName]) !== JSON.stringify(grouped)) {
+              newState[colName] = { ...prev[colName], ...grouped };
+              changed = true;
+            }
           }
           
-          if (colName === 'notifications') setNotifications(docs);
-          
-          return newState;
+          return changed ? newState : prev;
         });
       });
     });
