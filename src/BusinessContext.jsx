@@ -44,9 +44,22 @@ export const BusinessProvider = ({ children }) => {
           if (!grouped[sub]) grouped[sub] = [];
           grouped[sub].push(d);
         });
-        
-        if (JSON.stringify(newState[colName]) !== JSON.stringify(grouped)) {
-          newState[colName] = { ...(newState[colName] || {}), ...grouped };
+
+        // [AUDIT] Sécurité: Garantir que les propriétés essentielles (orders, products, etc.) existent toujours
+        const initialModuleState = {
+          sales: { orders: [], invoices: [] },
+          inventory: { products: [], movements: [] },
+          production: { orders: [], boms: [], machines: [], workOrders: [] },
+          finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
+          website: { config: {}, chats: [] },
+          signature: { requests: [] }
+        }[colName] || {};
+
+        const currentModuleState = newState[colName] || initialModuleState;
+        const updatedModuleState = { ...currentModuleState, ...grouped };
+
+        if (JSON.stringify(currentModuleState) !== JSON.stringify(updatedModuleState)) {
+          newState[colName] = updatedModuleState;
           changed = true;
         }
       });
