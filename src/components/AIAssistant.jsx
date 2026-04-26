@@ -6,9 +6,11 @@ import {
   AlertCircle, CheckCircle2, Sparkles, Loader2, Settings
 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '../firebase/config';
 import { useStore } from '../store';
 
-const functions = getFunctions();
+// Bind to the same Firebase app instance to ensure auth token is transmitted
+const functions = getFunctions(app);
 const nexusChatFn = httpsCallable(functions, 'nexusChat');
 
 // ══ Typing animation component ═══════════════════════════════
@@ -110,7 +112,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    content: `Système Nexus en ligne ✦ Alimenté par Gemini 2.0\n\nBonjour ! Je suis votre copilote stratégique. Posez-moi une question sur vos données, demandez une analyse ou naviguez dans les modules avec ma voix.`
+    content: `Bonjour ! Je suis Nexus, votre assistant de gestion.\n\nPosez-moi une question sur vos données, demandez une analyse ou dites-moi de naviguer vers un module.`
   }]);
 
   const inputRef = useRef(null);
@@ -197,11 +199,13 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
     } catch (err) {
       console.error('Nexus AI call failed:', err);
-      const errorMsg = err.code === 'functions/failed-precondition'
-        ? 'Clé API Gemini non configurée. Contactez votre administrateur.'
-        : err.code === 'functions/unauthenticated'
-        ? 'Vous devez être connecté pour utiliser Nexus AI.'
-        : 'Connexion Nexus interrompue. Vérifiez votre connexion internet.';
+      const errorMsg = err.code === 'functions/unauthenticated'
+        ? 'Vous devez être connecté pour utiliser Nexus.'
+        : err.code === 'functions/failed-precondition'
+        ? 'Nexus n\'est pas encore configuré. Contactez l\'administrateur.'
+        : err.code === 'functions/unavailable' || err.code === 'functions/internal'
+        ? 'Nexus est temporairement indisponible. Réessayez dans un instant.'
+        : 'Je ne suis pas disponible pour le moment. Vérifiez votre connexion.';
 
       if (err.code === 'functions/failed-precondition') setApiConfigured(false);
       setMessages(prev => [...prev, { role: 'assistant', content: errorMsg, error: err.code }]);
@@ -279,9 +283,9 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
                   <Cpu size={18} />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>Nexus Intelligence</div>
+                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>Nexus</div>
                   <div style={{ fontSize: '0.65rem', opacity: 0.85, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>
-                    ✦ Gemini 2.0 · Module: {contextLabel}
+                    Votre assistant · Module: {contextLabel}
                   </div>
                 </div>
               </div>
@@ -334,7 +338,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
                 </button>
               </div>
               <div style={{ textAlign: 'center', fontSize: '0.64rem', color: 'rgba(255,255,255,0.25)', marginTop: '0.5rem', fontWeight: 600 }}>
-                Nexus AI · Gemini 2.0 Flash · Données ERP en direct
+                Votre assistant de gestion I.P.C
               </div>
             </div>
           </motion.div>
@@ -440,7 +444,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
                 <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><MessageSquare size={13} /> Réponses contextuelles ERP</span>
               </div>
               <div style={{ fontSize: '0.72rem', fontWeight: 900, color: 'var(--accent)', letterSpacing: '1px' }}>
-                ✦ NEXUS AI · GEMINI 2.0
+                NEXUS · Votre assistant IPC
               </div>
             </div>
           </motion.div>
