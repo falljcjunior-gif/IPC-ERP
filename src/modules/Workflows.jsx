@@ -9,12 +9,12 @@ import { useStore } from '../store';
 import { registry } from '../services/Registry';
 
 const Workflows = () => {
-  // [AUIT] Correction: Sélecteur atomique pour éviter les re-renders massifs
-  const workflows = useStore(state => state.data.workflows || []);
+  // [AUDIT] Correction: Sélecteur atomique pour éviter les re-renders massifs
+  const workflows = useStore(state => state.data?.workflows || []);
   const addRecord = useStore(state => state.addRecord);
   const updateRecord = useStore(state => state.updateRecord);
   const deleteRecord = useStore(state => state.deleteRecord);
-  const shellView = useStore(state => state.shellView);
+  const shellView = useStore(state => state.shellView || {});
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   

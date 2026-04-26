@@ -18,20 +18,24 @@ const WebsiteHub = () => {
   const [portalTab, setPortalTab] = useState('catalog'); // 'catalog', 'account', 'support'
 
   // Local state for theme config to provide instant live-preview without complex Context updates
-  const [themeConfig, setThemeConfig] = useState(data.website?.config || {
+  // [AUDIT] Sécurité: Optional chaining et valeurs par défaut robustes
+  const websiteData = data?.website || {};
+  const [themeConfig, setThemeConfig] = useState(websiteData.config || {
+    primaryColor: '#06B6D4',
     heroTitle: 'Bienvenue sur votre Espace B2B',
     heroSubtitle: 'Gérez vos commandes, factures et tickets support en ligne.',
-    ctaLabel: 'Voir le Catalogue',
-    primaryColor: '#06B6D4'
+    ctaLabel: 'Voir le Catalogue'
   });
 
-  const [chatMessage, setChatMessage] = useState('');
-
-  const products = data.inventory?.products || [];
+  const products = (data?.inventory?.products || []).filter(p => p && p.nom);
   const publishedProducts = products.filter(p => p.isPublishedOnWeb);
   
-  // Client's virtual invoices (mocked from Sales orders that are not paid or not delivered)
-  const clientOrders = (data.sales?.orders || []).filter(o => o.client.includes('Web') || o.source === 'Website');
+  // [FIX] Sécurité renforcée pour les commandes client
+  const clientOrders = (data?.sales?.orders || []).filter(o => 
+    o && 
+    o.client && 
+    (String(o.client).includes('Web') || o.source === 'Website')
+  );
 
   const handleThemeChange = (field, value) => {
     setThemeConfig(prev => ({ ...prev, [field]: value }));
