@@ -2,7 +2,7 @@ import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query,
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { db, storage, auth, firebaseConfig } from '../../firebase/config';
 
 export const createOperationsSlice = (set, get) => ({
@@ -242,9 +242,79 @@ export const createOperationsSlice = (set, get) => ({
      5. DATA MUTATION LOGIC (Topological Order)
      ══════════════════════════════════════════════════════════════════════════ */
 
-  // Les générateurs d'écritures (Comptabilité, Facturation, Production)
-  // ont été déportés dans leurs Services de domaine respectifs pour
-  // garantir un découplage total.
+  getNextSequence: (key) => {
+    const currentData = get().data;
+    const seq = currentData.base?.sequences?.[key];
+    if (!seq) return "";
+    const numStr = seq.next.toString().padStart(seq.padding, '0');
+    const nextNum = `${seq.prefix}${new Date().getFullYear()}-${numStr}`;
+    
+    set(prev => {
+      const s = prev.base?.sequences?.[key];
+      if (!s) return prev;
+      return { 
+        ...prev, 
+        base: { 
+          ...prev.base, 
+          sequences: { 
+            ...(prev.base?.sequences || {}), 
+            [key]: { ...s, next: s.next + 1 } 
+          } 
+        } 
+      };
+    });
+    return nextNum;
+  },
+
+  addAccountingEntry: (entry, lines) => {
+    const totalDebit = lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
+    const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
+    
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      get().addHint({ title: "Erreur d'équilibre", message: "Le total débit doit être égal au total crédit.", type: 'error' });
+      return false;
+    }
+
+    const entryId = Date.now().toString();
+    const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
+    const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
+
+    set(prev => {
+      const finance = prev.finance || { entries: [], lines: [] };
+      return {
+        ...prev,
+        finance: {
+          ...finance,
+          entries: [newEntry, ...(finance.entries || [])],
+          lines: [...newLines, ...(finance.lines || [])]
+        }
+      };
+    });
+
+    if (auth.currentUser) {
+      setDoc(doc(db, 'finance', entryId), { ...newEntry, subModule: 'entries' });
+      newLines.forEach(l => setDoc(doc(db, 'finance', l.id), { ...l, subModule: 'lines' }));
+    }
+
+    get().logAction('Écriture Comptable', entry.libelle, 'finance');
+    return true;
+  },
+
+  generateInvoiceEntry: (invoice) => {
+    const entry = {
+      libelle: `Facture Client ${invoice.num}`,
+      date: invoice.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+      journalCode: 'J-VT',
+      piece: invoice.num
+    };
+
+    const lines = [
+      { accountId: '411100', label: invoice.client, debit: invoice.montant, credit: 0 },
+      { accountId: '701100', label: 'Vente de marchandises', debit: 0, credit: invoice.montant }
+    ];
+
+    get().addAccountingEntry(entry, lines);
+  },
 
 
   generateExpenseEntry: (expense) => {
@@ -466,6 +536,11 @@ export const createOperationsSlice = (set, get) => ({
       if (!prev[appId] || !prev[appId][subModule]) return prev;
       const oldRecord = prev[appId][subModule].find(i => i.id === id);
       if (!oldRecord) return prev;
+
+      // [SÉCURITÉ] Garde-fou contre les boucles infinies de dominos
+      const hasActualChanges = Object.keys(newData).some(key => newData[key] !== oldRecord[key]);
+      if (!hasActualChanges) return prev;
+
       const changes = Object.keys(newData).filter(key => newData[key] !== oldRecord[key]).map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`).join(', ');
       const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
       let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
@@ -494,7 +569,7 @@ export const createOperationsSlice = (set, get) => ({
            // Revert Confirmé to 'Attente Visa'
            const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Attente Visa Juridique' } : item);
            nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
-           get().sendNotification('Juridique', 'Visa requis pour commande modifiée', 'warning', 'legal');
+           get().sendNotification('Juridique', 'Visa requis pour commande', 'Une commande modifiée hors template nécessite un visa juridique.', 'warning', 'legal');
         } else {
            get().processOrderValidation(record);
         }
@@ -642,9 +717,12 @@ export const createOperationsSlice = (set, get) => ({
                  const msg = wf.actionPayload.replace('{statut}', newData.statut || record.statut || '').replace('{num}', record.num || id);
                  get().sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
              } else if (wf.actionType === 'UPDATE_STATUS') {
-                 // Apply the status change on top of nextState directly
-                 const finalUpdatedList = nextState[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
-                 nextState = { ...nextState, [appId]: { ...nextState[appId], [subModule]: finalUpdatedList } };
+                 // [AUDIT] Sécurité: Empêcher les boucles infinies si le statut est déjà identique
+                 const currentStatus = nextState[appId][subModule].find(item => item.id === id)?.statut;
+                 if (currentStatus !== wf.actionPayload) {
+                    const finalUpdatedList = nextState[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
+                    nextState = { ...nextState, [appId]: { ...nextState[appId], [subModule]: finalUpdatedList } };
+                 }
              } else if (wf.actionType === 'LOG_ACTION') {
                  get().logAction('I.P.C. Automator', wf.actionPayload, appId, id);
              }
@@ -1062,4 +1140,87 @@ export const createOperationsSlice = (set, get) => ({
       get().setActiveCall(null);
     } catch (err) { console.error("Reject Error:", err); }
   },
+
+  resetAllData: async () => {
+    get().addHint({ title: "Purge en cours", message: "Nettoyage complet du système...", type: "warning" });
+    set({
+      data: {
+        base: { sequences: get().data.base?.sequences || {} },
+        hr: { employees: [], payroll: [] },
+        crm: { leads: [], customers: [] },
+        activities: [],
+        marketing: { campaigns: [] }
+      },
+      activities: [],
+      notifications: [],
+      hints: []
+    });
+    try {
+      if (auth.currentUser) {
+        const collections = ["crm", "hr", "finance", "inventory", "sales", "purchase", "production", "legal", "signature", "activities", "notifications"];
+        for (const col of collections) {
+          const snap = await getDocs(collection(db, col));
+          const chunks = [];
+          const docsArr = snap.docs;
+          for (let i = 0; i < docsArr.length; i += 400) {
+            chunks.push(docsArr.slice(i, i + 400));
+          }
+          for (const chunk of chunks) {
+            const batch = writeBatch(db);
+            chunk.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erreur purge Firestore:", e);
+    }
+  },
+
+  seedDemoData: async () => {
+    const months = 6;
+    const now = new Date();
+    get().addHint({ title: "🌱 Seeding...", message: "Génération de 6 mois d'historique métier...", type: "info" });
+    const clientNoms = ["Industries Ouest", "TechCorp Plus", "BTP Alpha", "Giga Mart", "Auto Pro"];
+    clientNoms.forEach((nom, i) => get().addRecord("base", "contacts", { id: `CLI-00${i+1}`, nom, type: "Client", email: `contact@${nom.toLowerCase().replace(" ", "")}.com`, categorie: "B2B" }));
+    for (let m = 0; m < months; m++) {
+      const dateM = new Date(now.getFullYear(), now.getMonth() - m, 15);
+      const isPast = m > 0;
+      const count = 5 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) {
+        const montant = 500000 + Math.floor(Math.random() * 2500000);
+        get().addRecord("finance", "invoices", {
+          client: clientNoms[i % 5],
+          montant,
+          statut: isPast ? "Payé" : "Envoyé",
+          createdAt: dateM.toISOString(),
+          type: "vente"
+        });
+        get().addRecord("finance", "vendor_bills", {
+          fournisseur: "Grossiste Global",
+          montant: montant * 0.4,
+          statut: "Payé",
+          createdAt: dateM.toISOString()
+        });
+      }
+    }
+    const hrData = [
+      { id: "T-001", nom: "Alice Martin", poste: "Dev React", source: "LinkedIn", statut: "Embauché", score: 85 },
+      { id: "T-002", nom: "Bob Dupont", poste: "Sales Manager", source: "Indeed", statut: "Offre", score: 92 },
+      { id: "T-003", nom: "Claire Lefebvre", poste: "UX Designer", source: "Portfolio", statut: "Test Technique", score: 78 }
+    ];
+    hrData.forEach(t => get().addRecord("talent", "candidates", t));
+    get().addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: "success" });
+  },
+
+  _logout: async () => {
+    try {
+      await signOut(auth);
+      set({ user: null, userRole: "GUEST", isAuthenticated: false });
+      localStorage.clear();
+      window.location.reload();
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  }
 });

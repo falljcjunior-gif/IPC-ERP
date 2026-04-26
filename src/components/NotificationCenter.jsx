@@ -12,9 +12,11 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useStore } from '../store';
-
 const NotificationCenter = ({ isOpen, onClose }) => {
-  const { notifications, currentUser, navigateTo } = useStore();
+  const _notifications = useStore(s => s.notifications);
+  const notifications = _notifications || [];
+  const currentUser = useStore(s => s.user);
+  const navigateTo = useStore(s => s.setActiveApp);
   
   // Filter notifications by role
   const filteredNotifications = notifications.filter(n => 

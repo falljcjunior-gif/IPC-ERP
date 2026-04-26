@@ -21,7 +21,10 @@ const RecordModal = ({
   smartButtons = [],
   isLoading = false 
 }) => {
-  const { data, getModuleAccess, currentUser } = useStore();
+  const getModuleAccess = useStore(s => s.getModuleAccess);
+  const currentUser = useStore(s => s.user);
+  const _dmsFiles = useStore(s => s.data.dms?.files);
+  const dmsFiles = _dmsFiles || [];
   const { t } = useTranslation();
   const { addToast } = useToast();
   const [formData, setFormData] = useState(initialData || {});
@@ -254,8 +257,8 @@ const RecordModal = ({
                                 <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Documents liés</h4>
                                 <button className="btn glass" style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Upload size={12}/> Ajouter</button>
                              </div>
-                             {(data.dms?.files || []).filter(f => f.relatedId === recordId).length > 0 ? (
-                                (data.dms?.files || []).filter(f => f.relatedId === recordId).map(file => (
+                             {dmsFiles.filter(f => f.relatedId === recordId).length > 0 ? (
+                                dmsFiles.filter(f => f.relatedId === recordId).map(file => (
                                   <div key={file.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                      <FileText size={16} color="var(--accent)" />
                                      <div style={{ flex: 1, overflow: 'hidden' }}>

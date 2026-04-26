@@ -43,7 +43,7 @@ const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
               <div style={{ fontWeight: 900, fontSize: '1.1rem' }}>{clients.length}</div>
            </div>
            <div style={{ height: '30px', width: '1px', background: 'var(--border)' }} />
-           <button className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>
+           <button onClick={() => alert('Exportation des clients en CSV...')} className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
               Exporter
            </button>
            <button 
@@ -98,7 +98,7 @@ const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <button className="glass" style={{ padding: '0.5rem', borderRadius: '0.75rem' }}>
+                <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(client, 'crm', 'clients'); }} className="glass" style={{ padding: '0.5rem', borderRadius: '0.75rem', cursor: 'pointer' }}>
                   <MoreHorizontal size={18} />
                 </button>
               </div>

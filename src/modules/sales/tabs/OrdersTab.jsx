@@ -23,12 +23,12 @@ const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
             <input className="glass" placeholder="Rechercher une commande..." 
               style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: '1rem', border: 'none', fontSize: '0.9rem' }} />
           </div>
-          <button className="glass" style={{ padding: '0.8rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+          <button onClick={() => alert('Filtrage des commandes en cours...')} className="glass" style={{ padding: '0.8rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
             <Filter size={18} /> Filtres
           </button>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-           <button className="glass" style={{ padding: '0.8rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+           <button onClick={() => alert('Génération du rapport PDF...')} className="glass" style={{ padding: '0.8rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
              <Download size={18} /> Export PDF
            </button>
            <button 

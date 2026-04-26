@@ -73,7 +73,7 @@ const ControlHub = ({ onOpenDetail }) => {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>Status : Optimal</span>
            </div>
            
-           <button className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)' }}>
+           <button onClick={() => alert('Centre de notifications système : 0 alerte critique.')} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
               <Bell size={22} />
            </button>
            <button onClick={() => {

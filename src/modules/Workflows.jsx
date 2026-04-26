@@ -222,7 +222,7 @@ const Workflows = () => {
                                 <input required type="text" className="form-control" value={actionTargetRole} onChange={e => setActionTargetRole(e.target.value)} placeholder="MANAGER, ADMIN, ALL" />
                              </div>
                              <div style={{ flex: 2 }}>
-                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Message (Variables: {`{id}`, `{nom}`, `{statut}`})</label>
+                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Message (Variables: {"{id}, {nom}, {statut}"})</label>
                                 <input required type="text" className="form-control" value={actionPayload} onChange={e => setActionPayload(e.target.value)} placeholder="Le statut est passé à {statut}" />
                              </div>
                           </div>

@@ -13,6 +13,7 @@
  * RÈGLE: Tout nouveau accès au store doit passer par ce fichier.
  */
 
+//
 import { useStore } from './index';
 
 // ── Authentification & Utilisateur ───────────────────────────────────────────
@@ -68,16 +69,24 @@ export const useAllData = () => useStore(s => s.data ?? {});
 export const useModuleData = (module) => useStore(s => s.data?.[module] ?? {});
 
 /** Données HR */
-export const useHRData = () => useStore(s => ({
-  employees: s.data?.hr?.employees ?? [],
-  payroll: s.data?.hr?.payroll ?? [],
-}));
+export const useHRData = () => {
+  const employees = useStore(s => s.data?.hr?.employees);
+  const payroll = useStore(s => s.data?.hr?.payroll);
+  return {
+    employees: employees ?? [],
+    payroll: payroll ?? [],
+  };
+};
 
 /** Données CRM */
-export const useCRMData = () => useStore(s => ({
-  leads: s.data?.crm?.leads ?? [],
-  customers: s.data?.crm?.customers ?? [],
-}));
+export const useCRMData = () => {
+  const leads = useStore(s => s.data?.crm?.leads);
+  const customers = useStore(s => s.data?.crm?.customers);
+  return {
+    leads: leads ?? [],
+    customers: customers ?? [],
+  };
+};
 
 // ── Actions CRUD ─────────────────────────────────────────────────────────────
 

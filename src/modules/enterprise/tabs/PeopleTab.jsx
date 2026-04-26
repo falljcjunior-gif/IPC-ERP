@@ -46,7 +46,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
               <button onClick={() => generatePayrollEntry()} className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 800, fontSize: '0.85rem', color: '#8B5CF6', border: '1px solid #8B5CF650' }}>
                 <Wallet size={18} /> Exécuter la Paie
               </button>
-              <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+              <button onClick={() => alert('Visualisation de l\'organigramme dynamique...')} className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>
                 <Building2 size={18} /> Organigramme
               </button>
               <button onClick={() => onOpenDetail && onOpenDetail(null, 'hr', 'employees')} className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>
@@ -76,7 +76,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>3 Périodes d'essai se terminent cette semaine</div>
                      <p style={{ margin: '2px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Revues à programmer pour J. Doe, A. Smith, M. Kablan.</p>
                   </div>
-                  <button style={{ background: 'none', border: 'none', color: '#F59E0B', cursor: 'pointer' }}><Plus size={20} /></button>
+                  <button onClick={() => alert('Planification des revues de fin de période d\'essai...')} style={{ background: 'none', border: 'none', color: '#F59E0B', cursor: 'pointer', padding: '4px' }}><Plus size={20} /></button>
                </div>
                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', borderRadius: '1.25rem', background: '#10B98110', border: '1px solid #10B98120' }}>
                   <div style={{ color: '#10B981' }}><CheckCircle2 size={20} /></div>
@@ -84,7 +84,7 @@ const PeopleTab = ({ data, onOpenDetail }) => {
                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Formation "Hygiène & Sécurité" complétée</div>
                      <p style={{ margin: '2px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>92% des employés de production ont validé le module.</p>
                   </div>
-                  <button style={{ background: 'none', border: 'none', color: '#10B981', cursor: 'pointer' }}><Activity size={20} /></button>
+                  <button onClick={() => alert('Détails des certifications d\'hygiène et sécurité...')} style={{ background: 'none', border: 'none', color: '#10B981', cursor: 'pointer', padding: '4px' }}><Activity size={20} /></button>
                </div>
             </div>
          </motion.div>

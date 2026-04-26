@@ -94,7 +94,9 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
              </div>
           </div>
 
-          <button className="btn-primary" style={{ width: '100%', marginTop: '2rem', padding: '1rem', borderRadius: '1.25rem', fontWeight: 900, background: 'white', color: '#0F172A', border: 'none' }}>
+          <button 
+            onClick={() => alert('Analyse Nexus IA en cours sur les données de vente...')}
+            className="btn-primary" style={{ width: '100%', marginTop: '2rem', padding: '1rem', borderRadius: '1.25rem', fontWeight: 900, background: 'white', color: '#0F172A', border: 'none', cursor: 'pointer' }}>
              Lancer l'Analyse Détaillée
           </button>
         </motion.div>

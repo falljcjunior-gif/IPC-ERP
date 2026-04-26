@@ -44,6 +44,8 @@ const History = lazy(() => import('./modules/History'));
 const Workflows = lazy(() => import('./modules/Workflows'));
 const Shipping = lazy(() => import('./modules/Shipping'));
 const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
+const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
+const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -60,6 +62,7 @@ import { baseSchema } from './schemas/base.schema';
 import { auditSchema } from './schemas/audit.schema';
 import { adminSchema } from './schemas/admin.schema';
 import { legalSchema } from './schemas/legal.schema';
+import { helpdeskSchema } from './schemas/helpdesk.schema';
 import { marketingSchema } from './schemas/marketing.schema';
 import { signatureSchema } from './schemas/signature.schema';
 import { websiteSchema } from './schemas/website.schema';
@@ -72,11 +75,15 @@ import { dmsSchema } from './schemas/dms.schema';
  * This follows Odoo's 'manifest' pattern.
  * Components are registered as types, Shell injects common props.
  */
+let isInitialized = false;
+
 export const initRegistry = () => {
+  if (isInitialized) return;
+  isInitialized = true;
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-   baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema].forEach(s => registry.registerSchema(s));
+    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cœur de Métier ---
   registry.register({
@@ -158,6 +165,12 @@ export const initRegistry = () => {
     component: Project, priority: 14
   });
 
+  registry.register({
+    id: 'fleet', label: 'Flotte', icon: <Truck size={18} />,
+    category: 'operations', roles: ['ADMIN', 'LOGISTICS', 'SUPER_ADMIN'],
+    component: FleetHub, priority: 15
+  });
+
   // --- Finance & Stratégie ---
   registry.register({
     id: 'finance', label: 'Finance', icon: <CreditCard size={18} />,
@@ -230,6 +243,12 @@ export const initRegistry = () => {
     id: 'planning', label: 'Planning & Temps', icon: <Calendar size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
     component: PlanningTemps, priority: 33
+  });
+
+  registry.register({
+    id: 'helpdesk', label: 'Support & Helpdesk', icon: <LifeBuoy size={18} />,
+    category: 'hr', roles: ['ADMIN', 'STAFF', 'SUPER_ADMIN'],
+    component: HelpdeskHub, priority: 34
   });
 
   registry.register({

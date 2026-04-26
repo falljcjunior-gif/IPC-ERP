@@ -456,7 +456,12 @@ const BienEtreTab = () => {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Users size={12} />{init.participants} participants
                 </div>
-                <button style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 999, border: 'none', background: `${init.color}15`, color: init.color, fontWeight: 700, cursor: 'pointer' }}>Rejoindre</button>
+                <button 
+                  onClick={() => alert(`Inscription enregistrée pour l'initiative : ${init.title}`)}
+                  style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 999, border: 'none', background: `${init.color}15`, color: init.color, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  Rejoindre
+                </button>
               </div>
             </motion.div>
           ))}
@@ -478,7 +483,9 @@ const BienEtreTab = () => {
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             {[['😔', 'Bas'], ['😐', 'Moyen'], ['🙂', 'Bien'], ['😄', 'Excellent']].map(([emoji, label]) => (
-              <button key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontSize: '1.5rem', transition: '0.2s' }}
+              <button key={label} 
+                onClick={() => handleSentiment(label)}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontSize: '1.5rem', transition: '0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
                 {emoji}<span style={{ fontSize: '0.7rem', fontWeight: 700, opacity: 0.8 }}>{label}</span>

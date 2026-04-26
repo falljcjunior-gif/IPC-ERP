@@ -76,7 +76,9 @@ const SupportTab = ({ data, onOpenDetail, updateRecord }) => {
             </div>
          </div>
 
-         <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>
+         <button 
+           onClick={() => onOpenDetail && onOpenDetail(null, 'helpdesk', 'tickets')}
+           className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488', cursor: 'pointer' }}>
             <Plus size={20} /> Nouveau Ticket
          </button>
       </div>

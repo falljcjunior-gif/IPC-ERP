@@ -65,10 +65,10 @@ const EnterpriseHub = ({ onOpenDetail, appId }) => {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0D9488' }}>Statut Opérationnel : Optimal</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button onClick={() => alert('Historique des opérations enterprise...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
              <History size={20} />
            </button>
-          <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A' }}>
+          <button onClick={() => onOpenDetail && onOpenDetail(null, 'hr', 'employees')} className="btn-primary" style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A', cursor: 'pointer' }}>
             <Briefcase size={20} /> <span style={{ fontWeight: 800 }}>Recrutement Flash</span>
           </button>
         </div>

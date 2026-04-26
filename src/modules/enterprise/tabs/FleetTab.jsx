@@ -40,7 +40,9 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
               <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Parc Automobile Actif</h3>
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Suivi télémétrique et opérationnel de vos actifs mobiles.</p>
            </div>
-           <button className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488' }}>
+           <button 
+             onClick={() => onOpenDetail && onOpenDetail(null, 'fleet', 'vehicles')}
+             className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#0D9488', borderColor: '#0D9488', cursor: 'pointer' }}>
               <Plus size={20} /> Nouveau Véhicule
            </button>
         </div>
@@ -104,7 +106,7 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
          <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Journal de Maintenance</h4>
-               <button className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.75rem', fontWeight: 800 }}>
+               <button onClick={() => alert('Affichage de l\'historique complet...')} className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>
                   Voir Tout l'Historique
                </button>
             </div>

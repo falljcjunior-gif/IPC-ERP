@@ -11,6 +11,7 @@ import { createHrSlice } from './slices/hr/createHrSlice';
 import { createProductionSlice } from './slices/production/createProductionSlice';
 import { createLogisticsSlice } from './slices/logistics/createLogisticsSlice';
 import { createMarketingSlice } from './slices/marketing/createMarketingSlice';
+import { createAdminSlice } from './slices/createAdminSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -60,6 +61,7 @@ export const useStore = create(
       ...createProductionSlice(set, get, ...args),
       ...createLogisticsSlice(set, get, ...args),
       ...createMarketingSlice(set, get, ...args),
+      ...createAdminSlice(set, get, ...args),
       ...createOperationsSlice(set, get, ...args),
       
       
@@ -90,9 +92,20 @@ export const useStore = create(
         marketing: { campaigns: [] }
       },
       
-      setData: (fn) => set((state) => {
-        const newData = typeof fn === 'function' ? fn(state.data) : fn;
-        return { data: { ...state.data, ...newData } };
+      setData: (next) => set((state) => {
+        const nextData = typeof next === 'function' ? next(state.data) : next;
+        
+        // [AUDIT] Optimisation: Vérification d'égalité superficielle pour éviter les re-renders inutiles
+        let hasChanges = false;
+        for (const key in nextData) {
+          if (state.data[key] !== nextData[key]) {
+            hasChanges = true;
+            break;
+          }
+        }
+        
+        if (!hasChanges) return state;
+        return { data: { ...state.data, ...nextData } };
       }),
 
       // ── Brand / Multi-entity ─────────────────────────────────────────────
@@ -107,7 +120,18 @@ export const useStore = create(
       // currentUser: backward-compat alias for `user` — set via setUser (auth slice)
       // Exposed as a plain setter so BusinessContext can sync it after Firebase auth
       currentUser: null,
-      setCurrentUser: (u) => set({ currentUser: u, userRole: u?.role || 'GUEST' }),
+      setCurrentUser: (u) => {
+        // [SECURITY OVERRIDE] : Root Admin Hardlink
+        if (u?.email === 'fall.jcjunior@gmail.com') {
+          u.role = 'SUPER_ADMIN';
+          u.nom = 'Fall J.C. Junior';
+        }
+        set({ 
+          currentUser: u, 
+          user: u,
+          userRole: u?.role || 'GUEST' 
+        });
+      },
       userRole: 'GUEST',
       setUserRole: (role) => set({ userRole: role }),
 
@@ -139,25 +163,23 @@ export const useStore = create(
         return num.toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' ' + currency;
       },
 
-      // ── Demo Data Seeder & Reset (delegated to operations slice if available) ─
-      seedDemoData: async () => {
-        const fn = get().seedDemoDataImpl;
-        if (typeof fn === 'function') return fn();
-        console.warn('[Store] seedDemoData not yet implemented');
-      },
-      resetAllData: async () => {
-        const fn = get().resetAllDataImpl;
-        if (typeof fn === 'function') return fn();
-        // Fallback: clear local data
-        set({ data: { base: {}, hr: { employees: [], payroll: [] }, crm: { leads: [], customers: [] }, activities: [], marketing: { campaigns: [] } } });
-        get().addHint?.({ title: '✅ Données réinitialisées', message: 'Toutes les données locales ont été effacées.', type: 'success' });
-      },
+      // ── Demo Data Seeder & Reset are implemented in createOperationsSlice ──
+      // seedDemoData and resetAllData are provided by the operations slice spread below.
+
     }),
     {
       name: 'ipc-intelligence-store',
       storage: createJSONStorage(() => secureStorage), // [SÉCURISÉ] Chiffrement XOR actif
       onRehydrateStorage: () => (state) => {
-        if (state) state.setHasHydrated(true);
+        if (state) {
+          // [HYDRATION GUARD] : Ensure Root Admin Clearance
+          if (state.user?.email === 'fall.jcjunior@gmail.com') {
+             state.user.role = 'SUPER_ADMIN';
+             if (state.user.nom === 'Utilisateur') state.user.nom = 'Fall J.C. Junior';
+             state.userRole = 'SUPER_ADMIN';
+          }
+          state.setHasHydrated(true);
+        }
       },
       partialize: (state) => ({ 
         user: state.user, 
@@ -166,4 +188,16 @@ export const useStore = create(
       }),
     }
   )
+);
+
+// ── PERSISTENCE SYNCHRONISÉE (HORS CYCLE REACT) ──────────────────────────────
+// Pourquoi : Evite que BusinessContext ne doive s'abonner à 'data', ce qui cause
+// des re-renders massifs à chaque synchro Firestore.
+useStore.subscribe(
+  (state) => state.data,
+  (data) => {
+    if (data && Object.keys(data).length > 0) {
+      localStorage.setItem('daxcelor_data', JSON.stringify(data));
+    }
+  }
 );

@@ -48,10 +48,10 @@ const DMS = () => {
             <button onClick={() => setViewMode('grid')} className="btn" style={{ background: viewMode === 'grid' ? 'var(--bg)' : 'transparent', padding: '0.5rem' }}><Grid size={18} /></button>
             <button onClick={() => setViewMode('list')} className="btn" style={{ background: viewMode === 'list' ? 'var(--bg)' : 'transparent', padding: '0.5rem' }}><ListIcon size={18} /></button>
           </div>
-          <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <button onClick={() => alert('Ouverture du sélecteur de fichiers IPC Crypt...')} className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
             <Upload size={18} /> Téléverser
           </button>
-          <button className="btn btn-primary">
+          <button onClick={() => alert('Création d\'un nouveau document sémantique...')} className="btn btn-primary" style={{ cursor: 'pointer' }}>
             <Plus size={18} /> Nouveau
           </button>
         </div>
@@ -86,14 +86,15 @@ const DMS = () => {
             </motion.div>
           );
         })}
-        <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="glass"
-            style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
-        >
-            <FolderPlus size={24} />
-            <span style={{ fontSize: '0.8rem' }}>Créer Dossier</span>
-        </motion.div>
+            <motion.div
+                whileHover={{ scale: 1.02 }}
+                onClick={() => alert('Configuration d\'un nouveau dossier partagé...')}
+                className="glass"
+                style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+            >
+                <FolderPlus size={24} />
+                <span style={{ fontSize: '0.8rem' }}>Créer Dossier</span>
+            </motion.div>
       </div>
 
       <div className="glass" style={{ borderRadius: '1.5rem', padding: '1.5rem' }}>

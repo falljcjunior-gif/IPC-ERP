@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store';
 
+//
+
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
@@ -18,7 +20,9 @@ const POST_TYPES = [
 const INITIAL_FEED = [];
 
 const WallTab = ({ data, currentUser }) => {
-  const { addConnectPost, addConnectComment } = useStore();
+  const addConnectPost = useStore(s => s.addConnectPost);
+  const addConnectComment = useStore(s => s.addConnectComment);
+  const employeesCount = useStore(s => s.data?.hr?.employees?.filter(e => e.active)?.length || 0);
 
   // Local feed state so likes update immediately in the UI
   const [feed, setFeed] = useState(() =>
@@ -237,7 +241,7 @@ const WallTab = ({ data, currentUser }) => {
               { label: 'Publications ce mois', value: feed.length, icon: <TrendingUp size={15} color="#8B5CF6" /> },
               { label: 'Réactions totales', value: feed.reduce((s, p) => s + p.reactions, 0), icon: <Heart size={15} color="#EC4899" /> },
               { label: 'Commentaires', value: feed.reduce((s, p) => s + p.comments.length, 0), icon: <MessageCircle size={15} color="#6366F1" /> },
-              { label: 'Collaborateurs actifs', value: data?.hr?.employees?.filter(e => e.active)?.length || 0, icon: <HeartHandshake size={15} color="#10B981" /> },
+              { label: 'Collaborateurs actifs', value: employeesCount, icon: <HeartHandshake size={15} color="#10B981" /> },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>

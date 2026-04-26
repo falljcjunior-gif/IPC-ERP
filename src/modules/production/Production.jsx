@@ -86,7 +86,7 @@ const Production = ({ onOpenDetail, appId }) => {
               <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#06B6D4' }}>Usine : 98% OEE</span>
            </div>
 
-           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+           <button onClick={() => alert('Génération du rapport de production industriel...')} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
              <Download size={20} />
            </button>
            

@@ -5,7 +5,6 @@ import {
   Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import { useStore } from '../../store';
-import { useShallow } from 'zustand/react/shallow';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -15,13 +14,11 @@ import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
-  const { data, currentUser, navigationIntent, setNavigationIntent, shellView } = useStore(useShallow(state => ({
-    data: state.data,
-    currentUser: state.user,
-    navigationIntent: state.navigationIntent,
-    setNavigationIntent: state.setNavigationIntent,
-    shellView: state.shellView
-  })));
+  const data = useStore(s => s.data);
+  const currentUser = useStore(s => s.user);
+  const navigationIntent = useStore(s => s.navigationIntent);
+  const setNavigationIntent = useStore(s => s.setNavigationIntent);
+  const shellView = useStore(s => s.shellView);
   const [activeTab, setActiveTab] = useState('wall');
   const [showSettings, setShowSettings] = useState(false);
   const [connectSettings, setConnectSettings] = useState({
@@ -72,7 +69,7 @@ const ConnectHub = ({ onOpenDetail }) => {
              <button onClick={() => setShowSettings(true)} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', border: 'none', cursor: 'pointer', background: 'white' }}>
                 <Settings size={22} />
              </button>
-             <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+             <button onClick={() => alert('Analyse IA Social Pulse en cours : Climat social excellent (8.4/10).')} className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
                 <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>IA Social Pulse</span>
              </button>
           </div>

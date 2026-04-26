@@ -33,9 +33,7 @@ class ModuleRegistry {
    * Register a new module/addon
    */
   register(module) {
-    if (this.modules.has(module.id)) {
-      console.warn(`Module ${module.id} is already registered. Overwriting.`);
-    }
+    if (!module || !module.id) return this;
     this.modules.set(module.id, {
       id: module.id,
       label: module.label,

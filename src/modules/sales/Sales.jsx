@@ -59,7 +59,7 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3B82F6' }}>Objectif Q2: 85% Atteint</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button onClick={() => alert('Génération du rapport de ventes global...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
              <Download size={20} />
            </button>
            {accessLevel === 'write' && (

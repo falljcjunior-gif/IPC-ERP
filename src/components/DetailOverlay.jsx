@@ -27,25 +27,27 @@ import { generatePDF } from '../utils/PDFExporter';
 import Timeline from './Timeline';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
-import { useShallow } from 'zustand/react/shallow';
+//
 import { useTranslation } from 'react-i18next';
 
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { t } = useTranslation();
-  const { 
-    hasPermission, userRole, config, navigateTo, deleteRecord, data, logAction 
-  } = useStore(useShallow(state => ({
-    hasPermission: state.hasPermission,
-    userRole: state.userRole,
-    config: state.config,
-    navigateTo: state.navigateTo,
-    deleteRecord: state.deleteRecord,
-    data: state.data,
-    logAction: state.logAction
-  })));
+  const hasPermission = useStore(s => s.hasPermission);
+  const userRole = useStore(s => s.userRole);
+  const config = useStore(s => s.config);
+  const navigateTo = useStore(s => s.navigateTo);
+  const deleteRecord = useStore(s => s.deleteRecord);
+  const activities = useStore(s => s.activities);
+  const products = useStore(s => s.data?.inventory?.products);
+  const contracts = useStore(s => s.data?.legal?.contracts);
+  const logAction = useStore(s => s.logAction);
   const [activeTab, setActiveTab] = useState('infos');
   const [formData, setFormData] = useState({});
   const [prevRecord, setPrevRecord] = useState(null);
+
+  const productsArr = products || [];
+  const contractsArr = contracts || [];
+  const activitiesArr = activities || [];
 
   const customFields = config?.customFields?.[appId] || [];
 
@@ -245,7 +247,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                                 let optDisabled = false;
                                 let optLabel = opt;
                                 if (appId === 'sales' && subModule === 'orders' && key === 'statut' && (opt === 'Confirmé' || opt === 'Expédié')) {
-                                    const prod = data?.inventory?.products?.find(p => p.nom === formData.produit || p.id === formData.produitId);
+                                    const prod = productsArr.find(p => p.nom === formData.produit || p.id === formData.produitId);
                                     if (!prod || prod.stock < (formData.qte || 0)) {
                                         optDisabled = true;
                                         optLabel = `${opt} ⚠️ Bloqué (Stock Physique Insuffisant: ${prod ? prod.stock : 0})`;
@@ -256,7 +258,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                                     }
                                 }
                                 if (appId === 'purchase' && subModule === 'orders' && key === 'statut' && opt === 'Confirmé') {
-                                    const supplierContract = (data.legal?.contracts || []).find(c => c.partie === formData.fournisseur && c.statut === 'Signé');
+                                    const supplierContract = contractsArr.find(c => c.partie === formData.fournisseur && c.statut === 'Signé');
                                     if (!supplierContract) {
                                         optDisabled = true;
                                         optLabel = `${opt} ⚖️ Bloqué (Contrat Cadre Non Signé)`;
@@ -473,7 +475,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                      </div>
 
                      <Timeline events={[
-                       ...((data?.activities || [])
+                       ...(activitiesArr
                          .filter(a => String(a.targetId) === String(record.id))
                          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                          .map(a => ({

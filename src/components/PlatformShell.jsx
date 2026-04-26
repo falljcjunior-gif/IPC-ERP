@@ -12,7 +12,6 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
-import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from 'react-i18next';
 
 // Lazy loaded components
@@ -32,32 +31,27 @@ import PointageWidget from './PointageWidget';
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ toggleTheme, theme, setView }) => {
   const { t, i18n } = useTranslation();
-  const { 
-    globalSearch, searchResults, updateRecord, addRecord, data, config, 
-    globalSettings, permissions, getModuleAccess, logout, activeApp, 
-    setActiveApp, activeCall, setActiveCall, acceptCall, rejectCall, 
-    setActiveBrand, BRANDS, user: currentUser
-  } = useStore(useShallow(state => ({
-    globalSearch: state.globalSearch,
-    searchResults: state.searchResults,
-    updateRecord: state.updateRecord,
-    addRecord: state.addRecord,
-    data: state.data,
-    config: state.config,
-    globalSettings: state.globalSettings,
-    permissions: state.permissions,
-    getModuleAccess: state.getModuleAccess,
-    logout: state.logout,
-    activeApp: state.activeApp,
-    setActiveApp: state.setActiveApp,
-    activeCall: state.activeCall,
-    setActiveCall: state.setActiveCall,
-    acceptCall: state.acceptCall,
-    rejectCall: state.rejectCall,
-    setActiveBrand: state.setActiveBrand,
-    BRANDS: state.BRANDS,
-    user: state.user
-  })));
+  const globalSearch = useStore(s => s.globalSearch);
+  const searchResults = useStore(s => s.searchResults);
+  const updateRecord = useStore(s => s.updateRecord);
+  const addRecord = useStore(s => s.addRecord);
+  const config = useStore(s => s.config);
+  const globalSettings = useStore(s => s.globalSettings);
+  const permissions = useStore(s => s.permissions);
+  const getModuleAccess = useStore(s => s.getModuleAccess);
+  const logout = useStore(s => s.logout);
+  const activeApp = useStore(s => s.activeApp);
+  const setActiveApp = useStore(s => s.setActiveApp);
+  const activeCall = useStore(s => s.activeCall);
+  const setActiveCall = useStore(s => s.setActiveCall);
+  const acceptCall = useStore(s => s.acceptCall);
+  const rejectCall = useStore(s => s.rejectCall);
+  const setActiveBrand = useStore(s => s.setActiveBrand);
+  const BRANDS = useStore(s => s.BRANDS);
+  const currentUser = useStore(s => s.user);
+
+  // Locatized subscription for campaigns to avoid massive shell re-renders
+  const marketingCampaigns = useStore(state => state.data.marketing?.campaigns || []);
 
   const userRole = currentUser?.role || 'GUEST';
   const activeBrand = globalSettings?.brand || 'ALL';
@@ -103,9 +97,9 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
   // Auto-derived Campaigns for CRM attribution
   const activeCampaigns = useMemo(() => {
     const defaultSources = ['Prospection Directe', 'Bouche à oreille', 'Appel Entrant', 'Email', 'Autre'];
-    const dynamicCampaigns = (data?.marketing?.campaigns || []).map(c => c.nom);
+    const dynamicCampaigns = (marketingCampaigns || []).map(c => c.nom);
     return [...dynamicCampaigns, ...defaultSources];
-  }, [data?.marketing?.campaigns]);
+  }, [marketingCampaigns]);
 
   const openDetail = useCallback((record, appId, subModule) => {
     setDetails({ record, context: { appId, subModule } });
@@ -115,7 +109,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
 
   useEffect(() => {
     setAppsPool(registry.getModulesByCategory());
-  }, []);
+  }, [userRole]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

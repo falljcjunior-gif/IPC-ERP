@@ -68,31 +68,37 @@ const CustomTooltip = ({ active, payload, label }) => {
    Main Dashboard
 ──────────────────────────────── */
 const GlobalDashboard = () => {
-  const { data, currentUser, navigateTo, formatCurrency } = useStore();
+  const _incomes = useStore(s => s.data.finance?.incomes);
+  const incomes = _incomes || [];
+  const _employees = useStore(s => s.data.hr?.employees);
+  const employees = _employees || [];
+  const _shipments = useStore(s => s.data.inventory?.shipments);
+  const shipments = _shipments || [];
+  const _workOrders = useStore(s => s.data.production?.workOrders);
+  const workOrders = _workOrders || [];
+  const currentUser = useStore(state => state.user);
+  const navigateTo = useStore(state => state.navigateTo);
+  const formatCurrency = useStore(state => state.formatCurrency);
   const [activeDrillDown, setActiveDrillDown] = useState(null);
 
   // ─── Variables BI Dynamiques ───
   const { metrics, caComparaisonData, deptHealth, aiInsights } = useMemo(() => {
     // 1. Finance & Ventes
-    const incomes = data.finance?.incomes || [];
     const caRealise = incomes.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
     const caPrevu = 2800000000;
 
     // 2. RH
-    const employees = data.hr?.employees || [];
     const effectif = employees.length;
     const masseSalariale = employees.reduce((sum, e) => sum + Number(e.salaire || 0), 0);
 
     // 3. Logistique
-    const shipments = data.shipping?.shipments || [];
     const livres = shipments.filter(s => s.statut === 'Livré').length;
     const retardes = shipments.filter(s => s.statut === 'Retardé').length;
     const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94.2;
 
     // 4. Production
-    const plannedOrders = data.production?.workOrders || [];
-    const prodScore = plannedOrders.length > 0 
-        ? Math.round((plannedOrders.filter(o => o.statut === 'Terminé').length / plannedOrders.length) * 100) 
+    const prodScore = workOrders.length > 0 
+        ? Math.round((workOrders.filter(o => o.statut === 'Terminé').length / workOrders.length) * 100) 
         : 88;
 
     // Chart Data
@@ -140,7 +146,7 @@ const GlobalDashboard = () => {
     ];
 
     return { metrics: { sales: { caRealise, caPrevu }, finance: { margeNette: 18.5 }, hr: { masseSalariale, effectif }, supply: { otif } }, caComparaisonData, deptHealth, aiInsights };
-  }, [data, formatCurrency]);
+  }, [incomes, employees, shipments, workOrders, formatCurrency]);
 
   return (
     <motion.div 
@@ -223,8 +229,8 @@ const GlobalDashboard = () => {
               </div>
 
               <div style={{ marginTop: '2.5rem', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                 <button className="btn-primary" style={{ background: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    Ouvrir Nexus Chat <MessageSquare size={16} />
+                 <button className="btn-primary" onClick={() => navigateTo('connect')} style={{ background: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    Ouvrir Connect+ <MessageSquare size={16} />
                  </button>
                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Dernière mise à jour : instantané à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
@@ -271,7 +277,7 @@ const GlobalDashboard = () => {
                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>Santé Systémique des Départements</h3>
                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.4rem' }}>Score consolidé basé sur 14 indicateurs temps-réel.</p>
               </div>
-              <button className="btn-glass" style={{ border: '1px solid var(--border)' }}>Détails Ops</button>
+              <button onClick={() => navigateTo('analytics')} className="btn-glass" style={{ border: '1px solid var(--border)' }}>Détails Ops</button>
            </div>
            
            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>

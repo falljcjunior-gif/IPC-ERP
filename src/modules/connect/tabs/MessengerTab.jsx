@@ -70,11 +70,18 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     }
   }, [navigationIntent]);
 
+  const processedReadReceiptsRef = useRef(new Set());
+
   // Messages Subscription & Read Receipts
   useEffect(() => {
     if (!currentUser?.id || !activeRoom?.id) return;
 
-    const unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
+    const unsubscribe = FirestoreService.subscribeToCollection('messages', {
+      filters: [{ field: 'roomId', operator: '==', value: activeRoom.id }],
+      orderByField: 'createdAt',
+      descending: false,
+      limitTo: 100
+    }, (msgs) => {
       setMessages(msgs);
       setTimeout(() => {
         if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -84,10 +91,15 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
       
       const unreadDocs = msgs.filter(m => 
-        m.userId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id))
+        m.userId !== currentUser.id && 
+        (!m.readBy || !m.readBy.includes(currentUser.id)) &&
+        !processedReadReceiptsRef.current.has(m.id)
       );
 
       if (unreadDocs.length > 0) {
+        // [AUDIT] Optimisation: Marquer immédiatement pour éviter les déclenchements multiples
+        unreadDocs.forEach(m => processedReadReceiptsRef.current.add(m.id));
+
         readReceiptTimerRef.current = setTimeout(async () => {
           try {
             const operations = unreadDocs.map(m => ({
@@ -100,11 +112,9 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
           } catch (err) {
             logger.error('Read Receipt Batch Error', err);
           }
-        }, 2000); // Guard delay
+        }, 1500); // Guard delay réduit car sécurisé par le Ref
       }
-    }, [
-      { field: 'roomId', operator: '==', value: activeRoom.id }
-    ], { field: 'createdAt', direction: 'asc' }, 100);
+    });
 
     return () => {
        unsubscribe();

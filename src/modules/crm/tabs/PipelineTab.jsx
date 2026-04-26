@@ -97,7 +97,7 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
 
             {/* Actions */}
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button className="glass" style={{ padding: '0.6rem', borderRadius: '0.8rem', border: 'none' }}>
+              <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(opp, 'crm', 'opportunities'); }} className="glass" style={{ padding: '0.6rem', borderRadius: '0.8rem', border: 'none', cursor: 'pointer' }}>
                 <MoreVertical size={18} />
               </button>
             </div>
@@ -106,7 +106,7 @@ const PipelineTab = ({ opportunities, formatCurrency, onOpenDetail }) => {
           <div style={{ textAlign: 'center', padding: '5rem', opacity: 0.5 }}>
              <Briefcase size={48} style={{ marginBottom: '1rem', color: 'var(--text-muted)' }} />
              <p style={{ fontWeight: 800 }}>Aucune opportunité dans le pipeline.</p>
-             <button className="btn-primary" style={{ marginTop: '1rem' }}>Ajouter la première</button>
+             <button onClick={() => onOpenDetail && onOpenDetail(null, 'crm', 'opportunities')} className="btn-primary" style={{ marginTop: '1rem' }}>Ajouter la première</button>
           </div>
         )}
       </div>

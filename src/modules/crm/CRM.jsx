@@ -61,7 +61,7 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
                 <Zap size={16} color="#10B981" />
                 <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>Pipeline: +15% ce mois</span>
              </div>
-             <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+             <button onClick={() => alert('Exportation globale des données CRM...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
                <Download size={20} />
              </button>
              {accessLevel === 'write' && (

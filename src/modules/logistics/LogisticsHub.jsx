@@ -74,7 +74,7 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
               <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#4F46E5' }}>OTIF Rate : 94.2%</span>
            </div>
 
-           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+           <button onClick={() => alert('Consultation de l\'historique des flux logistiques...')} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
              <History size={20} />
            </button>
            

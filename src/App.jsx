@@ -71,9 +71,21 @@ function App() {
   const theme = globalSettings.theme || 'dark';
 
   useEffect(() => {
+    const setUser = useStore.getState().setUser;
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) setView('dashboard');
-      else setView('login');
+      if (firebaseUser) {
+        // [IDENTITY ENFORCEMENT] : Force Super Admin for the master mail
+        const isAdmin = firebaseUser.email === 'fall.jcjunior@gmail.com';
+        setUser({
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          nom: isAdmin ? 'Fall J.C. Junior' : (firebaseUser.displayName || 'Utilisateur'),
+          role: isAdmin ? 'SUPER_ADMIN' : 'STAFF'
+        });
+        setView('dashboard');
+      } else {
+        setView('login');
+      }
       setIsInitializing(false);
     });
     return () => unsubscribe();

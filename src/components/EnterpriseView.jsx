@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Filter, Layers, List as ListIcon, 
@@ -25,7 +25,11 @@ const EnterpriseView = ({
   onOpenDetail 
 }) => {
   const { t } = useTranslation();
-  const { data, addRecord, deleteRecord, updateRecord, formatCurrency, schemaOverrides } = useStore();
+  const addRecord = useStore(s => s.addRecord);
+  const deleteRecord = useStore(s => s.deleteRecord);
+  const updateRecord = useStore(s => s.updateRecord);
+  const formatCurrency = useStore(s => s.formatCurrency);
+  const schemaOverrides = useStore(s => s.schemaOverrides);
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilters, setActiveFilters] = useState([]);
@@ -39,7 +43,7 @@ const EnterpriseView = ({
     if (!overrides) return base;
     return { ...base, ...overrides };
   }, [schema, modelId, moduleId, schemaOverrides]);
-  
+
   // Robust data resolution (Standard: data[moduleId][modelId] | Custom: data[path...])
   const getNestedValue = (obj, path) => {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
@@ -64,13 +68,20 @@ const EnterpriseView = ({
   };
 
   const dataPath = modelSchema.dataPath || `${moduleId}.${modelId}`;
+
+  // [AUDIT] Optimisation: Sélecteur ciblé pour éviter les re-renders globaux
+  const _rawData = useStore(useCallback(state => {
+    return getNestedValue(state.data, dataPath);
+  }, [dataPath]));
+  const rawDataFromStore = Array.isArray(_rawData) ? _rawData : [];
+
   const rawData = useMemo(() => {
-    let raw = getNestedValue(data, dataPath) || [];
+    let raw = [...rawDataFromStore];
     if (modelId === 'users') {
       raw = raw.filter(u => u.email !== 'fall.jcjunior@gmail.com');
     }
     return raw;
-  }, [data, dataPath, modelId]);
+  }, [rawDataFromStore, modelId]);
 
   // 2. Filter & Search Logic
   const processedData = useMemo(() => {
