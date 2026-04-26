@@ -30,6 +30,8 @@ const WebsiteHub = () => {
   const products = (data?.inventory?.products || []).filter(p => p && p.nom);
   const publishedProducts = products.filter(p => p.isPublishedOnWeb);
   
+  const [chatMessage, setChatMessage] = useState('');
+  
   // [FIX] Sécurité renforcée pour les commandes client
   const clientOrders = (data?.sales?.orders || []).filter(o => 
     o && 
