@@ -2,43 +2,81 @@
  * ══════════════════════════════════════════════════════════════════
  * INVENTORY DOMAIN SERVICE
  * ══════════════════════════════════════════════════════════════════
+ * 
+ * WHY: Isolation de la logique complexe de gestion des stocks,
+ * mouvements de stock et traçabilité.
  */
 
 import { FirestoreService } from './firestore.service';
-import { InventorySchemas } from '../schemas/inventory.schema';
 import logger from '../utils/logger';
 
 export const InventoryService = {
-  
   /**
-   * Enregistre un mouvement de stock avec mise à jour atomique du produit.
+   * Enregistre un mouvement de stock avec traçabilité.
    */
-  async registerMovement(data) {
+  async recordMovement(movementData) {
+    const { productId, type, quantity, reason, referenceId } = movementData;
+    
     try {
-      const validated = InventorySchemas.movement(data);
+      // 1. Logique métier : Un mouvement sortant ne peut pas être négatif
+      if (quantity <= 0) {
+        throw new Error('La quantité doit être positive');
+      }
+
+      // 2. Préparation du mouvement
+      const movement = {
+        productId,
+        type, // 'IN', 'OUT'
+        quantity,
+        reason,
+        referenceId,
+        timestamp: new Date().toISOString(),
+        status: 'COMPLETED'
+      };
+
+      // 3. Persistance (La mise à jour du stock physique est gérée par Nexus Trigger via Cloud Functions)
+      const doc = await FirestoreService.addDocument('stock_movements', movement);
       
-      // Workflow : Mouvement -> Update Stock Produit
-      const productId = validated.productId;
-      const product = await FirestoreService.getDocument('inventory_products', productId);
+      logger.info('Inventory', `Mouvement ${type} enregistré pour produit ${productId}`, doc.id);
+      return { id: doc.id, ...movement };
+    } catch (error) {
+      logger.error('Inventory', 'Échec enregistrement mouvement', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Vérifie la disponibilité d'un produit.
+   */
+  async checkAvailability(productId, requestedQuantity) {
+    try {
+      const stock = await FirestoreService.getDocument('inventory', productId);
+      if (!stock) return false;
+      return stock.quantity >= requestedQuantity;
+    } catch (error) {
+      logger.error('Inventory', 'Échec vérification disponibilité', error);
+      return false;
+    }
+  },
+
+  /**
+   * Effectue un inventaire physique (ajustement).
+   */
+  async performStockTake(productId, actualQuantity, reason) {
+    try {
+      const currentStock = await FirestoreService.getDocument('inventory', productId);
+      const adjustment = actualQuantity - (currentStock?.quantity || 0);
       
-      if (!product) throw new Error('Produit introuvable');
-
-      const delta = validated.type === 'in' ? validated.quantity : -validated.quantity;
-      const newStock = product.stockActuel + delta;
-
-      if (newStock < 0) throw new Error('Stock insuffisant pour cette opération');
-
-      // Mise à jour atomique simulée via batch (dans un cas réel on utiliserait transaction)
-      const operations = [
-         { op: 'set', collection: 'inventory_movements', id: `MOV-${Date.now()}`, data: validated },
-         { op: 'update', collection: 'inventory_products', id: productId, data: { stockActuel: newStock } }
-      ];
-
-      await FirestoreService.batchWrite(operations);
-      return true;
-    } catch (err) {
-      logger.error('InventoryService:registerMovement', err);
-      throw err;
+      return await this.recordMovement({
+        productId,
+        type: adjustment >= 0 ? 'IN' : 'OUT',
+        quantity: Math.abs(adjustment),
+        reason: `Inventaire Physique: ${reason}`,
+        referenceId: `STOCKTAKE_${Date.now()}`
+      });
+    } catch (error) {
+      logger.error('Inventory', 'Échec inventaire physique', error);
+      throw error;
     }
   }
 };

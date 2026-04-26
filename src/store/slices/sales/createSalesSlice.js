@@ -5,6 +5,7 @@
  */
 
 import { SalesService } from '../../../services/sales.service';
+import { FirestoreService } from '../../../services/firestore.service';
 
 export const createSalesSlice = (set, get) => ({
   sales: {

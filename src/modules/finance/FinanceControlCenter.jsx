@@ -13,20 +13,22 @@ import AccountingTab from './tabs/AccountingTab';
 import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
 import BankReconTab from './tabs/BankReconTab';
+import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
 
 const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const { data, addRecord, formatCurrency, addAccountingEntry, userRole, shellView } = useStore();
+  const { hasAccess } = useRBAC();
   const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('invoices');
 
-  const tabs = [
+  const allTabs = [
     { id: 'analytics', label: 'Performance', icon: <BarChart3 size={16} /> },
-    { id: 'accounting', label: 'Comptabilité', icon: <Calculator size={16} /> },
+    { id: 'accounting', label: 'Comptabilité', icon: <Calculator size={16} />, permission: 'MANAGE_FINANCE' },
     { id: 'invoicing', label: 'Facturation', icon: <FileText size={16} /> },
-    { id: 'budget', label: 'Budgets', icon: <PiggyBank size={16} /> },
-    { id: 'banque', label: 'Banque', icon: <Wallet size={16} /> },
+    { id: 'budget', label: 'Budgets', icon: <PiggyBank size={16} />, permission: 'MANAGE_FINANCE' },
+    { id: 'banque', label: 'Banque', icon: <Wallet size={16} />, permission: 'MANAGE_FINANCE' },
   ];
+
+  const tabs = allTabs.filter(t => !t.permission || hasAccess(PERMISSIONS[t.permission]));
 
   const isBudgetContext = appId === 'budget';
 
