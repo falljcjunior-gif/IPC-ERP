@@ -425,7 +425,7 @@ const FormationsTab = () => {
 /* ══════════════════════════════════════
    TAB 5 — Bien-être & Engagement
 ══════════════════════════════════════ */
-const BienEtreTab = () => {
+const BienEtreTab = ({ onSentiment }) => {
   const { data, addRecord } = useStore();
   const [showModal, setShowModal] = useState(false);
   const surveys = data.talent?.surveys || [];
@@ -484,7 +484,7 @@ const BienEtreTab = () => {
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             {[['😔', 'Bas'], ['😐', 'Moyen'], ['🙂', 'Bien'], ['😄', 'Excellent']].map(([emoji, label]) => (
               <button key={label} 
-                onClick={() => handleSentiment(label)}
+                onClick={() => onSentiment(label)}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontSize: '1.5rem', transition: '0.2s' }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
@@ -670,7 +670,7 @@ const PeopleAndCulture = () => {
           {tab === 'recrutement' && <RecrutementTab />}
           {tab === 'evaluations' && <EvaluationsTab />}
           {tab === 'formations'  && <FormationsTab />}
-          {tab === 'bienetre'    && <BienEtreTab />}
+          {tab === 'bienetre'    && <BienEtreTab onSentiment={handleSentiment} />}
           {tab === 'orga'        && <OrgaTab data={data} />}
         </motion.div>
       </AnimatePresence>
