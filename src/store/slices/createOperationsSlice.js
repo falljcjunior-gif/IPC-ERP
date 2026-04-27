@@ -1,9 +1,8 @@
-import { doc, getDoc, getDocs, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, where, writeBatch } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
-import { db, storage, auth, firebaseConfig } from '../../firebase/config';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { auth, firebaseConfig } from '../../firebase/config';
+import { FirestoreService, StorageService } from '../../services/firestore.service';
 
 export const createOperationsSlice = (set, get) => ({
   addHint: (hint) => {
@@ -44,7 +43,7 @@ export const createOperationsSlice = (set, get) => ({
       }));
 
       if (auth.currentUser) {
-        setDoc(doc(db, 'activities', activity.id), activity);
+        FirestoreService.setDocument('activities', activity.id, activity);
       }
     }, 0);
   },
@@ -63,179 +62,10 @@ export const createOperationsSlice = (set, get) => ({
       createdAt: new Date().toISOString()
     };
     try {
-      if (auth.currentUser) await setDoc(doc(db, 'notifications', notifyDoc.id), notifyDoc);
+      if (auth.currentUser) await FirestoreService.setDocument('notifications', notifyDoc.id, notifyDoc);
     } catch (e) {
       console.error("sendNotification Error:", e);
     }
-  },
-
-  /* ══════════════════════════════════════════════════════════════════════════
-     ADMIN LOGIC (User Management)
-     ══════════════════════════════════════════════════════════════════════════ */
-
-  updateUserRole: (userId, newRole) => {
-    get().setPermissions(prev => {
-      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
-      const newPerms = { ...userPerms, roles: [newRole] };
-      
-      if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
-          .catch(e => console.error("Erreur save role:", e));
-      }
-      return { ...prev, [userId]: newPerms };
-    });
-  },
-
-  setModuleAccessLevel: (userId, moduleId, level) => {
-    get().setPermissions(prev => {
-      const userPerms = prev[userId] || { roles: [], moduleAccess: {} };
-      const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
-      
-      if (level === 'none') {
-        delete newModuleAccess[moduleId];
-      } else {
-        newModuleAccess[moduleId] = level;
-      }
-      
-      const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
-      
-      // Clean up legacy allowedModules if present
-      if (newPerms.allowedModules) delete newPerms.allowedModules;
-
-      if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
-          .catch(e => console.error("Erreur save permissions:", e));
-      }
-      return { ...prev, [userId]: newPerms };
-    });
-  },
-
-  getModuleAccess: (userId, moduleId) => {
-    // 1. Super Admin Bypass
-    if (get().currentUser?.role === 'SUPER_ADMIN') return 'write';
-
-    const userPerms = get().permissions?.[userId];
-    if (!userPerms) return 'none';
-    
-    // Check for explicit SUPER_ADMIN role in matrix (redundant but safe)
-    if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
-    
-    // Special case for 'home' - always write access for authenticated users
-    if (moduleId === 'home') return 'write';
-
-    // Check new structure
-    if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
-      return userPerms.moduleAccess[moduleId];
-    }
-    
-    // Check legacy structure
-    if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
-      return 'write';
-    }
-    
-    return 'none';
-  },
-
-  createFullUser: async (userData, source = 'admin') => {
-    let secondaryApp;
-    try {
-      secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-      const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
-      const uid = userCredential.user.uid;
-      
-      const role = userData.role || 'STAFF';
-      const profileData = { 
-        nom: userData.nom, 
-        email: userData.email, 
-        poste: userData.poste, 
-        id: uid, 
-        dept: userData.dept || '',
-        avatar: userData.avatar || userData.nom[0],
-        statut: source === 'admin' ? 'À compléter' : 'Actif',
-        active: true,
-        createdAt: new Date().toISOString() 
-      };
-
-      const permissionsData = {
-        roles: userData.roles || [role],
-        moduleAccess: userData.moduleAccess || { home: 'write' },
-        // Legacy fallback
-        allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
-      };
-
-      // 1. Create User Document
-      await setDoc(doc(db, 'users', uid), { 
-        profile: profileData, 
-        permissions: permissionsData, 
-        data: {} 
-      });
-
-      // 2. Create HR Record with exact employee structure
-      await setDoc(doc(db, 'hr', uid), { 
-         ...profileData, 
-         subModule: 'employees',
-         salaire: userData.salaire || 0,
-         contratType: userData.contratType || 'CDI',
-         contratDuree: userData.contratDuree || '',
-      });
-
-      // 3. Send Notification
-      if (source === 'hr') {
-        await get().sendNotification('SUPER_ADMIN', 'Onboarding Finalisé', `Le compte de ${userData.nom} a été généré via Onboarding RH.`, 'user', 'hr');
-      } else {
-        await get().sendNotification('RH', 'Nouvel Utilisateur Provisionné', `Un compte pour ${userData.nom} a été créé par l'Admin. Veuillez compléter son profil RH.`, 'user', 'hr');
-      }
-
-      return { success: true, uid };
-    } finally { if (secondaryApp) deleteApp(secondaryApp); }
-  },
- 
-  toggleUserStatus: async (userId, newStatus) => {
-    const uid = String(userId);
-    try {
-      if (auth.currentUser) {
-        await setDoc(doc(db, 'users', uid), { profile: { active: newStatus } }, { merge: true });
-        await setDoc(doc(db, 'hr', uid), { active: newStatus }, { merge: true });
-      }
-      get().logAction(newStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
-      return { success: true };
-    } catch (e) {
-      console.error("toggleUserStatus error:", e);
-      throw e;
-    }
-  },
-
-
-  permanentlyDeleteUserRecord: async (userId) => {
-    const uid = String(userId);
-    
-    // Call Cloud Function to delete from Firebase Authentication
-    try {
-      const functions = getFunctions();
-      const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
-      await deleteUserFunc({ uid });
-    } catch (err) {
-      console.error("Erreur suppression Auth:", err);
-      if (get().addHint) {
-        get().addHint({ 
-          title: "Suppression Auth Échouée", 
-          message: "Le compte n'a pas pu être supprimé de Firebase Authentication (vérifiez les logs functions).", 
-          type: 'warning' 
-        });
-      }
-    }
-
-    if (auth.currentUser) {
-      await deleteDoc(doc(db, 'users', uid));
-      await deleteDoc(doc(db, 'hr', uid));
-    }
-    set(prev => ({ 
-      ...prev, 
-      hr: { ...prev.hr, employees: (prev.hr?.employees || []).filter(e => String(e.id) !== uid) },
-      base: { ...prev.base, users: (prev.base?.users || []).filter(u => String(u.id) !== uid) }
-    }));
-    get().setPermissions(prev => { const next = { ...prev }; delete next[uid]; return next; });
-    get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
   },
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -292,8 +122,8 @@ export const createOperationsSlice = (set, get) => ({
     });
 
     if (auth.currentUser) {
-      setDoc(doc(db, 'finance', entryId), { ...newEntry, subModule: 'entries' });
-      newLines.forEach(l => setDoc(doc(db, 'finance', l.id), { ...l, subModule: 'lines' }));
+      FirestoreService.setDocument('finance', entryId, { ...newEntry, subModule: 'entries' });
+      newLines.forEach(l => FirestoreService.setDocument('finance', l.id, { ...l, subModule: 'lines' }));
     }
 
     get().logAction('Écriture Comptable', entry.libelle, 'finance');
@@ -492,7 +322,7 @@ export const createOperationsSlice = (set, get) => ({
       
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         if (auth.currentUser) setDoc(doc(db, appId, newRecord.id), { ...newRecord, subModule, ownerId: auth.currentUser?.uid }, { merge: true });
+         if (auth.currentUser) FirestoreService.setDocument(appId, newRecord.id, { ...newRecord, subModule, ownerId: auth.currentUser?.uid }, true);
       }, 0);
 
       return nextState;
@@ -547,7 +377,7 @@ export const createOperationsSlice = (set, get) => ({
       const record = updatedList.find(o => o.id === id);
       setTimeout(() => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
-         if (auth.currentUser) setDoc(doc(db, appId, id), { ...record, subModule, updatedAt: new Date().toISOString() }, { merge: true });
+         if (auth.currentUser) FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
       }, 0);
       
       if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
@@ -747,7 +577,7 @@ export const createOperationsSlice = (set, get) => ({
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: updatedList } };
       setTimeout(() => {
          get().logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
-         if (auth.currentUser) deleteDoc(doc(db, appId, id));
+         if (auth.currentUser) FirestoreService.deleteDocument(appId, id);
       }, 0);
       return nextState;
     });
@@ -1003,7 +833,7 @@ export const createOperationsSlice = (set, get) => ({
   updateGlobalSettings: async (newGlobal) => {
     if ((get().currentUser?.role) !== 'SUPER_ADMIN') return;
     get().setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
-    if (auth.currentUser) setDoc(doc(db, 'settings', 'global'), { ...newGlobal }, { merge: true });
+    if (auth.currentUser) FirestoreService.setDocument('settings', 'global', { ...newGlobal }, true);
   },
 
   togglePinnedModule: (moduleId) => {
@@ -1017,11 +847,10 @@ export const createOperationsSlice = (set, get) => ({
 
   uploadLogo: async (file) => {
     if ((get().currentUser?.role) !== 'SUPER_ADMIN') throw new Error("Accès refusé");
-    const storageRef = ref(storage, `brand/logos/master_logo_${Date.now()}`);
     try {
-      const snapshot = await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
-      await get().get().updateGlobalSettings({ logoUrl: url });
+      const path = `brand/logos/master_logo_${Date.now()}`;
+      const url = await StorageService.uploadFile(file, path);
+      await get().updateGlobalSettings({ logoUrl: url });
       return url;
     } catch (error) {
       console.error("Erreur lors de l'upload du logo:", error);
@@ -1098,48 +927,6 @@ export const createOperationsSlice = (set, get) => ({
     get().addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
   },
 
-  /* ══════════════════════════════════════════════════════════════════════════
-     7. CALLING & REALTIME NOTIFICATIONS
-     ══════════════════════════════════════════════════════════════════════════ */
-  playRingtone: () => {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const startTime = audioCtx.currentTime;
-    
-    const playNote = (freq, time, duration) => {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine'; // Soft classic sound
-      osc.frequency.setValueAtTime(freq, time);
-      gain.gain.setValueAtTime(0.3, time);
-      gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(time);
-      osc.stop(time + duration);
-    };
-
-    // "Classic but soft" sequence
-    for (let i = 0; i < 4; i++) {
-        const offset = i * 2;
-        playNote(660, startTime + offset, 0.4);      
-        playNote(660, startTime + offset + 0.5, 0.4); 
-        playNote(660, startTime + offset + 1.2, 0.6); 
-    }
-  },
-  acceptCall: async () => {
-    if (!get().activeCall) return;
-    try {
-      get().setActiveCall(prev => ({ ...prev, accepted: true }));
-      await updateDoc(doc(db, 'calls', get().activeCall.id), { status: 'accepted' });
-    } catch (err) { console.error("Accept Error:", err); }
-  },
-  rejectCall: async () => {
-    if (!get().activeCall) return;
-    try {
-      await updateDoc(doc(db, 'calls', get().activeCall.id), { status: 'rejected' });
-      get().setActiveCall(null);
-    } catch (err) { console.error("Reject Error:", err); }
-  },
 
   resetAllData: async () => {
     get().addHint({ title: "Purge en cours", message: "Nettoyage complet du système...", type: "warning" });
@@ -1159,16 +946,16 @@ export const createOperationsSlice = (set, get) => ({
       if (auth.currentUser) {
         const collections = ["crm", "hr", "finance", "inventory", "sales", "purchase", "production", "legal", "signature", "activities", "notifications"];
         for (const col of collections) {
-          const snap = await getDocs(collection(db, col));
+          const docs = await FirestoreService.listDocuments(col);
+          if (docs.length === 0) continue;
+
           const chunks = [];
-          const docsArr = snap.docs;
-          for (let i = 0; i < docsArr.length; i += 400) {
-            chunks.push(docsArr.slice(i, i + 400));
+          for (let i = 0; i < docs.length; i += 400) {
+            chunks.push(docs.slice(i, i + 400));
           }
           for (const chunk of chunks) {
-            const batch = writeBatch(db);
-            chunk.forEach(d => batch.delete(d.ref));
-            await batch.commit();
+            const ops = chunk.map(d => ({ op: 'delete', collection: col, id: d.id }));
+            await FirestoreService.batchWrite(ops);
           }
         }
       }

@@ -144,33 +144,6 @@ const PlatformShell = ({ theme, setView }) => {
     };
   }, [currentUser?.id]);
 
-  // ── Call Signaling Listener ──
-  useEffect(() => {
-    if (!currentUser?.id) return;
-
-    // Listen for calls targeted to me
-    const unsub = FirestoreService.subscribeToCollection('calls', {
-       filters: [
-         { field: 'receiverId', operator: '==', value: currentUser.id },
-         { field: 'status', operator: '==', value: 'ringing' }
-       ]
-    }, (calls) => {
-      if (calls.length > 0) {
-        // Sort by creation to get latest
-        const latestCall = calls.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis())[0];
-        setActiveCall({
-          ...latestCall,
-          id: latestCall.id,
-          contactName: latestCall.callerName,
-          type: latestCall.type,
-          role: 'receiver',
-          status: 'ringing'
-        });
-      }
-    });
-
-    return () => unsub();
-  }, [currentUser?.id, setActiveCall]);
 
   // Auto-derived Campaigns for CRM attribution
   const activeCampaigns = useMemo(() => {

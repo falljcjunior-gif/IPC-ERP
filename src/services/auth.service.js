@@ -7,13 +7,13 @@
  * Centralise les logs de connexion et la gestion des droits.
  */
 
-import { auth, db } from '../firebase/config';
+import { auth } from '../firebase/config';
 import { 
   signInWithEmailAndPassword, 
   updatePassword as fbUpdatePassword, 
   signOut as fbSignOut 
 } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { FirestoreService } from './firestore.service';
 import { messaging } from '../firebase/config';
 import { getToken } from 'firebase/messaging';
 import logger from '../utils/logger';
@@ -44,13 +44,13 @@ export const AuthService = {
       const user = userCredential.user;
 
       // Récupération sécurisée du profil utilisateur
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = await FirestoreService.getDocument('users', user.uid);
       
-      if (!userDoc.exists()) {
+      if (!userData) {
         throw new Error('Profil utilisateur introuvable dans le système.');
       }
 
-      const userData = userDoc.data();
+      // userData is already data object from getDocument
 
       // Vérification du statut du compte
       if (userData.profile?.active === false) {
@@ -73,7 +73,7 @@ export const AuthService = {
 
     try {
       await fbUpdatePassword(auth.currentUser, newPassword);
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      await FirestoreService.updateDocument('users', auth.currentUser.uid, {
         'profile.mustChangePassword': false
       });
       logger.info('AuthService:passwordUpdate:success', { uid: auth.currentUser.uid });

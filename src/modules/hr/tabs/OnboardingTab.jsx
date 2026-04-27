@@ -1,8 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../../store';
-import { db } from '../../../firebase/config';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { 
   UserPlus, Mail, Lock, Briefcase, DollarSign, 
   Shield, Check, Calendar, Settings, AlertCircle, Loader,

@@ -9,6 +9,8 @@ import {
 import { auth, db } from './firebase/config';
 import { useStore } from './store';
 import { nexusWorkflowEngine } from './services/WorkflowEngine';
+import { CallListener } from './services/CallListener';
+import { logger } from './utils/logger';
 
 /**
  * BusinessProvider (Passive Orchestrator)
@@ -53,7 +55,17 @@ export const BusinessProvider = ({ children }) => {
         const currentModuleState = newState[colName] || initialModuleState;
         const updatedModuleState = { ...currentModuleState, ...grouped };
 
-        if (JSON.stringify(currentModuleState) !== JSON.stringify(updatedModuleState)) {
+        // Optimization: Shallow compare submodule keys to avoid unnecessary re-renders
+        let moduleChanged = false;
+        const keys = Object.keys(updatedModuleState);
+        for (const key of keys) {
+          if (currentModuleState[key] !== updatedModuleState[key]) {
+            moduleChanged = true;
+            break;
+          }
+        }
+
+        if (moduleChanged) {
           newState[colName] = updatedModuleState;
           changed = true;
         }
@@ -116,32 +128,8 @@ export const BusinessProvider = ({ children }) => {
       useStore.getState().setPermissions(userPermissions);
     });
 
-    // E. Call Listener (IPC CONNECT)
-    const unsubCalls = onSnapshot(query(collection(db, 'calls'), where('receiverId', '==', userId), where('status', '==', 'ringing'), limit(1)), (snap) => {
-        const currentCall = useStore.getState().activeCall;
-        
-        if (snap.empty) {
-          // If we had a ringing call as receiver, and now it's gone (cancelled/timed out), clear it
-          if (currentCall?.status === 'ringing' && currentCall?.role === 'receiver') {
-            useStore.getState().setActiveCall(null);
-          }
-          return;
-        }
-
-        const callDoc = snap.docs[0];
-        const callData = callDoc.data();
-        
-        if (currentCall?.id === callDoc.id) return;
-
-        useStore.getState().setActiveCall({ 
-          id: callDoc.id, 
-          roomId: callData.roomId || callDoc.id,
-          role: 'receiver', 
-          type: callData.type, 
-          contactName: callData.callerName || 'Collègue',
-          status: 'ringing'
-        });
-    });
+    // E. Call Listener (Decoupled Service)
+    CallListener.init(userId);
 
     // 0. Auth Identity Bridge
     const unsubAuth = auth.onAuthStateChanged(fbUser => {
@@ -161,7 +149,7 @@ export const BusinessProvider = ({ children }) => {
       unsubWorkflows();
       unsubNotify();
       unsubUsers();
-      unsubCalls();
+      CallListener.stop();
     };
   }, [userId, scheduleUpdate]); // Minimum dependencies
 

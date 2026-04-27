@@ -1,8 +1,8 @@
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { db, auth, firebaseConfig } from '../../firebase/config';
+import { auth, firebaseConfig } from '../../firebase/config';
+import { FirestoreService } from '../../services/firestore.service';
 
 export const createAdminSlice = (set, get) => ({
   updateUserRole: (userId, newRole) => {
@@ -11,7 +11,7 @@ export const createAdminSlice = (set, get) => ({
       const newPerms = { ...userPerms, roles: [newRole] };
       
       if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+        FirestoreService.setDocument('users', userId, { permissions: newPerms }, true)
           .catch(e => console.error("Erreur save role:", e));
       }
       return { permissions: { ...state.permissions, [userId]: newPerms } };
@@ -33,7 +33,7 @@ export const createAdminSlice = (set, get) => ({
       if (newPerms.allowedModules) delete newPerms.allowedModules;
 
       if (auth.currentUser) {
-        setDoc(doc(db, 'users', userId), { permissions: newPerms }, { merge: true })
+        FirestoreService.setDocument('users', userId, { permissions: newPerms }, true)
           .catch(e => console.error("Erreur save permissions:", e));
       }
       return { permissions: { ...state.permissions, [userId]: newPerms } };
@@ -87,19 +87,19 @@ export const createAdminSlice = (set, get) => ({
         allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
       };
 
-      await setDoc(doc(db, 'users', uid), { 
+      await FirestoreService.setDocument('users', uid, { 
         profile: profileData, 
         permissions: permissionsData, 
         data: {} 
-      });
+      }, false);
 
-      await setDoc(doc(db, 'hr', uid), { 
+      await FirestoreService.setDocument('hr', uid, { 
          ...profileData, 
          subModule: 'employees',
          salaire: userData.salaire || 0,
          contratType: userData.contratType || 'CDI',
          contratDuree: userData.contratDuree || '',
-      });
+      }, false);
 
       return { success: true, uid };
     } finally { if (secondaryApp) deleteApp(secondaryApp); }
@@ -109,8 +109,8 @@ export const createAdminSlice = (set, get) => ({
     const uid = String(userId);
     try {
       if (auth.currentUser) {
-        await setDoc(doc(db, 'users', uid), { profile: { active: activeStatus } }, { merge: true });
-        await setDoc(doc(db, 'hr', uid), { active: activeStatus }, { merge: true });
+        await FirestoreService.setDocument('users', uid, { profile: { active: activeStatus } }, true);
+        await FirestoreService.setDocument('hr', uid, { active: activeStatus }, true);
       }
       get().logAction(activeStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
       return { success: true };
@@ -136,8 +136,8 @@ export const createAdminSlice = (set, get) => ({
     }
 
     if (auth.currentUser) {
-      await deleteDoc(doc(db, 'users', uid));
-      await deleteDoc(doc(db, 'hr', uid));
+      await FirestoreService.deleteDocument('users', uid);
+      await FirestoreService.deleteDocument('hr', uid);
     }
     
     set(state => ({ 

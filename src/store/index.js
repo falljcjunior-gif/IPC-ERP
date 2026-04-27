@@ -12,6 +12,7 @@ import { createProductionSlice } from './slices/production/createProductionSlice
 import { createLogisticsSlice } from './slices/logistics/createLogisticsSlice';
 import { createMarketingSlice } from './slices/marketing/createMarketingSlice';
 import { createAdminSlice } from './slices/createAdminSlice';
+import { createCallSlice } from './slices/createCallSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -62,6 +63,7 @@ export const useStore = create(
       ...createLogisticsSlice(set, get, ...args),
       ...createMarketingSlice(set, get, ...args),
       ...createAdminSlice(set, get, ...args),
+      ...createCallSlice(set, get, ...args),
       ...createOperationsSlice(set, get, ...args),
       
       
@@ -71,8 +73,6 @@ export const useStore = create(
       setSearchResults: (val) => set(typeof val === 'function' ? (state) => ({ searchResults: val(state.searchResults) }) : { searchResults: val }),
       workflows: [],
       setWorkflows: (val) => set(typeof val === 'function' ? (state) => ({ workflows: val(state.workflows) }) : { workflows: val }),
-      activeCall: null,
-      setActiveCall: (val) => set(typeof val === 'function' ? (state) => ({ activeCall: val(state.activeCall) }) : { activeCall: val }),
       notifications: [],
       setNotifications: (val) => set(typeof val === 'function' ? (state) => ({ notifications: val(state.notifications) }) : { notifications: val }),
       navigationIntent: null,

@@ -6,8 +6,7 @@ import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import { initRegistry } from './registry_init';
 import { httpsCallable, getFunctions } from 'firebase/functions';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase/config';
+import { FirestoreService } from './services/firestore.service';
 import './index.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider, useToast } from './components/ToastProvider';
@@ -34,13 +33,13 @@ const AuthObserver = () => {
 
           const { accessToken } = result.data;
 
-          await setDoc(doc(db, 'marketing', 'accounts_live'), {
+          await FirestoreService.setDocument('marketing', 'accounts_live', {
             facebook: {
               accessToken,
               statut: 'Connecté',
-              derniereSynchro: serverTimestamp()
+              derniereSynchro: new Date().toISOString()
             }
-          }, { merge: true });
+          }, true);
 
           window.history.replaceState({}, document.title, "/");
           addToast("Compte Marketing connecté avec succès !", 'success');

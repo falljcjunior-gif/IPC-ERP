@@ -17,6 +17,12 @@ const servers = {
     {
       urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
     },
+    // [TURN CONFIG] Added for enterprise/strict NAT support
+    // {
+    //   urls: ['turn:your-turn-server.com:3478'],
+    //   username: 'your-username',
+    //   credential: 'your-password'
+    // }
   ],
   iceCandidatePoolSize: 10,
 };
@@ -125,6 +131,8 @@ export class WebRTCService {
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    
+    logger.info(`WebRTCService: Sending offer to ${targetId}`);
     this.sendSignal(roomId, myId, targetId, { type: 'offer', sdp: offer.sdp });
   }
 

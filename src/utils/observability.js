@@ -2,8 +2,7 @@
  * 🛰️ OBSERVABILITY ENGINE (SRE)
  * Tracking production health and module performance.
  */
-import { db } from '../firebase/config';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { FirestoreService } from '../services/firestore.service';
 
 export const NexusMonitor = {
   
@@ -14,12 +13,12 @@ export const NexusMonitor = {
     console.error(`[SRE:${moduleName}]`, error);
 
     try {
-      await addDoc(collection(db, 'system_incidents'), {
+      await FirestoreService.addDocument('system_incidents', {
         module: moduleName,
         error: error.message || error,
         stack: error.stack || null,
         severity,
-        timestamp: serverTimestamp(),
+        timestamp: new Date().toISOString(),
         context: {
           userAgent: navigator.userAgent,
           url: window.location.href
