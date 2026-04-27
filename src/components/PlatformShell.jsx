@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { AuthService } from '../services/auth.service';
+import { FirestoreService } from '../services/firestore.service';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
   Moon, Sun, Grid, Home, ShoppingCart, Package as Box, FileText, Users2,
@@ -95,6 +96,80 @@ const PlatformShell = ({ theme, setView }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // ── Connect Plus - Real-time Presence & Notifications ──
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    // Presence Management
+    const updatePresence = (isOnline) => {
+      FirestoreService.updateDocument('users', currentUser.id, {
+        isOnline,
+        lastSeen: new Date().toISOString()
+      }).catch(err => console.warn("Presence Error:", err));
+    };
+
+    updatePresence(true);
+
+    const handleVisibilityChange = () => {
+      updatePresence(document.visibilityState === 'visible');
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // FCM Registration
+    if ("Notification" in window) {
+      const registerFCM = async () => {
+        const permission = await Notification.requestPermission();
+        if (permission === "granted") {
+          const token = await AuthService.getFCMToken();
+          if (token) {
+            await FirestoreService.updateDocument('users', currentUser.id, { 
+              fcmToken: token,
+              lastTokenUpdate: new Date().toISOString()
+            });
+          }
+        }
+      };
+      
+      // Delay registration to avoid startup heavy load
+      const timer = setTimeout(registerFCM, 3000);
+      return () => clearTimeout(timer);
+    }
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      updatePresence(false);
+    };
+  }, [currentUser?.id]);
+
+  // ── Call Signaling Listener ──
+  useEffect(() => {
+    if (!currentUser?.id) return;
+
+    // Listen for calls targeted to me
+    const unsub = FirestoreService.subscribeToCollection('calls', {
+       filters: [
+         { field: 'receiverId', operator: '==', value: currentUser.id },
+         { field: 'status', operator: '==', value: 'ringing' }
+       ]
+    }, (calls) => {
+      if (calls.length > 0) {
+        // Sort by creation to get latest
+        const latestCall = calls.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis())[0];
+        setActiveCall({
+          ...latestCall,
+          id: latestCall.id,
+          contactName: latestCall.callerName,
+          type: latestCall.type,
+          role: 'receiver',
+          status: 'ringing'
+        });
+      }
+    });
+
+    return () => unsub();
+  }, [currentUser?.id, setActiveCall]);
 
   // Auto-derived Campaigns for CRM attribution
   const activeCampaigns = useMemo(() => {

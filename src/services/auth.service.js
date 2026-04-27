@@ -14,9 +14,26 @@ import {
   signOut as fbSignOut 
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { messaging } from '../firebase/config';
+import { getToken } from 'firebase/messaging';
 import logger from '../utils/logger';
 
 export const AuthService = {
+
+  /**
+   * Récupère le token FCM pour les notifications
+   */
+  async getFCMToken() {
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: 'BJp_9p1X0-8Zz8X_X_X_X_X_X' // Replace with real VAPID key if needed
+      });
+      return token;
+    } catch (err) {
+      logger.warn('AuthService:getFCMToken:failed', err);
+      return null;
+    }
+  },
 
   /**
    * Connexion sécurisée avec vérification du statut du compte

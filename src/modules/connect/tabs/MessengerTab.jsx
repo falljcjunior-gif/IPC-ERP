@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, MessageSquare, Search, User, Users, Paperclip, 
   Smile, Phone, Video, MoreVertical, CheckCheck, Circle, 
-  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square, ChevronLeft
+  Plus, Settings, ImageIcon, Clock, Hash, Shield, X, Bell, ToggleLeft, ToggleRight, Loader, Mic, MicOff, Square, ChevronLeft, Reply, Share2
 } from 'lucide-react';
 import { 
   useCurrentUser, useHRData, useSetActiveCall, 
@@ -38,6 +38,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [replyingTo, setReplyingTo] = useState(null); // { id, text, userName }
+  const [showForwardModal, setShowForwardModal] = useState(null); // { text, type, metadata }
   const [showRoomSettings, setShowRoomSettings] = useState(false);
   const [roomSettings, setRoomSettings] = useState({ muteNotifs: false, pinned: false });
   const [showEmojis, setShowEmojis] = useState(false);
@@ -295,9 +297,11 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         roomId: activeRoom.id,
         userId: currentUser.id,
         userName: currentUser.nom,
-        readBy: [currentUser.id]
+        readBy: [currentUser.id],
+        replyTo: replyingTo ? { id: replyingTo.id, text: replyingTo.text, userName: replyingTo.userName } : null
       };
       await FirestoreService.createDocument('messages', msgData);
+      setReplyingTo(null);
       
       // Update Room Metadata
       if (activeRoom.type !== 'direct') {
@@ -312,6 +316,27 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       inputRef.current?.focus();
     } catch (err) { 
       logger.error("Send Message Error", err); 
+    }
+  };
+
+  const handleForward = async (targetRoomId) => {
+    if (!showForwardModal || !currentUser?.id) return;
+    try {
+      const msgData = {
+        text: showForwardModal.text,
+        roomId: targetRoomId,
+        userId: currentUser.id,
+        userName: currentUser.nom,
+        readBy: [currentUser.id],
+        isForwarded: true,
+        fileUrl: showForwardModal.fileUrl || null,
+        fileType: showForwardModal.fileType || null,
+        fileName: showForwardModal.fileName || null
+      };
+      await FirestoreService.createDocument('messages', msgData);
+      setShowForwardModal(null);
+    } catch (err) {
+      logger.error("Forward Error", err);
     }
   };
 
@@ -348,6 +373,81 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     }
   };
 
+  const createRoom = async () => {
+    if (!newGroupData.label || newGroupData.members.length === 0) return;
+    try {
+      const members = [...newGroupData.members, currentUser.id];
+      const res = await FirestoreService.createDocument('rooms', {
+        label: newGroupData.label,
+        type: 'group',
+        members,
+        admins: [currentUser.id],
+        _createdAt: new Date().toISOString()
+      });
+      
+      // Register all members in participants sub-collection for presence/typing
+      const batchPromises = members.map(uid => {
+        const user = employees.find(e => e.id === uid) || (uid === currentUser.id ? currentUser : null);
+        return FirestoreService.setDocument(`rooms/${res.id}/participants`, uid, {
+          id: uid,
+          nom: user?.nom || 'Utilisateur',
+          joinedAt: new Date().toISOString()
+        });
+      });
+      await Promise.all(batchPromises);
+
+      setShowCreateGroup(false);
+      setNewGroupData({ label: '', members: [] });
+      setActiveRoom({ id: res.id, label: newGroupData.label, type: 'group', members });
+    } catch (err) {
+      logger.error("Create Room Error", err);
+    }
+  };
+
+  const addParticipant = async (userId) => {
+    if (!activeRoom || activeRoom.type !== 'group') return;
+    try {
+      await FirestoreService.updateDocument('rooms', activeRoom.id, {
+        members: FirestoreService.arrayUnion(userId)
+      });
+      const user = employees.find(e => e.id === userId);
+      await FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, userId, {
+        id: userId,
+        nom: user?.nom || 'Utilisateur',
+        joinedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      logger.error("Add participant error", err);
+    }
+  };
+
+  const removeParticipant = async (userId) => {
+    if (!activeRoom || activeRoom.type !== 'group') return;
+    if (!window.confirm("Retirer ce membre du groupe ?")) return;
+    try {
+      await FirestoreService.updateDocument('rooms', activeRoom.id, {
+        members: FirestoreService.arrayRemove(userId)
+      });
+      await FirestoreService.deleteDocument(`rooms/${activeRoom.id}/participants`, userId);
+    } catch (err) {
+      logger.error("Remove participant error", err);
+    }
+  };
+
+  const leaveGroup = async () => {
+    if (!activeRoom || activeRoom.type !== 'group') return;
+    if (!window.confirm("Quitter ce groupe ?")) return;
+    try {
+      await FirestoreService.updateDocument('rooms', activeRoom.id, {
+        members: FirestoreService.arrayRemove(currentUser.id)
+      });
+      await FirestoreService.deleteDocument(`rooms/${activeRoom.id}/participants`, currentUser.id);
+      setActiveRoom(shellView?.mobile ? null : groups[0]);
+    } catch (err) {
+      logger.error("Leave group error", err);
+    }
+  };
+
   const initiateCall = async (type) => {
     if (!currentUser?.id) return;
     let targetUsers = [];
@@ -355,7 +455,10 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       const parts = activeRoom.id.split('_');
       const receiverId = parts.find(p => p !== 'dm' && p !== currentUser.id);
       targetUsers = [receiverId];
+    } else if (activeRoom.type === 'group') {
+      targetUsers = (activeRoom.members || []).filter(uid => uid !== currentUser.id);
     } else {
+      // Team / Global
       targetUsers = (employees || []).filter(e => e.id !== currentUser.id).map(e => e.id);
     }
     
@@ -564,8 +667,48 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                       </button>
                     </div>
                   ))}
+
+                  {activeRoom.type === 'group' && (
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Membres du groupe</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                        {activeRoom.members?.map(uid => {
+                          const user = employees.find(e => e.id === uid) || (uid === currentUser.id ? currentUser : null);
+                          const isAdmin = activeRoom.admins?.includes(uid);
+                          return (
+                            <div key={uid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900 }}>{user?.nom?.[0] || '?'}</div>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 700 }}>{user?.nom} {uid === currentUser.id && '(Vous)'}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {isAdmin && <span style={{ fontSize: '0.65rem', fontWeight: 900, color: '#8B5CF6', background: '#8B5CF615', padding: '2px 6px', borderRadius: '4px' }}>ADMIN</span>}
+                                {activeRoom.admins?.includes(currentUser.id) && uid !== currentUser.id && (
+                                  <button onClick={() => removeParticipant(uid)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }}><X size={14} /></button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {activeRoom.admins?.includes(currentUser.id) && (
+                        <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Ajouter un membre</p>
+                           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                             {employees.filter(e => !activeRoom.members?.includes(e.id)).slice(0, 5).map(emp => (
+                               <button key={emp.id} onClick={() => addParticipant(emp.id)} style={{ padding: '4px 10px', borderRadius: '20px', border: '1px solid var(--border)', background: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>+ {emp.nom}</button>
+                             ))}
+                           </div>
+                        </div>
+                      )}
+
+                      <button onClick={leaveGroup} style={{ width: '100%', marginTop: '1.5rem', padding: '0.75rem', borderRadius: '0.9rem', background: '#EF444415', color: '#EF4444', border: 'none', fontWeight: 800, cursor: 'pointer' }}>Quitter le groupe</button>
+                    </div>
+                  )}
+
                   <button onClick={() => setShowRoomSettings(false)}
-                    style={{ width: '100%', marginTop: '0.5rem', padding: '0.8rem', borderRadius: '0.9rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
+                    style={{ width: '100%', marginTop: '1rem', padding: '0.8rem', borderRadius: '0.9rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer' }}>
                     Fermer
                   </button>
                 </motion.div>
@@ -603,7 +746,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                         </label>
                      ))}
                   </div>
-                  <button onClick={handleCreateGroup} disabled={!newGroupData.label || newGroupData.members.length === 0}
+                  <button onClick={createRoom} disabled={!newGroupData.label || newGroupData.members.length === 0}
                     style={{ width: '100%', padding: '0.8rem', borderRadius: '0.9rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', opacity: (!newGroupData.label || newGroupData.members.length === 0) ? 0.5 : 1 }}>
                     Créer le Groupe
                   </button>
@@ -637,12 +780,18 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                            {reactionEmojis.map(emoji => (
                              <button key={emoji} onClick={() => handleReaction(msg.id, emoji)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: '4px', borderRadius: '50%', transition: '0.2s' }}>{emoji}</button>
                            ))}
-                           {isMe && <button onClick={() => deleteMessage(msg.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#EF4444' }}><X size={14} /></button>}
+                           <button onClick={() => setReplyingTo({ id: msg.id, text: msg.text, userName: msg.userName })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-muted)' }} title="Répondre"><Reply size={14} /></button><button onClick={() => setShowForwardModal(msg)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--text-muted)' }} title="Transférer"><Share2 size={14} /></button>{isMe && <button onClick={() => deleteMessage(msg.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#EF4444' }} title="Supprimer"><X size={14} /></button>}
                         </motion.div>
                       )}
                    </AnimatePresence>
 
                    <div style={{ padding: '1rem 1.25rem', borderRadius: '1.75rem', background: isMe ? '#8B5CF6' : 'white', color: isMe ? 'white' : 'var(--text)', border: isMe ? 'none' : '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.5, position: 'relative' }}>
+                       {msg.replyTo && (
+                         <div style={{ background: isMe ? 'rgba(0,0,0,0.1)' : 'var(--bg-subtle)', padding: '0.5rem 0.75rem', borderRadius: '0.75rem', borderLeft: '3px solid var(--nexus-primary)', marginBottom: '0.75rem', fontSize: '0.8rem', opacity: 0.9 }}>
+                            <div style={{ fontWeight: 800, color: isMe ? 'white' : 'var(--nexus-primary)' }}>{msg.replyTo.userName}</div>
+                            <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{msg.replyTo.text}</div>
+                         </div>
+                       )}
                       {msg.fileUrl ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                           {msg.fileType?.startsWith('audio/') ? (
@@ -708,6 +857,20 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
          {/* Message Input */}
          <form onSubmit={sendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', position: 'relative' }}>
             <AnimatePresence>
+              {replyingTo && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, height: 0 }} animate={{ opacity: 1, y: 0, height: 'auto' }} exit={{ opacity: 0, y: 10, height: 0 }}
+                  style={{ background: 'var(--bg-subtle)', padding: '0.75rem 1rem', borderRadius: '1rem', borderLeft: '4px solid #8B5CF6', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                   <div style={{ overflow: 'hidden' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.75rem', color: '#8B5CF6' }}>Répondre à {replyingTo.userName}</div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{replyingTo.text}</div>
+                   </div>
+                   <button type="button" onClick={() => setReplyingTo(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={16} /></button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
               {showEmojis && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
@@ -755,6 +918,69 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
          </form>
       </div>
       )}
+
+          <AnimatePresence>
+            {showForwardModal && (
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3000, padding: '2rem' }}
+              >
+                 <motion.div 
+                   initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }}
+                   style={{ background: 'white', borderRadius: '2rem', width: '100%', maxWidth: '500px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}
+                 >
+                    <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                       <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.2rem', color: 'var(--nexus-primary)' }}>Transférer le message</h3>
+                       <button type="button" onClick={() => setShowForwardModal(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={24} /></button>
+                    </div>
+                    
+                    <div style={{ padding: '1rem 2rem', background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
+                       <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#8B5CF6', marginBottom: '4px' }}>Message à transférer:</div>
+                       <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{showForwardModal.text}</div>
+                    </div>
+
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 2rem' }}>
+                       <div style={{ fontWeight: 800, marginBottom: '1rem', fontSize: '0.85rem', opacity: 0.6 }}>CHOISIR UNE DESTINATION</div>
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          {customRooms.map(room => (
+                             <button 
+                               key={room.id}
+                               type="button"
+                               onClick={() => handleForward(room.id)}
+                               style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', textAlign: 'left', transition: '0.2s' }}
+                               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-subtle)'}
+                               onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                             >
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--nexus-primary-light)', color: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                   <Users size={20} />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                   <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{room.label}</div>
+                                   <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{room.members?.length} membres</div>
+                                </div>
+                             </button>
+                          ))}
+                          <button 
+                             type="button"
+                             onClick={() => handleForward('team_global')}
+                             style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--border)', background: 'white', cursor: 'pointer', textAlign: 'left', transition: '0.2s' }}
+                             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-subtle)'}
+                             onMouseLeave={e => e.currentTarget.style.background = 'white'}
+                          >
+                             <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#8B5CF622', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Hash size={20} />
+                             </div>
+                             <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Espace Général</div>
+                                <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>Tout le monde</div>
+                             </div>
+                          </button>
+                       </div>
+                    </div>
+                 </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
     </div>
   );
 };

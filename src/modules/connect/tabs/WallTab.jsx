@@ -1,12 +1,4 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trophy, Megaphone, Target, Heart, MessageCircle, Plus,
-  Sparkles, Zap, ShieldCheck, HeartHandshake, Send, X, TrendingUp
-} from 'lucide-react';
-import { useStore } from '../../../store';
-
-//
+import { FirestoreService, StorageService } from '../../../services/firestore.service';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -17,78 +9,119 @@ const POST_TYPES = [
   { id: 'milestone', label: 'Jalon', icon: <Target size={16} />, color: '#D946EF' },
 ];
 
-const INITIAL_FEED = [];
-
 const WallTab = ({ data, currentUser }) => {
-  const addConnectPost = useStore(s => s.addConnectPost);
-  const addConnectComment = useStore(s => s.addConnectComment);
+  const logAction = useStore(s => s.logAction);
   const employeesCount = useStore(s => s.data?.hr?.employees?.filter(e => e.active)?.length || 0);
 
-  // Local feed state so likes update immediately in the UI
-  const [feed, setFeed] = useState(() =>
-    data?.connect?.posts?.length > 0 ? data.connect.posts : INITIAL_FEED
-  );
+  const [feed, setFeed] = useState([]);
   const [showCompose, setShowCompose] = useState(false);
-  const [form, setForm] = useState({ type: 'success', title: '', content: '', category: '' });
+  const [form, setForm] = useState({ type: 'success', title: '', content: '', category: '', image: null, uploading: false });
   const [commentInputs, setCommentInputs] = useState({});
   const [openComments, setOpenComments] = useState({});
+  const [commentsData, setCommentsData] = useState({}); // { postId: [comments] }
 
-  // Sync when new posts are added from context
+  // ── Firestore Subscription ──
   React.useEffect(() => {
-    if (data?.connect?.posts?.length > 0) {
-      setFeed(prev => {
-        // Preserve local liked/reactions state for existing posts
-        const likedMap = {};
-        prev.forEach(p => { likedMap[p.id] = { liked: p.liked, reactions: p.reactions }; });
-        return data.connect.posts.map(p => likedMap[p.id] ? { ...p, ...likedMap[p.id] } : p);
+    const unsub = FirestoreService.subscribeToCollection(
+      'posts', 
+      { orderByField: '_createdAt', descending: true }, 
+      (posts) => setFeed(posts),
+      (err) => console.error("Erreur Wall Feed:", err)
+    );
+    return () => unsub();
+  }, []);
+
+  const handleLike = async (post) => {
+    const userId = currentUser?.id;
+    if (!userId) return;
+
+    const isLiked = post.likedBy?.includes(userId);
+    try {
+      await FirestoreService.updateDocument('posts', post.id, {
+        likedBy: isLiked ? FirestoreService.arrayRemove(userId) : FirestoreService.arrayUnion(userId),
+        reactionsCount: FirestoreService.increment(isLiked ? -1 : 1)
       });
+    } catch (err) {
+      console.error("Erreur Like:", err);
     }
-  }, [data?.connect?.posts?.length]);
-
-  const handleLike = (id) => {
-    setFeed(prev =>
-      prev.map(p =>
-        p.id === id
-          ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked }
-          : p
-      )
-    );
   };
 
-  const handleAddComment = (postId) => {
+  const handleAddComment = async (postId) => {
     const text = commentInputs[postId]?.trim();
-    if (!text) return;
-    const comment = { id: Date.now(), author: currentUser?.nom || 'Moi', text, time: 'À l\'instant' };
-    // Update local feed immediately
-    setFeed(prev =>
-      prev.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), comment] } : p)
-    );
-    addConnectComment(postId, comment);
-    setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    if (!text || !currentUser) return;
+
+    try {
+      await FirestoreService.addDocument(`posts/${postId}/comments`, {
+        text,
+        author: currentUser.nom,
+        authorId: currentUser.id,
+        createdAt: new Date().toISOString()
+      });
+      // Increment comment count on post
+      await FirestoreService.updateDocument('posts', postId, {
+        commentsCount: FirestoreService.increment(1)
+      });
+      setCommentInputs(prev => ({ ...prev, [postId]: '' }));
+    } catch (err) {
+      console.error("Erreur Commentaire:", err);
+    }
   };
 
-  const handlePublish = () => {
+  // Subscribe to comments when a post is expanded
+  React.useEffect(() => {
+    const unsubs = [];
+    Object.keys(openComments).forEach(postId => {
+      if (openComments[postId] && !commentsData[postId]) {
+        const unsub = FirestoreService.subscribeToCollection(
+          `posts/${postId}/comments`,
+          { orderByField: 'createdAt', descending: false },
+          (comments) => setCommentsData(prev => ({ ...prev, [postId]: comments }))
+        );
+        unsubs.push(unsub);
+      }
+    });
+    return () => unsubs.forEach(u => u());
+  }, [openComments]);
+
+  const handleImageChange = (e) => {
+    if (e.target.files?.[0]) {
+      setForm(p => ({ ...p, image: e.target.files[0] }));
+    }
+  };
+
+  const handlePublish = async () => {
     if (!form.title.trim() || !form.content.trim()) return;
-    const typeConf = POST_TYPES.find(t => t.id === form.type);
-    const newPost = {
-      id: `f${Date.now()}`,
-      type: form.type,
-      category: form.category || typeConf?.label || 'Général',
-      title: form.title,
-      content: form.content,
-      author: currentUser?.nom || 'Moi',
-      authorInit: (currentUser?.nom || 'M')[0],
-      color: typeConf?.color || '#8B5CF6',
-      date: 'À l\'instant',
-      reactions: 0,
-      liked: false,
-      comments: []
-    };
-    // Add to local feed immediately
-    setFeed(prev => [newPost, ...prev]);
-    addConnectPost(newPost);
-    setForm({ type: 'success', title: '', content: '', category: '' });
-    setShowCompose(false);
+    setForm(p => ({ ...p, uploading: true }));
+
+    try {
+      let imageUrl = null;
+      if (form.image) {
+        imageUrl = await StorageService.uploadFile(form.image, `wall/${Date.now()}_${form.image.name}`);
+      }
+
+      const typeConf = POST_TYPES.find(t => t.id === form.type);
+      await FirestoreService.addDocument('posts', {
+        type: form.type,
+        category: form.category || typeConf?.label || 'Général',
+        title: form.title,
+        content: form.content,
+        imageUrl,
+        author: currentUser?.nom || 'Anonyme',
+        authorId: currentUser?.id,
+        authorInit: (currentUser?.nom || 'A')[0],
+        color: typeConf?.color || '#8B5CF6',
+        likedBy: [],
+        reactionsCount: 0,
+        commentsCount: 0
+      });
+
+      logAction('Publication Sociale', form.title, 'connect');
+      setForm({ type: 'success', title: '', content: '', category: '', image: null, uploading: false });
+      setShowCompose(false);
+    } catch (err) {
+      console.error("Erreur Publication:", err);
+      setForm(p => ({ ...p, uploading: false }));
+    }
   };
 
   return (
@@ -137,86 +170,106 @@ const WallTab = ({ data, currentUser }) => {
                 placeholder="Décrivez le succès ou l'annonce…" rows={3}
                 style={{ width: '100%', padding: '0.75rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', marginBottom: '1rem', fontSize: '0.9rem', resize: 'vertical', lineHeight: 1.5 }} />
 
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.75rem', borderRadius: '0.75rem', border: '1px dashed var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                   <Camera size={18} /> {form.image ? form.image.name : 'Ajouter une image...'}
+                   <input type="file" accept="image/*" hidden onChange={handleImageChange} />
+                </label>
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                 <button onClick={() => setShowCompose(false)} style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'transparent', cursor: 'pointer', fontWeight: 700 }}>Annuler</button>
-                <button onClick={handlePublish} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.75rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer' }}>Publier</button>
+                <button onClick={handlePublish} disabled={form.uploading} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.75rem', background: '#8B5CF6', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', opacity: form.uploading ? 0.7 : 1 }}>
+                  {form.uploading ? 'Chargement...' : 'Publier'}
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Feed posts */}
-        {feed.map(post => (
-          <motion.div key={post.id} variants={item} whileHover={{ y: -3 }} className="glass"
-            style={{ padding: '1.75rem', borderRadius: '2rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
-            <div style={{ display: 'flex', gap: '1.25rem' }}>
-              <div style={{ padding: '12px', borderRadius: '1.25rem', background: `${post.color}15`, height: 'fit-content', color: post.color, flexShrink: 0 }}>
-                {post.type === 'success' ? <Trophy size={24} /> : post.type === 'announcement' ? <Megaphone size={24} /> : <Target size={24} />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                  <div>
-                    <span style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: post.color, letterSpacing: '1px' }}>{post.category}</span>
-                    <h4 style={{ margin: '4px 0 0 0', fontSize: '1.1rem', fontWeight: 900 }}>{post.title}</h4>
-                  </div>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0, marginLeft: '1rem' }}>{post.date}</span>
-                </div>
-                <p style={{ margin: '0 0 1.25rem 0', color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.6 }}>{post.content}</p>
+        {feed.map(post => {
+          const isLiked = post.likedBy?.includes(currentUser?.id);
+          const postComments = commentsData[post.id] || [];
 
-                {/* Actions */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-                  <div style={{ display: 'flex', gap: '1.5rem' }}>
-                    <button onClick={() => handleLike(post.id)} style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: post.liked ? '#EC4899' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.85rem', transition: 'color 0.2s' }}>
-                      <Heart size={16} fill={post.liked ? '#EC4899' : 'none'} /> {post.reactions}
-                    </button>
-                    <button onClick={() => setOpenComments(p => ({ ...p, [post.id]: !p[post.id] }))}
-                      style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.85rem' }}>
-                      <MessageCircle size={16} /> {post.comments.length}
-                    </button>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: `${post.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, color: post.color }}>
-                      {post.authorInit}
+          return (
+            <motion.div key={post.id} variants={item} whileHover={{ y: -3 }} className="glass"
+              style={{ padding: '1.75rem', borderRadius: '2rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
+              <div style={{ display: 'flex', gap: '1.25rem' }}>
+                <div style={{ padding: '12px', borderRadius: '1.25rem', background: `${post.color}15`, height: 'fit-content', color: post.color, flexShrink: 0 }}>
+                  {post.type === 'success' ? <Trophy size={24} /> : post.type === 'announcement' ? <Megaphone size={24} /> : <Target size={24} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <div>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: post.color, letterSpacing: '1px' }}>{post.category}</span>
+                      <h4 style={{ margin: '4px 0 0 0', fontSize: '1.1rem', fontWeight: 900 }}>{post.title}</h4>
                     </div>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>{post.author}</div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, flexShrink: 0, marginLeft: '1rem' }}>
+                      {post._createdAt?.seconds ? new Date(post._createdAt.seconds * 1000).toLocaleDateString() : 'À l\'instant'}
+                    </span>
                   </div>
-                </div>
+                  <p style={{ margin: '0 0 1.25rem 0', color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.6 }}>{post.content}</p>
 
-                {/* Comments section */}
-                <AnimatePresence>
-                  {openComments[post.id] && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                      style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                        {post.comments.map(c => (
-                          <div key={c.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                            <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, color: '#8B5CF6', flexShrink: 0 }}>
-                              {c.author[0]}
-                            </div>
-                            <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem 0.9rem', borderRadius: '0.75rem', flex: 1 }}>
-                              <div style={{ fontWeight: 800, fontSize: '0.78rem', marginBottom: '0.2rem' }}>{c.author}</div>
-                              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{c.text}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input value={commentInputs[post.id] || ''} onChange={e => setCommentInputs(p => ({ ...p, [post.id]: e.target.value }))}
-                          onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)}
-                          placeholder="Ajouter un commentaire…"
-                          style={{ flex: 1, padding: '0.6rem 0.9rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.85rem' }} />
-                        <button onClick={() => handleAddComment(post.id)}
-                          style={{ padding: '0.6rem 0.9rem', borderRadius: '0.75rem', background: '#8B5CF6', color: 'white', border: 'none', cursor: 'pointer' }}>
-                          <Send size={14} />
-                        </button>
-                      </div>
-                    </motion.div>
+                  {post.imageUrl && (
+                    <img src={post.imageUrl} alt="Post" style={{ width: '100%', borderRadius: '1.25rem', marginBottom: '1.25rem', maxHeight: '400px', objectFit: 'cover' }} />
                   )}
-                </AnimatePresence>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem' }}>
+                      <button onClick={() => handleLike(post)} style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: isLiked ? '#EC4899' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.85rem', transition: 'color 0.2s' }}>
+                        <Heart size={16} fill={isLiked ? '#EC4899' : 'none'} /> {post.reactionsCount || 0}
+                      </button>
+                      <button onClick={() => setOpenComments(p => ({ ...p, [post.id]: !p[post.id] }))}
+                        style={{ background: 'none', border: 'none', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.85rem' }}>
+                        <MessageCircle size={16} /> {post.commentsCount || 0}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: `${post.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 900, color: post.color }}>
+                        {post.authorInit}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>{post.author}</div>
+                    </div>
+                  </div>
+
+                  {/* Comments section */}
+                  <AnimatePresence>
+                    {openComments[post.id] && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                          {postComments.map(c => (
+                            <div key={c.id} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                              <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: '#8B5CF620', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 900, color: '#8B5CF6', flexShrink: 0 }}>
+                                {c.author[0]}
+                              </div>
+                              <div style={{ background: 'var(--bg-subtle)', padding: '0.6rem 0.9rem', borderRadius: '0.75rem', flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.78rem', marginBottom: '0.2rem' }}>{c.author}</div>
+                                <div style={{ fontSize: '0.82rem', color: 'var(--text)' }}>{c.text}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input value={commentInputs[post.id] || ''} onChange={e => setCommentInputs(p => ({ ...p, [post.id]: e.target.value }))}
+                            onKeyDown={e => e.key === 'Enter' && handleAddComment(post.id)}
+                            placeholder="Ajouter un commentaire…"
+                            style={{ flex: 1, padding: '0.6rem 0.9rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', fontSize: '0.85rem' }} />
+                          <button onClick={() => handleAddComment(post.id)}
+                            style={{ padding: '0.6rem 0.9rem', borderRadius: '0.75rem', background: '#8B5CF6', color: 'white', border: 'none', cursor: 'pointer' }}>
+                            <Send size={14} />
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Sidebar */}
