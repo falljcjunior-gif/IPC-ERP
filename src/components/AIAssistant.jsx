@@ -109,7 +109,6 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(true); // optimistic
-  const aiName = config?.aiName || 'Nexus AI';
 
   const [messages, setMessages] = useState([{
     role: 'assistant',

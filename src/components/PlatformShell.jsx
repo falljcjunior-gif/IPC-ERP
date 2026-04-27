@@ -52,6 +52,7 @@ const PlatformShell = ({ theme, setView }) => {
   const setActiveBrand = useStore(s => s.setActiveBrand);
   const BRANDS = useStore(s => s.BRANDS);
   const currentUser = useStore(s => s.user);
+  const notifications = useStore(s => s.notifications || []);
 
   // Locatized subscription for campaigns to avoid massive shell re-renders
   const marketingCampaigns = useStore(state => state.data.marketing?.campaigns || []);
