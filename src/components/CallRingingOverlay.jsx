@@ -28,13 +28,17 @@ const CallRingingOverlay = () => {
 
   const handleAccept = async () => {
     try {
+      // 1. Update local state immediately to 'ongoing' to prevent BusinessContext race condition
+      setActiveCall({ ...activeCall, accepted: true, status: 'ongoing' });
+
+      // 2. Then update Firestore
       await FirestoreService.updateDocument('calls', activeCall.id, { 
         status: 'accepted',
         acceptedAt: new Date()
       });
-      setActiveCall({ ...activeCall, accepted: true, status: 'ongoing' });
     } catch (err) {
       console.error("Accept call error", err);
+      // Optionnel: Revenir en arrière si erreur critique
     }
   };
 
