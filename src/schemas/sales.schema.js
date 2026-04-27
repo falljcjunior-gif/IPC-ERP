@@ -33,7 +33,28 @@ export const SalesSchemas = {
     valideJusquau: data.valideJusquau || '',
     statut: 'en_attente', // en_attente | accepté | refusé | expiré
     _domain: 'sales'
-  })
+  }),
+  /**
+   * BACKWARD COMPATIBILITY & REGISTRY MODELS
+   */
+  models: {
+    orders: {
+      fields: {
+        client: { label: 'Client', type: 'text', required: true },
+        montant: { label: 'Montant Total', type: 'number', required: true },
+        date: { label: 'Date Commande', type: 'date', required: true },
+        statut: { label: 'Statut', type: 'select', options: ['En cours', 'Livré', 'Annulé'], default: 'En cours' }
+      }
+    },
+    products: {
+      fields: {
+        nom: { label: 'Nom du Produit', type: 'text', required: true },
+        categorie: { label: 'Catégorie', type: 'text', required: true },
+        prix: { label: 'Prix Unitaire', type: 'number', required: true },
+        stock: { label: 'Stock Initial', type: 'number', default: 0 }
+      }
+    }
+  }
 };
 
 // [COMPAT] Alias pour compatibilité avec l'existant
