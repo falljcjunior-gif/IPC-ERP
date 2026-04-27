@@ -112,7 +112,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       
       const unreadDocs = msgs.filter(m => 
         m.userId !== currentUser.id && 
-        (!m.readBy || !m.readBy.includes(currentUser.id)) &&
+        (!Array.isArray(m.readBy) || !m.readBy.includes(currentUser.id)) &&
         !processedReadReceiptsRef.current.has(m.id)
       );
 
@@ -126,7 +126,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
               op: 'update',
               collection: 'messages',
               id: m.id,
-              data: { readBy: [...(m.readBy || []), currentUser.id] }
+              data: { readBy: [...(Array.isArray(m.readBy) ? m.readBy : []), currentUser.id] }
             }));
             await FirestoreService.batchWrite(operations);
           } catch (err) {
@@ -193,7 +193,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   useEffect(() => {
     if (!activeRoom?.id || !currentUser?.id || messages.length === 0) return;
     
-    const unreadMessages = messages.filter(m => m.userId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id)));
+    const unreadMessages = messages.filter(m => m.userId !== currentUser.id && (!Array.isArray(m.readBy) || !m.readBy.includes(currentUser.id)));
     
     if (unreadMessages.length > 0) {
       unreadMessages.forEach(msg => {
