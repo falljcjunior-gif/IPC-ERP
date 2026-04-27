@@ -4,15 +4,13 @@ import {
   addDoc, 
   setDoc, 
   onSnapshot, 
-  updateDoc, 
-  collectionGroup, 
-  query, 
+  deleteDoc, 
+  query,
   where,
-  getDoc,
-  deleteDoc,
   serverTimestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import logger from './logger';
 
 const servers = {
   iceServers: [
