@@ -9,15 +9,15 @@ export const purchaseSchema = {
     orders: {
       label: 'Demandes d\'Achats & Commandes',
       fields: {
-        num: { label: 'Réf. Commande Achat', type: 'text', required: true, search: true, placeholder: 'Ex: PO-2024-001' },
-        fournisseur: { label: 'Partenaire Fournisseur', type: 'text', required: true, search: true, placeholder: 'Sélectionner un fournisseur...' },
-        produitId: { label: 'Article Lié', type: 'text', search: true },
-        qte: { label: 'Quantité', type: 'number' },
-        date: { label: 'Date', type: 'date', required: true },
-        echeance: { label: 'Livraison Prévue', type: 'date' },
-        total: { label: 'Valeur Acquisition (HT)', type: 'money', currency: 'FCFA', search: true },
+        num: { label: 'Code de l\'Engagement d\'Achat', type: 'text', required: true, search: true, placeholder: 'Ex: PO-2024-001' },
+        fournisseur: { label: 'Entité Fournisseur', type: 'text', required: true, search: true, placeholder: 'Sélectionner un fournisseur...' },
+        produitId: { label: 'Article de Destination', type: 'text', search: true },
+        qte: { label: 'Volume de Commande', type: 'number' },
+        date: { label: 'Date d\'Émission', type: 'date', required: true },
+        echeance: { label: 'Date de Livraison Contractuelle', type: 'date' },
+        total: { label: 'Montant de l\'Engagement (HT)', type: 'money', currency: 'FCFA', search: true },
         statut: { 
-          label: 'Statut', 
+          label: 'Phase de l\'Approvisionnement', 
           type: 'selection', 
           options: ['Brouillon', 'En approbation', 'Commandé', 'Réceptionné', 'Facturé'],
           default: 'Brouillon'

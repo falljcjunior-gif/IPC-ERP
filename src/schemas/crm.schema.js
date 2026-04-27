@@ -18,14 +18,14 @@ export const crmSchema = {
         ville: { label: 'Ville', type: 'text', search: true },
         pays: { label: 'Pays', type: 'text', default: 'Sénégal' },
         secteur: { 
-          label: 'Secteur d\'activité', 
+          label: 'Secteur Stratégique', 
           type: 'selection', 
-          options: ['Industrie', 'Services', 'Tech', 'BTP', 'Commerce', 'Santé', 'Éducation', 'Banque & Assurance', 'Transport', 'Autre'] 
+          options: ['Industrie BTP', 'Agro-transformation', 'Services Publics', 'Logistique', 'Commerce de Gros', 'Autre'] 
         },
         taille_entreprise: { 
-          label: 'Taille Entreprise', 
+          label: 'Segment de Marché', 
           type: 'selection', 
-          options: ['1-10 employés', '11-50 employés', '51-200 employés', '201-500 employés', '500+ employés'] 
+          options: ['TPE/PME', 'Grande Entreprise', 'Institutionnel', 'Multinationale'] 
         },
         source: { label: 'Source', type: 'selection', options: ['Site Web', 'E-mail', 'Appel entrant', 'Partenaire', 'Conférence', 'Autre'] },
         priorite: { 

@@ -66,6 +66,56 @@ export const FinanceSchemas = {
       period: data.period || new Date().getMonth() + 1,
       _domain: 'finance'
     };
+  },
+  /**
+   * MODELS FOR REGISTRY
+   */
+  models: {
+    invoices: {
+      label: 'Registre de Facturation Émise',
+      fields: {
+        num: { label: 'Référence Facture', type: 'text', required: true, search: true },
+        clientName: { label: 'Désignation du Tiers', type: 'text', required: true, search: true },
+        amountHT: { label: 'Assiette HT (FCFA)', type: 'money', currency: 'FCFA', required: true },
+        amountTTC: { label: 'Total Net à Payer (TTC)', type: 'money', currency: 'FCFA', readonly: true },
+        status: { label: 'État du Recouvrement', type: 'selection', options: ['Brouillon', 'Envoyé', 'Payé', 'En Retard', 'Annulé'], default: 'Brouillon' },
+        dueDate: { label: 'Date d\'Échéance de Paiement', type: 'date', required: true }
+      },
+      views: {
+        list: ['num', 'clientName', 'amountTTC', 'status', 'dueDate'],
+        search: {
+          filters: [
+            { id: 'overdue', label: 'Factures en Souffrance', domain: [['status', '==', 'En Retard']] },
+            { id: 'paid', label: 'Règlements Encaissés', domain: [['status', '==', 'Payé']] }
+          ],
+          groups: [
+            { id: 'status', label: 'Par État de Recouvrement' }
+          ]
+        }
+      }
+    },
+    transactions: {
+      label: 'Journal de Trésorerie & Flux',
+      fields: {
+        date: { label: 'Date de Valeur', type: 'date', required: true },
+        description: { label: 'Libellé de l\'Opération', type: 'text', required: true, search: true },
+        amount: { label: 'Montant de l\'Écriture', type: 'money', currency: 'FCFA', required: true },
+        type: { label: 'Sens du Flux', type: 'selection', options: ['Recette', 'Dépense'], default: 'Dépense' },
+        category: { label: 'Poste Budgétaire', type: 'selection', options: ['Salaires', 'Achats MP', 'Logistique', 'Loyer', 'Impôts', 'Ventes', 'Autre'] }
+      },
+      views: {
+        list: ['date', 'description', 'amount', 'type', 'category'],
+        search: {
+          filters: [
+            { id: 'revenue', label: 'Flux Entrants', domain: [['type', '==', 'Recette']] },
+            { id: 'expense', label: 'Flux Sortants', domain: [['type', '==', 'Dépense']] }
+          ],
+          groups: [
+            { id: 'category', label: 'Par Poste Budgétaire' }
+          ]
+        }
+      }
+    }
   }
 };
 

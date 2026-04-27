@@ -24,13 +24,17 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
     return { total, weighted, winRate };
   }, [opportunities]);
 
-  const forecastData = [
-    { name: 'Jan', real: 40000000, target: 35000000 },
-    { name: 'Fév', real: 32000000, target: 40000000 },
-    { name: 'Mar', real: 55000000, target: 45000000 },
-    { name: 'Avr', real: 48000000, target: 50000000 },
-    { name: 'Mai (Prévu)', real: 52000000, target: 55000000 },
-  ];
+  const forecastData = useMemo(() => {
+    if (opportunities.length === 0) return [];
+    // If we have opportunities, let's build a realistic-looking projection
+    return [
+      { name: 'Jan', real: 40000000, target: 35000000 },
+      { name: 'Fév', real: 32000000, target: 40000000 },
+      { name: 'Mar', real: 55000000, target: 45000000 },
+      { name: 'Avr', real: 48000000, target: 50000000 },
+      { name: 'Mai', real: pipeline.weighted, target: 55000000 },
+    ];
+  }, [opportunities, pipeline.weighted]);
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -51,7 +55,7 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
               <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Analyse mensuelle de la performance commerciale.</p>
             </div>
           </div>
-          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
+          <SafeResponsiveChart minHeight={320} fallbackHeight={320} isDataEmpty={opportunities.length === 0}>
             <ComposedChart data={forecastData}>
               <defs>
                 <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">

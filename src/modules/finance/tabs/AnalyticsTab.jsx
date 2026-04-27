@@ -88,7 +88,11 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E' }} /> Décaissements</div>
             </div>
           </div>
-          <SafeResponsiveChart minHeight={320} fallbackHeight={320}>
+          <SafeResponsiveChart 
+            minHeight={320} 
+            fallbackHeight={320}
+            isDataEmpty={cashFlowData.every(d => d.in === 0 && d.out === 0)}
+          >
             <ComposedChart data={cashFlowData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 700 }} dy={10} />

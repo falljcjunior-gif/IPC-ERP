@@ -37,7 +37,7 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
   };
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(59, 130, 246, 0.02) 100%)' }}>
+    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '100%', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(59, 130, 246, 0.02) 100%)' }}>
       {/* Header Premium Experience */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>

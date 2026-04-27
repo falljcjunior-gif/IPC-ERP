@@ -38,34 +38,34 @@ export const InventorySchemas = {
    */
   models: {
     products: {
-      label: 'Référentiel Articles',
+      label: 'Référentiel des Articles & Matériels',
       fields: {
         nom: { label: 'Désignation Commerciale', type: 'text', required: true, search: true, placeholder: 'Ex: Brique G-Block' },
-        ref: { label: 'Code SKU / Réf.', type: 'text', required: true, search: true, placeholder: 'Ex: SK-BR-2024' },
-        stock_reel: { label: 'Disponibilité Physique', type: 'number', required: true },
-        unite: { label: 'Unité de Gestion', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³'], default: 'Unités' },
-        categorie: { label: 'Catégorie', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Consommables'] }
+        ref: { label: 'Référence Catalogue (SKU)', type: 'text', required: true, search: true, placeholder: 'Ex: SK-BR-2024' },
+        stock_reel: { label: 'Quantité Disponible en Entrepôt', type: 'number', required: true },
+        unite: { label: 'Unité de Mesure Industrielle', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³', 'Litres'], default: 'Unités' },
+        categorie: { label: 'Famille Logistique', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Consommables', 'Pièces de Rechange'] }
       },
       views: {
         list: ['ref', 'nom', 'stock_reel', 'unite', 'categorie'],
         search: {
           filters: [
-            { id: 'low_stock', label: 'Rupture de Stock', domain: [['stock_reel', '<=', 10]] }
+            { id: 'low_stock', label: 'Alerte Rupture Immédiate', domain: [['stock_reel', '<=', 10]] }
           ],
           groups: [
-            { id: 'categorie', label: 'Par Catégorie' }
+            { id: 'categorie', label: 'Par Famille Logistique' }
           ]
         }
       }
     },
     movements: {
-      label: 'Registre des Flux de Stock',
+      label: 'Registre des Flux & Mouvements',
       fields: {
-        date: { label: 'Date', type: 'date', required: true },
+        date: { label: 'Date d\'Opération', type: 'date', required: true },
         produit: { label: 'Article Concerné', type: 'text', required: true, search: true, placeholder: 'Rechercher un article...' },
         quantite: { label: 'Quantité Mouvementée', type: 'number', required: true },
-        type: { label: 'Type de Flux', type: 'selection', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Sortie' },
-        reference: { label: 'Réf. Document Source', type: 'text', search: true, placeholder: 'Ex: BL-2024-001' }
+        type: { label: 'Type de Flux Logistique', type: 'selection', options: ['Entrée (Réception)', 'Sortie (Expédition)', 'Ajustement (Inventaire)'], default: 'Sortie (Expédition)' },
+        reference: { label: 'Réf. Document de Liaison', type: 'text', search: true, placeholder: 'Ex: BL-2024-001' }
       },
       views: {
         list: ['date', 'produit', 'quantite', 'type', 'reference'],
