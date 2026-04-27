@@ -6,6 +6,7 @@ import {
   History, Download, Share2, ShieldCheck, Activity, Sparkles
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { registry } from '../../services/Registry';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
