@@ -51,22 +51,28 @@ const CallInterface = ({
   useEffect(() => {
     if (!isOpen || !callId) return;
 
+    let isMounted = true;
+    let audioCtx = null;
+    let animationFrameId = null;
+
     const setupCall = async () => {
       try {
+        logger.info(`CallInterface: Setting up WebRTC for room ${callId}`);
         const stream = await webrtcService.startLocalStream(callType);
+        if (!isMounted) return;
         setLocalStream(stream);
 
         // Local Speech Detection
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
         const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser); // We don't connect to destination to avoid hearing ourselves
+        source.connect(analyser); 
         analyser.fftSize = 256;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         
-        let animationFrameId;
         const checkVolume = () => {
+          if (!isMounted) return;
           if (!stream.getAudioTracks()[0]?.enabled) {
              setLocalSpeaking(false);
              animationFrameId = requestAnimationFrame(checkVolume);
@@ -76,36 +82,28 @@ const CallInterface = ({
           let sum = 0;
           for (let i = 0; i < bufferLength; i++) { sum += dataArray[i]; }
           const average = sum / bufferLength;
-          if (average > 15) { // Threshold
-             setLocalSpeaking(true);
-          } else {
-             setLocalSpeaking(false);
-          }
+          setLocalSpeaking(average > 15);
           animationFrameId = requestAnimationFrame(checkVolume);
         };
         checkVolume();
 
         await webrtcService.joinRoom(callId, currentUser?.id, currentUser?.nom, (streams) => {
-          setRemoteParticipants({ ...streams });
+          if (isMounted) setRemoteParticipants({ ...streams });
         });
-
-        // Cleanup
-        return () => {
-           if (animationFrameId) cancelAnimationFrame(animationFrameId);
-           if (audioCtx.state !== 'closed') audioCtx.close();
-        };
       } catch (err) {
         logger.error("Group Call Setup Error:", err);
       }
     };
 
-    const cleanup = setupCall();
+    setupCall();
 
     return () => {
-      if (cleanup && typeof cleanup.then === 'function') {
-         cleanup.then(clean => clean && clean());
-      }
-      webrtcService.hangup(callId, currentUser?.id);
+      logger.info(`CallInterface: Cleaning up WebRTC for room ${callId}`);
+      isMounted = false;
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+      // On ne raccroche ici QUE si on ferme vraiment l'interface
+      // webrtcService.hangup est géré par handleHangup ou le listener global
     };
   }, [isOpen, callId, currentUser?.id, currentUser?.nom, callType]);
 
