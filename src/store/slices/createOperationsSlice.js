@@ -1,8 +1,5 @@
-import { initializeApp, deleteApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { auth, firebaseConfig } from '../../firebase/config';
 import { FirestoreService, StorageService } from '../../services/firestore.service';
+import { AuthService } from '../../services/auth.service';
 
 export const createOperationsSlice = (set, get) => ({
   addHint: (hint) => {
@@ -1002,7 +999,7 @@ export const createOperationsSlice = (set, get) => ({
 
   _logout: async () => {
     try {
-      await signOut(auth);
+      await AuthService.logout();
       set({ user: null, userRole: "GUEST", isAuthenticated: false });
       localStorage.clear();
       window.location.reload();

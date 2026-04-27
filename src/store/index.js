@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import { AuthService } from '../services/auth.service';
 import { createAuthSlice } from './slices/createAuthSlice';
 import { createUiSlice } from './slices/createUiSlice';
 import { createFinanceSlice } from './slices/finance/createFinanceSlice';
@@ -146,7 +145,7 @@ export const useStore = create(
 
       logout: async () => {
         try {
-          await signOut(auth);
+          await AuthService.logout();
         } catch (e) {
           console.warn('Logout error:', e);
         }
