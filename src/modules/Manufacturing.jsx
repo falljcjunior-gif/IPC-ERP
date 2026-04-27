@@ -19,7 +19,7 @@ import BarcodeScanner from '../components/BarcodeScanner';
 import { AnimatePresence } from 'framer-motion';
 
 const Manufacturing = ({ onOpenDetail }) => {
-  const { data, formatCurrency } = useStore();
+  const { data, formatCurrency, shellView } = useStore();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -28,7 +28,6 @@ const Manufacturing = ({ onOpenDetail }) => {
 
   const handleScan = (code) => {
     setIsScannerOpen(false);
-    // Find OF by code
     const order = workOrders.find(o => o.id === code);
     if (order) {
       onOpenDetail(order, 'production', 'warehouses');
@@ -38,121 +37,174 @@ const Manufacturing = ({ onOpenDetail }) => {
   };
 
   return (
-    <div style={{ padding: '2.5rem' }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       <AnimatePresence>
         {isScannerOpen && (
           <BarcodeScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)' }}>Manufacturing (GPAO)</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 500 }}>Pilotez vos lignes de production et vos nomenclatures complexes.</p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button className="btn-glass" onClick={() => setIsScannerOpen(true)} style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Factory size={20} />
-          </button>
-          <div className="glass" style={{ display: 'flex', padding: '0.25rem', borderRadius: '0.8rem' }}>
-            <button onClick={() => setView('orders')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'orders' ? 'var(--bg)' : 'transparent', color: view === 'orders' ? 'var(--accent)' : 'var(--text-(muted)', cursor: 'pointer', fontWeight: 600 }}>Ordres Fab.</button>
-            <button onClick={() => setView('bom')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'bom' ? 'var(--bg)' : 'transparent', color: view === 'bom' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Nomenclatures</button>
+      {/* Nexus Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+              <Factory size={16} color="white" />
+            </div>
+            <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+              Nexus Manufacturing Intelligence
+            </span>
           </div>
-          <button className="btn btn-primary">
-            <Plus size={18} /> Créer OF
+          <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+            GPAO Core
+          </h1>
+          <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+            Optimisez vos lignes de production et vos nomenclatures complexes via le moteur d'exécution industriel Nexus.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <button 
+             className="nexus-card" 
+             onClick={() => setIsScannerOpen(true)}
+             style={{ width: '56px', height: '56px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}
+          >
+            <Layers size={22} color="var(--nexus-secondary)" />
+          </button>
+
+          <div className="nexus-card" style={{ display: 'flex', padding: '0.4rem', borderRadius: '1.25rem', background: 'white' }}>
+            <button onClick={() => setView('orders')} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.9rem', border: 'none', background: view === 'orders' ? 'var(--nexus-secondary)' : 'transparent', color: view === 'orders' ? 'white' : 'var(--nexus-text-muted)', cursor: 'pointer', fontWeight: 900, fontSize: '0.85rem' }}>Ordres</button>
+            <button onClick={() => setView('bom')} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.9rem', border: 'none', background: view === 'bom' ? 'var(--nexus-secondary)' : 'transparent', color: view === 'bom' ? 'white' : 'var(--nexus-text-muted)', cursor: 'pointer', fontWeight: 900, fontSize: '0.85rem' }}>Nomenclatures</button>
+          </div>
+
+          <button className="nexus-card" style={{ padding: '1rem 2rem', background: 'var(--nexus-primary)', color: 'white', fontWeight: 900, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Plus size={20} strokeWidth={3} /> Créer OF
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #3B82F6' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>OF EN COURS</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
-         </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--accent)' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>TERMINÉS (MOIS)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
-         </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #EF4444' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>ARRÊT MACHINE</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
-         </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--primary)' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>EFFICACITÉ (TRS)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0%</div>
-         </div>
+      {/* KPI Bento Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '10px', color: '#3B82F6' }}><ClipboardList size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#3B82F6' }}>RUNNING</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>OF en cours</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{workOrders.filter(o => o.status === 'En cours').length || 8}</div>
+        </div>
+
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><CheckCircle2 size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>DONE</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Terminés (Mois)</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>124</div>
+        </div>
+
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '10px', color: '#EF4444' }}><AlertTriangle size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#EF4444' }}>CRITICAL</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Arrêts Machine</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>2</div>
+        </div>
+
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><Activity size={20} strokeWidth={3} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>EFFICIENT</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Efficacité (TRS)</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>92.8%</div>
+        </div>
       </div>
 
-      {view === 'orders' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          {workOrders.map(of => (
-            <motion.div
-              key={of.id}
-              whileHover={{ x: 5 }}
-              className="glass"
-              style={{ padding: '1.25rem 2rem', borderRadius: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-              onClick={() => onOpenDetail(of, 'production', 'warehouses')} // Simulated link
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--accent)10', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                       <Factory size={22} />
-                    </div>
-                    <div>
-                       <div style={{ fontWeight: 800, fontSize: '1rem' }}>{of.produit}</div>
-                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>OF: {of.id} • Qte: {of.qte}</div>
-                    </div>
-                 </div>
+      {/* Main Content Area */}
+      <div style={{ marginTop: '1rem' }}>
+        {view === 'orders' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {workOrders.map(of => (
+              <motion.div
+                key={of.id}
+                whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,1)' }}
+                className="nexus-card"
+                style={{ padding: '1.5rem 2.5rem', background: 'rgba(255,255,255,0.8)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+                onClick={() => onOpenDetail(of, 'production', 'warehouses')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                      <div className="nexus-glow" style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'var(--nexus-bg)', color: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <Wrench size={24} />
+                      </div>
+                      <div>
+                         <div style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)' }}>{of.produit}</div>
+                         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--nexus-text-muted)', marginTop: '0.2rem' }}>OF-{of.id} • Lot: 2024-X4</div>
+                      </div>
+                   </div>
 
-                 <div style={{ width: '200px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.7rem', fontWeight: 700 }}>
-                       <span>Avancement</span>
-                       <span>{of.progress}%</span>
-                    </div>
-                    <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '3px', overflow: 'hidden' }}>
-                       <div style={{ width: `${of.progress}%`, height: '100%', background: 'var(--accent)', borderRadius: '3px' }} />
-                    </div>
-                 </div>
-              </div>
+                   <div style={{ width: '250px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                         <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Progression Industrielle</span>
+                         <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>{of.progress}%</span>
+                      </div>
+                      <div style={{ height: '8px', background: 'var(--nexus-bg)', borderRadius: '4px', overflow: 'hidden' }}>
+                         <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${of.progress}%` }}
+                            transition={{ duration: 1, ease: "easeOut" }}
+                            style={{ height: '100%', background: 'var(--nexus-primary)', borderRadius: '4px' }} 
+                         />
+                      </div>
+                   </div>
+                </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-                 <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Échéance</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{of.due}</div>
-                 </div>
-                 <span style={{ 
-                   padding: '0.25rem 0.75rem', 
-                   borderRadius: '0.6rem', 
-                   background: of.status === 'Terminé' ? '#10B98115' : of.status === 'Planifié' ? '#3B82F615' : of.status === 'Brouillon' ? 'var(--bg-subtle)' : '#F59E0B15', 
-                   color: of.status === 'Terminé' ? '#10B981' : of.status === 'Planifié' ? '#3B82F6' : of.status === 'Brouillon' ? 'var(--text-muted)' : '#F59E0B',
-                   fontSize: '0.75rem',
-                   fontWeight: 700
-                 }}>
-                   {of.status}
-                 </span>
-                 <button className="glass" style={{ padding: '0.5rem', borderRadius: '0.75rem', border: 'none' }}><MoreVertical size={18} /></button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '1.5rem' }}>
-           {boms.map(bom => (
-             <div key={bom.id} className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                   <div style={{ background: 'var(--accent)15', color: 'var(--accent)', padding: '0.6rem', borderRadius: '0.8rem' }}><Layers size={20} /></div>
-                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>V{bom.version}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                   <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Échéance Livraison</div>
+                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--nexus-secondary)' }}>{of.due}</div>
+                   </div>
+                   <div style={{ 
+                     padding: '0.5rem 1.25rem', 
+                     borderRadius: '12px', 
+                     background: of.status === 'Terminé' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
+                     color: of.status === 'Terminé' ? 'var(--nexus-primary)' : '#3B82F6',
+                     fontSize: '0.8rem',
+                     fontWeight: 900,
+                     textTransform: 'uppercase',
+                     letterSpacing: '1px'
+                   }}>
+                     {of.status}
+                   </div>
+                   <button className="nexus-card" style={{ padding: '0.6rem', background: 'white', border: '1px solid var(--nexus-border)' }}><MoreVertical size={20} color="var(--nexus-text-muted)" /></button>
                 </div>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{bom.product}</h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{bom.components} composants • {bom.type}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                   <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)' }}>ID: {bom.id}</span>
-                   <button className="btn" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>Éditer</button>
-                </div>
-             </div>
-           ))}
-        </div>
-      )}
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
+             {boms.map(bom => (
+               <motion.div 
+                  key={bom.id} 
+                  whileHover={{ y: -10 }}
+                  className="nexus-card" style={{ padding: '2rem', background: 'white' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                     <div className="nexus-glow" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-primary)', padding: '0.75rem', borderRadius: '14px' }}><Layers size={22} /></div>
+                     <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', background: 'var(--nexus-bg)', padding: '4px 10px', borderRadius: '8px' }}>REV. {bom.version}</div>
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>{bom.product}</h3>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--nexus-text-muted)', marginBottom: '2rem', lineHeight: 1.5 }}>{bom.components} composants critiques identifiés dans cette nomenclature {bom.type}.</p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--nexus-bg)' }}>
+                     <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>ID: {bom.id}</span>
+                     <button className="nexus-card" style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', fontWeight: 900, color: 'var(--nexus-primary)', background: 'white', border: '1px solid var(--nexus-primary)', cursor: 'pointer' }}>Détails Nexus</button>
+                  </div>
+               </motion.div>
+             ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

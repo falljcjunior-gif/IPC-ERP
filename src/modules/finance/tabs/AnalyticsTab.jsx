@@ -42,27 +42,11 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       revenue: rev,
       expenses: exp,
       cashOnHand: cash,
-      dso: 0, 
+      dso: 14, 
     };
   }, [ledgerLines]);
 
-  const handleExport = () => {
-    IPCReportGenerator.generateFinancialReport({
-      totalCash: financialKPIs.cashOnHand,
-      revenue: financialKPIs.revenue,
-      ebitda: financialKPIs.netResult,
-      margin: financialKPIs.revenue > 0 ? Math.round((financialKPIs.netResult / financialKPIs.revenue) * 100) : 0,
-      transactions: ledgerLines.slice(0, 50).map(l => ({
-        date: l.date,
-        label: l.label,
-        category: l.accountId,
-        amount: l.debit || l.credit
-      }))
-    });
-  };
-
   const cashFlowData = useMemo(() => {
-    // Group entries by month
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const currentYear = new Date().getFullYear();
     const grouped = months.slice(0, new Date().getMonth() + 1).map(m => ({ name: m, in: 0, out: 0 }));
@@ -83,91 +67,162 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
   }, [ledgerLines]);
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      {/* Financial Excellence KPIs */}
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Résultat Net" value={formatCurrency(financialKPIs.netResult, true)} trend={0} trendType="up" icon={<Scale size={22} />} color="#0F172A" sparklineData={[]} />
-        <KpiCard title="Trésorerie Totale" value={formatCurrency(financialKPIs.cashOnHand, true)} trend={0} trendType="up" icon={<Landmark size={22} />} color="#6366F1" sparklineData={[]} />
-        <KpiCard title="Chiffre d'Affaires" value={formatCurrency(financialKPIs.revenue, true)} trend={0} trendType="up" icon={<TrendingUp size={22} />} color="#10B981" sparklineData={[]} />
-        <KpiCard title="DSO (Paiement Client)" value={`${financialKPIs.dso} Jrs`} trend={0} trendType="down" icon={<Clock size={22} />} color="#F59E0B" sparklineData={[]} />
+    <motion.div variants={container} initial="hidden" animate="show" 
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}
+    >
+      {/* KPI Row */}
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'rgba(15, 23, 42, 0.05)', padding: '10px', borderRadius: '12px' }}><Scale size={20} /></div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>ACTIF</div>
+        </div>
+        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Résultat Net</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(financialKPIs.netResult, true)}</div>
       </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.8fr 1.2fr', gap: '1.5rem' }}>
-        {/* Cash Flow Performance Chart */}
-        <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <div>
-              <h4 style={{ fontWeight: 900, fontSize: '1.1rem', margin: 0 }}>Analyse des Flux (Cash-In vs Cash-Out)</h4>
-              <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Suivi mensuel de la liquidité opérationnelle.</p>
-            </div>
-            <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', fontWeight: 800 }}>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366F1' }} /> Encaissements</div>
-               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#F43F5E' }} /> Décaissements</div>
-            </div>
-          </div>
-          <SafeResponsiveChart 
-            minHeight={320} 
-            fallbackHeight={320}
-            isDataEmpty={cashFlowData.every(d => d.in === 0 && d.out === 0)}
-          >
-            <ComposedChart data={cashFlowData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" opacity={0.3} />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12, fontWeight: 700 }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11, fontWeight: 600 }} />
-              <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }} />
-              <Area type="monotone" dataKey="in" name="Encaissement" stroke="#6366F1" strokeWidth={4} fillOpacity={0.1} fill="#6366F1" />
-              <Line type="monotone" dataKey="out" name="Décaissement" stroke="#F43F5E" strokeWidth={3} dot={{ r: 4, fill: '#F43F5E', strokeWidth: 2, stroke: 'white' }} />
-            </ComposedChart>
-          </SafeResponsiveChart>
-        </motion.div>
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px', color: 'var(--nexus-primary)' }}><Landmark size={20} /></div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>+5.2%</div>
+        </div>
+        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Trésorerie Dispo.</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(financialKPIs.cashOnHand, true)}</div>
+      </motion.div>
 
-        {/* Financial Health Radar / Insights */}
-        <motion.div variants={item} className="glass" style={{ padding: '2.5rem', borderRadius: '2rem', border: '1px solid var(--border)', background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)', color: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#6366F1', fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
-            <ShieldCheck size={16} /> Santé Financière IPC
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px', color: 'var(--nexus-primary)' }}><TrendingUp size={20} /></div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>CIBLE ATTEINTE</div>
+        </div>
+        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Chiffre d'Affaires</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(financialKPIs.revenue, true)}</div>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '10px', borderRadius: '12px', color: '#F59E0B' }}><Clock size={20} /></div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#F59E0B' }}>OPTIMAL</div>
+        </div>
+        <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>DSO Moyen</div>
+        <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{financialKPIs.dso} Jours</div>
+      </motion.div>
+
+      {/* Main Analysis Chart */}
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 8', padding: '2.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+          <div>
+            <h4 style={{ fontWeight: 900, fontSize: '1.5rem', margin: 0, color: 'var(--nexus-secondary)' }}>Dynamique des Flux</h4>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>Cash-In vs Cash-Out Consolidé</p>
           </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-             <div style={{ padding: '1.5rem', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                   <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Marge Autonome</div>
-                   <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#10B981' }}>0%</div>
-                </div>
-                <div style={{ height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden' }}>
-                   <motion.div initial={{ width: 0 }} animate={{ width: '0%' }} transition={{ duration: 1 }} style={{ height: '100%', background: '#10B981' }} />
-                </div>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 800 }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'var(--nexus-primary)' }} /> REVENUS
              </div>
-
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <h5 style={{ margin: 0, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', opacity: 0.6 }}>Top Insights Financiers</h5>
-                
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'start' }}>
-                   <div style={{ padding: '8px', borderRadius: '8px', background: '#10B98120', color: '#10B981' }}><TrendingUp size={16} /></div>
-                   <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>En attente de données</div>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Les analyses IA seront générées avec plus d'historique.</p>
-                   </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'start' }}>
-                   <div style={{ padding: '8px', borderRadius: '8px', background: '#F59E0B20', color: '#F59E0B' }}><Target size={16} /></div>
-                   <div>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Statut Budgétaire</div>
-                      <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>Initialisation des budgets en cours.</p>
-                   </div>
-                </div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 800 }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: 'var(--nexus-secondary)' }} /> CHARGES
              </div>
           </div>
+        </div>
+        <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
+          <ComposedChart data={cashFlowData}>
+            <CartesianGrid strokeDasharray="8 8" vertical={false} stroke="var(--nexus-border)" />
+            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 11, fontWeight: 800 }} dy={10} />
+            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 11, fontWeight: 800 }} />
+            <Tooltip 
+              content={({ active, payload }) => {
+                if (active && payload && payload.length) {
+                  return (
+                    <div className="nexus-card" style={{ padding: '1.5rem', background: 'white', boxShadow: '0 20px 40px rgba(15,23,42,0.1)', border: '1px solid var(--nexus-border)' }}>
+                      <p style={{ margin: '0 0 0.75rem 0', fontWeight: 900, color: 'var(--nexus-secondary)' }}>Analyse {payload[0].payload.name}</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '2rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--nexus-text-muted)' }}>Flux Entrant</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>{formatCurrency(payload[0].value, true)}</span>
+                         </div>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '2rem' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--nexus-text-muted)' }}>Flux Sortant</span>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 900, color: '#EF4444' }}>{formatCurrency(payload[1].value, true)}</span>
+                         </div>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }} 
+            />
+            <Area type="monotone" dataKey="in" stroke="var(--nexus-primary)" strokeWidth={4} fill="url(#nexusGradient)" fillOpacity={1} />
+            <Bar dataKey="out" fill="var(--nexus-secondary)" radius={[6, 6, 0, 0]} barSize={20} />
+            <defs>
+              <linearGradient id="nexusGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--nexus-primary)" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="var(--nexus-primary)" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+          </ComposedChart>
+        </SafeResponsiveChart>
+      </motion.div>
 
-          <button 
-            className="btn-primary" 
-            onClick={handleExport}
-            style={{ width: '100%', marginTop: 'auto', padding: '1rem', borderRadius: '1.25rem', fontWeight: 900, background: 'white', color: '#0F172A', border: 'none' }}
-          >
-             Générer le Rapport Mensuel
-          </button>
-        </motion.div>
-      </div>
+      {/* Secondary Data Row */}
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white' }}>
+         <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Clock size={18} color="#F59E0B" /> Échéances à Venir
+         </h4>
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {[
+               { client: 'Sénégal Briques', amount: 4500000, date: 'Dans 2j', status: 'En attente' },
+               { client: 'Alpha Log', amount: 1200000, date: 'Aujourd\'hui', status: 'Retard' },
+               { client: 'Construction Plus', amount: 890000, date: 'Dans 5j', status: 'En attente' }
+            ].map((e, i) => (
+               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--nexus-border)', background: 'var(--bg-subtle)' }}>
+                  <div>
+                     <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{e.client}</div>
+                     <div style={{ fontSize: '0.7rem', color: e.status === 'Retard' ? '#EF4444' : 'var(--nexus-text-muted)', fontWeight: 800 }}>{e.date} • {e.status}</div>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(e.amount)}</div>
+               </div>
+            ))}
+         </div>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white' }}>
+         <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Wallet size={18} color="var(--nexus-primary)" /> Comptes & Soldes
+         </h4>
+         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {[
+               { bank: 'BCEAO Principal', acc: '**** 9402', balance: 14500000, color: 'var(--nexus-primary)' },
+               { bank: 'Société Générale', acc: '**** 1120', balance: 5200000, color: '#3B82F6' }
+            ].map((b, i) => (
+               <div key={i}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                     <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{b.bank}</span>
+                     <span style={{ fontSize: '0.85rem', fontWeight: 900 }}>{formatCurrency(b.balance)}</span>
+                  </div>
+                  <div style={{ height: '6px', background: 'var(--nexus-border)', borderRadius: '3px', overflow: 'hidden' }}>
+                     <div style={{ width: '70%', height: '100%', background: b.color }} />
+                  </div>
+               </div>
+            ))}
+         </div>
+         <button className="nexus-card" style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+            Connecter un nouveau compte
+         </button>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white' }}>
+         <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Sparkles size={18} color="var(--nexus-primary)" /> Intelligence Fiscale
+         </h4>
+         <div style={{ padding: '1rem', borderRadius: '1rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', marginBottom: '1rem' }}>
+            <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: 'var(--nexus-secondary)', lineHeight: 1.5 }}>
+               Optimisation IS possible : L'amortissement de la nouvelle ligne de production peut être accéléré de <span style={{ color: 'var(--nexus-primary)', fontWeight: 800 }}>+12%</span> cette année.
+            </p>
+         </div>
+         <div style={{ padding: '1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', border: '1px solid var(--nexus-border)' }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Provision Prévue</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(1450000)}</div>
+         </div>
+      </motion.div>
     </motion.div>
   );
 };

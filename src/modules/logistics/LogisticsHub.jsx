@@ -26,117 +26,95 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
 
   const handleScan = (code) => {
     setIsScannerOpen(false);
-    // Find product by ref or EAN
     const product = data?.inventory?.products?.find(p => p.ref === code || p.ean === code);
     if (product) {
       onOpenDetail(product.id, 'inventory', 'products');
     } else {
-      alert(`Produit non trouvé pour le code : ${code}. Création d'une nouvelle fiche...`);
       setModalMode('movement');
       setIsModalOpen(true);
     }
   };
 
   const tabs = [
-    { id: 'inventory', label: 'Disponibilité & Entrepôts', icon: <Package size={16} /> },
-    { id: 'purchase', label: 'Approvisionnements & Achats', icon: <ShoppingBag size={16} /> },
-    { id: 'project', label: 'Suivi des Livrables & Projets', icon: <Briefcase size={16} /> },
+    { id: 'inventory', label: 'ENTREPÔTS', icon: <Package size={16} /> },
+    { id: 'purchase', label: 'ACHATS', icon: <ShoppingBag size={16} /> },
+    { id: 'project', label: 'PROJETS', icon: <Briefcase size={16} /> },
   ];
 
   const isPurchaseContext = appId === 'purchase';
 
   return (
-    <div style={{ 
-      padding: shellView?.mobile ? '1rem' : '2.5rem', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: shellView?.mobile ? '1.5rem' : '3rem', 
-      minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 100% 0%, var(--accent-glow) 0%, transparent 50%)'
-    }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '3rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '100%' }}>
       
-      {/* --- SCANNER OVERLAY --- */}
       <AnimatePresence>
         {isScannerOpen && (
-          <BarcodeScanner 
-            onScan={handleScan} 
-            onClose={() => setIsScannerOpen(false)} 
-          />
+          <BarcodeScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />
         )}
       </AnimatePresence>
-      
-      {/* --- NEXT GEN LOGISTICS HEADER --- */}
+
+      {/* Nexus Logistics Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--accent)', marginBottom: '0.75rem' }}>
-            <motion.div 
-              animate={{ 
-                rotate: [0, 90, 180, 270, 360],
-                boxShadow: ['0 0 0px var(--accent-glow)', '0 0 20px var(--accent-glow)', '0 0 0px var(--accent-glow)']
-              }} 
-              transition={{ repeat: Infinity, duration: 10, ease: "linear" }} 
-              style={{ background: 'var(--accent-glow)', padding: '8px', borderRadius: '12px', border: '1px solid var(--accent)' }}
-            >
-              <Link size={20} />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px', color: 'var(--accent)' }}>
-              {isPurchaseContext ? 'IPC Procurement Core' : 'IPC Unified Logistics'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '8px', borderRadius: '12px' }}>
+              <Truck size={20} color="white" />
+            </div>
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '3px' }}>
+              {isPurchaseContext ? 'Nexus Procurement Core' : 'Nexus Supply Chain'}
             </span>
           </div>
-          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            {isPurchaseContext ? 'Approvisionnements' : 'Flux Logistiques'}
+          <h1 className="nexus-gradient-text" style={{ fontSize: shellView?.mobile ? '2.5rem' : '4rem', fontWeight: 900, margin: 0, letterSpacing: '-3px', lineHeight: 0.9 }}>
+            {isPurchaseContext ? 'Procurement' : 'Logistics'}
           </h1>
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.2rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6, margin: '1rem 0 0 0' }}>
             {isPurchaseContext 
-              ? 'Pilotage stratégique des approvisionnements et optimisation de la chaîne fournisseur.'
-              : 'Maîtrisez vos flux physiques, la traçabilité des stocks et la livraison de vos projets en temps réel.'}
+              ? 'Optimisation stratégique de la chaîne fournisseur et pilotage des approvisionnements.'
+              : 'Traçabilité totale et orchestration des flux physiques via le moteur logistique Nexus.'}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--accent)', background: 'var(--accent-glow)' }}>
-              <Target size={18} color="var(--accent)" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent)' }}>OTIF Rate : 94.2%</span>
-           </div>
+          <div className="nexus-card" style={{ display: 'flex', alignItems: 'center', gap: '15px', padding: '1rem 2rem', background: 'white' }}>
+            <Activity size={24} color="var(--nexus-primary)" />
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Performance OTIF</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>94.2%</div>
+            </div>
+          </div>
 
-           <button onClick={() => setIsScannerOpen(true)} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-             <Package size={20} />
-           </button>
-
-           <button onClick={() => alert('Consultation de l\'historique des flux logistiques...')} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-             <History size={20} />
-           </button>
-           
-           {accessLevel === 'write' && (
-            <button className="btn-primary" onClick={() => { 
+          <button className="nexus-card" onClick={() => setIsScannerOpen(true)} style={{ width: '56px', height: '56px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'white' }}>
+            <Package size={22} color="var(--nexus-secondary)" />
+          </button>
+          
+          {accessLevel === 'write' && (
+            <button 
+              className="nexus-card" 
+              onClick={() => { 
                 setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
                 setIsModalOpen(true); 
-              }} 
-              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--primary)' }}>
-              <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
-                mainTab === 'purchase' ? 'Nouvelle Commande' : 
-                mainTab === 'project' ? 'Nouveau Jalon' : 
-                'Flux Logistique'
-              }</span>
+              }}
+              style={{ padding: '1rem 2.5rem', background: 'var(--nexus-secondary)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 900, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '1rem' }}
+            >
+              <Plus size={22} strokeWidth={3} /> {mainTab === 'purchase' ? 'NOUVEL ACHAT' : mainTab === 'project' ? 'NOUVEL ACTIF' : 'NOUVEAU FLUX'}
             </button>
-           )}
+          )}
         </div>
       </div>
 
-      {/* --- PREMIUM TAB NAVIGATION --- */}
-      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
+      {/* Nexus Navigation */}
+      <div className="nexus-card" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '0.5rem', borderRadius: '1.5rem', alignSelf: 'center' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* --- CONTENT FRAME --- */}
+      {/* Nexus Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 15, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.98 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ minHeight: '60vh' }}
         >
           {mainTab === 'inventory' && <InventoryTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
           {mainTab === 'purchase' && <PurchaseTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
@@ -148,9 +126,9 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={
-          modalMode === 'purchase' ? 'Demande d\'Achat & Commande' :
-          modalMode === 'project' ? 'Action & Jalon Opérationnel' :
-          'Enregistrement de Flux Physique'
+          modalMode === 'purchase' ? 'Demande d\'Achat Stratégique' :
+          modalMode === 'project' ? 'Action Opérationnelle Nexus' :
+          'Enregistrement de Flux Nexus'
         }
         fields={
           modalMode === 'purchase' ? Object.entries(registry.getSchema('purchase')?.models?.orders?.fields || {}).map(([name, f]) => ({ ...f, name })) :

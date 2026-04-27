@@ -40,10 +40,6 @@ const RecordModal = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const isFieldReadonly = (field) => {
-    return field.readonly || false;
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLoading) return;
@@ -65,229 +61,135 @@ const RecordModal = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 2000,
-          padding: '1rem'
-        }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+          
+          {/* Nexus Backdrop */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(10px)', zIndex: 1000 }} />
+
           {/* Success Overlay */}
           <AnimatePresence>
             {showSuccessAnim && (
-               <motion.div
-                 initial={{ opacity: 0, scale: 0.8 }}
-                 animate={{ opacity: 1, scale: 1 }}
-                 exit={{ opacity: 0, scale: 0.8 }}
-                 style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(16, 185, 129, 0.95)', zIndex: 3000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '2rem' }}
-               >
-                 <CheckCircle2 size={80} color="white" style={{ marginBottom: '1rem' }} />
-                 <h2 style={{ color: 'white', fontSize: '2rem', fontWeight: 900, textAlign: 'center' }}>Demande envoyée !</h2>
+               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} style={{ position: 'absolute', inset: 0, background: 'var(--nexus-primary)', zIndex: 3000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: 'var(--radius-nexus)' }}>
+                 <div className="nexus-glow" style={{ background: 'white', padding: '20px', borderRadius: '50%', marginBottom: '1.5rem' }}>
+                   <CheckCircle2 size={64} color="var(--nexus-primary)" />
+                 </div>
+                 <h2 style={{ color: 'white', fontSize: '2.5rem', fontWeight: 900, textAlign: 'center' }}>Opération Réussie</h2>
+                 <p style={{ color: 'white', opacity: 0.8, fontWeight: 700 }}>Synchronisation Nexus en cours...</p>
                </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(15, 23, 42, 0.5)',
-              zIndex: 1000
-            }}
-          />
-
-          {/* Modal Content */}
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 30 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 30 }}
-            style={{
-              width: '100%',
-              maxWidth: '1200px',
-              height: '90vh',
-              borderRadius: '2rem',
-              position: 'relative',
-              zIndex: 1001,
-              background: 'var(--bg)',
-              border: '1px solid var(--border)',
-              boxShadow: 'var(--shadow-premium)',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden'
-            }}
-          >
-            {/* Header / Barra de ferramientas */}
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
-              padding: '1.5rem 2.5rem', 
-              borderBottom: '1px solid var(--border)',
-              background: 'var(--bg-subtle)'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--text)' }}>{title}</h2>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  {isReadOnly ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--accent)', fontSize: '0.8rem', fontWeight: 700, background: 'var(--accent)10', padding: '0.4rem 0.8rem', borderRadius: '0.5rem' }}>
-                      <Lock size={14} /> Lecture Seule
-                    </div>
-                  ) : isEditMode ? (
-                     <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Save size={14}/> Enregistrer</button>
-                  ) : (
-                     <button onClick={() => setIsEditMode(true)} className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Edit3 size={14}/> Modifier</button>
-                  )}
-                  <button className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.8rem' }}><Printer size={14}/> Imprimer</button>
+          {/* Nexus Modal Content */}
+          <motion.div initial={{ scale: 0.95, opacity: 0, y: 30 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 30 }} className="nexus-card" style={{ width: '100%', maxWidth: '1280px', height: '85vh', position: 'relative', zIndex: 1001, background: 'white', border: 'none', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2.5rem', borderBottom: '1px solid var(--nexus-border)', background: 'var(--nexus-bg)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '10px', borderRadius: '12px', color: 'white' }}>
+                   <FileText size={20} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)', margin: 0 }}>{title}</h2>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '4px' }}>
+                    {isReadOnly ? (
+                      <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Lecture Seule</span>
+                    ) : (
+                      <span style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Mode Edition Nexus</span>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                 <button className="btn glass" style={{ border: '1px solid var(--border)', padding: '0.5rem' }}><MoreHorizontal size={18}/></button>
-                 <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={24} /></button>
+
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                {!isReadOnly && (
+                  isEditMode ? (
+                    <button onClick={handleSubmit} className="nexus-card" style={{ background: 'var(--nexus-primary)', padding: '0.6rem 1.5rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Save size={18}/> Enregistrer
+                    </button>
+                  ) : (
+                    <button onClick={() => setIsEditMode(true)} className="nexus-card" style={{ background: 'white', padding: '0.6rem 1.5rem', color: 'var(--nexus-secondary)', fontWeight: 800, cursor: 'pointer', border: '1px solid var(--nexus-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <Edit3 size={18}/> Modifier
+                    </button>
+                  )
+                )}
+                <button onClick={onClose} style={{ background: 'none', border: 'none', width: 40, height: 40, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--nexus-text-muted)' }}>
+                  <X size={24} />
+                </button>
               </div>
             </div>
 
-            {/* Main Content Area */}
+            {/* Content Area */}
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-               {/* Left Side: Data & Forms */}
-               <div style={{ flex: 1.5, overflowY: 'auto', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                  
-                  {/* Smart Buttons Row */}
+               {/* Left: Form */}
+               <div style={{ flex: 2, overflowY: 'auto', padding: '3rem', background: 'white' }}>
                   <SmartButtons buttons={smartButtons} />
-
-                  <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '2rem' }}>
-                      {fields.map(field => (
-                        <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                          <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {t(field.label)}
-                          </label>
-                          {!isEditMode ? (
-                            <div style={{ padding: '0.75rem 0', fontWeight: 700, fontSize: '1rem', borderBottom: '1px solid var(--border)' }}>
-                              {initialData[field.name]?.toString() || '—'}
-                            </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '2.5rem', marginTop: '2rem' }}>
+                    {fields.map(field => (
+                      <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+                          {t(field.label)}
+                        </label>
+                        
+                        {!isEditMode ? (
+                          <div style={{ padding: '1rem 0', fontWeight: 800, fontSize: '1.1rem', color: 'var(--nexus-secondary)', borderBottom: '2px solid var(--nexus-bg)' }}>
+                            {formData[field.name]?.toString() || '—'}
+                          </div>
+                        ) : (
+                          (field.type === 'selection' || field.type === 'select') ? (
+                            <select value={formData[field.name] || ''} onChange={(e) => handleChange(field.name, e.target.value)} style={{ padding: '1rem', borderRadius: '14px', border: '2px solid var(--nexus-border)', background: 'var(--nexus-bg)', fontWeight: 700, outline: 'none' }}>
+                               <option value="">Sélectionner...</option>
+                               {field.options?.map(opt => <option key={opt.value || opt} value={opt.value || opt}>{opt.label || opt}</option>)}
+                            </select>
+                          ) : field.type === 'textarea' ? (
+                            <textarea value={formData[field.name] || ''} onChange={(e) => handleChange(field.name, e.target.value)} style={{ padding: '1rem', borderRadius: '14px', border: '2px solid var(--nexus-border)', background: 'var(--nexus-bg)', fontWeight: 700, outline: 'none', minHeight: '120px' }} />
                           ) : (
-                            (field.type === 'selection' || field.type === 'select') ? (
-                              <select
-                                value={formData[field.name] || ''}
-                                required={field.required}
-                                onChange={(e) => handleChange(field.name, e.target.value)}
-                                className="glass"
-                                disabled={!isEditMode || isFieldReadonly(field)}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
-                              >
-                                <option value="">Sélectionner...</option>
-                                {field.options && field.options.map(opt => {
-                                  const value = typeof opt === 'object' ? opt.value : opt;
-                                  const label = typeof opt === 'object' ? opt.label : opt;
-                                  return <option key={value} value={value}>{label}</option>;
-                                })}
-                              </select>
-                            ) : field.type === 'textarea' ? (
-                              <textarea
-                                value={formData[field.name] || ''}
-                                required={field.required}
-                                placeholder={field.placeholder ? t(field.placeholder) : ''}
-                                onChange={(e) => handleChange(field.name, e.target.value)}
-                                className="glass"
-                                disabled={!isEditMode || isFieldReadonly(field)}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, minHeight: '120px', resize: 'vertical', opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
-                              />
-                            ) : (
-                              <input
-                                value={formData[field.name] || ''}
-                                type={field.type === 'money' ? 'number' : (field.type || 'text')}
-                                required={field.required}
-                                placeholder={field.placeholder ? t(field.placeholder) : ''}
-                                onChange={(e) => handleChange(field.name, (field.type === 'number' || field.type === 'money') ? Number(e.target.value) : e.target.value)}
-                                className="glass"
-                                disabled={!isEditMode || isFieldReadonly(field)}
-                                style={{ padding: '0.85rem 1rem', borderRadius: '0.85rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none', fontWeight: 600, opacity: (isEditMode && !isFieldReadonly(field)) ? 1 : 0.7 }}
-                              />
-                            )
-                          )}
-                          {field.description && (
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                              {t(field.description)}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </form>
+                            <input value={formData[field.name] || ''} type={field.type} onChange={(e) => handleChange(field.name, e.target.value)} style={{ padding: '1rem', borderRadius: '14px', border: '2px solid var(--nexus-border)', background: 'var(--nexus-bg)', fontWeight: 700, outline: 'none' }} />
+                          )
+                        )}
+                      </div>
+                    ))}
+                  </div>
                </div>
 
-               {/* Right Side: Chatter (The Odoo Magic) */}
+               {/* Right: Chatter */}
                {recordId && (
-                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-                    <div style={{ display: 'flex', background: 'var(--bg)', borderBottom: '1px solid var(--border)' }}>
-                       <button 
-                        onClick={() => setActiveTab('data')}
-                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'data' ? '2px solid var(--accent)' : 'none', color: activeTab === 'data' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}
-                       >
-                         INFOS
-                       </button>
-                       <button 
-                        onClick={() => setActiveTab('chatter')}
-                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'chatter' ? '2px solid var(--accent)' : 'none', color: activeTab === 'chatter' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                       >
-                         CHATTER <MessageSquare size={14}/>
-                       </button>
-                       <button 
-                        onClick={() => setActiveTab('documents')}
-                        style={{ flex: 1, padding: '1rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'documents' ? '2px solid var(--accent)' : 'none', color: activeTab === 'documents' ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                       >
-                         DOCS <FileText size={14}/>
-                       </button>
+                 <div style={{ flex: 1, background: 'var(--nexus-bg)', borderLeft: '1px solid var(--nexus-border)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ display: 'flex', borderBottom: '1px solid var(--nexus-border)', background: 'white' }}>
+                       <button onClick={() => setActiveTab('data')} style={{ flex: 1, padding: '1.25rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'data' ? '3px solid var(--nexus-primary)' : 'none', color: activeTab === 'data' ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', fontWeight: 900, fontSize: '0.75rem' }}>INFOS</button>
+                       <button onClick={() => setActiveTab('chatter')} style={{ flex: 1, padding: '1.25rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'chatter' ? '3px solid var(--nexus-primary)' : 'none', color: activeTab === 'chatter' ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', fontWeight: 900, fontSize: '0.75rem' }}>CHATTER</button>
+                       <button onClick={() => setActiveTab('documents')} style={{ flex: 1, padding: '1.25rem', border: 'none', background: 'transparent', borderBottom: activeTab === 'documents' ? '3px solid var(--nexus-primary)' : 'none', color: activeTab === 'documents' ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', fontWeight: 900, fontSize: '0.75rem' }}>DOCS</button>
                     </div>
-                    
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
                        {activeTab === 'chatter' ? (
                           <Chatter targetId={recordId} targetType={recordType} />
                        ) : activeTab === 'documents' ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                                <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Documents liés</h4>
-                                <button className="btn glass" style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}><Upload size={12}/> Ajouter</button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '0.8rem', color: 'var(--nexus-secondary)' }}>Fichiers Nexus</h4>
+                                <button className="nexus-card" style={{ padding: '6px 12px', background: 'white', fontWeight: 800, fontSize: '0.7rem' }}>Ajouter</button>
                              </div>
-                             {dmsFiles.filter(f => f.relatedId === recordId).length > 0 ? (
-                                dmsFiles.filter(f => f.relatedId === recordId).map(file => (
-                                  <div key={file.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                     <FileText size={16} color="var(--accent)" />
-                                     <div style={{ flex: 1, overflow: 'hidden' }}>
-                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{file.name}</div>
-                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{file.size} · {file.type}</div>
-                                     </div>
-                                  </div>
-                                ))
-                             ) : (
-                                <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.8rem', border: '2px dashed var(--border)', borderRadius: '1rem' }}>
-                                   Aucun document joint.
+                             {dmsFiles.filter(f => f.relatedId === recordId).map(file => (
+                                <div key={file.id} className="nexus-card" style={{ padding: '1rem', background: 'white', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                   <FileText size={20} color="var(--nexus-primary)" />
+                                   <div style={{ flex: 1 }}>
+                                      <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{file.name}</div>
+                                      <div style={{ fontSize: '0.7rem', color: 'var(--nexus-text-muted)' }}>{file.size}</div>
+                                   </div>
                                 </div>
-                             )}
+                             ))}
                           </div>
                        ) : (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                             <div className="glass" style={{ padding: '1rem', borderRadius: '1rem' }}>
-                                <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Identifiant Interne</h4>
-                                <code style={{ fontSize: '0.8rem', color: 'var(--accent)' }}>{recordId}</code>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                             <div className="nexus-card" style={{ padding: '1.5rem', background: 'white' }}>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>ID Interne</div>
+                                <code style={{ fontSize: '0.9rem', color: 'var(--nexus-primary)', fontWeight: 800 }}>{recordId}</code>
                              </div>
-                             <div className="glass" style={{ padding: '1rem', borderRadius: '1rem' }}>
-                                <h4 style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text_muted)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Audit Création</h4>
-                                <div style={{ fontSize: '0.8rem' }}>Créé par: <span style={{ fontWeight: 700 }}>{initialData.user || 'Système'}</span></div>
-                                <div style={{ fontSize: '0.8rem' }}>Le: <span style={{ fontWeight: 700 }}>{initialData.createdAt ? new Date(initialData.createdAt).toLocaleString() : '—'}</span></div>
+                             <div className="nexus-card" style={{ padding: '1.5rem', background: 'white' }}>
+                                <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Audit Log</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{initialData.user || 'IPC User'}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--nexus-text-muted)' }}>{new Date().toLocaleString()}</div>
                              </div>
                           </div>
                        )}
@@ -296,18 +198,11 @@ const RecordModal = ({
                )}
             </div>
 
-            {/* Footer Actions if needed (New Record only) */}
+            {/* Footer */}
             {!recordId && !isReadOnly && (
-              <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                 <button onClick={onClose} className="btn glass" style={{ border: '1px solid var(--border)' }}>Annuler</button>
-                 <button onClick={handleSubmit} className="btn btn-primary" style={{ padding: '0.75rem 2rem' }}><Save size={18}/> Créer {title}</button>
-              </div>
-            )}
-            {!recordId && isReadOnly && (
-              <div style={{ padding: '1.5rem 2.5rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                 <div style={{ color: '#EF4444', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Lock size={18} /> Accès Refusé : Vous n'avez pas les habilitations pour créer des enregistrements.
-                 </div>
+              <div style={{ padding: '1.5rem 3rem', borderTop: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', background: 'var(--nexus-bg)' }}>
+                <button onClick={onClose} style={{ background: 'none', border: 'none', fontWeight: 800, color: 'var(--nexus-text-muted)', cursor: 'pointer' }}>Annuler</button>
+                <button onClick={handleSubmit} className="nexus-card" style={{ background: 'var(--nexus-primary)', padding: '1rem 3rem', color: 'white', fontWeight: 900, border: 'none', cursor: 'pointer' }}>Créer Enregistrement</button>
               </div>
             )}
           </motion.div>

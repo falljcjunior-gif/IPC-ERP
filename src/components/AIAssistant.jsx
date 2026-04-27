@@ -15,12 +15,12 @@ const nexusChatFn = httpsCallable(functions, 'nexusChat');
 
 // ══ Typing animation component ═══════════════════════════════
 const TypingDots = () => (
-  <div style={{ display: 'flex', gap: '4px', padding: '4px 0' }}>
+  <div style={{ display: 'flex', gap: '6px', padding: '6px 0' }}>
     {[0, 1, 2].map(i => (
       <motion.div key={i}
-        animate={{ y: [0, -6, 0], opacity: [0.4, 1, 0.4] }}
-        transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}
-        style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }}
+        animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
+        transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
+        style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--nexus-primary)' }}
       />
     ))}
   </div>
@@ -29,30 +29,31 @@ const TypingDots = () => (
 // ══ Message bubble ════════════════════════════════════════════
 const MessageBubble = ({ m, onExecuteAction }) => (
   <motion.div
-    initial={{ opacity: 0, y: 10 }}
-    animate={{ opacity: 1, y: 0 }}
+    initial={{ opacity: 0, x: m.role === 'user' ? 20 : -20 }}
+    animate={{ opacity: 1, x: 0 }}
     style={{
       alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-      maxWidth: '87%',
+      maxWidth: '85%',
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.5rem'
+      gap: '0.6rem'
     }}
   >
     <div style={{
       background: m.role === 'user'
-        ? 'linear-gradient(135deg, var(--accent), var(--accent-hover))'
-        : 'rgba(255,255,255,0.06)',
-      color: m.role === 'user' ? 'white' : '#e2e8f0',
-      padding: '0.9rem 1.1rem',
+        ? 'var(--nexus-secondary)'
+        : 'white',
+      color: m.role === 'user' ? 'white' : 'var(--nexus-text)',
+      padding: '1rem 1.25rem',
       borderRadius: m.role === 'user'
-        ? '1.5rem 1.5rem 0.3rem 1.5rem'
-        : '1.5rem 1.5rem 1.5rem 0.3rem',
-      fontSize: '0.88rem',
-      lineHeight: 1.65,
-      boxShadow: m.role === 'user' ? '0 4px 15px rgba(16,185,129,0.3)' : 'none',
-      border: m.role === 'user' ? 'none' : '1px solid rgba(255,255,255,0.08)',
+        ? '1.5rem 1.5rem 0.4rem 1.5rem'
+        : '1.5rem 1.5rem 1.5rem 0.4rem',
+      fontSize: '0.9rem',
+      lineHeight: 1.6,
+      boxShadow: 'var(--shadow-nexus)',
+      border: '1px solid var(--nexus-border)',
       whiteSpace: 'pre-wrap',
+      fontWeight: 500
     }}>
       {m.content}
     </div>
@@ -62,39 +63,39 @@ const MessageBubble = ({ m, onExecuteAction }) => (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        className="nexus-card"
         style={{
-          padding: '1rem 1.1rem',
-          borderRadius: '1.2rem',
-          border: '1px solid rgba(16,185,129,0.3)',
-          background: 'rgba(16,185,129,0.07)',
+          padding: '1.25rem',
+          background: 'rgba(16, 185, 129, 0.05)',
+          border: '1px solid rgba(16, 185, 129, 0.2)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.6rem' }}>
-          <Zap size={13} /> Action Nexus disponible
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-primary)', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <Zap size={14} fill="var(--nexus-primary)" stroke="none" /> Nexus Intelligence Action
         </div>
         <button
           onClick={() => onExecuteAction(m.action)}
+          className="nexus-card"
           style={{
             width: '100%',
-            background: 'linear-gradient(135deg, var(--accent), var(--accent-hover))',
+            background: 'var(--nexus-secondary)',
             color: 'white', border: 'none',
-            padding: '0.65rem 1rem',
-            borderRadius: '0.85rem',
-            fontWeight: 800, fontSize: '0.82rem',
+            padding: '0.75rem 1rem',
+            fontWeight: 800, fontSize: '0.85rem',
             cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem'
           }}
         >
-          <CheckCircle2 size={14} />
-          {m.action.type === 'NAVIGATE' ? `Aller vers ${m.action.appId}` : `Créer : ${m.action.label}`}
+          <CheckCircle2 size={16} />
+          {m.action.type === 'NAVIGATE' ? `Ouvrir ${m.action.appId.toUpperCase()}` : `Exécuter : ${m.action.label}`}
         </button>
       </motion.div>
     )}
 
     {/* Error badge */}
     {m.error && (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#F87171', fontWeight: 600 }}>
-        <AlertCircle size={13} /> {m.error}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#ef4444', fontWeight: 700, paddingLeft: '0.5rem' }}>
+        <AlertCircle size={14} /> {m.error}
       </div>
     )}
   </motion.div>
@@ -112,7 +113,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    content: `Bonjour ! Je suis Nexus, votre assistant de gestion.\n\nPosez-moi une question sur vos données, demandez une analyse ou dites-moi de naviguer vers un module.`
+    content: `Système Nexus OS activé.\n\nJe suis prêt à analyser vos opérations, naviguer entre les pôles ou générer des rapports stratégiques. Comment puis-je vous assister ?`
   }]);
 
   const inputRef = useRef(null);
@@ -252,62 +253,56 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
   // ── Bubble (floating chat) ────────────────────────────────
   const renderBubble = () => (
-    <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1rem' }}>
+    <div style={{ position: 'fixed', bottom: '2.5rem', right: '2.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '1.25rem' }}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.92 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.92 }}
-            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+            exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="nexus-card"
             style={{
-              width: shellView?.mobile ? 'calc(100vw - 2rem)' : '420px',
-              height: '620px',
+              width: shellView?.mobile ? 'calc(100vw - 2.5rem)' : '450px',
+              height: '650px',
               borderRadius: '2rem',
               display: 'flex', flexDirection: 'column', overflow: 'hidden',
-              boxShadow: '0 30px 60px -12px rgba(0,0,0,0.6)',
-              border: '1px solid rgba(16,185,129,0.2)',
-              background: 'rgba(9, 16, 32, 0.97)',
-              backdropFilter: 'blur(24px)',
+              background: 'rgba(255, 255, 255, 0.92)',
+              backdropFilter: 'blur(30px)',
+              border: '1px solid var(--nexus-border)',
+              boxShadow: '0 40px 80px -15px rgba(15, 23, 42, 0.15)'
             }}
           >
             {/* Header */}
             <div style={{
-              padding: '1.25rem 1.5rem',
-              background: 'linear-gradient(135deg, #0d9468 0%, #0891b2 100%)',
+              padding: '1.5rem 2rem',
+              background: 'var(--nexus-secondary)',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               flexShrink: 0,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ background: 'rgba(255,255,255,0.2)', padding: '7px', borderRadius: '12px', display: 'flex' }}>
-                  <Cpu size={18} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '8px', borderRadius: '12px', display: 'flex' }}>
+                  <Cpu size={20} color="white" />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '1rem', color: '#fff', letterSpacing: '-0.02em' }}>Nexus</div>
-                  <div style={{ fontSize: '0.65rem', opacity: 0.85, fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>
-                    Votre assistant · Module: {contextLabel}
+                  <div style={{ fontWeight: 900, fontSize: '1.1rem', color: '#fff', letterSpacing: '-0.02em' }}>Nexus Intelligence</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.8, fontWeight: 700, color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Mode: {contextLabel}
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {!apiConfigured && (
-                  <div title="Clé API non configurée" style={{ color: '#FCA5A5', cursor: 'pointer' }}>
-                    <Settings size={18} />
-                  </div>
-                )}
-                <button onClick={() => setIsOpen(false)}
-                  style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', cursor: 'pointer', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <X size={17} />
-                </button>
-              </div>
+              <button onClick={() => setIsOpen(false)}
+                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', width: 34, height: 34, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition-nexus)' }}>
+                <X size={18} />
+              </button>
             </div>
 
             {/* Chat messages */}
-            <div style={{ flex: 1, padding: '1.25rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', scrollbarWidth: 'none' }}>
+            <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', scrollbarWidth: 'none' }}>
               {messages.map((m, i) => <MessageBubble key={i} m={m} onExecuteAction={executeAction} />)}
               {isProcessing && (
                 <div style={{ alignSelf: 'flex-start' }}>
-                  <div style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', padding: '0.9rem 1.2rem', borderRadius: '1.5rem 1.5rem 1.5rem 0.3rem' }}>
+                  <div style={{ background: 'white', border: '1px solid var(--nexus-border)', padding: '1rem 1.5rem', borderRadius: '1.5rem 1.5rem 1.5rem 0.4rem', boxShadow: 'var(--shadow-nexus)' }}>
                     <TypingDots />
                   </div>
                 </div>
@@ -316,29 +311,30 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
             </div>
 
             {/* Input */}
-            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.2)', flexShrink: 0 }}>
-              <div style={{ display: 'flex', gap: '0.6rem', background: 'rgba(255,255,255,0.05)', padding: '0.4rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ padding: '1.5rem', borderTop: '1px solid var(--nexus-border)', background: 'var(--bg-subtle)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '1.25rem', border: '1px solid var(--nexus-border)', boxShadow: 'var(--shadow-sm)', transition: 'var(--transition-nexus)' }}>
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processMessage(query); } }}
-                  placeholder="Interrogez Nexus..."
+                  placeholder="Instruire Nexus..."
                   disabled={isProcessing}
-                  style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#e2e8f0', padding: '0.5rem 0.75rem', fontSize: '0.9rem' }}
+                  style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--nexus-text)', padding: '0.6rem 1rem', fontSize: '0.95rem', fontWeight: 500 }}
                 />
                 <button onClick={startVoice}
-                  style={{ color: isRecording ? '#EF4444' : 'rgba(255,255,255,0.4)', border: 'none', background: 'transparent', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <Mic size={19} />
+                  style={{ color: isRecording ? '#ef4444' : 'var(--nexus-text-muted)', border: 'none', background: 'transparent', padding: '0.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <Mic size={20} />
                 </button>
                 <button
                   onClick={() => processMessage(query)}
                   disabled={isProcessing || !query.trim()}
-                  style={{ background: isProcessing ? 'rgba(16,185,129,0.4)' : 'linear-gradient(135deg, var(--accent), var(--accent-hover))', color: 'white', border: 'none', width: 38, height: 38, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isProcessing ? 'not-allowed' : 'pointer', flexShrink: 0 }}>
-                  {isProcessing ? <Loader2 size={17} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Send size={17} />}
+                  className="nexus-card"
+                  style={{ background: isProcessing ? 'var(--nexus-text-muted)' : 'var(--nexus-secondary)', color: 'white', border: 'none', width: 42, height: 42, borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: isProcessing ? 'not-allowed' : 'pointer', flexShrink: 0 }}>
+                  {isProcessing ? <Loader2 size={18} style={{ animation: 'spin 0.8s linear infinite' }} /> : <Send size={18} />}
                 </button>
               </div>
-              <div style={{ textAlign: 'center', fontSize: '0.64rem', color: 'rgba(255,255,255,0.25)', marginTop: '0.5rem', fontWeight: 600 }}>
-                Votre assistant de gestion I.P.C
+              <div style={{ textAlign: 'center', fontSize: '0.65rem', color: 'var(--nexus-text-muted)', marginTop: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.6 }}>
+                Powered by IPC Nexus Strategy Core
               </div>
             </div>
           </motion.div>
@@ -347,31 +343,32 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
       {/* FAB button */}
       <motion.button
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.1, rotate: 5 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(p => !p)}
+        className="nexus-glow"
         style={{
-          width: 64, height: 64, borderRadius: '20px',
-          background: isOpen ? 'var(--accent-hover)' : 'linear-gradient(135deg, var(--accent), #06B6D4)',
+          width: 70, height: 70, borderRadius: '22px',
+          background: 'var(--nexus-secondary)',
           color: 'white', border: 'none',
-          boxShadow: '0 10px 40px rgba(16,185,129,0.35)',
+          boxShadow: '0 15px 45px rgba(15, 23, 42, 0.25)',
           cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           position: 'relative', overflow: 'hidden',
         }}
       >
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
-          style={{ position: 'absolute', width: '150%', height: '150%', background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%)' }}
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, var(--nexus-primary-glow) 0%, transparent 70%)', opacity: 0.3 }}
         />
         {isProcessing
-          ? <Loader2 size={30} style={{ position: 'relative', zIndex: 1, animation: 'spin 0.8s linear infinite' }} />
-          : <Cpu size={30} style={{ position: 'relative', zIndex: 1 }} />}
+          ? <Loader2 size={32} style={{ position: 'relative', zIndex: 1, animation: 'spin 1s linear infinite' }} />
+          : <Zap size={32} fill="var(--nexus-primary)" stroke="none" style={{ position: 'relative', zIndex: 1 }} />}
       </motion.button>
     </div>
   );
 
-  // ── Spotlight (Cmd+K) ─────────────────────────────────────
+  // ── Spotlight (Nexus Command Palette) ──────────────────────────
   const renderSpotlight = () => (
     <AnimatePresence>
       {spotlightOpen && (
@@ -379,72 +376,77 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setSpotlightOpen(false)}
-            style={{ position: 'absolute', inset: 0, background: 'rgba(9,16,32,0.85)', backdropFilter: 'blur(16px)' }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.4)', backdropFilter: 'blur(20px)' }}
           />
           <motion.div
-            initial={{ opacity: 0, y: -30, scale: 0.97 }}
+            initial={{ opacity: 0, y: -40, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -30, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            exit={{ opacity: 0, y: -40, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 450, damping: 35 }}
+            className="nexus-card"
             style={{
-              position: 'relative', width: 'min(90vw, 780px)', margin: '12vh auto',
-              background: 'rgba(9, 16, 32, 0.98)', borderRadius: '2rem', overflow: 'hidden',
-              boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)', border: '1px solid rgba(16,185,129,0.2)'
+              position: 'relative', width: 'min(90vw, 850px)', margin: '10vh auto',
+              background: 'rgba(255, 255, 255, 0.95)', borderRadius: '2.5rem', overflow: 'hidden',
+              boxShadow: '0 60px 120px -25px rgba(15, 23, 42, 0.3)', border: '1px solid var(--nexus-border)'
             }}
           >
             {/* Search bar */}
-            <div style={{ padding: '1.75rem 2rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ position: 'relative', marginRight: '1.25rem' }}>
-                <motion.div animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 2 }}
-                  style={{ position: 'absolute', inset: -10, background: 'var(--accent)', borderRadius: '50%', filter: 'blur(14px)' }} />
-                <Sparkles size={26} color="var(--accent)" style={{ position: 'relative' }} />
+            <div style={{ padding: '2rem 2.5rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--nexus-border)', gap: '1.5rem' }}>
+              <div style={{ position: 'relative' }}>
+                <motion.div 
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.1, 0.3, 0.1] }} 
+                  transition={{ repeat: Infinity, duration: 3 }}
+                  style={{ position: 'absolute', inset: -15, background: 'var(--nexus-primary)', borderRadius: '50%', filter: 'blur(20px)' }} 
+                />
+                <Cpu size={32} className="nexus-gradient-text" style={{ position: 'relative' }} />
               </div>
               <input
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && query.trim()) { processMessage(query); setSpotlightOpen(false); setIsOpen(true); } }}
-                placeholder="Demandez à Nexus une analyse, un KPI, une navigation..."
-                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: '#f1f5f9', fontSize: '1.45rem', fontWeight: 700, letterSpacing: '-0.02em' }}
+                placeholder="Nexus Command... Demandez une analyse stratégique"
+                style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--nexus-secondary)', fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-0.03em' }}
               />
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.68rem', fontWeight: 800, color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.08)', padding: '5px 10px', borderRadius: '8px' }}>⏎ Envoyer</span>
-                <X size={22} color="rgba(255,255,255,0.3)" style={{ cursor: 'pointer' }} onClick={() => setSpotlightOpen(false)} />
+                <kbd style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', background: 'var(--bg-subtle)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--nexus-border)' }}>Enter</kbd>
+                <X size={26} color="var(--nexus-text-muted)" style={{ cursor: 'pointer', opacity: 0.5 }} onClick={() => setSpotlightOpen(false)} />
               </div>
             </div>
 
-            {/* Quick suggestions */}
-            <div style={{ padding: '1.5rem 2rem' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--accent)', textTransform: 'uppercase', marginBottom: '1.25rem', letterSpacing: '2px' }}>
-                Analyses Rapides
+            {/* Quick Suggestions (Nexus Style) */}
+            <div style={{ padding: '2rem 2.5rem' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)', textTransform: 'uppercase', marginBottom: '1.5rem', letterSpacing: '3px' }}>
+                Moteurs de Calcul Nexus
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
                 {[
-                  { title: 'Performance Supply Chain', icon: <Target size={17} />, tag: 'OTIF ANALYSIS', q: 'Analyse ma performance supply chain et OTIF' },
-                  { title: 'Santé Financière', icon: <TrendingUp size={17} />, tag: 'P&L OVERVIEW', q: 'Donne-moi un bilan de la santé financière' },
-                  { title: 'Masse Salariale & RH', icon: <Activity size={17} />, tag: 'HR INSIGHTS', q: 'Analyse la masse salariale et le turnover' },
-                  { title: 'Efficacité Industrielle', icon: <BarChart3 size={17} />, tag: 'OEE REPORT', q: 'Quel est l\'OEE de production ce mois-ci?' },
+                  { title: 'Performance & OTIF', icon: <Target size={20} />, tag: 'SUPPLY CHAIN', q: 'Analyse OTIF' },
+                  { title: 'Bilan de Santé Global', icon: <TrendingUp size={20} />, tag: 'FINANCIAL CORE', q: 'Bilan financier' },
+                  { title: 'Analyse Capital Humain', icon: <Activity size={20} />, tag: 'HR TELEMETRY', q: 'Analyse RH' },
+                  { title: 'Audit de Production', icon: <BarChart3 size={20} />, tag: 'OEE INDUSTRIAL', q: 'Audit production' },
                 ].map((s, i) => (
                   <motion.div key={i}
-                    whileHover={{ y: -3, borderColor: 'rgba(16,185,129,0.5)', background: 'rgba(16,185,129,0.05)' }}
+                    whileHover={{ y: -5, borderColor: 'var(--nexus-primary)', background: 'rgba(16, 185, 129, 0.05)' }}
                     onClick={() => { setQuery(s.q); processMessage(s.q); setSpotlightOpen(false); setIsOpen(true); }}
-                    style={{ padding: '1.1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                    className="nexus-card"
+                    style={{ padding: '1.5rem', background: 'white', cursor: 'pointer', border: '1px solid var(--nexus-border)' }}
                   >
-                    <div style={{ color: 'var(--accent)', marginBottom: '0.6rem' }}>{s.icon}</div>
-                    <div style={{ fontSize: '0.88rem', fontWeight: 800, marginBottom: '0.2rem', color: '#e2e8f0' }}>{s.title}</div>
-                    <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.35)', fontWeight: 700, letterSpacing: '0.5px' }}>{s.tag}</div>
+                    <div style={{ color: 'var(--nexus-primary)', marginBottom: '0.75rem' }}>{s.icon}</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 900, marginBottom: '0.3rem', color: 'var(--nexus-secondary)', letterSpacing: '-0.01em' }}>{s.title}</div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--nexus-text-muted)', fontWeight: 800, letterSpacing: '1px' }}>{s.tag}</div>
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            <div style={{ padding: '0.85rem 2rem', background: 'rgba(0,0,0,0.3)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.72rem', color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><HelpCircle size={13} /> Cmd+K pour ouvrir</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><MessageSquare size={13} /> Réponses contextuelles ERP</span>
+            <div style={{ padding: '1rem 2.5rem', background: 'var(--nexus-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '2rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><HelpCircle size={14} /> Cmd+K pour Command Palette</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={14} fill="var(--nexus-primary)" stroke="none" /> Intelligence Contextuelle</span>
               </div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 900, color: 'var(--accent)', letterSpacing: '1px' }}>
-                NEXUS · Votre assistant IPC
+              <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)', letterSpacing: '2px' }}>
+                NEXUS OS v5.0
               </div>
             </div>
           </motion.div>

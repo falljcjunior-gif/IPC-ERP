@@ -7,12 +7,10 @@ const CommerceHub = () => {
   const [activeTab, setActiveTab] = useState('pos_boutique');
   const [cart, setCart] = useState([]);
   const [customer, setCustomer] = useState('Passager');
-  const { data, processPOSOrder } = useStore();
+  const { data, processPOSOrder, shellView } = useStore();
 
-  // Using inventory products, filtering out those with no stock if needed, or just all.
   const inventory = useMemo(() => data?.inventory?.products || [], [data]);
 
-  // Helper to add item to cart
   const addToCart = (product) => {
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
@@ -40,94 +38,104 @@ const CommerceHub = () => {
     if (cart.length === 0) return;
     if (processPOSOrder) {
       processPOSOrder({ cart, customer, totalAmount, type: activeTab });
-    } else {
-      // Fallback if processPOSOrder isn't implemented yet
     }
-    setCart([]); // Clear cart
+    setCart([]);
   };
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 400px', height: '100%', gap: '1px', background: 'var(--border)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: shellView?.mobile ? '1fr' : 'minmax(0, 2fr) 450px', height: '100%', gap: '1px', background: 'var(--nexus-border)' }}>
       
       {/* LEFT: PRODUCTS GRID STUDIO */}
-      <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* POS Header */}
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '2rem', borderBottom: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
           <div>
-             <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Store size={22} color="var(--accent)" /> IPC Point de Vente
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '8px' }}>
+                   <Store size={14} color="white" />
+                </div>
+                <span style={{ fontWeight: 900, fontSize: '0.65rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Nexus Retail Core</span>
+             </div>
+             <h1 className="nexus-gradient-text" style={{ fontSize: '2rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px' }}>
+                Commerce Studio
              </h1>
-             <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>Caisse Rapide & Tactile</div>
           </div>
-          <div className="glass" style={{ padding: '0.35rem', borderRadius: '0.8rem', display: 'flex' }}>
-             <button onClick={() => setActiveTab('pos_boutique')} className="btn" style={{ background: activeTab === 'pos_boutique' ? 'var(--bg)' : 'transparent', color: activeTab === 'pos_boutique' ? 'var(--accent)' : 'var(--text-muted)', padding: '0.5rem 1rem', display:'flex', gap:'6px' }}><Store size={15}/> Boutique</button>
-             <button onClick={() => setActiveTab('pos_restaurant')} className="btn" style={{ background: activeTab === 'pos_restaurant' ? 'var(--bg)' : 'transparent', color: activeTab === 'pos_restaurant' ? 'var(--accent)' : 'var(--text-muted)', padding: '0.5rem 1rem', display:'flex', gap:'6px' }}><UtensilsCrossed size={15}/> Restauration</button>
+          <div className="nexus-card" style={{ padding: '0.5rem', borderRadius: '1rem', display: 'flex', background: 'var(--bg-subtle)' }}>
+             <button onClick={() => setActiveTab('pos_boutique')} className="btn" style={{ background: activeTab === 'pos_boutique' ? 'white' : 'transparent', color: activeTab === 'pos_boutique' ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', padding: '0.6rem 1.2rem', display:'flex', gap:'8px', borderRadius: '0.75rem', boxShadow: activeTab === 'pos_boutique' ? 'var(--shadow-sm)' : 'none', fontWeight: 800 }}><Store size={16}/> Boutique</button>
+             <button onClick={() => setActiveTab('pos_restaurant')} className="btn" style={{ background: activeTab === 'pos_restaurant' ? 'white' : 'transparent', color: activeTab === 'pos_restaurant' ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', padding: '0.6rem 1.2rem', display:'flex', gap:'8px', borderRadius: '0.75rem', boxShadow: activeTab === 'pos_restaurant' ? 'var(--shadow-sm)' : 'none', fontWeight: 800 }}><UtensilsCrossed size={16}/> Resto</button>
           </div>
         </div>
 
         {/* Internal Grid Layout */}
-        <div style={{ padding: '2rem', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))', gap: '1.25rem', alignContent: 'start' }}>
+        <div style={{ padding: '2rem', overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 200px), 1fr))', gap: '1.5rem', alignContent: 'start' }}>
           {inventory.map((prod, idx) => (
             <motion.div
-              whileHover={{ y: -4, scale: 1.02 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ y: -5, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => addToCart(prod)}
               key={idx}
-              className="glass"
-              style={{ padding: '1.25rem', borderRadius: '1rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid var(--border)', position: 'relative' }}
+              className="nexus-card"
+              style={{ padding: '1.5rem', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'white', position: 'relative' }}
             >
               {prod.qte <= 5 && (
-                 <div style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#EF4444', color: 'white', padding: '2px 8px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700 }}>
-                    Stock: {prod.qte}
+                 <div className="nexus-glow" style={{ position: 'absolute', top: '12px', right: '12px', background: '#EF4444', color: 'white', padding: '4px 10px', borderRadius: '20px', fontSize: '0.65rem', fontWeight: 900 }}>
+                    LOW STOCK: {prod.qte}
                  </div>
               )}
-              <div style={{ fontWeight: 800, fontSize: '1rem', lineHeight: '1.2', color: 'var(--text)' }}>{prod.nom}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{prod.categorie || 'Standard'} • {prod.um || 'Unité'}</div>
-              <div style={{ marginTop: 'auto', fontWeight: 700, fontSize: '1.1rem', color: 'var(--accent)' }}>
-                {prod.pu ? prod.pu.toLocaleString('fr-FR') : 0} <span style={{ fontSize:'0.75rem' }}>FCFA</span>
+              <div style={{ fontWeight: 900, fontSize: '1.1rem', lineHeight: '1.2', color: 'var(--nexus-secondary)', letterSpacing: '-0.5px' }}>{prod.nom}</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>{prod.categorie || 'Standard'} • {prod.um || 'Unité'}</div>
+              <div style={{ marginTop: 'auto', fontWeight: 900, fontSize: '1.4rem', color: 'var(--nexus-primary)', letterSpacing: '-1px' }}>
+                {prod.pu ? prod.pu.toLocaleString('fr-FR') : 0} <span style={{ fontSize:'0.8rem', fontWeight: 700 }}>FCFA</span>
               </div>
             </motion.div>
           ))}
-          {inventory.length === 0 && <div style={{ color:'var(--text-muted)' }}>Aucun produit en stock ou inventaire vide..</div>}
+          {inventory.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '4rem', color:'var(--nexus-text-muted)', fontWeight: 600 }}>
+               L'inventaire Nexus est actuellement vide ou en cours de synchronisation...
+            </div>
+          )}
         </div>
       </div>
 
       {/* RIGHT: TICKET / CAISSE RECAP */}
-      <div style={{ background: 'var(--bg)', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border)' }}>
-         <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <h2 style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Receipt size={18} /> Ticket Électronique</h2>
-            <div className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-               <UserX size={16} color="var(--text-muted)" />
-               <input value={customer} onChange={e => setCustomer(e.target.value)} placeholder="Nom du client (optionnel)" style={{ border: 'none', background: 'transparent', flex: 1, outline: 'none', color: 'var(--text)', fontSize: '0.9rem', fontWeight: 600 }} />
+      <div style={{ background: 'var(--bg-subtle)', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--nexus-border)', position: 'relative' }}>
+         <div style={{ padding: '2rem', borderBottom: '1px solid var(--nexus-border)', display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'white' }}>
+            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--nexus-secondary)' }}><Receipt size={22} color="var(--nexus-primary)" /> Flux Transactionnel</h2>
+            <div className="nexus-card" style={{ padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-subtle)', border: 'none' }}>
+               <UserX size={18} color="var(--nexus-text-muted)" />
+               <input value={customer} onChange={e => setCustomer(e.target.value)} placeholder="Identifier un client..." style={{ border: 'none', background: 'transparent', flex: 1, outline: 'none', color: 'var(--nexus-secondary)', fontSize: '0.95rem', fontWeight: 700 }} />
             </div>
          </div>
 
          {/* Cart Lines */}
-         <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+         <div style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             <AnimatePresence>
                {cart.length === 0 && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: 'var(--text-muted)', textAlign: 'center', margin: 'auto 0', fontSize: '0.95rem' }}>
-                     Scannez ou cliquez sur un article pour l'ajouter au ticket.
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ color: 'var(--nexus-text-muted)', textAlign: 'center', margin: 'auto 0', fontSize: '1rem', fontWeight: 500, lineHeight: 1.6 }}>
+                     Sélectionnez des actifs numériques ou physiques<br/>pour initialiser le flux de revenus.
                   </motion.div>
                )}
                {cart.map(item => (
                   <motion.div 
                      initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
                      key={item.id} 
-                     style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', borderBottom: '1px dashed var(--border)', paddingBottom: '1rem' }}
+                     className="nexus-card"
+                     style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem', background: 'white' }}
                   >
-                     <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.95rem' }}>
-                        <span>{item.nom}</span>
-                        <span style={{ color: 'var(--accent)' }}>{(item.pu * item.qty).toLocaleString()} FCFA</span>
-                     </div>
-                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{item.pu.toLocaleString()} FCFA / {item.um}</span>
-                        <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: '0.5rem', padding: '0.2rem' }}>
-                           <button onClick={() => decreaseQty(item.id)} className="btn" style={{ background: 'transparent', padding: '0.3rem' }}><Minus size={12} /></button>
-                           <span style={{ fontWeight: 700, width: '20px', textAlign: 'center', fontSize: '0.85rem' }}>{item.qty}</span>
-                           <button onClick={() => addToCart(item)} className="btn" style={{ background: 'transparent', padding: '0.3rem' }}><Plus size={12} /></button>
-                           <button onClick={() => removeFromCart(item.id)} className="btn" style={{ background: '#EF444415', color: '#EF4444', padding: '0.3rem', marginLeft: '0.5rem', borderRadius: '0.4rem' }}><Trash2 size={12} /></button>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                           <span style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)' }}>{item.nom}</span>
+                           <span style={{ color: 'var(--nexus-text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>{item.pu.toLocaleString()} FCFA / {item.um}</span>
                         </div>
+                        <span style={{ color: 'var(--nexus-primary)', fontWeight: 900, fontSize: '1.1rem' }}>{(item.pu * item.qty).toLocaleString()} FCFA</span>
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '4px', borderRadius: '12px' }}>
+                           <button onClick={() => decreaseQty(item.id)} className="btn-icon btn-sm" style={{ background: 'white', borderRadius: '8px' }}><Minus size={14} /></button>
+                           <span style={{ fontWeight: 900, width: '30px', textAlign: 'center', fontSize: '1rem' }}>{item.qty}</span>
+                           <button onClick={() => addToCart(item)} className="btn-icon btn-sm" style={{ background: 'white', borderRadius: '8px' }}><Plus size={14} /></button>
+                        </div>
+                        <button onClick={() => removeFromCart(item.id)} className="btn-icon btn-sm" style={{ background: '#EF444410', color: '#EF4444' }}><Trash2 size={16} /></button>
                      </div>
                   </motion.div>
                ))}
@@ -135,18 +143,18 @@ const CommerceHub = () => {
          </div>
 
          {/* Checkout Actions */}
-         <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem' }}>
-               <span>TOTAL à Payer</span>
-               <span style={{ color: 'var(--accent)' }}>{totalAmount.toLocaleString('fr-FR')} FCFA</span>
+         <div style={{ padding: '2.5rem', borderTop: '1px solid var(--nexus-border)', background: 'white', boxShadow: '0 -10px 40px rgba(15, 23, 42, 0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+               <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--nexus-text-muted)' }}>TOTAL TRANSACTION</span>
+               <span style={{ color: 'var(--nexus-secondary)', fontSize: '2rem', fontWeight: 900, letterSpacing: '-1px' }}>{totalAmount.toLocaleString('fr-FR')} <span style={{ fontSize: '1rem' }}>FCFA</span></span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-               <button disabled={cart.length === 0} onClick={handleCheckout} className="btn" style={{ padding: '1rem', background: 'var(--accent)', color: 'white', borderRadius: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: cart.length === 0 ? 0.5 : 1 }}>
-                  <HandCoins size={18} /> Espèces
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+               <button disabled={cart.length === 0} onClick={handleCheckout} className="nexus-card" style={{ padding: '1.25rem', background: 'var(--nexus-primary)', color: 'white', border: 'none', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', opacity: cart.length === 0 ? 0.5 : 1 }}>
+                  <HandCoins size={20} /> ESPÈCES
                </button>
-               <button disabled={cart.length === 0} onClick={handleCheckout} className="btn" style={{ padding: '1rem', background: '#10B981', color: 'white', borderRadius: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: cart.length === 0 ? 0.5 : 1 }}>
-                  <CreditCard size={18} /> Carte / TPE
+               <button disabled={cart.length === 0} onClick={handleCheckout} className="nexus-card" style={{ padding: '1.25rem', background: 'var(--nexus-secondary)', color: 'white', border: 'none', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', opacity: cart.length === 0 ? 0.5 : 1 }}>
+                  <CreditCard size={20} /> CARTE / TPE
                </button>
             </div>
          </div>

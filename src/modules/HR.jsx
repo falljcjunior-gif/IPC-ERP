@@ -15,103 +15,101 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
   const shellView = useStore(state => state.shellView);
   const [mainTab, setMainTab] = useState('people');
 
-  // Badge count for approvals - Sélecteur isolé pour la performance
   const pendingCount = [
     ...(hrData.leaves || []).filter(l => l.statut === 'En attente' || l.statut === 'Brouillon'),
     ...(hrData.expenses || []).filter(e => e.statut === 'En attente' || e.statut === 'Brouillon')
   ].length;
 
   const tabs = [
-    { id: 'people', label: 'Talents & Collaborateurs', icon: <Users size={16} /> },
+    { id: 'people', label: 'Espace Talents', icon: <Users size={16} /> },
     { 
       id: 'approvals', 
-      label: `Validations RH${pendingCount > 0 ? ` (${pendingCount})` : ''}`, 
+      label: `Validations Nexus${pendingCount > 0 ? ` (${pendingCount})` : ''}`, 
       icon: <CheckSquare size={16} /> 
     },
-    { id: 'onboarding', label: 'Intégration & Habilitations', icon: <UserPlus size={16} /> }
+    { id: 'onboarding', label: 'Intégration Stratégique', icon: <UserPlus size={16} /> }
   ];
 
   return (
-    <div style={{ 
-      padding: shellView?.mobile ? '1rem' : '2.5rem', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: shellView?.mobile ? '1.5rem' : '3rem', 
-      minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)'
-    }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
       
-      {/* --- NEXT GEN HEADER --- */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--accent)', marginBottom: '0.75rem' }}>
-            <motion.div 
-              animate={{ 
-                rotate: [0, 10, -10, 0],
-                boxShadow: ['0 0 0px var(--accent-glow)', '0 0 20px var(--accent-glow)', '0 0 0px var(--accent-glow)']
-              }} 
-              transition={{ repeat: Infinity, duration: 4 }} 
-              style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '12px' }}
-            >
-              <Briefcase size={20} />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>IPC Talent Cloud</span>
-          </div>
-          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>Talents & Culture</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '700px', lineHeight: 1.6 }}>
-            Optimisez le capital humain et pilotez la performance de vos équipes avec une vision à 360°.
-          </p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {pendingCount > 0 && (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              onClick={() => setMainTab('approvals')}
-              className="glass" 
-              style={{ 
-                display: 'flex', alignItems: 'center', gap: '12px', padding: '0.85rem 1.5rem', 
-                borderRadius: '1.25rem', border: '1px solid #F59E0B60', cursor: 'pointer',
-                background: 'rgba(245, 158, 11, 0.05)'
-              }}
-            >
-              <Activity size={18} color="#F59E0B" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#F59E0B' }}>
-                {pendingCount} Alerte{pendingCount > 1 ? 's' : ''} Validation
+      {/* Nexus HR Header */}
+      {!shellView?.mobile ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Users size={16} color="white" fill="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Talent Intelligence
               </span>
-            </motion.div>
-          )}
-          <div className="glass" style={{ padding: '0.85rem 1.25rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-             <TrendingUp size={18} color="var(--accent)" />
-             <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>+4 Recrutements</div>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Human Capital
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Pilotez l'excellence opérationnelle de vos équipes avec la vision contextuelle Nexus.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {pendingCount > 0 && (
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                onClick={() => setMainTab('approvals')}
+                className="nexus-card" 
+                style={{ 
+                  padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white',
+                  border: '1px solid rgba(245, 158, 11, 0.3)', cursor: 'pointer'
+                }}
+              >
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#F59E0B', textTransform: 'uppercase' }}>Alertes Nexus</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#F59E0B' }}>{pendingCount} Validation{pendingCount > 1 ? 's' : ''}</div>
+                </div>
+                <Activity size={24} color="#F59E0B" />
+              </motion.div>
+            )}
+            
+            <div className="nexus-card" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Onboarding Actif</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>+4 Talents</div>
+              </div>
+              <TrendingUp size={24} color="var(--nexus-primary)" />
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }} className="nexus-gradient-text">Talent Hub</h2>
+          <div style={{ background: 'var(--nexus-primary)', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: 900 }}>
+            {pendingCount} Validations
+          </div>
+        </div>
+      )}
 
-      {/* --- PREMIUM TAB NAVIGATION --- */}
-      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
+      {/* Navigation Nexus */}
+      <div className="nexus-card" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '0.5rem', borderRadius: '1.5rem' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* --- CONTENT FRAME --- */}
+      {/* Content Nexus */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 15, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.98 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ position: 'relative', minHeight: '60vh' }}
         >
           {mainTab === 'people' && <PeopleTab data={hrData} onOpenDetail={onOpenDetail} accessLevel={accessLevel} />}
           {mainTab === 'approvals' && <ApprovalsTab accessLevel={accessLevel} />}
           {mainTab === 'onboarding' && <OnboardingTab accessLevel={accessLevel} />}
         </motion.div>
       </AnimatePresence>
-
-      <style>{`
-        .bento-card-hover:hover { transform: translateY(-5px); border-color: var(--accent); }
-      `}</style>
     </div>
   );
 };

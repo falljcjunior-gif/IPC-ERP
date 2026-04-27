@@ -36,6 +36,22 @@
   --radius-sm: 0.75rem;
   --radius-lg: 2rem;
   
+  /* ══ NEXUS DESIGN TOKENS (New Generation) ══ */
+  --nexus-bg: #f8fafc;
+  --nexus-card: #ffffff;
+  --nexus-primary: #10b981;
+  --nexus-primary-glow: rgba(16, 185, 129, 0.15);
+  --nexus-secondary: #0f172a;
+  --nexus-border: rgba(15, 23, 42, 0.08);
+  --nexus-glass: rgba(255, 255, 255, 0.7);
+  --nexus-text: #1e293b;
+  --nexus-text-muted: #64748b;
+  
+  --radius-nexus: 1.5rem;
+  --shadow-nexus: 0 10px 40px -10px rgba(15, 23, 42, 0.05);
+  --shadow-nexus-hover: 0 20px 50px -15px rgba(15, 23, 42, 0.1);
+  --transition-nexus: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+
   /* Layered 3D Shadows */
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.03);
   --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
@@ -314,4 +330,47 @@ h1, h2, h3, h4, h5, h6 {
   main {
     padding-bottom: 90px !important;
   }
+}
+
+/* ══ NEXUS UTILITIES ══ */
+.nexus-floating-sidebar {
+  background: var(--nexus-glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--radius-nexus);
+  box-shadow: var(--shadow-nexus);
+  transition: var(--transition-nexus);
+}
+
+.nexus-card {
+  background: var(--nexus-card);
+  border: 1px solid var(--nexus-border);
+  border-radius: var(--radius-nexus);
+  box-shadow: var(--shadow-nexus);
+  transition: var(--transition-nexus);
+  overflow: hidden;
+}
+
+.nexus-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-nexus-hover);
+  border-color: var(--nexus-primary);
+}
+
+.nexus-gradient-text {
+  background: linear-gradient(135deg, var(--nexus-primary), #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nexus-glow {
+  box-shadow: 0 0 20px var(--nexus-primary-glow);
+}
+
+.nexus-bento-rhythm {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(160px, auto);
+  gap: 1.5rem;
+  grid-auto-flow: dense;
 }

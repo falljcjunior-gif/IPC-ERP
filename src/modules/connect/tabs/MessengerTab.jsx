@@ -78,7 +78,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
     const unsubscribe = FirestoreService.subscribeToCollection('messages', {
       filters: [{ field: 'roomId', operator: '==', value: activeRoom.id }],
-      orderByField: 'createdAt',
+      orderByField: '_createdAt',
       descending: false,
       limitTo: 100
     }, (msgs) => {
@@ -143,7 +143,29 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       { field: 'members', operator: 'array-contains', value: currentUser.id }
     ]);
     return () => unsub();
-  }, [currentUser?.id]);
+  // Typing Indicator Logic
+  useEffect(() => {
+    if (!activeRoom?.id || !currentUser?.id || !newMessage.trim()) {
+      if (activeRoom?.id && currentUser?.id) {
+         FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false });
+      }
+      return;
+    }
+
+    FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: true });
+    
+    const timer = setTimeout(() => {
+      FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false });
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [newMessage, activeRoom?.id, currentUser?.id]);
+
+  const typingUsers = useMemo(() => {
+    return Object.values(activeParticipants)
+      .filter(p => p.id !== currentUser?.id && p.isTyping)
+      .map(p => p.nom || 'Quelqu\'un');
+  }, [activeParticipants, currentUser?.id]);
 
   const startRecording = async () => {
     try {
@@ -232,12 +254,23 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     e.preventDefault();
     if (!newMessage.trim() || !currentUser?.id) return;
     try {
-      await FirestoreService.createDocument('messages', {
+      const msgData = {
         text: newMessage,
         roomId: activeRoom.id,
         userId: currentUser.id,
         userName: currentUser.nom
-      });
+      };
+      await FirestoreService.createDocument('messages', msgData);
+      
+      // Update Room Metadata
+      if (activeRoom.type !== 'direct') {
+        await FirestoreService.updateDocument('rooms', activeRoom.id, {
+          lastMsg: newMessage,
+          lastMsgUserId: currentUser.id,
+          lastMsgUserName: currentUser.nom
+        });
+      }
+
       setNewMessage('');
       inputRef.current?.focus();
     } catch (err) { 
@@ -390,14 +423,14 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                </div>
                <div>
                   <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}>{activeRoom.label}</h4>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                     <Circle size={8} fill="#10B981" color="#10B981" />
-                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10B981' }}>
-                       {Object.keys(activeParticipants).length > 0 
-                         ? `${Object.keys(activeParticipants).length} en appel` 
-                         : 'Actif'}
-                     </span>
-                  </div>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Circle size={8} fill={typingUsers.length > 0 ? "#8B5CF6" : "#10B981"} color={typingUsers.length > 0 ? "#8B5CF6" : "#10B981"} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: typingUsers.length > 0 ? "#8B5CF6" : "#10B981" }}>
+                        {typingUsers.length > 0 
+                          ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'écrivent...' : 'écrit...'}`
+                          : (Object.keys(activeParticipants).length > 0 ? `${Object.keys(activeParticipants).length} en appel` : 'Actif')}
+                      </span>
+                   </div>
                </div>
             </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>

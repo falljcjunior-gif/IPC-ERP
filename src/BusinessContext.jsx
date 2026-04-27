@@ -112,27 +112,31 @@ export const BusinessProvider = ({ children }) => {
       useStore.getState().setPermissions(userPermissions);
     });
 
-    // E. Call Listener (IPC CONNECT) - Using getState check to avoid re-triggering
-    const unsubCalls = onSnapshot(query(collection(db, 'calls'), where('targetUserId', '==', userId), where('status', '==', 'ringing'), limit(1)), (snap) => {
-        if (!snap.empty) {
-          const callDoc = snap.docs[0];
-          const callData = callDoc.data();
-          const currentCall = useStore.getState().activeCall;
-          
-          if (currentCall?.id === callDoc.id) return;
-
-          useStore.getState().setActiveCall({ 
-            id: callDoc.id, 
-            roomId: callData.roomId || callDoc.id,
-            role: 'receiver', 
-            type: callData.type, 
-            contactName: callData.callerName || 'Collègue',
-            status: 'ringing'
-          });
-          
-          const ringFunc = useStore.getState().playRingtone;
-          if (ringFunc) ringFunc();
+    // E. Call Listener (IPC CONNECT)
+    const unsubCalls = onSnapshot(query(collection(db, 'calls'), where('receiverId', '==', userId), where('status', '==', 'ringing'), limit(1)), (snap) => {
+        const currentCall = useStore.getState().activeCall;
+        
+        if (snap.empty) {
+          // If we had a ringing call as receiver, and now it's gone (cancelled/timed out), clear it
+          if (currentCall?.status === 'ringing' && currentCall?.role === 'receiver') {
+            useStore.getState().setActiveCall(null);
+          }
+          return;
         }
+
+        const callDoc = snap.docs[0];
+        const callData = callDoc.data();
+        
+        if (currentCall?.id === callDoc.id) return;
+
+        useStore.getState().setActiveCall({ 
+          id: callDoc.id, 
+          roomId: callData.roomId || callDoc.id,
+          role: 'receiver', 
+          type: callData.type, 
+          contactName: callData.callerName || 'Collègue',
+          status: 'ringing'
+        });
     });
 
     // 0. Auth Identity Bridge

@@ -27,80 +27,98 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
   const { leads = [], opportunities = [] } = data.crm || {};
 
   const tabs = [
-    { id: 'analytics', label: 'Performance & Efficacité', icon: <BarChart3 size={16} /> },
+    { id: 'analytics', label: 'Performance Stratégique', icon: <BarChart3 size={16} /> },
     { id: 'pipeline', label: 'Pipeline Commercial', icon: <Briefcase size={16} /> },
-    { id: 'leads', label: 'Pistes de Vente', icon: <UserPlus size={16} /> },
-    { id: 'customers', label: 'Base Clients & Partenaires', icon: <Users size={16} /> },
+    { id: 'leads', label: 'Centre de Prospects', icon: <UserPlus size={16} /> },
+    { id: 'customers', label: 'Écosystème Clients', icon: <Users size={16} /> },
   ];
 
   const modalConfig = {
-    leads: { title: 'Nouvelle Piste de Vente', schema: crmSchema.models.leads },
-    opportunities: { title: 'Nouvelle Affaire Potentielle', schema: crmSchema.models.opportunities },
-    clients: { title: 'Nouveau Partenaire Client', schema: crmSchema.models.clients }
+    leads: { title: 'Initialiser une Piste Nexus', schema: crmSchema.models.leads },
+    opportunities: { title: 'Déployer une Nouvelle Affaire', schema: crmSchema.models.opportunities },
+    clients: { title: 'Enregistrer un Partenaire Stratégique', schema: crmSchema.models.clients }
   };
 
   return (
-    <div style={{ padding: shellView?.mobile ? '0.75rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: shellView?.mobile ? '1rem' : '3rem', minHeight: '100%', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(16, 185, 129, 0.02) 100%)' }}>
-      {/* Header : masqué sur mobile */}
-      {!shellView?.mobile && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#10B981', marginBottom: '0.75rem' }}>
-              <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2.5 }} style={{ background: '#10B98120', padding: '6px', borderRadius: '8px' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981' }} />
-              </motion.div>
-              <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Sales Intelligence</span>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
+      {/* Nexus Header */}
+      {!shellView?.mobile ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Zap size={16} color="white" fill="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Sales Intelligence
+              </span>
             </div>
-            <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Sales Velocity Hub</h1>
-            <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-              Transformez vos prospects en partenaires fidèles avec une visibilité totale sur votre tunnel de conversion.
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Velocity Engine
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Optimisez votre tunnel de conversion avec l'intelligence contextuelle Nexus. Transformez vos prospects en partenaires stratégiques.
             </p>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-             <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #10B98130' }}>
-                <Zap size={16} color="#10B981" />
-                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981' }}>Pipeline: +15% ce mois</span>
-             </div>
-             <button onClick={() => alert('Exportation globale des données CRM...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-               <Download size={20} />
-             </button>
-             {accessLevel === 'write' && (
-              <button className="btn-primary" onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#10B981', borderColor: '#10B981' }}>
-                <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Piste</span>
+
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="nexus-card" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Pipeline Mensuel</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>+18.4%</div>
+              </div>
+              <Activity size={24} color="var(--nexus-primary)" />
+            </div>
+            
+            {accessLevel === 'write' && (
+              <button 
+                className="nexus-card" 
+                onClick={() => { setModalMode('leads'); setIsModalOpen(true); }}
+                style={{ 
+                  background: 'var(--nexus-secondary)', 
+                  color: 'white', 
+                  padding: '1rem 2rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.75rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 900
+                }}
+              >
+                <Plus size={20} strokeWidth={3} />
+                Nouvelle Opportunité
               </button>
             )}
           </div>
         </div>
-      )}
-      {/* Header mobile minimaliste */}
-      {shellView?.mobile && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.3rem', color: 'var(--text)' }}>CRM</h2>
-            <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#10B981', fontWeight: 700 }}>Pipeline: +15% ce mois</p>
-          </div>
-          {accessLevel === 'write' && (
-            <button onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} style={{ background: '#10B981', color: 'white', border: 'none', cursor: 'pointer', padding: '0.6rem 1rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <Plus size={16} /> Lead
-            </button>
-          )}
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }} className="nexus-gradient-text">Sales Hub</h2>
+          <button 
+            onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} 
+            className="nexus-card"
+            style={{ background: 'var(--nexus-secondary)', color: 'white', border: 'none', padding: '0.75rem', borderRadius: '14px' }}
+          >
+            <Plus size={24} />
+          </button>
         </div>
       )}
 
-      {/* Main Tab Navigation */}
-      <div style={{ overflow: 'hidden' }}>
+      {/* Navigation Onglets Nexus */}
+      <div className="nexus-card" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '0.5rem', borderRadius: '1.5rem' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* Dynamic Content Frame */}
+      {/* Zone de Contenu Nexus */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ minHeight: '60vh' }}
         >
           {mainTab === 'analytics' && <AnalyticsTab leads={leads} opportunities={opportunities} formatCurrency={formatCurrency} />}
           {mainTab === 'pipeline' && <PipelineTab opportunities={opportunities} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}

@@ -203,8 +203,14 @@ export const FirestoreService = {
     try {
       let q = collection(db, collectionName);
       const constraints = [];
-      for (const [field, op, value] of filters) {
-        constraints.push(where(field, op, value));
+      for (const filter of filters) {
+        if (Array.isArray(filter)) {
+          const [field, op, value] = filter;
+          constraints.push(where(field, op, value));
+        } else {
+          const { field, operator, value } = filter;
+          constraints.push(where(field, operator, value));
+        }
       }
       if (orderByField) constraints.push(orderBy(orderByField, descending ? 'desc' : 'asc'));
       if (limitTo) constraints.push(limit(limitTo));

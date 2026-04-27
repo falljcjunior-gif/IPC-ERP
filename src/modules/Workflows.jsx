@@ -9,7 +9,6 @@ import { useStore } from '../store';
 import { registry } from '../services/Registry';
 
 const Workflows = () => {
-  // [AUDIT] Correction: Sélecteur atomique pour éviter les re-renders massifs
   const workflows = useStore(state => state.data?.workflows || []);
   const addRecord = useStore(state => state.addRecord);
   const updateRecord = useStore(state => state.updateRecord);
@@ -18,7 +17,6 @@ const Workflows = () => {
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   
-  // [AUDIT] Génération dynamique de la liste des modules
   const MODULES_MAP = useMemo(() => {
     const map = {};
     registry.getIds().forEach(id => {
@@ -41,15 +39,13 @@ const Workflows = () => {
 
   const handleSaveWorkflow = (e) => {
     e.preventDefault();
-    
-    // [AUDIT] Sécurité: Sanitisation et validation
     if (wfName.length < 3) return;
     
     const payload = {
       name: wfName.trim(),
       targetModule,
       triggerEvent,
-      conditionField: conditionField.trim().replace(/[^a-zA-Z._]/g, ''), // Empêche l'injection de scripts dans les champs
+      conditionField: conditionField.trim().replace(/[^a-zA-Z._]/g, ''),
       operator,
       value: conditionValue.trim(),
       actionType,
@@ -67,7 +63,7 @@ const Workflows = () => {
 
   const resetBuilder = () => {
     setWfName('');
-    setTargetModule('sales.orders');
+    setTargetModule('sales');
     setTriggerEvent('onUpdate');
     setConditionField('statut');
     setOperator('==');
@@ -78,178 +74,157 @@ const Workflows = () => {
   };
 
   return (
-    <div style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-             <Zap color="var(--accent)" /> I.P.C. Automator
-          </h1>
-          <p style={{ color: 'var(--text-muted)' }}>Concevez des règles métier automatisées (Business Process Management).</p>
-        </div>
-        <button className="btn btn-primary" onClick={() => setIsBuilderOpen(true)}>
-          <Plus size={18} /> Créer un Scénario
-        </button>
-      </div>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
+      
+      {/* Nexus Header */}
+      {!shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Zap size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Automator — Intelligent BPM
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Process & Automates
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Concevez des règles métier intelligentes pour automatiser vos opérations et garantir une réactivité instantanée à chaque événement.
+            </p>
+          </div>
 
-      {/* Liste des Workflows */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
+          <button onClick={() => setIsBuilderOpen(true)} className="nexus-card" style={{ background: 'var(--nexus-secondary)', padding: '1rem 2rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Plus size={20} /> Créer un Scénario
+          </button>
+        </div>
+      )}
+
+      {/* Workflows Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
         {workflows.length === 0 ? (
-          <div className="glass" style={{ gridColumn: '1 / -1', padding: '4rem', textAlign: 'center', borderRadius: '2rem', border: '2px dashed var(--border)' }}>
-             <Activity size={48} color="var(--text-muted)" style={{ marginBottom: '1rem', margin: '0 auto' }} />
-             <h3 style={{ color: 'var(--text-muted)' }}>Aucune automatisation en place</h3>
-             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Automatisez vos statuts et vos notifications via des règles SI/ALORS.</p>
+          <div className="nexus-card" style={{ gridColumn: 'span 12', padding: '5rem', textAlign: 'center', background: 'white' }}>
+             <Activity size={64} color="var(--nexus-primary)" style={{ marginBottom: '1.5rem', opacity: 0.3 }} />
+             <h3 style={{ fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Nexus Automator est prêt</h3>
+             <p style={{ color: 'var(--nexus-text-muted)', maxWidth: '400px', margin: '1rem auto' }}>Commencez par créer votre première règle d'automatisation intelligente.</p>
+             <button onClick={() => setIsBuilderOpen(true)} style={{ background: 'var(--nexus-primary)', color: 'white', border: 'none', padding: '0.75rem 2rem', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', marginTop: '1rem' }}>
+                Concevoir une règle
+             </button>
           </div>
         ) : (
           workflows.map((wf) => (
-            <motion.div
-              key={wf.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass"
-              style={{ padding: '1.5rem', borderRadius: '1.5rem', border: wf.active ? '2px solid var(--accent)50' : '2px solid transparent', opacity: wf.active ? 1 : 0.6 }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1.2rem', margin: 0, wordBreak: 'break-word', paddingRight: '1rem' }}>{wf.name}</h3>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                   <button 
-                     onClick={() => updateRecord('workflows', '', wf.id, { active: !wf.active })}
-                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: wf.active ? 'var(--accent)' : 'var(--text-muted)', padding: 0 }}
-                   >
-                     {wf.active ? <ToggleRight size={28} /> : <ToggleLeft size={28} />}
+            <motion.div key={wf.id} whileHover={{ y: -5 }} className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white', borderTop: `4px solid ${wf.active ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)'}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--nexus-secondary)', margin: 0 }}>{wf.name}</h3>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                   <button onClick={() => updateRecord('workflows', '', wf.id, { active: !wf.active })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: wf.active ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)' }}>
+                     {wf.active ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
                    </button>
-                   <button 
-                    onClick={() => deleteRecord('workflows', '', wf.id)}
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#EF4444', padding: 0, marginLeft: '0.5rem' }}
-                   >
+                   <button onClick={() => deleteRecord('workflows', '', wf.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', opacity: 0.5 }}>
                      <Trash2 size={20} />
                    </button>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '1rem', borderRadius: '1rem', fontSize: '0.85rem' }}>
-                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                   <strong style={{ color: 'var(--accent)' }}>QUAND</strong>
-                   <span>{MODULES_MAP[wf.targetModule] || wf.targetModule} est {wf.triggerEvent === 'onUpdate' ? 'Modifié' : 'Créé'}</span>
-                 </div>
-                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                   <strong style={{ color: '#F59E0B' }}>SI</strong>
-                   <span>[{wf.conditionField}] {wf.operator} "{wf.value}"</span>
-                 </div>
-                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                   <strong style={{ color: '#10B981' }}>ALORS</strong>
-                   <span style={{ wordBreak: 'break-word' }}>
-                     {wf.actionType === 'SEND_NOTIFICATION' ? `Notifier ${wf.actionTargetRole} : ${wf.actionPayload}` : `Changer statut -> ${wf.actionPayload}`}
-                   </span>
-                 </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)' }}>SI</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--nexus-secondary)' }}>
+                    {MODULES_MAP[wf.targetModule]} est {wf.triggerEvent === 'onUpdate' ? 'Modifié' : 'Créé'}
+                  </div>
+                </div>
+
+                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: '#F59E0B' }}>ET</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--nexus-secondary)' }}>
+                    [{wf.conditionField}] {wf.operator} "{wf.value}"
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: 'white' }}>DO</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--nexus-primary)' }}>
+                    {wf.actionType === 'SEND_NOTIFICATION' ? `Notifier ${wf.actionTargetRole}` : `Changer Statut`}
+                  </div>
+                </div>
               </div>
             </motion.div>
           ))
         )}
       </div>
 
-      {/* Modal Constructeur de Workflow */}
       <AnimatePresence>
         {isBuilderOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}
-          >
-            <motion.div
-               initial={{ scale: 0.95, y: 20 }}
-               animate={{ scale: 1, y: 0 }}
-               exit={{ scale: 0.95, y: 20 }}
-               className="glass"
-               style={{ width: '100%', maxWidth: '800px', background: 'var(--bg-color)', borderRadius: '1.5rem', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}
-            >
-               <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Settings2 size={20} /> Créateur d'Automatisation BI</h3>
-                 <button className="btn" style={{ padding: '0.5rem' }} onClick={() => setIsBuilderOpen(false)}>
-                   <X size={18} />
-                 </button>
-               </div>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="nexus-card" style={{ width: '100%', maxWidth: '900px', background: 'white', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+              
+              <div style={{ padding: '2rem', background: 'var(--nexus-bg)', borderBottom: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Nouvelle Automatisation</h3>
+                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>Nexus Automator Intelligence Core</p>
+                </div>
+                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'white', border: 'none', width: 40, height: 40, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                  <X size={20} color="var(--nexus-secondary)" />
+                </button>
+              </div>
 
-               <div style={{ padding: '2rem', overflowY: 'auto' }}>
-                 <form id="wf-form" onSubmit={handleSaveWorkflow}>
-                   <div style={{ marginBottom: '2rem' }}>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>Nom de la Règle *</label>
-                      <input required type="text" className="form-control" value={wfName} onChange={e => setWfName(e.target.value)} placeholder="Ex: Alerte Gros Devis Validé" />
-                   </div>
+              <div style={{ padding: '2.5rem', overflowY: 'auto' }}>
+                <form id="wf-form" onSubmit={handleSaveWorkflow} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                  
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 900, color: 'var(--nexus-secondary)', textTransform: 'uppercase', marginBottom: '0.75rem' }}>Identifiant du Scénario</label>
+                    <input required type="text" value={wfName} onChange={e => setWfName(e.target.value)} placeholder="Ex: Alerte Stock Critique" style={{ width: '100%', padding: '1.25rem', borderRadius: '16px', background: 'var(--nexus-bg)', border: '2px solid var(--nexus-border)', fontWeight: 700, fontSize: '1rem', outline: 'none' }} />
+                  </div>
 
-                   {/* STEP 1: TRIGGER */}
-                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '1rem' }}>
-                      <div style={{ background: 'var(--accent)', color: '#fff', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 800 }}>QUAND</div>
-                      <select className="form-control" style={{ flex: 1 }} value={targetModule} onChange={e => setTargetModule(e.target.value)}>
-                         {Object.entries(MODULES_MAP).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--nexus-bg)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--nexus-border)' }}>
+                    <div style={{ background: 'var(--nexus-primary)', color: 'white', padding: '10px 20px', borderRadius: '12px', fontWeight: 900, fontSize: '0.8rem' }}>QUAND</div>
+                    <select value={targetModule} onChange={e => setTargetModule(e.target.value)} style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }}>
+                       {Object.entries(MODULES_MAP).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                    <span style={{ fontWeight: 800, color: 'var(--nexus-text-muted)' }}>est</span>
+                    <select value={triggerEvent} onChange={e => setTriggerEvent(e.target.value)} style={{ width: '200px', padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }}>
+                       <option value="onUpdate">Modifié</option>
+                       <option value="onCreate">Créé</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--nexus-bg)', padding: '2rem', borderRadius: '24px', border: '1px solid var(--nexus-border)' }}>
+                    <div style={{ background: '#F59E0B', color: 'white', padding: '10px 20px', borderRadius: '12px', fontWeight: 900, fontSize: '0.8rem' }}>SI</div>
+                    <input required type="text" value={conditionField} onChange={e => setConditionField(e.target.value)} placeholder="Champ" style={{ width: '150px', padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }} />
+                    <select value={operator} onChange={e => setOperator(e.target.value)} style={{ width: '180px', padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }}>
+                       <option value="==">Est égal à</option>
+                       <option value="!=">Est différent de</option>
+                       <option value=">">Est supérieur à</option>
+                       <option value="<">Est inférieur à</option>
+                    </select>
+                    <input required type="text" value={conditionValue} onChange={e => setConditionValue(e.target.value)} placeholder="Valeur" style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }} />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start', background: 'rgba(16, 185, 129, 0.05)', padding: '2rem', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                    <div style={{ background: 'var(--nexus-primary)', color: 'white', padding: '10px 20px', borderRadius: '12px', fontWeight: 900, fontSize: '0.8rem' }}>ALORS</div>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <select value={actionType} onChange={e => setActionType(e.target.value)} style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }}>
+                         <option value="SEND_NOTIFICATION">Envoyer une Notification Interne</option>
+                         <option value="UPDATE_STATUS">Forcer un changement de Statut</option>
                       </select>
-                      <span>est</span>
-                      <select className="form-control" style={{ width: '150px' }} value={triggerEvent} onChange={e => setTriggerEvent(e.target.value)}>
-                         <option value="onUpdate">Modifié</option>
-                         <option value="onCreate">Créé</option>
-                      </select>
-                   </div>
-
-                   {/* STEP 2: CONDITION */}
-                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem', background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '1rem' }}>
-                      <div style={{ background: '#F59E0B', color: '#fff', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 800 }}>SI</div>
-                      <span style={{ fontSize: '0.9rem' }}>Le champ</span>
-                      <input required type="text" className="form-control" style={{ flex: 1 }} value={conditionField} onChange={e => setConditionField(e.target.value)} placeholder="Ex: statut ou montant" />
-                      <select className="form-control" style={{ width: '150px' }} value={operator} onChange={e => setOperator(e.target.value)}>
-                         <option value="==">Est égal à</option>
-                         <option value="!=">Est différent de</option>
-                         <option value=">">Est supérieur à</option>
-                         <option value="<">Est inférieur à</option>
-                         <option value="contains">Contient</option>
-                      </select>
-                      <input required type="text" className="form-control" style={{ flex: 1 }} value={conditionValue} onChange={e => setConditionValue(e.target.value)} placeholder="Ex: Validé" />
-                   </div>
-
-                   {/* STEP 3: ACTION */}
-                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', background: 'var(--bg-subtle)', padding: '1.5rem', borderRadius: '1rem' }}>
-                      <div style={{ background: '#10B981', color: '#fff', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 800 }}>ALORS</div>
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                        <select className="form-control" value={actionType} onChange={e => setActionType(e.target.value)}>
-                           <option value="SEND_NOTIFICATION">Envoyer une Notification Interne</option>
-                           <option value="UPDATE_STATUS">Forcer un changement de Statut</option>
-                           <option value="LOG_ACTION">Générer un Log Traçable</option>
-                        </select>
-                        
-                        {actionType === 'SEND_NOTIFICATION' && (
-                          <div style={{ display: 'flex', gap: '1rem' }}>
-                             <div style={{ flex: 1 }}>
-                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Destinataire (Rôle ou ALL)</label>
-                                <input required type="text" className="form-control" value={actionTargetRole} onChange={e => setActionTargetRole(e.target.value)} placeholder="MANAGER, ADMIN, ALL" />
-                             </div>
-                             <div style={{ flex: 2 }}>
-                                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Message (Variables: {"{id}, {nom}, {statut}"})</label>
-                                <input required type="text" className="form-control" value={actionPayload} onChange={e => setActionPayload(e.target.value)} placeholder="Le statut est passé à {statut}" />
-                             </div>
-                          </div>
-                        )}
-
-                        {actionType === 'UPDATE_STATUS' && (
-                           <div style={{ flex: 1 }}>
-                              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Nouveau Statut à appliquer</label>
-                              <input required type="text" className="form-control" value={actionPayload} onChange={e => setActionPayload(e.target.value)} placeholder="Ex: Bloqué, Validation Requise..." />
-                           </div>
-                        )}
-
-                        {actionType === 'LOG_ACTION' && (
-                           <div style={{ flex: 1 }}>
-                              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem' }}>Message du Log</label>
-                              <input required type="text" className="form-control" value={actionPayload} onChange={e => setActionPayload(e.target.value)} placeholder="Log auto : Modification sensible" />
-                           </div>
-                        )}
+                      
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                         <input required type="text" value={actionTargetRole} onChange={e => setActionTargetRole(e.target.value)} placeholder="Cible (MANAGER, ALL...)" style={{ flex: 1, padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }} />
+                         <input required type="text" value={actionPayload} onChange={e => setActionPayload(e.target.value)} placeholder="Message ou Valeur" style={{ flex: 2, padding: '1rem', borderRadius: '12px', border: '1px solid var(--nexus-border)', fontWeight: 800 }} />
                       </div>
-                   </div>
-                 </form>
-               </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
 
-               <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                  <button className="btn" onClick={() => setIsBuilderOpen(false)}>Annuler</button>
-                  <button type="submit" form="wf-form" className="btn btn-primary"><Save size={16} /> Activer la Règle</button>
-               </div>
+              <div style={{ padding: '2rem', borderTop: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'flex-end', gap: '1.5rem' }}>
+                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'none', border: 'none', fontWeight: 800, color: 'var(--nexus-text-muted)', cursor: 'pointer' }}>Annuler</button>
+                <button type="submit" form="wf-form" style={{ background: 'var(--nexus-primary)', color: 'white', border: 'none', padding: '1rem 3rem', borderRadius: '16px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)' }}>
+                  Activer le Scénario
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

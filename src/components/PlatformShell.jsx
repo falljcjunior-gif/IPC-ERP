@@ -7,7 +7,7 @@ import {
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
   Folder, Activity as ActivityIcon, Zap, Cpu, MessageCircle,
-  Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe
+  Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe, Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { registry } from '../services/Registry';
@@ -25,6 +25,7 @@ import CallInterface from './CallInterface';
 import MobileNavbar from './MobileNavbar';
 import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';
+import NexusSearch from './NexusSearch';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -66,7 +67,7 @@ const PlatformShell = ({ theme, setView }) => {
     chat: false
   });
 
-  const [search, setSearch] = useState({ query: '', focused: false });
+  const [search, setSearch] = useState({ query: '', focused: false, nexusOpen: false });
   const [details, setDetails] = useState({ record: null, context: { appId: '', subModule: '' } });
   
   // Password Change State
@@ -167,50 +168,46 @@ const PlatformShell = ({ theme, setView }) => {
       '--accent-hover': (config?.theme?.accent || '#3d7870') + 'dd', '--radius': config?.theme?.borderRadius || '1rem'
     }}>
       
-      {/* ── SIDEBAR (Floating Glass Control) ── */}
+      {/* ── SIDEBAR (Nexus Floating Control) ── */}
       <motion.aside 
         initial={{ x: -100, opacity: 0 }}
         animate={{ 
           x: shellView.mobile && !shellView.sidebar ? -280 : 0,
           opacity: 1,
-          width: shellView.sidebar ? '280px' : '80px'
+          width: shellView.sidebar ? '280px' : '90px'
         }}
+        className="nexus-floating-sidebar"
         style={{
-          width: shellView.sidebar ? '280px' : '80px',
           height: 'calc(100vh - 2rem)',
           margin: '1rem',
           position: shellView.mobile ? 'fixed' : 'relative',
           zIndex: 1000,
           display: 'flex',
           flexDirection: 'column',
-          transition: 'var(--transition)',
-          backgroundColor: 'var(--bg-card)',
-          backdropFilter: 'blur(8px) saturate(150%)',
-          WebkitBackdropFilter: 'blur(8px) saturate(150%)',
-          borderRadius: 'var(--radius-lg)',
-          boxShadow: 'var(--shadow-lg)',
-          overflow: 'hidden',
-          border: '1px solid var(--border)'
+          overflow: 'hidden'
         }}
       >
         {/* Sidebar Header / Logo */}
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-          <div style={{ 
-            minWidth: '40px', 
-            height: '40px', 
-            background: 'var(--accent)', 
-            borderRadius: '12px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            boxShadow: '0 0 20px var(--accent-glow)'
-          }}>
-            <Box size={24} color="white" />
-          </div>
+        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--nexus-border)' }}>
+          <motion.div 
+            whileHover={{ rotate: 180, scale: 1.1 }}
+            className="nexus-glow"
+            style={{ 
+              minWidth: '40px', 
+              height: '40px', 
+              background: 'var(--nexus-primary)', 
+              borderRadius: '12px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center'
+            }}
+          >
+            <Cpu size={24} color="white" />
+          </motion.div>
           {shellView.sidebar && (
-            <div style={{ color: 'var(--primary)' }}>
+            <div style={{ color: 'var(--nexus-text)' }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', marginTop: '4px' }}>Control Center</div>
+              <div className="nexus-gradient-text" style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', marginTop: '4px' }}>Nexus OS</div>
             </div>
           )}
         </div>
@@ -220,11 +217,9 @@ const PlatformShell = ({ theme, setView }) => {
           {appsPool.map((cat) => {
             const visibleItems = (cat.items || []).filter(item => {
               if (item.hidden) return false;
-              // Always show all modules to SUPER_ADMIN or if user has no permission entries yet (fresh account)
               if (userRole === 'SUPER_ADMIN') return true;
               if (!currentUser || currentUser.id === 'guest') return item.id === 'home';
               const access = getModuleAccess(currentUser?.id, item.id);
-              // If no permission matrix set up yet for this user, show all modules
               if (!permissions || Object.keys(permissions).length === 0) return true;
               return access !== 'none';
             });
@@ -233,7 +228,7 @@ const PlatformShell = ({ theme, setView }) => {
             return (
               <div key={cat.label} style={{ marginBottom: '1.5rem' }}>
                 {shellView.sidebar && (
-                  <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px', opacity: 0.5 }}>
                     {cat.label}
                   </div>
                 )}
@@ -242,7 +237,7 @@ const PlatformShell = ({ theme, setView }) => {
                   return (
                     <motion.div
                       key={item.id}
-                      whileHover={{ x: 4 }}
+                      whileHover={{ x: 8, backgroundColor: 'rgba(16, 185, 129, 0.05)' }}
                       onClick={() => setActiveApp(item.id)}
                       style={{
                         display: 'flex',
@@ -251,16 +246,16 @@ const PlatformShell = ({ theme, setView }) => {
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
-                        color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-                        background: isActive ? 'var(--bg-subtle)' : 'transparent',
-                        boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
-                        border: isActive ? '1px solid var(--border)' : '1px solid transparent',
-                        transition: 'var(--transition)',
+                        color: isActive ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)',
+                        background: isActive ? 'white' : 'transparent',
+                        boxShadow: isActive ? 'var(--shadow-nexus)' : 'none',
+                        border: isActive ? '1px solid var(--nexus-border)' : '1px solid transparent',
+                        transition: 'var(--transition-nexus)',
                         position: 'relative'
                       }}
                     >
                       {isActive && (
-                        <motion.div layoutId="active-nav" style={{ position: 'absolute', left: 0, width: '4px', height: '60%', background: 'var(--accent)', borderRadius: '0 4px 4px 0' }} />
+                        <motion.div layoutId="active-nav" style={{ position: 'absolute', left: 0, width: '4px', height: '60%', background: 'var(--nexus-primary)', borderRadius: '0 4px 4px 0' }} />
                       )}
                       <div style={{ marginRight: shellView.sidebar ? '1rem' : 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                          {React.cloneElement(item.icon, { size: 20 })}
@@ -275,18 +270,18 @@ const PlatformShell = ({ theme, setView }) => {
         </div>
 
         {/* User Profile / Bottom */}
-        <div style={{ padding: '1rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+        <div style={{ padding: '1rem', borderTop: '1px solid var(--nexus-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem' }}>
-             <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 800, color: 'white' }}>
+             <div className="nexus-glow" style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>
                 {currentUser?.nom?.charAt(0)}
              </div>
              {shellView.sidebar && (
-               <div style={{ color: 'var(--primary)', flex: 1, overflow: 'hidden' }}>
+               <div style={{ color: 'var(--nexus-text)', flex: 1, overflow: 'hidden' }}>
                  <div style={{ fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser?.nom}</div>
-                 <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{userRole}</div>
+                 <div style={{ fontSize: '0.7rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>{userRole}</div>
                </div>
              )}
-             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'rgba(31, 54, 61, 0.4)', cursor: 'pointer' }}>
+             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'var(--nexus-text-muted)', cursor: 'pointer', opacity: 0.5 }}>
                 <LogOut size={18} />
              </button>
           </div>
@@ -302,29 +297,34 @@ const PlatformShell = ({ theme, setView }) => {
         overflowX: 'hidden',
         overflowY: 'auto'
       }}>
-        {/* Topbar (Actions) */}
+        {/* Topbar (Nexus Glass) */}
         <header style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           marginBottom: '2.5rem',
           padding: '0.75rem 1.5rem',
-          background: 'var(--glass-bg)',
-          backdropFilter: 'blur(4px)',
-          borderRadius: '1.5rem',
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow-sm)'
+          background: 'var(--nexus-glass)',
+          backdropFilter: 'blur(8px)',
+          borderRadius: '1.25rem',
+          border: '1px solid var(--nexus-border)',
+          boxShadow: 'var(--shadow-nexus)'
         }}>
            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
-              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--nexus-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {shellView.sidebar ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', padding: '0.5rem 1rem', gap: '0.75rem', flex: 1, maxWidth: '400px' }}>
-                <Search size={18} color="var(--text-muted)" />
-                <input value={search.query} onChange={(e) => setSearch(p => ({ ...p, query: e.target.value }))} placeholder="Rechercher ou scanner..." style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--text)', fontSize: '0.85rem', width: '100%' }} />
-                <button onClick={() => setShowScanner(true)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent)' }}>
-                  <Camera size={18} />
-                </button>
+              <div 
+                onClick={() => setSearch(p => ({ ...p, nexusOpen: true }))}
+                style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid transparent', transition: 'var(--transition-nexus)' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--nexus-primary)'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+              >
+                <Search size={18} color="var(--nexus-text-muted)" />
+                <span style={{ fontSize: '0.9rem', color: 'var(--nexus-text-muted)', flex: 1 }}>Recherche globale Nexus...</span>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'white', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--nexus-border)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <Command size={10} /> K
+                </div>
               </div>
            </div>
            
@@ -334,21 +334,23 @@ const PlatformShell = ({ theme, setView }) => {
                   const newLng = i18n.language === 'fr' ? 'en' : 'fr';
                   i18n.changeLanguage(newLng);
                 }}
-                className="btn-glass" style={{ width: '40px', height: '40px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                 <Globe size={18} />
-                 <span style={{ fontSize: '0.6rem', fontWeight: 900, position: 'absolute', bottom: -5, background: 'var(--accent)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                className="nexus-card" style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                 <Globe size={18} color="var(--nexus-text)" />
+                 <span style={{ fontSize: '0.55rem', fontWeight: 900, position: 'absolute', bottom: -4, background: 'var(--nexus-primary)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
                    {i18n.language.substring(0, 2)}
                  </span>
               </button>
               <div style={{ position: 'relative' }}>
-                <Bell size={22} color="var(--text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
+                <Bell size={22} color="var(--nexus-text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
                 <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
               </div>
-              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="btn-primary" style={{ padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                 <Cpu size={16} /> Nexus
+              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="nexus-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--nexus-secondary)', color: 'white', cursor: 'pointer' }}>
+                 <Zap size={16} fill="var(--nexus-primary)" stroke="none" /> Nexus
               </button>
            </div>
         </header>
+
+        <NexusSearch isOpen={search.nexusOpen} onClose={(val) => setSearch(p => ({ ...p, nexusOpen: val }))} />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -454,6 +456,7 @@ const PlatformShell = ({ theme, setView }) => {
         callType={activeCall?.type}
         contactName={activeCall?.contactName}
       />
+      <CallRingingOverlay />
       <AnimatePresence>
         {showScanner && <BarcodeScanner onClose={() => setShowScanner(false)} onScan={(text) => { setSearch(p => ({ ...p, query: text })); setShowScanner(false); }} />}
       </AnimatePresence>

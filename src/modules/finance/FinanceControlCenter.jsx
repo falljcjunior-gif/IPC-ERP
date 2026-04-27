@@ -22,9 +22,9 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
 
   const allTabs = [
-    { id: 'analytics', label: 'Performance & Analyse', icon: <BarChart3 size={16} /> },
+    { id: 'analytics', label: 'Analyse Stratégique', icon: <BarChart3 size={16} /> },
     { id: 'accounting', label: 'Comptabilité Générale', icon: <Calculator size={16} />, permission: 'MANAGE_FINANCE' },
-    { id: 'invoicing', label: 'Facturation & Créances', icon: <FileText size={16} /> },
+    { id: 'invoicing', label: 'Cycle de Facturation', icon: <FileText size={16} /> },
     { id: 'budget', label: 'Arbitrages Budgétaires', icon: <PiggyBank size={16} />, permission: 'MANAGE_FINANCE' },
     { id: 'banque', label: 'Trésorerie & Banque', icon: <Wallet size={16} />, permission: 'MANAGE_FINANCE' },
   ];
@@ -38,16 +38,16 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
     setIsExporting(true);
     try {
       await IPCReportGenerator.generateFinancialStatement({
-        title: "Bilan de Performance Financière",
-        summary: "Synthèse institutionnelle des flux de trésorerie et de la performance comptable.",
+        title: "Nexus Financial Intelligence Statement",
+        summary: "Analyse institutionnelle consolidée des flux de trésorerie et de la performance stratégique.",
         metrics: [
-          { label: 'Période', value: 'Q2 2024' },
-          { label: 'Score Santé', value: '95%' }
+          { label: 'Période Nexus', value: 'Q2 2024' },
+          { label: 'Indice de Liquidité', value: 'Optimal' }
         ],
         rows: [
-          { module: 'Trésorerie', description: 'Flux de trésorerie opérationnels', status: 'Stable' },
-          { module: 'Facturation', description: 'Taux de recouvrement des créances', status: 'Optimal' },
-          { module: 'Budget', description: 'Consommation des enveloppes budgétaires', status: '82%' }
+          { module: 'Trésorerie', description: 'Flux de trésorerie Nexus Core', status: 'Stable' },
+          { module: 'Facturation', description: 'Performance du recouvrement', status: 'Optimal' },
+          { module: 'Budget', description: 'Efficacité de l\'allocation', status: '82%' }
         ]
       });
     } finally {
@@ -56,80 +56,91 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   };
 
   return (
-    <div style={{ 
-      padding: shellView?.mobile ? '1rem' : '2.5rem', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: shellView?.mobile ? '1.5rem' : '3rem', 
-      minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(6, 78, 59, 0.05) 0%, transparent 50%)'
-    }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
       
-      {/* --- NEXT GEN FINANCE HEADER --- */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#064E3B', marginBottom: '0.75rem' }}>
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.1, 1],
-                boxShadow: ['0 0 0px rgba(6, 78, 59, 0)', '0 0 20px rgba(6, 78, 59, 0.3)', '0 0 0px rgba(6, 78, 59, 0)']
-              }} 
-              transition={{ repeat: Infinity, duration: 5 }} 
-              style={{ background: 'rgba(6, 78, 59, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(6, 78, 59, 0.2)' }}
-            >
-              <Landmark size={20} color="#064E3B" />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
-              {isBudgetContext ? 'IPC Strategic Planning' : 'IPC Institutional Finance'}
-            </span>
+      {/* Nexus Finance Header */}
+      {!shellView?.mobile ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Landmark size={16} color="white" fill="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                {isBudgetContext ? 'Nexus Budgetary Planning' : 'Nexus Financial Intelligence'}
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              {isBudgetContext ? 'Budget Engine' : 'Financial Core'}
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              {isBudgetContext 
+                ? 'Arbitrage et optimisation des ressources stratégiques via le moteur prévisionnel Nexus.'
+                : 'Pilotage haute fidélité de la santé financière. Maîtrisez vos flux et votre liquidité en temps réel.'}
+            </p>
           </div>
-          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            {isBudgetContext ? 'Arbitrages Budgétaires' : 'Finance Excellence Hub'}
-          </h1>
-          <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '700px', lineHeight: 1.6 }}>
-            {isBudgetContext 
-              ? 'Pilotage stratégique des ressources et analyse prévisionnelle de la performance.'
-              : 'Cockpit financier haute fidélité : Maîtrisez vos flux de trésorerie et votre santé comptable en temps réel.'}
-          </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #064E3B40', background: 'rgba(6, 78, 59, 0.05)' }}>
-              <ShieldCheck size={18} color="#064E3B" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#064E3B' }}>Période Active : Q2 2024</span>
-           </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="nexus-card" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Indice de Santé</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>AAA</div>
+              </div>
+              <ShieldCheck size={24} color="var(--nexus-primary)" />
+            </div>
 
-           <button 
-             onClick={handleExport}
-             disabled={isExporting}
-             className="btn-glass" 
-             style={{ width: 'auto', px: '1.5rem', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-           >
-             <Download size={20} /> {isExporting ? 'Export...' : 'Exporter'}
-           </button>
-           
-           <button className="btn-primary" 
+            <button 
+              className="nexus-card" 
+              onClick={handleExport}
+              disabled={isExporting}
+              style={{ background: 'white', padding: '1rem', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}
+            >
+              <Download size={20} color="var(--nexus-secondary)" />
+            </button>
+            
+            <button 
+              className="nexus-card" 
               onClick={() => { setMainTab('accounting'); }}
-              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>Vue Ledger</span>
-           </button>
+              style={{ 
+                background: 'var(--nexus-secondary)', 
+                color: 'white', 
+                padding: '1rem 2rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 900
+              }}
+            >
+              <Sparkles size={20} strokeWidth={3} />
+              Accès Ledger
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }} className="nexus-gradient-text">Finance</h2>
+          <button onClick={handleExport} className="nexus-card" style={{ background: 'white', padding: '0.75rem', borderRadius: '14px' }}>
+            <Download size={24} />
+          </button>
+        </div>
+      )}
 
-      {/* --- PREMIUM TAB NAVIGATION --- */}
-      <div style={{ display: 'flex', justifyContent: shellView?.mobile ? 'flex-start' : 'center', alignItems: 'center', overflowX: 'auto' }}>
+      {/* Navigation Onglets Nexus */}
+      <div className="nexus-card" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '0.5rem', borderRadius: '1.5rem' }}>
         <TabBar tabs={tabs} active={mainTab} onChange={setMainTab} />
       </div>
 
-      {/* --- CONTENT FRAME --- */}
+      {/* Zone de Contenu Nexus */}
       <AnimatePresence mode="wait">
         <motion.div
           key={mainTab}
-          initial={{ opacity: 0, y: 15, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -15, scale: 0.98 }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ minHeight: '60vh' }}
         >
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
           {mainTab === 'accounting' && <AccountingTab onOpenDetail={onOpenDetail} addAccountingEntry={addAccountingEntry} />}

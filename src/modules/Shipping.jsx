@@ -58,7 +58,7 @@ const SHIP_STATUS = {
    SHIPPING MODULE
 ════════════════════════════════════ */
 const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
-  const { data, addRecord, getModuleAccess, currentUser } = useStore();
+  const { data, addRecord, getModuleAccess, currentUser, formatCurrency, shellView } = useStore();
   const accessLevel = getModuleAccess(currentUser?.id, appId);
   const isReadOnly = accessLevel === 'read';
 
@@ -77,29 +77,19 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
     const transit  = SHIPMENTS.filter(s => s.statut === 'En Transit' || s.statut === 'Expédié').length;
     const otif     = (livres + retardes) > 0 ? Math.round((livres / (livres + retardes)) * 100 * 10) / 10 : 0;
     const totalColis = SHIPMENTS.reduce((s, x) => s + (x.colis || 0), 0);
-    const caMoyen    = SHIPMENTS.length > 0 ? SHIPMENTS.reduce((s, x) => s + (x.montant || 0), 0) / SHIPMENTS.length : 0;
-    return { livres, retardes, transit, otif, totalColis, caMoyen };
+    return { livres, retardes, transit, otif, totalColis };
   }, [SHIPMENTS]);
 
   const otifTrend = useMemo(() => {
     if (SHIPMENTS.length === 0) return [];
     const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul'];
-    return months.map(m => ({
-      mois: m,
-      otif: 90 + Math.random() * 8,
-      retards: Math.floor(Math.random() * 5)
-    }));
+    return months.map(m => ({ mois: m, otif: 90 + Math.random() * 8, retards: Math.floor(Math.random() * 5) }));
   }, [SHIPMENTS]);
 
   const volumeTrend = useMemo(() => {
     if (SHIPMENTS.length === 0) return [];
     const weeks = ['S1', 'S2', 'S3', 'S4'];
-    return weeks.map(w => ({
-      sem: w,
-      colisExp: 20 + Math.floor(Math.random() * 30),
-      colisLiv: 18 + Math.floor(Math.random() * 25),
-      retours: Math.floor(Math.random() * 3)
-    }));
+    return weeks.map(w => ({ sem: w, colisExp: 20 + Math.floor(Math.random() * 30), colisLiv: 18 + Math.floor(Math.random() * 25), retours: Math.floor(Math.random() * 3) }));
   }, [SHIPMENTS]);
 
   const causeRetards = useMemo(() => {
@@ -107,8 +97,8 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
     return [
       { cause: 'Douane / Contrôle', pct: 45, color: '#F59E0B' },
       { cause: 'Panne Transporteur', pct: 25, color: '#EF4444' },
-      { cause: 'Intempéries', pct: 15, color: '#3B82F6' },
-      { cause: 'Erreur Destination', pct: 15, color: '#64748B' },
+      { cause: 'Intempéries', pct: 15, color: 'var(--nexus-primary)' },
+      { cause: 'Erreur Destination', pct: 15, color: 'var(--nexus-text-muted)' },
     ];
   }, [SHIPMENTS]);
 
@@ -120,16 +110,18 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
         {steps.map((s, i) => (
           <React.Fragment key={i}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-              <div style={{ width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: i <= idx ? (statut === 'Retardé' && i === idx ? '#EF4444' : '#10B981') : 'var(--bg-subtle)',
-                border: `2px solid ${i <= idx ? (statut === 'Retardé' && i === idx ? '#EF4444' : '#10B981') : 'var(--border)'}` }}>
-                {i <= idx && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'white' }} />}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+              <div style={{ 
+                width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: i <= idx ? (statut === 'Retardé' && i === idx ? '#EF4444' : 'var(--nexus-primary)') : 'var(--nexus-bg)',
+                border: `2px solid ${i <= idx ? (statut === 'Retardé' && i === idx ? '#EF4444' : 'var(--nexus-primary)') : 'var(--nexus-border)'}` 
+              }}>
+                {i <= idx && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'white' }} />}
               </div>
-              <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{s.substring(0,5)}</div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: i <= idx ? 'var(--nexus-secondary)' : 'var(--nexus-text-muted)', whiteSpace: 'nowrap' }}>{s}</div>
             </div>
             {i < steps.length - 1 && (
-              <div style={{ flex: 1, height: '2px', background: i < idx ? '#10B981' : 'var(--border)', minWidth: '20px', marginBottom: '14px' }} />
+              <div style={{ flex: 1, height: '3px', background: i < idx ? 'var(--nexus-primary)' : 'var(--nexus-border)', minWidth: '20px', marginBottom: '14px' }} />
             )}
           </React.Fragment>
         ))}
@@ -158,244 +150,227 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
 
   /* ═══════════ DASHBOARD ═══════════ */
   const renderDashboard = () => (
-    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      
       {/* KPIs */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="OTIF Livraisons"      value={`${kpis.otif}%`}                           trend={0} trendType="down"  icon={<Target size={20}/>}       color="#F59E0B" sparklineData={[]} />
-        <KpiCard title="Livraisons Réalisées" value={kpis.livres}                               trend={0}  trendType="up"    icon={<CheckCircle2 size={20}/>} color="#10B981" sparklineData={[]} />
-        <KpiCard title="En Transit / Expédié" value={kpis.transit}                              trend={0}    trendType="up"    icon={<Navigation size={20}/>}   color="#3B82F6" sparklineData={[]} />
-        <KpiCard title="Livraisons Retardées" value={kpis.retardes}                             trend={0} trendType="down"  icon={<AlertTriangle size={20}/>} color="#EF4444" sparklineData={[]} />
-        <KpiCard title="Colis Total Expédiés" value={kpis.totalColis}                           trend={0}  trendType="up"    icon={<Package size={20}/>}      color="#8B5CF6" sparklineData={[]} />
-      </motion.div>
-
-      {/* Alertes retards */}
-      {SHIPMENTS.filter(s => s.statut === 'Retardé').length > 0 && (
-        <motion.div variants={fadeIn} className="glass" style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #EF444430' }}>
-          <h4 style={{ fontWeight: 700, color: '#EF4444', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <AlertTriangle size={15} /> Expéditions Retardées — Action Requise
-          </h4>
-          {SHIPMENTS.filter(s => s.statut === 'Retardé').map((s, i) => (
-            <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '0.5rem 0', borderTop: i > 0 ? '1px solid var(--border)' : 'none', flexWrap: 'wrap' }}>
-              <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: '0.82rem' }}>{s.id}</span>
-              <span style={{ flex: 1, fontSize: '0.83rem' }}>{s.client} — {s.dest}</span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{s.transporteur}</span>
-              <Chip label="Retardé" color="#EF4444" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><Target size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>QUALITY</div>
             </div>
-          ))}
-        </motion.div>
-      )}
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>OTIF Livraisons</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{kpis.otif}%</div>
+        </div>
 
-      {/* OTIF Trend + Causes retards */}
-      <motion.div variants={fadeIn} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>OTIF & Retards — 7 Mois</h4>
-          <SafeResponsiveChart minHeight={220} fallbackHeight={220} isDataEmpty={SHIPMENTS.length === 0}>
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '10px', color: '#3B82F6' }}><CheckCircle2 size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#3B82F6' }}>SUCCESS</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Livraisons Réalisées</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{kpis.livres}</div>
+        </div>
+
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '8px', borderRadius: '10px', color: '#F59E0B' }}><Navigation size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#F59E0B' }}>TRANSIT</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>En Transit</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{kpis.transit}</div>
+        </div>
+
+        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '10px', color: '#EF4444' }}><AlertTriangle size={20} /></div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#EF4444' }}>ALERT</div>
+            </div>
+            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Retards Détectés</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#EF4444' }}>{kpis.retardes}</div>
+        </div>
+      </div>
+
+      {/* Main Charts Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
+        <div className="nexus-card" style={{ gridColumn: 'span 8', padding: '2rem', background: 'white' }}>
+          <h4 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Activity size={20} color="var(--nexus-primary)" strokeWidth={3} /> OTIF & Retards — Cycle 7 Mois
+          </h4>
+          <SafeResponsiveChart minHeight={300} fallbackHeight={300} isDataEmpty={SHIPMENTS.length === 0}>
             <ComposedChart data={otifTrend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-              <YAxis yAxisId="l" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} domain={[80, 100]} />
-              <YAxis yAxisId="r" orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-              <Tooltip content={<TT />} />
-              <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
-              <Bar  yAxisId="r" dataKey="retards" name="Retards"     fill="#EF444430" radius={[4,4,0,0]} barSize={20} />
-              <Line yAxisId="l" dataKey="otif"    name="OTIF (%)"    stroke="#10B981" strokeWidth={2.5} dot={{ r: 4, fill: '#10B981' }} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--nexus-border)" opacity={0.4} />
+              <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 12, fontWeight: 800 }} dy={10} />
+              <YAxis yAxisId="l" axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 11, fontWeight: 700 }} domain={[80, 100]} />
+              <YAxis yAxisId="r" orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 11, fontWeight: 700 }} />
+              <Tooltip />
+              <Bar  yAxisId="r" dataKey="retards" name="Retards" fill="rgba(239, 68, 68, 0.1)" radius={[6,6,0,0]} barSize={30} />
+              <Line yAxisId="l" dataKey="otif" name="OTIF (%)" stroke="var(--nexus-primary)" strokeWidth={4} dot={{ r: 6, fill: 'var(--nexus-primary)', strokeWidth: 0 }} />
             </ComposedChart>
           </SafeResponsiveChart>
         </div>
-        <div className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem', position: 'relative' }}>
-          <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Causes des Retards</h4>
-          {SHIPMENTS.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100px', opacity: 0.5 }}>
-               <AlertTriangle size={24} />
-               <div style={{ fontSize: '0.7rem', marginTop: '8px' }}>Aucun retard enregistré</div>
-            </div>
-          ) : causeRetards.map((c, i) => (
-            <div key={i} style={{ marginBottom: '0.9rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', marginBottom: '3px' }}>
-                <span style={{ fontWeight: 600 }}>{c.cause}</span>
-                <span style={{ color: c.color, fontWeight: 700 }}>{c.pct}%</span>
-              </div>
-              <div style={{ height: '6px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${c.pct}%` }} transition={{ duration: 1, delay: i * 0.1 }}
-                  style={{ height: '100%', background: c.color, borderRadius: '999px' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
 
-      {/* Scorecard Transporteurs */}
-      <motion.div variants={fadeIn}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.1rem', fontSize: '0.95rem' }}>Performance Transporteurs</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {TRANSPORTEURS.sort((a, b) => b.otif - a.otif).map((t, i) => (
-            <div key={i} className="glass" style={{ padding: '1rem 1.4rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap', borderLeft: `4px solid ${t.color}` }}>
-              <div style={{ flex: '1 1 120px', fontWeight: 700, fontSize: '0.88rem' }}>{t.nom}</div>
-              <div style={{ flex: '0 1 140px' }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '3px' }}>OTIF</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '80px', height: '7px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                    <div style={{ width: `${t.otif}%`, height: '100%', background: t.otif >= 95 ? '#10B981' : t.otif >= 90 ? '#F59E0B' : '#EF4444', borderRadius: '999px' }} />
-                  </div>
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: t.otif >= 95 ? '#10B981' : t.otif >= 90 ? '#F59E0B' : '#EF4444' }}>{t.otif}%</span>
+        <div className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white' }}>
+          <h4 style={{ margin: '0 0 2rem 0', fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <AlertTriangle size={18} color="#EF4444" /> Causes des Retards
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {causeRetards.map((c, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 800, marginBottom: '8px' }}>
+                  <span style={{ color: 'var(--nexus-secondary)' }}>{c.cause}</span>
+                  <span style={{ color: c.color }}>{c.pct}%</span>
+                </div>
+                <div style={{ height: '8px', background: 'var(--nexus-bg)', borderRadius: '999px', overflow: 'hidden' }}>
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${c.pct}%` }} transition={{ duration: 1 }}
+                    style={{ height: '100%', background: c.color, borderRadius: '999px' }} />
                 </div>
               </div>
-              {[
-                { l: 'Livraisons', v: t.livraisons },
-                { l: 'Retards',    v: `${t.retards}%` },
-                { l: 'Coût Moy.',  v: `${(t.coutMoy/1000).toFixed(0)}K FCFA` },
-              ].map((s, j) => (
-                <div key={j} style={{ flex: '0 1 100px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{s.l}</div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>{s.v}</div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Carrier Performance Row */}
+      <div className="nexus-card" style={{ padding: '2rem', background: 'white' }}>
+        <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Truck size={18} color="var(--nexus-primary)" /> Performance des Transporteurs Nexus
+        </h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {TRANSPORTEURS.sort((a, b) => b.otif - a.otif).map((t, i) => (
+            <div key={i} style={{ padding: '1.5rem', borderRadius: '20px', background: 'var(--nexus-bg)', display: 'flex', alignItems: 'center', gap: '2rem', border: '1px solid var(--nexus-border)' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)' }}>{t.nom}</div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Nexus Verified Carrier</div>
+              </div>
+              <div style={{ flex: 2 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 900, marginBottom: '6px' }}>
+                  <span style={{ color: 'var(--nexus-text-muted)' }}>OTIF Score</span>
+                  <span style={{ color: t.otif >= 95 ? 'var(--nexus-primary)' : '#F59E0B' }}>{t.otif}%</span>
                 </div>
-              ))}
+                <div style={{ height: '8px', background: 'white', borderRadius: '999px', overflow: 'hidden' }}>
+                  <div style={{ width: `${t.otif}%`, height: '100%', background: t.otif >= 95 ? 'var(--nexus-primary)' : '#F59E0B' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>VOLUME</div>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)' }}>{t.livraisons}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>COÛT MOY.</div>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)' }}>{Math.round(t.coutMoy/1000)}k</div>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 
   /* ═══════════ BONS DE LIVRAISON ═══════════ */
   const renderShipments = () => (
-    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <motion.div variants={fadeIn} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-        <div className="glass" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.55rem 1rem', borderRadius: '0.75rem', minWidth: '220px' }}>
-          <Search size={15} color="var(--text-muted)" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Chercher BL, client, destination..." style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontSize: '0.88rem', color: 'var(--text)' }} />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="nexus-card" style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.5rem', background: 'white' }}>
+          <Search size={20} color="var(--nexus-text-muted)" />
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder="Rechercher par BL, client, destination..." 
+            style={{ flex: 1, border: 'none', background: 'none', outline: 'none', fontSize: '1rem', fontWeight: 600, color: 'var(--nexus-secondary)' }} 
+          />
         </div>
         {!isReadOnly && (
-          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.84rem' }}>
-            <Plus size={14} /> Nouveau BL
+          <button onClick={() => setModal(true)} className="nexus-card" style={{ background: 'var(--nexus-primary)', padding: '1rem 2rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Plus size={20} /> Nouveau BL
           </button>
         )}
-      </motion.div>
+      </div>
 
-      {/* Cards BL */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 340px), 1fr))', gap: '1.1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
         {filtered.map((s, i) => {
           const sc = SHIP_STATUS[s.statut] || SHIP_STATUS['Expédié'];
           return (
-            <motion.div key={i} variants={fadeIn} whileHover={{ y: -3 }} onClick={() => onOpenDetail?.(s, 'shipping', 'shipments')}
-              className="glass" style={{ padding: '1.4rem', borderRadius: '1.25rem', cursor: 'pointer', borderTop: `3px solid ${sc.color}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--accent)' }}>{s.id}</div>
-                <Chip label={s.statut} color={sc.color} />
+            <motion.div key={i} whileHover={{ y: -5 }} onClick={() => onOpenDetail?.(s, 'shipping', 'shipments')}
+              className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white', cursor: 'pointer' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-primary)' }}>{s.id}</div>
+                <div style={{ padding: '4px 12px', borderRadius: '10px', background: `${sc.color}15`, color: sc.color, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase' }}>{s.statut}</div>
               </div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '4px' }}>{s.client}</div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '1rem' }}>
-                <MapPin size={11} /> {s.dest} · <Truck size={11} /> {s.transporteur}
+              <div style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--nexus-secondary)', marginBottom: '0.5rem' }}>{s.client}</div>
+              <div style={{ fontSize: '0.9rem', color: 'var(--nexus-text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+                <MapPin size={16} color="var(--nexus-primary)" /> {s.dest}
               </div>
 
-              {/* Tracking timeline */}
-              <div style={{ marginBottom: '1rem' }}>
+              <div style={{ marginBottom: '2rem' }}>
                 <TrackingTimeline statut={s.statut} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                {[
-                  { l: 'Colis',   v: s.colis },
-                  { l: 'Poids',   v: s.poids },
-                  { l: 'Expédié', v: s.date.substring(5) },
-                  { l: 'Prévu',   v: s.dateExpec.substring(5) },
-                ].map((d, j) => (
-                  <div key={j} style={{ background: 'var(--bg-subtle)', borderRadius: '0.5rem', padding: '0.4rem 0.5rem' }}>
-                    <div style={{ color: 'var(--text-muted)', fontSize: '0.66rem' }}>{d.l}</div>
-                    <div style={{ fontWeight: 700 }}>{d.v}</div>
-                  </div>
-                ))}
-              </div>
-              {s.tracking !== 'En attente' && (
-                <div style={{ marginTop: '0.75rem', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                  Tracking: <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{s.tracking}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>TRANSPORTEUR</div>
+                  <div style={{ fontWeight: 900, fontSize: '0.9rem', color: 'var(--nexus-secondary)' }}>{s.transporteur}</div>
                 </div>
-              )}
+                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>LIVRAISON PRÉVUE</div>
+                  <div style={{ fontWeight: 900, fontSize: '0.9rem', color: 'var(--nexus-secondary)' }}>{s.dateExpec}</div>
+                </div>
+              </div>
             </motion.div>
           );
         })}
-        {!isReadOnly && (
-          <motion.div whileHover={{ scale: 1.02 }} onClick={() => setModal(true)} variants={fadeIn} className="glass"
-            style={{ padding: '1.4rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: 'var(--text-muted)', minHeight: '160px' }}>
-            <Plus size={26} />
-            <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>Nouveau Bon de Livraison</span>
-          </motion.div>
-        )}
       </div>
-    </motion.div>
-  );
-
-  /* ─── Volume stats mini-view ─── */
-  const renderVolume = () => (
-    <motion.div variants={stagger} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Volume Hebdomadaire — Colis Expédiés / Livrés</h4>
-        <SafeResponsiveChart minHeight={250} fallbackHeight={250} isDataEmpty={SHIPMENTS.length === 0}>
-          <BarChart data={volumeTrend}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-            <XAxis dataKey="sem" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-            <Tooltip content={<TT />} />
-            <Legend wrapperStyle={{ fontSize: '0.78rem' }} />
-            <Bar dataKey="colisExp" name="Expédiés" fill="#3B82F6" radius={[4,4,0,0]} barSize={24} />
-            <Bar dataKey="colisLiv" name="Livrés"   fill="#10B981" radius={[4,4,0,0]} barSize={24} />
-            <Bar dataKey="retours"  name="Retours"  fill="#EF4444" radius={[4,4,0,0]} barSize={24} />
-          </BarChart>
-        </SafeResponsiveChart>
-      </motion.div>
-
-      {/* Par destination */}
-      <motion.div variants={fadeIn} className="glass" style={{ padding: '1.75rem', borderRadius: '1.25rem' }}>
-        <h4 style={{ fontWeight: 700, marginBottom: '1.25rem', fontSize: '0.95rem' }}>Flux par Région de Destination</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-          {[].map((r, i) => (
-            <div key={i}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Globe size={13} color={r.color} /> <span style={{ fontWeight: 600 }}>{r.region}</span>
-                </div>
-                <span style={{ color: r.color, fontWeight: 700 }}>{r.livraisons} livraisons · {r.pct}%</span>
-              </div>
-              <div style={{ height: '8px', background: 'var(--bg-subtle)', borderRadius: '999px', overflow: 'hidden' }}>
-                <motion.div initial={{ width: 0 }} animate={{ width: `${r.pct}%` }} transition={{ duration: 1, delay: i * 0.15 }}
-                  style={{ height: '100%', background: r.color, borderRadius: '999px' }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
+    </div>
   );
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3B82F6', marginBottom: '0.4rem' }}>
-            <Truck size={16} />
-            <span style={{ fontWeight: 800, fontSize: '0.73rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Logistique — Shipping & Delivery</span>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
+      
+      {/* Nexus Header */}
+      {!shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Truck size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Supply Chain & Logistics
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Expéditions & Livraisons
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Supervisez vos flux logistiques mondiaux avec une visibilité totale sur l'OTIF et le tracking en temps réel.
+            </p>
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>Expéditions & Livraisons</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>
-            OTIF · Tracking Temps Réel · Transporteurs · Volumes
-          </p>
+
+          {!isReadOnly && (
+            <button onClick={() => setModal(true)} className="nexus-card" style={{ background: 'var(--nexus-secondary)', padding: '1rem 2rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Plus size={20} /> Nouveau BL
+            </button>
+          )}
         </div>
-        {!isReadOnly && (
-          <button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0.55rem 1.25rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-            <Plus size={15} /> Nouveau Bon de Livraison
-          </button>
-        )}
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <TabBar tabs={[
+          { id: 'dashboard',  label: 'Dashboard OTIF',      icon: <BarChart3 size={16}/> },
+          { id: 'shipments',  label: 'Bons de Livraison',   icon: <FileText size={16}/> },
+          { id: 'volume',     label: 'Volume & Flux',        icon: <Activity size={16}/> },
+        ]} active={tab} onChange={setTab} />
       </div>
 
-      <TabBar tabs={[
-        { id: 'dashboard',  label: 'Dashboard OTIF',      icon: <BarChart3 size={14}/> },
-        { id: 'shipments',  label: 'Bons de Livraison',   icon: <FileText size={14}/> },
-        { id: 'volume',     label: 'Volume & Flux',        icon: <Activity size={14}/> },
-      ]} active={tab} onChange={setTab} />
-
-      {tab === 'dashboard' && renderDashboard()}
-      {tab === 'shipments' && renderShipments()}
-      {tab === 'volume'    && renderVolume()}
+      <AnimatePresence mode="wait">
+        <motion.div key={tab} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+          {tab === 'dashboard' && renderDashboard()}
+          {tab === 'shipments' && renderShipments()}
+          {tab === 'volume'    && renderVolume()}
+        </motion.div>
+      </AnimatePresence>
 
       <RecordModal isOpen={modal} onClose={() => setModal(false)} title="Nouveau Bon de Livraison" appId={appId}
         fields={modalFields} onSave={f => { addRecord('shipping', 'shipments', { ...f, tracking: 'En attente' }); setModal(false); }} />

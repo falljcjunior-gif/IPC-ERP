@@ -10,12 +10,34 @@ import { baseSchema } from '../schemas/base.schema.js';
 
 /* ─── Helpers ─── */
 const TabBar = ({ tabs, active, onChange }) => (
-  <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.9rem', border: '1px solid var(--border)', gap: '0.2rem', width: 'fit-content' }}>
-    {tabs.map(t => (
-      <button key={t.id} onClick={() => onChange(t.id)} style={{ padding: '0.45rem 1rem', borderRadius: '0.7rem', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', background: active === t.id ? 'var(--bg)' : 'transparent', color: active === t.id ? 'var(--accent)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        {t.icon} {t.label}
-      </button>
-    ))}
+  <div className="nexus-card" style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.03)', padding: '0.4rem', borderRadius: '1rem', gap: '0.4rem', border: '1px solid var(--nexus-border)' }}>
+    {tabs.map(t => {
+      const isActive = active === t.id;
+      return (
+        <button 
+          key={t.id} 
+          onClick={() => onChange(t.id)} 
+          style={{ 
+            padding: '0.6rem 1.25rem', 
+            borderRadius: '0.75rem', 
+            border: 'none', 
+            cursor: 'pointer', 
+            fontWeight: 800, 
+            fontSize: '0.8rem', 
+            background: isActive ? 'white' : 'transparent', 
+            color: isActive ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)', 
+            boxShadow: isActive ? 'var(--shadow-nexus)' : 'none',
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.75rem',
+            transition: 'var(--transition-nexus)'
+          }}
+        >
+          {React.cloneElement(t.icon, { size: 16, strokeWidth: isActive ? 3 : 2 })} 
+          {t.label}
+        </button>
+      );
+    })}
   </div>
 );
 
@@ -24,37 +46,60 @@ const TabBar = ({ tabs, active, onChange }) => (
    Now powered by IPC Platform Engine
    ════════════════════════════════════ */
 const MasterData = ({ onOpenDetail }) => {
-  const [view, setView] = useState('contacts'); // 'contacts' | 'catalog'
+  const { shellView } = useStore();
+  const [view, setView] = useState('contacts');
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-       {/* Module Header Toolbar */}
-       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--accent)', marginBottom: '0.4rem' }}>
-                <Database size={16} /><span style={{ fontWeight: 800, fontSize: '0.73rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Data Core — Central Repository</span>
-             </div>
-             <h1 style={{ fontSize: '2rem', fontWeight: 800, margin: 0 }}>Données Maîtres</h1>
-             <p style={{ color: 'var(--text-muted)', margin: '0.3rem 0 0 0', fontSize: '0.92rem' }}>Référentiel global · Partenaires · Catalogue Articles</p>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
+      
+      {/* Nexus Header */}
+      {!shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Database size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Data Core — Central Registry
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Données Maîtres
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Gérez votre référentiel global de partenaires et votre catalogue d'articles avec une intégrité de données garantie.
+            </p>
           </div>
-          <TabBar tabs={[
-             { id: 'contacts', label: 'Contacts', icon: <Users size={16} /> },
-             { id: 'catalog', label: 'Catalogue', icon: <Package size={16} /> }
-          ]} active={view} onChange={setView} />
-       </div>
 
-       <div className="glass" style={{ borderRadius: '1.5rem', flex: 1, minHeight: '600px' }}>
-          <AnimatePresence mode="wait">
-             <motion.div key={view} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
-                <EnterpriseView 
-                   moduleId="base" 
-                   modelId={view}
-                   schema={baseSchema}
-                   onOpenDetail={onOpenDetail}
-                />
-             </motion.div>
-          </AnimatePresence>
-       </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '1rem' }}>
+            <TabBar tabs={[
+              { id: 'contacts', label: 'Contacts', icon: <Users size={16} /> },
+              { id: 'catalog', label: 'Catalogue', icon: <Package size={16} /> }
+            ]} active={view} onChange={setView} />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area */}
+      <div className="nexus-card" style={{ background: 'white', flex: 1, minHeight: '700px', padding: '1.5rem' }}>
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={view} 
+            initial={{ opacity: 0, x: 20 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            exit={{ opacity: 0, x: -20 }} 
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+          >
+            <EnterpriseView 
+              moduleId="base" 
+              modelId={view}
+              schema={baseSchema}
+              onOpenDetail={onOpenDetail}
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

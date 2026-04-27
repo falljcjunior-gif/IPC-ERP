@@ -18,7 +18,7 @@ import OrdersTab from './tabs/OrdersTab';
 import CatalogTab from './tabs/CatalogTab';
 
 const Sales = ({ onOpenDetail, accessLevel }) => {
-  const { data, addRecord, formatCurrency, userRole } = useStore();
+  const { data, addRecord, formatCurrency, shellView } = useStore();
   const [view, setView] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('orders');
@@ -26,64 +26,101 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
   const opportunities = useMemo(() => data?.crm?.opportunities || [], [data?.crm?.opportunities]);
 
   const tabs = [
-    { id: 'dashboard', label: 'Revenue Hub', icon: <BarChart3 size={16} /> },
-    { id: 'orders', label: 'Commandes', icon: <ShoppingCart size={16} /> },
-    { id: 'products', label: 'Catalogue', icon: <Tag size={16} /> }
+    { id: 'dashboard', label: 'Performance Hub', icon: <BarChart3 size={16} /> },
+    { id: 'orders', label: 'Espace Commandes', icon: <ShoppingCart size={16} /> },
+    { id: 'products', label: 'Catalogue Offres', icon: <Tag size={16} /> }
   ];
 
   const modalConfig = {
-    orders: { title: 'Nouvelle Commande', schema: salesSchema.models.orders },
-    products: { title: 'Nouveau Produit', schema: salesSchema.models.products }
+    orders: { title: 'Nouvelle Commande Nexus', schema: salesSchema.models.orders },
+    products: { title: 'Nouvelle Offre Catalogue', schema: salesSchema.models.products }
   };
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '100%', background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(59, 130, 246, 0.02) 100%)' }}>
-      {/* Header Premium Experience */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#3B82F6', marginBottom: '0.75rem' }}>
-            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 3 }} style={{ background: '#3B82F620', padding: '6px', borderRadius: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3B82F6' }} />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Revenue Hub</span>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
+      
+      {/* Nexus Sales Header */}
+      {!shellView?.mobile ? (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <TrendingUp size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Sales Engine Intelligence
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Revenue Hub
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Optimisez votre cycle de vente et pilotez vos flux de revenus avec le moteur d'exécution commerciale Nexus.
+            </p>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Ventes & Revenus</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Pilotez votre performance commerciale avec une visibilité totale sur vos commandes, votre catalogue et vos prévisions de croissance.
-          </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #3B82F630' }}>
-              <Target size={16} color="#3B82F6" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3B82F6' }}>Objectif Q2: 85% Atteint</span>
-           </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="nexus-card" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Objectif Q2</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>85.4%</div>
+              </div>
+              <Target size={24} color="var(--nexus-primary)" />
+            </div>
 
-           <button onClick={() => alert('Génération du rapport de ventes global...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
-             <Download size={20} />
-           </button>
-           {accessLevel === 'write' && (
-            <button className="btn-primary" onClick={() => { setModalMode('orders'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Commande</span>
+            <button 
+              className="nexus-card" 
+              onClick={() => alert('Génération du rapport Nexus Sales...')}
+              style={{ background: 'white', padding: '1rem', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}
+            >
+              <Download size={20} color="var(--nexus-secondary)" />
             </button>
-          )}
+            
+            {accessLevel === 'write' && (
+              <button 
+                className="nexus-card" 
+                onClick={() => { setModalMode('orders'); setIsModalOpen(true); }}
+                style={{ 
+                  background: 'var(--nexus-secondary)', 
+                  color: 'white', 
+                  padding: '1rem 2rem', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.75rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 900
+                }}
+              >
+                <Plus size={20} strokeWidth={3} />
+                Nouvelle Commande
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }} className="nexus-gradient-text">Ventes</h2>
+          <button onClick={() => { setModalMode('orders'); setIsModalOpen(true); }} className="nexus-card" style={{ background: 'var(--nexus-primary)', padding: '0.75rem', borderRadius: '14px', color: 'white' }}>
+            <Plus size={24} />
+          </button>
+        </div>
+      )}
 
-      {/* Main Tab Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem' }}>
+      {/* Navigation Nexus */}
+      <div className="nexus-card" style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)', padding: '0.5rem', borderRadius: '1.5rem' }}>
         <TabBar tabs={tabs} active={view} onChange={setView} />
       </div>
 
-      {/* Dynamic Content Frame */}
+      {/* Content Nexus */}
       <AnimatePresence mode="wait">
         <motion.div
           key={view}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
+          initial={{ opacity: 0, scale: 0.98, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ minHeight: '60vh' }}
         >
           {view === 'dashboard' && <AnalyticsTab opportunities={opportunities} formatCurrency={formatCurrency} />}
           {view === 'orders' && <OrdersTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}

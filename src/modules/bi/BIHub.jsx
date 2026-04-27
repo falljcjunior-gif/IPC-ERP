@@ -15,7 +15,7 @@ import FinancialTab from './tabs/FinancialTab';
 import GrowthTab from './tabs/GrowthTab';
 
 const BIHub = () => {
-  const { data, formatCurrency } = useStore();
+  const { data, formatCurrency, shellView } = useStore();
   const [activeTab, setActiveTab] = useState('executive');
 
   const tabs = [
@@ -26,44 +26,53 @@ const BIHub = () => {
   ];
 
   return (
-    <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '1000px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.02) 0%, rgba(139, 92, 246, 0.02) 100%)' }}>
+    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '3rem', minHeight: '100%' }}>
       
-      {/* Executive Header : The Boardroom Cockpit */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#6366F1', marginBottom: '1rem' }}>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} style={{ background: '#6366F120', padding: '8px', borderRadius: '10px' }}>
-              <Globe size={20} />
-            </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC STRATEGIC OS</span>
+      {/* Nexus Header */}
+      {!shellView?.mobile && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
+                <Globe size={16} color="white" />
+              </div>
+              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                Nexus Strategic Intelligence Hub
+              </span>
+            </div>
+            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
+              Decision Core
+            </h1>
+            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
+              Centralisez vos données stratégiques et visualisez la trajectoire de votre entreprise avec une précision militaire.
+            </p>
           </div>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', color: '#0F172A', lineHeight: 1 }}>Decision Core</h1>
-          <p style={{ color: 'var(--text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-            Intelligence centralisée : Visualisez la santé de vos opérations, vos flux financiers et votre vitesse de croissance en un cockpit unifié.
-          </p>
-        </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.75rem 1.5rem', borderRadius: '3rem', border: '1px solid #6366F130' }}>
-              <ShieldCheck size={16} color="#6366F1" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#6366F1' }}>Données Consolidées : 100% OK</span>
-           </div>
-           
-           <button className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)' }}>
-              <Calendar size={22} />
-           </button>
-           <button className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Download size={20} /> <span style={{ fontWeight: 800 }}>Rapport Exécutif</span>
-           </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div className="nexus-card" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', background: 'white' }}>
+              <ShieldCheck size={24} color="var(--nexus-primary)" />
+              <div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Consolidation Nexus</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>100% OK</div>
+              </div>
+            </div>
+
+            <button className="nexus-card" style={{ background: 'white', padding: '1rem', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}>
+               <Calendar size={20} color="var(--nexus-secondary)" />
+            </button>
+            <button className="nexus-card" style={{ background: 'var(--nexus-secondary)', padding: '1rem 2rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none' }}>
+               Rapport Exécutif
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Intelligence Navigation */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <TabBar tabs={tabs} active={activeTab} onChange={setActiveTab} />
       </div>
 
-      {/* Analytics Experience Frame */}
+      {/* Experience Frame */}
       <AnimatePresence mode="wait">
         <motion.div
           key={activeTab}
@@ -71,7 +80,6 @@ const BIHub = () => {
           animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
           exit={{ opacity: 0, y: -15, filter: 'blur(10px)' }}
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative' }}
         >
           {activeTab === 'executive' && <ExecutiveTab data={data} formatCurrency={formatCurrency} />}
           {activeTab === 'industrial' && <IndustrialTab data={data} />}
@@ -80,19 +88,28 @@ const BIHub = () => {
         </motion.div>
       </AnimatePresence>
 
-      {/* IA Strategic Insight Footer */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }} style={{ marginTop: '2rem', padding: '2rem', borderRadius: '2.5rem', background: '#0F172A', color: 'white', display: 'flex', alignItems: 'center', gap: '2rem', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
-         <div style={{ padding: '15px', borderRadius: '20px', background: 'rgba(99, 102, 241, 0.2)', color: '#6366F1' }}>
+      {/* Nexus AI Insights */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        className="nexus-card" 
+        style={{ padding: '2.5rem', background: 'white', border: '2px solid var(--nexus-primary)', display: 'flex', alignItems: 'center', gap: '2.5rem' }}
+      >
+         <div className="nexus-glow" style={{ padding: '20px', borderRadius: '24px', background: 'var(--nexus-primary)', color: 'white' }}>
             <Sparkles size={32} />
          </div>
          <div style={{ flex: 1 }}>
-            <h4 style={{ margin: 0, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', color: '#6366F1', marginBottom: '8px' }}>IPC Intelligence Insight</h4>
-            <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: 500, lineHeight: 1.4, opacity: 0.9 }}>
-               "Analyse en cours : La vitesse de croissance du pôle **Growth** (+12%) compense largement la légère baisse de l'OTIF industriel ce mois-ci. La trésorerie reste saine avec un runway projeté de 18 mois."
+            <div style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--nexus-primary)', marginBottom: '8px' }}>
+              Nexus Intelligence Insight Engine
+            </div>
+            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: 'var(--nexus-secondary)', lineHeight: 1.4 }}>
+              "Analyse prédictive : La synergie entre le pôle Industriel et la vélocité Growth projette une augmentation de 15% de la marge opérationnelle d'ici le prochain trimestre."
             </p>
          </div>
       </motion.div>
     </div>
+  );
+};
   );
 };
 

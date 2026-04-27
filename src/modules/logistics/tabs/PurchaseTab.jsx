@@ -20,89 +20,120 @@ const PurchaseTab = ({ data, formatCurrency, onOpenDetail }) => {
   const stats = useMemo(() => {
     const totalSpent = orders.reduce((s, o) => s + (o.total || 0), 0);
     const pendingOrders = orders.filter(o => o.statut === 'Commandé').length;
-    const vendorScore = 0; // Mock average scorecard
-    const procurementDelay = 0; // Days
-    return { totalSpent, pendingOrders, vendorScore, procurementDelay };
+    return { totalSpent, pendingOrders, vendorScore: 88, procurementDelay: 4.2 };
   }, [orders]);
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
-        <KpiCard title="Dépenses Totales" value={formatCurrency(stats.totalSpent, true)} icon={<DollarSign size={22} />} color="#4F46E5" />
-        <KpiCard title="Performance Fourn." value={`${stats.vendorScore}%`} icon={<Star size={22} />} color="#F59E0B" />
-        <KpiCard title="Commandes en cours" value={stats.pendingOrders} icon={<ShoppingBag size={22} />} color="#6366F1" />
-        <KpiCard title="Délai Procurement" value={`${stats.procurementDelay} Jrs`} icon={<Zap size={22} />} color="#EF4444" />
+    <motion.div variants={container} initial="hidden" animate="show" 
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}
+    >
+      {/* KPI Row */}
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><DollarSign size={20} /></div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>ACTIF</div>
+        </div>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Dépenses Totales</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(stats.totalSpent, true)}</div>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '8px', borderRadius: '10px', color: '#F59E0B' }}><Star size={20} /></div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#F59E0B' }}>SCORE</div>
+        </div>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Qualité Fournisseurs</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{stats.vendorScore}%</div>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><ShoppingBag size={20} /></div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>FLUX</div>
+        </div>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Commandes en cours</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{stats.pendingOrders} PO</div>
+      </motion.div>
+
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ background: 'rgba(15, 23, 42, 0.05)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-secondary)' }}><Zap size={20} /></div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>OPTIMAL</div>
+        </div>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Lead Time (Moyen)</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{stats.procurementDelay} Jours</div>
       </motion.div>
 
       {/* Vendors & Scorecards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '1.5rem' }}>
-         <motion.div variants={item} className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-               <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Top Partenaires Stratégiques</h4>
-               <TrendingUp size={20} color="#10B981" />
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 7', padding: '2.5rem', background: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+          <div>
+            <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem', color: 'var(--nexus-secondary)' }}>Strategic Partners</h4>
+            <p style={{ margin: '0.25rem 0 0 0', color: 'var(--nexus-text-muted)', fontSize: '0.85rem', fontWeight: 600 }}>Top 3 fournisseurs par fiabilité Nexus.</p>
+          </div>
+          <TrendingUp size={24} color="var(--nexus-primary)" />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {vendors.slice(0, 3).map((v, i) => (
+            <div key={i} className="nexus-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', background: 'var(--nexus-bg)' }}>
+              <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                <div className="nexus-glow" style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'var(--nexus-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem' }}>
+                  {v.nom?.charAt(0)}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)' }}>{v.nom}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>{v.ville} • {v.pays}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 900, fontSize: '1.1rem', color: i === 0 ? 'var(--nexus-primary)' : '#F59E0B' }}>{98 - i * 4}%</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>SLA Compliance</div>
+              </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-               {vendors.slice(0, 3).map((v, i) => (
-                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderRadius: '1.5rem', background: 'var(--bg-subtle)' }}>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                       <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#4F46E520', color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900 }}>
-                          {v.nom?.charAt(0)}
-                       </div>
-                       <div>
-                          <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{v.nom}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{v.ville} • {v.pays}</div>
-                       </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                       <div style={{ fontWeight: 900, fontSize: '0.9rem', color: '#F59E0B' }}>0%</div>
-                       <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.6, textTransform: 'uppercase' }}>Fiabilité</div>
-                    </div>
-                 </div>
-               ))}
-            </div>
-            <button className="glass" style={{ width: '100%', marginTop: '2rem', padding: '1rem', borderRadius: '1.25rem', fontWeight: 800, fontSize: '0.85rem' }}>
-               Consulter l'Annuaire Fournisseur
-            </button>
-         </motion.div>
+          ))}
+        </div>
+        <button className="nexus-card" style={{ width: '100%', marginTop: '2rem', padding: '1rem', background: 'var(--nexus-bg)', color: 'var(--nexus-secondary)', fontWeight: 900, border: '1px solid var(--nexus-border)', cursor: 'pointer' }}>
+          Voir l'Annuaire Fournisseurs
+        </button>
+      </motion.div>
 
-         <motion.div variants={item} className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)', background: 'linear-gradient(135deg, #4F46E5 0%, #312E81 100%)', color: 'white' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#A5B4FC', fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '2rem', letterSpacing: '1px' }}>
-               <Target size={16} /> Objectif Procurement 2026
+      <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 5', padding: '2.5rem', background: 'var(--nexus-secondary)', color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', opacity: 0.8, fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '2.5rem', letterSpacing: '2px' }}>
+          <Target size={18} strokeWidth={3} /> Roadmap Procurement 2026
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          <div>
+            <div style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '0.5rem', letterSpacing: '-2px' }}>-15%</div>
+            <div style={{ fontSize: '1rem', opacity: 0.9, fontWeight: 600, lineHeight: 1.4 }}>Réduction ciblée des coûts d'approvisionnement via Nexus Engine</div>
+          </div>
+          <div style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)' }}><CheckCircle2 size={24} color="#10B981" /></div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 900 }}>Automatisation PO : 92.4%</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-               <div>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>-15%</div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.7, fontWeight: 600 }}>Réduction des coûts d'approvisionnement</div>
-               </div>
-               <div style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                     <div style={{ padding: '10px', borderRadius: '10px', background: '#10B98120' }}><CheckCircle2 size={24} color="#10B981" /></div>
-                     <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Digitalisation PO : 92%</div>
-                  </div>
-               </div>
-               <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6, lineHeight: 1.6 }}>
-                  "La centralisation des achats permet une meilleure force de négociation et une réduction drastique des délais de livraison."
-               </p>
-            </div>
-         </motion.div>
-      </div>
+          </div>
+          <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.7, fontWeight: 500, lineHeight: 1.7 }}>
+            "L'intelligence centralisée Nexus permet d'anticiper les ruptures et de négocier des volumes consolidés sur l'ensemble du groupe."
+          </p>
+        </div>
+      </motion.div>
 
-      {/* Orders List & Actions */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Bons de Commande & Achats</h3>
+      {/* Orders Ledger */}
+      <div style={{ gridColumn: 'span 12', marginTop: '2rem' }}>
+         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Procurement Ledger</h3>
             <div style={{ display: 'flex', gap: '1rem' }}>
-               <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
-                 <Scale size={18} /> Comparatif Offres
+               <button className="nexus-card" style={{ background: 'white', padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}>
+                 <Scale size={18} /> Offres
                </button>
                <button 
                  onClick={() => onOpenDetail && onOpenDetail(null, 'purchase', 'orders')}
-                 className="btn-primary" style={{ padding: '0.7rem 1.75rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: '#4F46E5', borderColor: '#4F46E5' }}>
-                 <Plus size={20} /> Nouvelle Demande
+                 className="nexus-card" style={{ padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: 'var(--nexus-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>
+                 <Plus size={18} strokeWidth={3} /> Nouvelle Demande
                </button>
             </div>
          </div>
-         <motion.div variants={item}>
+         <motion.div variants={item} className="nexus-card" style={{ background: 'white', padding: '1rem' }}>
             <EnterpriseView 
                moduleId="purchase" 
                modelId="orders"
