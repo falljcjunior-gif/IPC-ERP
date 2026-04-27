@@ -14,7 +14,7 @@
 import {
   doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   collection, query, orderBy, limit, where, onSnapshot,
-  serverTimestamp, writeBatch
+  serverTimestamp, writeBatch, arrayUnion, arrayRemove, increment
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
@@ -257,6 +257,13 @@ export const FirestoreService = {
       throw wrapFirestoreError(err, 'batchWrite');
     }
   },
+
+  /**
+   * Helpers pour les opérations atomiques Firestore
+   */
+  arrayUnion: (...values) => arrayUnion(...values),
+  arrayRemove: (...values) => arrayRemove(...values),
+  increment: (n) => increment(n),
 };
 
 // ── Storage Service (isolé — même principe) ──────────────────────────────────

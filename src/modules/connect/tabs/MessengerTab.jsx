@@ -14,6 +14,20 @@ import logger from '../../../utils/logger';
 import { webrtcService } from '../../../utils/WebRTCService';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
+  const HighlightText = ({ text, highlight }) => {
+    if (!highlight.trim()) return <span>{text}</span>;
+    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+    return (
+      <span>
+        {parts.map((part, i) => 
+          part.toLowerCase() === highlight.toLowerCase() 
+            ? <span key={i} style={{ background: '#FDE047', color: 'black', padding: '0 2px', borderRadius: '2px' }}>{part}</span>
+            : <span key={i}>{part}</span>
+        )}
+      </span>
+    );
+  };
+
   const currentUser = useCurrentUser();
   const { employees } = useHRData();
   const setActiveCall = useSetActiveCall();
@@ -32,6 +46,9 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const [customRooms, setCustomRooms] = useState([]);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const [newGroupData, setNewGroupData] = useState({ label: '', members: [] });
+  const [searchInChat, setSearchInChat] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [hoveredMessage, setHoveredMessage] = useState(null);
   
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -44,6 +61,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const fileInputRef = useRef();
 
   const commonEmojis = ['😊', '😂', '👍', '🙏', '🔥', '🚀', '❤️', '👏', '🤔', '😎', '💡', '✅', '⏳', '📌', '📁', '🤝', '⭐', '✨', '💪', '🎯'];
+  const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
   const groups = [
     { id: 'team_global', label: 'Espace Général', type: 'team', lastMsg: 'Bienvenue sur Connect Plus', time: '', members: 0 }
@@ -169,6 +187,21 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       .map(p => p.nom || 'Quelqu\'un');
   }, [activeParticipants, currentUser?.id]);
 
+  // Read Receipts Logic
+  useEffect(() => {
+    if (!activeRoom?.id || !currentUser?.id || messages.length === 0) return;
+    
+    const unreadMessages = messages.filter(m => m.userId !== currentUser.id && (!m.readBy || !m.readBy.includes(currentUser.id)));
+    
+    if (unreadMessages.length > 0) {
+      unreadMessages.forEach(msg => {
+        FirestoreService.updateDocument('messages', msg.id, {
+          readBy: FirestoreService.arrayUnion(currentUser.id)
+        });
+      });
+    }
+  }, [messages, activeRoom?.id, currentUser?.id]);
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -224,7 +257,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         fileType: 'audio/webm',
         roomId: activeRoom.id,
         userId: currentUser.id,
-        userName: currentUser.nom
+        userName: currentUser.nom,
+        readBy: [currentUser.id]
       });
 
       // Notification logic remains but could be centralized later
@@ -260,7 +294,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
         text: newMessage,
         roomId: activeRoom.id,
         userId: currentUser.id,
-        userName: currentUser.nom
+        userName: currentUser.nom,
+        readBy: [currentUser.id]
       };
       await FirestoreService.createDocument('messages', msgData);
       
@@ -277,6 +312,39 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       inputRef.current?.focus();
     } catch (err) { 
       logger.error("Send Message Error", err); 
+    }
+  };
+
+  const handleReaction = async (msgId, emoji) => {
+    try {
+      const msg = messages.find(m => m.id === msgId);
+      const currentReactions = msg.reactions || {};
+      const users = currentReactions[emoji] || [];
+      
+      if (users.includes(currentUser.id)) {
+        await FirestoreService.updateDocument('messages', msgId, {
+          [`reactions.${emoji}`]: FirestoreService.arrayRemove(currentUser.id)
+        });
+      } else {
+        await FirestoreService.updateDocument('messages', msgId, {
+          [`reactions.${emoji}`]: FirestoreService.arrayUnion(currentUser.id)
+        });
+      }
+    } catch (err) {
+      logger.error("Reaction Error", err);
+    }
+  };
+
+  const deleteMessage = async (msgId) => {
+    if (!window.confirm("Supprimer ce message ?")) return;
+    try {
+      await FirestoreService.updateDocument('messages', msgId, {
+        text: "🚫 Ce message a été supprimé",
+        isDeleted: true,
+        fileUrl: null
+      });
+    } catch (err) {
+      logger.error("Delete Error", err);
     }
   };
 
@@ -436,6 +504,22 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                </div>
             </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                 {showSearch ? (
+                    <motion.div initial={{ width: 0, opacity: 0 }} animate={{ width: 200, opacity: 1 }} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-subtle)', padding: '6px 12px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                       <Search size={14} color="var(--text-muted)" />
+                       <input 
+                         autoFocus
+                         value={searchInChat} 
+                         onChange={e => setSearchInChat(e.target.value)}
+                         onBlur={() => !searchInChat && setShowSearch(false)}
+                         placeholder="Rechercher..." 
+                         style={{ background: 'none', border: 'none', outline: 'none', fontSize: '0.85rem', color: 'var(--text)', width: '100%' }} 
+                       />
+                       <X size={14} style={{ cursor: 'pointer' }} onClick={() => { setSearchInChat(''); setShowSearch(false); }} />
+                    </motion.div>
+                 ) : (
+                    <button onClick={() => setShowSearch(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Search size={20} /></button>
+                 )}
                  <div style={{ display: 'flex', gap: '8px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '12px' }}>
                     <button 
                       onClick={() => initiateCall('audio')} 
@@ -530,10 +614,34 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
          {/* Chat Messages */}
          <div ref={scrollRef} style={{ flex: 1, padding: '2rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'linear-gradient(to bottom, transparent, var(--bg-subtle))' }}>
-            {messages.map((msg, i) => {
+            {messages.filter(m => !searchInChat || m.text.toLowerCase().includes(searchInChat.toLowerCase())).map((msg, i) => {
               const isMe = msg.userId === currentUser?.id;
+              const isHovered = hoveredMessage === msg.id;
+              const hasReactions = msg.reactions && Object.keys(msg.reactions).some(k => msg.reactions[k].length > 0);
+
               return (
-                <div key={msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                <div 
+                  key={msg.id || i} 
+                  onMouseEnter={() => setHoveredMessage(msg.id)}
+                  onMouseLeave={() => setHoveredMessage(null)}
+                  style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '75%', position: 'relative', marginBottom: hasReactions ? '1rem' : '0' }}
+                >
+                   {/* Reaction Bar on Hover */}
+                   <AnimatePresence>
+                      {isHovered && !msg.isDeleted && (
+                        <motion.div 
+                          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          style={{ position: 'absolute', bottom: '100%', [isMe ? 'right' : 'left']: '0', marginBottom: '8px', background: 'white', borderRadius: '2rem', padding: '4px 8px', display: 'flex', gap: '4px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', zIndex: 10, border: '1px solid var(--border)' }}
+                        >
+                           {reactionEmojis.map(emoji => (
+                             <button key={emoji} onClick={() => handleReaction(msg.id, emoji)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', padding: '4px', borderRadius: '50%', transition: '0.2s' }}>{emoji}</button>
+                           ))}
+                           {isMe && <button onClick={() => deleteMessage(msg.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#EF4444' }}><X size={14} /></button>}
+                        </motion.div>
+                      )}
+                   </AnimatePresence>
+
                    <div style={{ padding: '1rem 1.25rem', borderRadius: '1.75rem', background: isMe ? '#8B5CF6' : 'white', color: isMe ? 'white' : 'var(--text)', border: isMe ? 'none' : '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', fontSize: '0.95rem', fontWeight: 500, lineHeight: 1.5, position: 'relative' }}>
                       {msg.fileUrl ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -550,20 +658,52 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                               <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem' }}>{msg.fileName}</a>
                             </div>
                           )}
-                          <div style={{ opacity: 0.9 }}>{msg.text}</div>
+                          <div style={{ opacity: 0.9 }}>
+                            <HighlightText text={msg.text} highlight={searchInChat} />
+                          </div>
                         </div>
                       ) : (
-                        msg.text
+                        <HighlightText text={msg.text} highlight={searchInChat} />
                       )}
+                      
+                      {/* Reactions Display */}
+                      {hasReactions && (
+                         <div style={{ position: 'absolute', top: '100%', [isMe ? 'right' : 'left']: '10px', marginTop: '-10px', display: 'flex', gap: '4px', background: 'white', padding: '2px 6px', borderRadius: '1rem', border: '1px solid var(--border)', boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+                            {Object.entries(msg.reactions).filter(([, uids]) => uids.length > 0).map(([emoji, uids]) => (
+                               <div key={emoji} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                  <span>{emoji}</span>
+                                  {uids.length > 1 && <span style={{ fontWeight: 800, fontSize: '0.65rem' }}>{uids.length}</span>}
+                               </div>
+                            ))}
+                         </div>
+                      )}
+
                       <div style={{ marginTop: '6px', fontSize: '0.65rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '4px', opacity: 0.7 }}>
                          {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Maintenant'} 
-                         {isMe && <CheckCheck size={12} color={msg.readBy?.length > 0 ? '#3B82F6' : 'currentColor'} />}
+                         {isMe && <CheckCheck size={12} color={msg.readBy?.length > 1 ? '#3B82F6' : 'currentColor'} />}
                       </div>
                    </div>
                 </div>
               );
             })}
          </div>
+
+         {/* Typing Indicator */}
+         <AnimatePresence>
+            {typingUsers.length > 0 && (
+               <motion.div 
+                 initial={{ opacity: 0, y: 5 }} 
+                 animate={{ opacity: 1, y: 0 }} 
+                 exit={{ opacity: 0, y: 5 }}
+                 style={{ padding: '0.5rem 2rem', fontSize: '0.75rem', color: '#8B5CF6', fontWeight: 700, fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '8px' }}
+               >
+                  <div className="typing-dots">
+                     <span /> <span /> <span />
+                  </div>
+                  {typingUsers.join(', ')} {typingUsers.length > 1 ? 'sont en train d\'écrire...' : 'est en train d\'écrire...'}
+               </motion.div>
+            )}
+         </AnimatePresence>
 
          {/* Message Input */}
          <form onSubmit={sendMessage} style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border)', position: 'relative' }}>
