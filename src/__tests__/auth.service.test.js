@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthService } from '../services/auth.service';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { getDoc } from 'firebase/firestore';
+import { FirestoreService } from '../services/firestore.service';
 
 describe('AuthService - Audit de Robustesse', () => {
   
@@ -18,7 +18,7 @@ describe('AuthService - Audit de Robustesse', () => {
     };
     
     vi.mocked(signInWithEmailAndPassword).mockResolvedValue({ user: mockUser });
-    vi.mocked(getDoc).mockResolvedValue(mockDoc);
+    vi.spyOn(FirestoreService, 'getDocument').mockResolvedValue(mockDoc.data());
 
     // ACT
     const result = await AuthService.login('test@ipc.com', 'correct_password');
@@ -40,7 +40,7 @@ describe('AuthService - Audit de Robustesse', () => {
   it('test_devrait_rejeter_si_utilisateur_est_fantome_dans_firestore', async () => {
     // ARRANGE (User existe dans Auth mais pas dans la collection 'users')
     vi.mocked(signInWithEmailAndPassword).mockResolvedValue({ user: { uid: 'ghost' } });
-    vi.mocked(getDoc).mockResolvedValue({ exists: () => false });
+    vi.spyOn(FirestoreService, 'getDocument').mockResolvedValue(null);
 
     // ACT & ASSERT
     await expect(AuthService.login('ghost@ipc.com', 'pw'))

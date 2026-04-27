@@ -3,14 +3,14 @@ import { vi } from 'vitest';
 
 // [SDET] Mock Global de Firebase pour isolation totale
 vi.mock('firebase/auth', () => ({
-  getAuth: vi.fn(),
+  getAuth: vi.fn(() => ({ currentUser: null })),
   signInWithEmailAndPassword: vi.fn(),
   signOut: vi.fn(),
   onAuthStateChanged: vi.fn()
 }));
 
 vi.mock('firebase/firestore', () => ({
-  getFirestore: vi.fn(),
+  getFirestore: vi.fn(() => ({})),
   doc: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
