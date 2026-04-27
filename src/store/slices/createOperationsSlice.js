@@ -39,7 +39,7 @@ export const createOperationsSlice = (set, get) => ({
         activities: [activity, ...(prev.activities || [])]
       }));
 
-      if (auth.currentUser) {
+      if (get().user) {
         FirestoreService.setDocument('activities', activity.id, activity);
       }
     }, 0);
@@ -59,7 +59,7 @@ export const createOperationsSlice = (set, get) => ({
       createdAt: new Date().toISOString()
     };
     try {
-      if (auth.currentUser) await FirestoreService.setDocument('notifications', notifyDoc.id, notifyDoc);
+      if (get().user) await FirestoreService.setDocument('notifications', notifyDoc.id, notifyDoc);
     } catch (e) {
       console.error("sendNotification Error:", e);
     }
@@ -118,7 +118,7 @@ export const createOperationsSlice = (set, get) => ({
       };
     });
 
-    if (auth.currentUser) {
+    if (get().user) {
       FirestoreService.setDocument('finance', entryId, { ...newEntry, subModule: 'entries' });
       newLines.forEach(l => FirestoreService.setDocument('finance', l.id, { ...l, subModule: 'lines' }));
     }
@@ -319,7 +319,8 @@ export const createOperationsSlice = (set, get) => ({
       
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         if (auth.currentUser) FirestoreService.setDocument(appId, newRecord.id, { ...newRecord, subModule, ownerId: auth.currentUser?.uid }, true);
+         const { user } = get();
+         if (user) FirestoreService.setDocument(appId, newRecord.id, { ...newRecord, subModule, ownerId: user.id }, true);
       }, 0);
 
       return nextState;
@@ -374,7 +375,7 @@ export const createOperationsSlice = (set, get) => ({
       const record = updatedList.find(o => o.id === id);
       setTimeout(() => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
-         if (auth.currentUser) FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+         if (get().user) FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
       }, 0);
       
       if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {
@@ -574,7 +575,7 @@ export const createOperationsSlice = (set, get) => ({
       const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: updatedList } };
       setTimeout(() => {
          get().logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
-         if (auth.currentUser) FirestoreService.deleteDocument(appId, id);
+         if (get().user) FirestoreService.deleteDocument(appId, id);
       }, 0);
       return nextState;
     });
@@ -830,7 +831,7 @@ export const createOperationsSlice = (set, get) => ({
   updateGlobalSettings: async (newGlobal) => {
     if ((get().currentUser?.role) !== 'SUPER_ADMIN') return;
     get().setGlobalSettings(prev => ({ ...prev, ...newGlobal }));
-    if (auth.currentUser) FirestoreService.setDocument('settings', 'global', { ...newGlobal }, true);
+    if (get().user) FirestoreService.setDocument('settings', 'global', { ...newGlobal }, true);
   },
 
   togglePinnedModule: (moduleId) => {
@@ -940,7 +941,7 @@ export const createOperationsSlice = (set, get) => ({
       hints: []
     });
     try {
-      if (auth.currentUser) {
+      if (get().user) {
         const collections = ["crm", "hr", "finance", "inventory", "sales", "purchase", "production", "legal", "signature", "activities", "notifications"];
         for (const col of collections) {
           const docs = await FirestoreService.listDocuments(col);
