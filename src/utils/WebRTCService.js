@@ -30,6 +30,7 @@ export class WebRTCService {
     this.remoteStreams = new Map(); // { participantId: MediaStream }
     this.roomUnsubscribe = null;
     this.signalUnsubscribes = {};
+    this.candidateQueues = {}; // { participantId: [candidates] }
   }
 
   async startLocalStream(type = 'video') {
@@ -99,9 +100,16 @@ export class WebRTCService {
     const pc = new RTCPeerConnection(servers);
     this.pcs.set(targetId, pc);
 
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
-    }
+    pc.oniceconnectionstatechange = () => {
+      logger.info(`ICE Connection State (${targetId}): ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+        // Optionnel: Tenter une renégociation ou informer l'UI
+      }
+    };
+
+    pc.onconnectionstatechange = () => {
+      logger.info(`Peer Connection State (${targetId}): ${pc.connectionState}`);
+    };
 
     pc.ontrack = (event) => {
       if (!this.remoteStreams.has(targetId)) {
@@ -127,6 +135,10 @@ export class WebRTCService {
     const pc = new RTCPeerConnection(servers);
     this.pcs.set(targetId, pc);
 
+    pc.oniceconnectionstatechange = () => {
+      logger.info(`ICE Connection State (${targetId}): ${pc.iceConnectionState}`);
+    };
+
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
     }
@@ -146,6 +158,15 @@ export class WebRTCService {
     };
 
     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: signal.sdp }));
+    
+    // Process queued candidates if any
+    const queue = this.candidateQueues[targetId] || [];
+    while (queue.length > 0) {
+      const candidate = queue.shift();
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    }
+    delete this.candidateQueues[targetId];
+
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     this.sendSignal(roomId, myId, targetId, { type: 'answer', sdp: answer.sdp });
@@ -155,13 +176,27 @@ export class WebRTCService {
     const pc = this.pcs.get(signal.senderId);
     if (pc) {
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: signal.sdp }));
+      
+      // Process queued candidates
+      const queue = this.candidateQueues[signal.senderId] || [];
+      while (queue.length > 0) {
+        const candidate = queue.shift();
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+      delete this.candidateQueues[signal.senderId];
     }
   }
 
   async handleCandidate(signal) {
     const pc = this.pcs.get(signal.senderId);
-    if (pc) {
+    if (pc && pc.remoteDescription) {
       await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
+    } else {
+      // Queue candidate if remote description not set yet
+      if (!this.candidateQueues[signal.senderId]) {
+        this.candidateQueues[signal.senderId] = [];
+      }
+      this.candidateQueues[signal.senderId].push(signal.candidate);
     }
   }
 
