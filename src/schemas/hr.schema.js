@@ -7,13 +7,13 @@ export const HRSchemas = {
   label: 'RH',
   models: {
     employees: {
-      label: 'Collaborateurs',
+      label: 'Talents & Collaborateurs',
       fields: {
-        nom: { label: 'Nom Complet', type: 'text', required: true, search: true },
-        poste: { label: 'Poste / Fonction', type: 'text', required: true, search: true },
-        dept: { label: 'Département', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
+        nom: { label: 'Nom & Prénoms', type: 'text', required: true, search: true, placeholder: 'Ex: Mamadou Diop' },
+        poste: { label: 'Intitulé du Poste / Fonction', type: 'text', required: true, search: true, placeholder: 'Ex: Responsable Production' },
+        dept: { label: 'Pôle Opérationnel', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
         email: { label: 'Email Pro', type: 'email', search: true },
-        salaire: { label: 'Salaire Brut', type: 'money', currency: 'FCFA' },
+        salaire: { label: 'Rémunération de Base (Brut)', type: 'money', currency: 'FCFA' },
         active: { label: 'Actif', type: 'boolean', default: true }
       },
       views: {
@@ -36,11 +36,11 @@ export const HRSchemas = {
       }
     },
     candidates: {
-      label: 'Candidats',
+      label: 'Vivier de Candidats',
       fields: {
-        nom: { label: 'Nom Complet', type: 'text', required: true, search: true },
-        poste: { label: 'Poste visé', type: 'text', search: true },
-        status: { label: 'Étape', type: 'selection', options: ['Top of Funnel', 'Entretien Tech', 'Entretien Manager', 'Offre envoyée'], default: 'Top of Funnel' },
+        nom: { label: 'Identité du Candidat', type: 'text', required: true, search: true, placeholder: 'Ex: Fatou Sow' },
+        poste: { label: 'Poste Targeté', type: 'text', search: true, placeholder: 'Ex: Ingénieur BTP' },
+        status: { label: 'État du Recrutement', type: 'selection', options: ['Top of Funnel', 'Entretien Tech', 'Entretien Manager', 'Offre envoyée'], default: 'Top of Funnel' },
         email: { label: 'Email', type: 'email' },
         score: { label: 'Score Match (%)', type: 'number' }
       },
@@ -82,7 +82,7 @@ export const HRSchemas = {
       label: 'Congés & Absences',
       fields: {
         collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
-        type: { label: 'Type', type: 'selection', options: ['Congé Payé', 'Maladie', 'Maternité', 'Sans Solde'], required: true, search: true },
+        type: { label: 'Type d\'Absence', type: 'selection', options: ['Congé Payé', 'Maladie', 'Maternité', 'Sans Solde'], required: true, search: true },
         date_debut: { label: 'Date Début', type: 'date', required: true },
         date_fin: { label: 'Date Fin', type: 'date', required: true },
         statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Soumis', 'Approuvé', 'Refusé'], default: 'Brouillon' }

@@ -68,12 +68,12 @@ const Marketing = ({ onOpenDetail, navigateTo }) => {
   };
 
   const tabs = [
-    { id: 'dashboard',  label: 'Stratégie', icon: <BarChart3 size={15} /> },
-    { id: 'campaigns',  label: `Campagnes${activeCampaigns > 0 ? ` (${activeCampaigns})` : ''}`, icon: <Megaphone size={15} /> },
-    { id: 'emailing',   label: 'E-mailing', icon: <Mail size={15} /> },
-    { id: 'events',     label: 'Événements', icon: <CalendarDays size={15} /> },
-    { id: 'leads',      label: `Leads${newLeadsCount > 0 ? ` (${newLeadsCount})` : ''}`, icon: <Users2 size={15} /> },
-    { id: 'budget',     label: 'Budget & ROI', icon: <DollarSign size={15} /> },
+    { id: 'dashboard',  label: 'Stratégies de Croissance', icon: <BarChart3 size={15} /> },
+    { id: 'campaigns',  label: `Campagnes Multicanales${activeCampaigns > 0 ? ` (${activeCampaigns})` : ''}`, icon: <Megaphone size={15} /> },
+    { id: 'emailing',   label: 'Automation & Emails', icon: <Mail size={15} /> },
+    { id: 'events',     label: 'Événements & Salons', icon: <CalendarDays size={15} /> },
+    { id: 'leads',      label: `Flux de Leads${newLeadsCount > 0 ? ` (${newLeadsCount})` : ''}`, icon: <Users2 size={15} /> },
+    { id: 'budget',     label: 'ROI & Pilotage', icon: <DollarSign size={15} /> },
   ];
 
   const primaryAction = {
@@ -115,7 +115,7 @@ const Marketing = ({ onOpenDetail, navigateTo }) => {
             </span>
           </div>
           <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            Marketing Suite
+            Growth & Marketing
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
             Accélérez votre croissance et optimisez votre visibilité avec des outils de gestion de campagnes et d'acquisition de pointe.

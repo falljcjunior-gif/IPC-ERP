@@ -7,10 +7,10 @@ export const crmSchema = {
   label: 'CRM',
   models: {
     leads: {
-      label: 'Prospects',
+      label: 'Pistes de Vente',
       fields: {
-        nom: { label: 'Nom Complet', type: 'text', required: true, search: true },
-        entreprise: { label: 'Entreprise', type: 'text', required: true, search: true },
+        nom: { label: 'Contact Principal', type: 'text', required: true, search: true, placeholder: 'Ex: M. Jean Dupont' },
+        entreprise: { label: 'Raison Sociale', type: 'text', required: true, search: true, placeholder: 'Ex: IPC Greenblocks SA' },
         poste: { label: 'Poste / Titre', type: 'text', search: true },
         email: { label: 'Email', type: 'email', search: true },
         telephone: { label: 'Téléphone', type: 'text', search: true },
@@ -29,16 +29,16 @@ export const crmSchema = {
         },
         source: { label: 'Source', type: 'selection', options: ['Site Web', 'E-mail', 'Appel entrant', 'Partenaire', 'Conférence', 'Autre'] },
         priorite: { 
-          label: 'Priorité', 
+          label: 'Indice de Priorité', 
           type: 'selection', 
           options: [
-            { label: '⭐ (Basse)', value: '⭐' },
-            { label: '⭐⭐ (Moyenne)', value: '⭐⭐' },
-            { label: '⭐⭐⭐ (Haute)', value: '⭐⭐⭐' }
+            { label: '⭐ (Exploration)', value: '⭐' },
+            { label: '⭐⭐ (Qualifié)', value: '⭐⭐' },
+            { label: '⭐⭐⭐ (Prioritaire)', value: '⭐⭐⭐' }
           ],
           default: '⭐'
         },
-        statut: { label: 'Statut', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
+        statut: { label: 'Qualification', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
         budget_estime: { label: 'Budget Estimé', type: 'money', currency: 'FCFA' },
         date_rappel: { label: 'Date de Rappel', type: 'date' },
         campagne_id: { label: 'Campagne Source', type: 'text', search: true },
@@ -60,10 +60,10 @@ export const crmSchema = {
       }
     },
     opportunities: {
-      label: 'Opportunités',
+      label: 'Affaires Potentielles',
       fields: {
-        titre: { label: 'Titre', type: 'text', required: true, search: true },
-        client: { label: 'Client', type: 'text', required: true, search: true },
+        titre: { label: 'Libellé de l\'Affaire', type: 'text', required: true, search: true, placeholder: 'Ex: Fourniture Briques Recyclées' },
+        client: { label: 'Compte Tiers', type: 'text', required: true, search: true, placeholder: 'Rechercher un client...' },
         montant: { label: 'Montant', type: 'money', currency: 'FCFA', search: true },
         probabilite: { label: 'Probabilité (%)', type: 'number', min: 0, max: 100 },
         type: { 
@@ -88,7 +88,7 @@ export const crmSchema = {
           options: ['Très Urgent', 'Grand Compte', 'Récurrent', 'Stratégique', 'En attente'] 
         },
         next_step: { label: 'Prochaine Étape', type: 'text' },
-        etape: { label: 'Étape', type: 'selection', options: ['Nouveau', 'Qualification', 'Proposition', 'Négociation', 'Gagné', 'Perdu'], default: 'Nouveau' },
+        etape: { label: 'Jalon du Cycle de Vente', type: 'selection', options: ['Nouveau', 'Qualification', 'Proposition', 'Négociation', 'Gagné', 'Perdu'], default: 'Nouveau' },
         dateFermeture: { label: 'Date de clôture', type: 'date' },
         campagne_id: { label: 'Campagne Source', type: 'text', search: true },
         description: { label: 'Notes internes', type: 'textarea' }

@@ -218,6 +218,11 @@ const RecordModal = ({
                               />
                             )
                           )}
+                          {field.description && (
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                              {t(field.description)}
+                            </span>
+                          )}
                         </div>
                       ))}
                     </div>

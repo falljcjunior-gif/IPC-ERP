@@ -7,15 +7,15 @@ export const legalSchema = {
   label: 'Juridique',
   models: {
     contracts: {
-      label: 'Contrats',
+      label: 'Référentiel des Engagements Contractuels',
       fields: {
-        titre: { label: 'Titre du Contrat', type: 'text', required: true, search: true },
-        type: { label: 'Type', type: 'selection', options: ['CDI', 'CDD', 'NDA', 'Vente', 'Fournisseur', 'Bail', 'Partenariat'], required: true },
-        partie: { label: 'Partie Adverse', type: 'text', required: true, search: true },
+        titre: { label: 'Intitulé de la Convention', type: 'text', required: true, search: true, placeholder: 'Ex: Contrat de Maintenance Annuelle' },
+        type: { label: 'Nature Juridique', type: 'selection', options: ['CDI', 'CDD', 'NDA', 'Vente', 'Fournisseur', 'Bail', 'Partenariat'], required: true },
+        partie: { label: 'Co-contractant / Tiers', type: 'text', required: true, search: true, placeholder: 'Ex: Entreprise Partenaire' },
         dateEffet: { label: 'Date d\'Effet', type: 'date', required: true },
         dateExpiration: { label: 'Date d\'Expiration', type: 'date' },
         statut: { 
-          label: 'Statut', 
+          label: 'Cycle de Vie du Contrat', 
           type: 'selection', 
           options: ['Brouillon', 'En révision', 'Approuvé', 'Signé', 'Expiré', 'Annulé'],
           default: 'Brouillon'
@@ -50,11 +50,11 @@ export const legalSchema = {
       }
     },
     litigations: {
-      label: 'Litiges & Contentieux',
+      label: 'Contentieux & Affaires Juridiques',
       fields: {
-        objet: { label: 'Objet du Litige', type: 'text', required: true, search: true },
-        type: { label: 'Type', type: 'selection', options: ['Prud\'hommes', 'Impayé Client', 'Conflit Fournisseur', 'Fiscal', 'Autre'] },
-        partieAdverse: { label: 'Partie Adverse', type: 'text', search: true },
+        objet: { label: 'Objet du Différend', type: 'text', required: true, search: true, placeholder: 'Ex: Retard de paiement facture #88' },
+        type: { label: 'Juridiction / Type', type: 'selection', options: ['Prud\'hommes', 'Impayé Client', 'Conflit Fournisseur', 'Fiscal', 'Autre'] },
+        partieAdverse: { label: 'Partie Adverse (Demandeur/Défendeur)', type: 'text', search: true },
         risqueFinancier: { label: 'Risque Financier Estimé', type: 'money', currency: 'FCFA' },
         avocat: { label: 'Avocat Référent', type: 'text' },
         statut: { label: 'Statut', type: 'selection', options: ['En cours', 'Amiable', 'Tribunal', 'Gagné', 'Perdu', 'Clos'] }

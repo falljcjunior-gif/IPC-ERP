@@ -224,12 +224,17 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                   {/* Task / Progress logic moved to Suivi tab */}
 
                   {Object.entries(formData).map(([key, value]) => {
-                    if (key === 'id' || key === 'avatar' || key === 'createdAt' || key === 'checklists' || key === 'skills') return null;
+                    const schema = registry.getSchema(appId);
+                    const model = schema?.models?.[subModule];
+                    const fieldDef = model?.fields?.[key];
+                    const label = fieldDef?.label || key;
+                    
+                    if (key === 'id' || key === 'avatar' || key === 'createdAt' || key === 'checklists' || key === 'skills' || key === '_domain' || key === '_hasHydrated') return null;
                     
                     return (
                       <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                          {key.replace(/([A-Z])/g, ' $1')}
+                          {t(label)}
                         </label>
                         
                         {(key === 'statut' || key === 'etape' || key === 'type' || (registry.getSchema(appId)?.models?.[subModule]?.fields?.[key]?.type === 'selection')) ? (

@@ -19,10 +19,10 @@ const LegalHub = ({ onOpenDetail }) => {
   const [activeTab, setActiveTab] = useState('clm');
 
   const tabs = [
-    { id: 'clm', label: 'Contrats (CLM)', icon: <FileSignature size={16} /> },
-    { id: 'ip', label: 'Propriété Intellectuelle', icon: <ShieldCheck size={16} /> },
-    { id: 'litiges', label: 'Litiges', icon: <Gavel size={16} /> },
-    { id: 'corporate', label: 'Corporate', icon: <Building size={16} /> },
+    { id: 'clm', label: 'Engagements Contractuels (CLM)', icon: <FileSignature size={16} /> },
+    { id: 'ip', label: 'Propriété Intellectuelle & Marques', icon: <ShieldCheck size={16} /> },
+    { id: 'litiges', label: 'Contentieux & Affaires Juridiques', icon: <Gavel size={16} /> },
+    { id: 'corporate', label: 'Gouvernance & Corporate', icon: <Building size={16} /> },
   ];
 
   // Restricted Access for Corporate Tab
@@ -39,7 +39,7 @@ const LegalHub = ({ onOpenDetail }) => {
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Legal OS — Compliance & Strategy</span>
           </div>
-          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Pôle Juridique</h1>
+          <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Direction Juridique</h1>
           <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
             Gestion souveraine du cycle de vie des contrats, de la propriété intellectuelle et des dossiers contentieux du groupe.
           </p>
@@ -48,7 +48,7 @@ const LegalHub = ({ onOpenDetail }) => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid rgba(82, 153, 144, 0.3)' }}>
               <ShieldCheck size={16} color="var(--accent)" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>Conformité : 100%</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>Compliance Index : 100%</span>
            </div>
 
            <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>

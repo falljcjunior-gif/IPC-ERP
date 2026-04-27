@@ -104,7 +104,7 @@ const ProjectHub = ({ onOpenDetail }) => {
               </button>
             )}
             <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>
-              {activeProject ? activeProject.nom : 'Tableaux de Projets'}
+              {activeProject ? activeProject.nom : 'Portefeuille de Projets'}
             </h1>
           </div>
 
@@ -115,19 +115,19 @@ const ProjectHub = ({ onOpenDetail }) => {
                   onClick={() => setActiveView('board')} 
                   style={{ background: 'transparent', border: 'none', borderBottom: activeView === 'board' ? '3px solid #8B5CF6' : '3px solid transparent', padding: '0.5rem 1rem', color: activeView === 'board' ? '#8B5CF6' : '#64748B', fontWeight: 700, cursor: 'pointer', display: 'flex', gap: '0.5rem', marginBottom: '-0.6rem' }}
                 >
-                  <Kanban size={18} /> Tableau
+                  <Kanban size={18} /> Tableau Kanban
                 </button>
                 <button 
                   onClick={() => setActiveView('calendar')} 
                   style={{ background: 'transparent', border: 'none', borderBottom: activeView === 'calendar' ? '3px solid #8B5CF6' : '3px solid transparent', padding: '0.5rem 1rem', color: activeView === 'calendar' ? '#8B5CF6' : '#64748B', fontWeight: 700, cursor: 'pointer', display: 'flex', gap: '0.5rem', marginBottom: '-0.6rem' }}
                 >
-                  <CalendarIcon size={18} /> Calendrier
+                  <CalendarIcon size={18} /> Planning Temporel
                 </button>
                 <button 
                   onClick={() => setActiveView('dashboard')} 
                   style={{ background: 'transparent', border: 'none', borderBottom: activeView === 'dashboard' ? '3px solid #8B5CF6' : '3px solid transparent', padding: '0.5rem 1rem', color: activeView === 'dashboard' ? '#8B5CF6' : '#64748B', fontWeight: 700, cursor: 'pointer', display: 'flex', gap: '0.5rem', marginBottom: '-0.6rem' }}
                 >
-                  <PieChart size={18} /> Dashboard
+                  <PieChart size={18} /> Analyses & KPI
                 </button>
               </div>
               {isBoardAdmin && (
@@ -147,7 +147,7 @@ const ProjectHub = ({ onOpenDetail }) => {
 
         {!activeProject && (
           <button className="btn-primary" onClick={() => setIsModalOpen(true)} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouveau Tableau</span>
+            <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouveau Chantier / Projet</span>
           </button>
         )}
       </div>
@@ -234,7 +234,7 @@ const ProjectHub = ({ onOpenDetail }) => {
                  }}
                >
                  <Plus size={32} />
-                 <span style={{ fontWeight: 700 }}>Créer un nouveau tableau</span>
+                 <span style={{ fontWeight: 700 }}>Initialiser un nouvel espace Projet</span>
                </motion.div>
             </motion.div>
           ) : (
@@ -285,9 +285,9 @@ const ProjectHub = ({ onOpenDetail }) => {
         fields={Object.entries(projectSchema.models.projects.fields).filter(([k]) => k !== 'colonnes').map(([name, f]) => ({ ...f, name }))}
         onSave={(formData) => {
           formData.colonnes = [
-            { id: 'col_' + Date.now() + '_1', title: 'À faire' },
-            { id: 'col_' + Date.now() + '_2', title: 'En cours' },
-            { id: 'col_' + Date.now() + '_3', title: 'Terminé' }
+            { id: 'col_' + Date.now() + '_1', title: 'Planifié / En Étude' },
+            { id: 'col_' + Date.now() + '_2', title: 'En Exécution' },
+            { id: 'col_' + Date.now() + '_3', title: 'Livré / Réceptionné' }
           ];
           addRecord('projects', 'projects', formData);
           setIsModalOpen(false);

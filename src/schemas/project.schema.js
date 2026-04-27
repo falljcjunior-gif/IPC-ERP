@@ -7,13 +7,13 @@ export const projectSchema = {
   label: 'Projets',
   models: {
     projects: {
-      label: 'Liste des Projets',
+      label: 'Portefeuille de Projets & Chantiers',
       fields: {
-        nom: { label: 'Nom du Projet', type: 'text', required: true, search: true },
-        client: { label: 'Client', type: 'text', required: true, search: true },
+        nom: { label: 'Intitulé de l\'Opération', type: 'text', required: true, search: true, placeholder: 'Ex: Aménagement Zone Industrielle' },
+        client: { label: 'Maître d\'Ouvrage / Partenaire', type: 'text', required: true, search: true, placeholder: 'Sélectionner un client...' },
         dateDebut: { label: 'Date Début', type: 'date' },
         echeance: { label: 'Échéance', type: 'date', search: true },
-        budget: { label: 'Budget', type: 'money', currency: 'EUR' },
+        budget: { label: 'Engagement Budgétaire (FCFA)', type: 'money', currency: 'FCFA' },
         chefProjet: { label: 'Chef de Projet', type: 'text', search: true },
         colonnes: { label: 'Colonnes (Trello)', type: 'json', default: [{ id: 'col1', title: 'À faire' }, { id: 'col2', title: 'En cours' }, { id: 'col3', title: 'Terminé' }] },
         rules: { label: 'Règles Butler', type: 'json', default: [] },
@@ -39,9 +39,9 @@ export const projectSchema = {
       }
     },
     tasks: {
-      label: 'Tâches',
+      label: 'Actions & Jalons Opérationnels',
       fields: {
-        titre: { label: 'Titre', type: 'text', required: true, search: true },
+        titre: { label: 'Libellé de la Tâche', type: 'text', required: true, search: true, placeholder: 'Ex: Coulage de la dalle R+1' },
         projet: { label: 'Projet', type: 'text', search: true },
         equipe: { label: 'Équipe', type: 'selection', options: ['IT', 'Ventes', 'RH', 'Finance', 'Production', 'Marketing'], search: true },
         assigne: { label: 'Assigné à', type: 'text', search: true },

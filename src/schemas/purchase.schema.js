@@ -7,15 +7,15 @@ export const purchaseSchema = {
   label: 'Achats',
   models: {
     orders: {
-      label: 'Bons de Commande',
+      label: 'Demandes d\'Achats & Commandes',
       fields: {
-        num: { label: 'Référence', type: 'text', required: true, search: true },
-        fournisseur: { label: 'Fournisseur', type: 'text', required: true, search: true },
+        num: { label: 'Réf. Commande Achat', type: 'text', required: true, search: true, placeholder: 'Ex: PO-2024-001' },
+        fournisseur: { label: 'Partenaire Fournisseur', type: 'text', required: true, search: true, placeholder: 'Sélectionner un fournisseur...' },
         produitId: { label: 'Article Lié', type: 'text', search: true },
         qte: { label: 'Quantité', type: 'number' },
         date: { label: 'Date', type: 'date', required: true },
         echeance: { label: 'Livraison Prévue', type: 'date' },
-        total: { label: 'Montant HT', type: 'money', currency: 'FCFA', search: true },
+        total: { label: 'Valeur Acquisition (HT)', type: 'money', currency: 'FCFA', search: true },
         statut: { 
           label: 'Statut', 
           type: 'selection', 
@@ -44,11 +44,11 @@ export const purchaseSchema = {
       }
     },
     vendors: {
-      label: 'Fournisseurs',
+      label: 'Base Fournisseurs',
       dataPath: 'base.contacts',
       staticDomain: [['type', '==', 'Fournisseur']],
       fields: {
-        nom: { label: 'Nom', type: 'text', required: true, search: true },
+        nom: { label: 'Raison Sociale Fournisseur', type: 'text', required: true, search: true, placeholder: 'Ex: Africa Cement SA' },
         email: { label: 'Email', type: 'text', search: true },
         contact: { label: 'Contact', type: 'text' },
         categories: { label: 'Catégorie', type: 'text', search: true }

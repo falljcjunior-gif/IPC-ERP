@@ -7,9 +7,9 @@ export const marketingSchema = {
   label: 'Marketing',
   models: {
     campaigns: {
-      label: 'Campagnes Marketing',
+      label: 'Stratégies de Croissance & Campagnes',
       fields: {
-        nom: { label: 'Nom de la Campagne', type: 'text', required: true, search: true },
+        nom: { label: 'Libellé de la Campagne', type: 'text', required: true, search: true, placeholder: 'Ex: Lancement Gamme Briques 2024' },
         type: {
           label: 'Type',
           type: 'selection',
@@ -29,11 +29,11 @@ export const marketingSchema = {
         responsable: { label: 'Responsable', type: 'text', search: true },
         dateDebut: { label: 'Date de Début', type: 'date', required: true },
         dateFin: { label: 'Date de Fin', type: 'date' },
-        budget: { label: 'Budget Alloué (FCFA)', type: 'money', currency: 'FCFA' },
+        budget: { label: 'Enveloppe Budgétaire (FCFA)', type: 'money', currency: 'FCFA' },
         depense: { label: 'Dépenses Réelles (FCFA)', type: 'money', currency: 'FCFA' },
         cible: { label: 'Cible / Audience', type: 'text', search: true },
         statut: {
-          label: 'Statut',
+          label: 'Cycle de Vie de la Campagne',
           type: 'selection',
           options: ['Brouillon', 'En Attente de Validation', 'Approuvée', 'Planifiée', 'Active', 'En Pause', 'Clôturée', 'Annulée'],
           default: 'Brouillon'
@@ -144,7 +144,7 @@ export const marketingSchema = {
     },
 
     leads_entrants: {
-      label: 'Leads Entrants',
+      label: 'Flux de Leads Entrants',
       dataPath: 'crm.leads',
       fields: {
         prenom: { label: 'Prénom', type: 'text', required: true, search: true },

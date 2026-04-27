@@ -27,16 +27,16 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
   const { leads = [], opportunities = [] } = data.crm || {};
 
   const tabs = [
-    { id: 'analytics', label: 'Efficacité', icon: <BarChart3 size={16} /> },
-    { id: 'pipeline', label: 'Pipeline', icon: <Briefcase size={16} /> },
-    { id: 'leads', label: 'Prospections', icon: <UserPlus size={16} /> },
-    { id: 'customers', label: 'Clients', icon: <Users size={16} /> },
+    { id: 'analytics', label: 'Performance & Efficacité', icon: <BarChart3 size={16} /> },
+    { id: 'pipeline', label: 'Pipeline Commercial', icon: <Briefcase size={16} /> },
+    { id: 'leads', label: 'Pistes de Vente', icon: <UserPlus size={16} /> },
+    { id: 'customers', label: 'Base Clients & Partenaires', icon: <Users size={16} /> },
   ];
 
   const modalConfig = {
-    leads: { title: 'Nouveau Prospect', schema: crmSchema.models.leads },
-    opportunities: { title: 'Nouvelle Opportunité', schema: crmSchema.models.opportunities },
-    clients: { title: 'Nouveau Client', schema: crmSchema.models.clients }
+    leads: { title: 'Nouvelle Piste de Vente', schema: crmSchema.models.leads },
+    opportunities: { title: 'Nouvelle Affaire Potentielle', schema: crmSchema.models.opportunities },
+    clients: { title: 'Nouveau Partenaire Client', schema: crmSchema.models.clients }
   };
 
   return (
@@ -51,7 +51,7 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
               </motion.div>
               <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '2.5px' }}>IPC Sales Intelligence</span>
             </div>
-            <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Velocity Center</h1>
+            <h1 style={{ fontSize: '3rem', fontWeight: 900, margin: 0, letterSpacing: '-1.5px', color: 'var(--text)' }}>Sales Velocity Hub</h1>
             <p style={{ color: 'var(--text-muted)', margin: '0.6rem 0 0 0', fontSize: '1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
               Transformez vos prospects en partenaires fidèles avec une visibilité totale sur votre tunnel de conversion.
             </p>
@@ -66,7 +66,7 @@ const CRM = ({ onOpenDetail, accessLevel }) => {
              </button>
              {accessLevel === 'write' && (
               <button className="btn-primary" onClick={() => { setModalMode('leads'); setIsModalOpen(true); }} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#10B981', borderColor: '#10B981' }}>
-                <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouveau Lead</span>
+                <Plus size={20} /> <span style={{ fontWeight: 800 }}>Nouvelle Piste</span>
               </button>
             )}
           </div>

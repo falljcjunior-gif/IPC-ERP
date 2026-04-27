@@ -38,12 +38,12 @@ export const InventorySchemas = {
    */
   models: {
     products: {
-      label: 'Articles en Stock',
+      label: 'Référentiel Articles',
       fields: {
-        nom: { label: 'Désignation', type: 'text', required: true, search: true },
-        ref: { label: 'Référence Interne', type: 'text', required: true, search: true },
-        stock_reel: { label: 'Quantité en Stock', type: 'number', required: true },
-        unite: { label: 'Unité', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³'], default: 'Unités' },
+        nom: { label: 'Désignation Commerciale', type: 'text', required: true, search: true, placeholder: 'Ex: Brique G-Block' },
+        ref: { label: 'Code SKU / Réf.', type: 'text', required: true, search: true, placeholder: 'Ex: SK-BR-2024' },
+        stock_reel: { label: 'Disponibilité Physique', type: 'number', required: true },
+        unite: { label: 'Unité de Gestion', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³'], default: 'Unités' },
         categorie: { label: 'Catégorie', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Consommables'] }
       },
       views: {
@@ -59,13 +59,13 @@ export const InventorySchemas = {
       }
     },
     movements: {
-      label: 'Mouvements de Stock',
+      label: 'Registre des Flux de Stock',
       fields: {
         date: { label: 'Date', type: 'date', required: true },
-        produit: { label: 'Article', type: 'text', required: true, search: true },
-        quantite: { label: 'Quantité', type: 'number', required: true },
-        type: { label: 'Type', type: 'selection', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Sortie' },
-        reference: { label: 'Document Source', type: 'text', search: true }
+        produit: { label: 'Article Concerné', type: 'text', required: true, search: true, placeholder: 'Rechercher un article...' },
+        quantite: { label: 'Quantité Mouvementée', type: 'number', required: true },
+        type: { label: 'Type de Flux', type: 'selection', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Sortie' },
+        reference: { label: 'Réf. Document Source', type: 'text', search: true, placeholder: 'Ex: BL-2024-001' }
       },
       views: {
         list: ['date', 'produit', 'quantite', 'type', 'reference'],

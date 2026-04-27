@@ -21,11 +21,11 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const [mainTab, setMainTab] = useState(appId === 'budget' ? 'budget' : 'analytics');
 
   const allTabs = [
-    { id: 'analytics', label: 'Performance', icon: <BarChart3 size={16} /> },
-    { id: 'accounting', label: 'Comptabilité', icon: <Calculator size={16} />, permission: 'MANAGE_FINANCE' },
-    { id: 'invoicing', label: 'Facturation', icon: <FileText size={16} /> },
-    { id: 'budget', label: 'Budgets', icon: <PiggyBank size={16} />, permission: 'MANAGE_FINANCE' },
-    { id: 'banque', label: 'Banque', icon: <Wallet size={16} />, permission: 'MANAGE_FINANCE' },
+    { id: 'analytics', label: 'Performance & Analyse', icon: <BarChart3 size={16} /> },
+    { id: 'accounting', label: 'Comptabilité Générale', icon: <Calculator size={16} />, permission: 'MANAGE_FINANCE' },
+    { id: 'invoicing', label: 'Facturation & Créances', icon: <FileText size={16} /> },
+    { id: 'budget', label: 'Arbitrages Budgétaires', icon: <PiggyBank size={16} />, permission: 'MANAGE_FINANCE' },
+    { id: 'banque', label: 'Trésorerie & Banque', icon: <Wallet size={16} />, permission: 'MANAGE_FINANCE' },
   ];
 
   const tabs = allTabs.filter(t => !t.permission || hasAccess(PERMISSIONS[t.permission]));
@@ -61,7 +61,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
             </span>
           </div>
           <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            {isBudgetContext ? 'Gestion Budgétaire' : 'Finance Excellence'}
+            {isBudgetContext ? 'Arbitrages Budgétaires' : 'Finance Excellence Hub'}
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '700px', lineHeight: 1.6 }}>
             {isBudgetContext 

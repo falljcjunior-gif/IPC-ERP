@@ -105,13 +105,13 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'crm', label: 'CRM', icon: <Users size={18} />,
+    id: 'crm', label: 'CRM & Pistes de Vente', icon: <Users size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES'],
     component: CRM, priority: 2
   });
 
   registry.register({
-    id: 'sales', label: 'Ventes', icon: <ShoppingCart size={18} />,
+    id: 'sales', label: 'Ventes & Devis', icon: <ShoppingCart size={18} />,
     category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
     component: Sales, priority: 3
   });
@@ -129,14 +129,14 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'marketing', label: 'Marketing', icon: <Mail size={18} />,
+    id: 'marketing', label: 'Marketing & Croissance', icon: <Mail size={18} />,
     category: 'core', roles: ['ADMIN', 'HR', 'SALES'],
     component: Marketing, priority: 4
   });
 
   // --- Opérations & Logistique ---
   registry.register({
-    id: 'inventory', label: 'Stocks', icon: <Package size={18} />,
+    id: 'inventory', label: 'Stocks & Logistique', icon: <Package size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
     component: LogisticsHub, priority: 10
   });
@@ -216,7 +216,7 @@ export const initRegistry = () => {
 
   // --- RH & Collaboration ---
   registry.register({
-    id: 'hr', label: 'RH', icon: <Users2 size={18} />,
+    id: 'hr', label: 'RH & Talents', icon: <Users2 size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
     component: HR, priority: 30
   });

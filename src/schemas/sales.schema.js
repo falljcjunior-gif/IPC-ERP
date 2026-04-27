@@ -39,12 +39,12 @@ export const SalesSchemas = {
    */
   models: {
     orders: {
-      label: 'Commandes Client',
+      label: 'Commandes & Contrats Vente',
       fields: {
-        client: { label: 'Client', type: 'text', required: true, search: true },
-        date: { label: 'Date', type: 'date', required: true },
-        montant: { label: 'Montant Total', type: 'money', currency: 'FCFA', search: true },
-        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Confirmé', 'Expédié', 'Payé', 'Annulé'], default: 'Brouillon' },
+        client: { label: 'Tiers Partenaire', type: 'text', required: true, search: true, placeholder: 'Sélectionner le client...' },
+        date: { label: 'Date de la Transaction', type: 'date', required: true },
+        montant: { label: 'Valeur Totale HT', type: 'money', currency: 'FCFA', search: true },
+        statut: { label: 'État de la Commande', type: 'selection', options: ['Brouillon', 'Confirmé', 'Expédié', 'Payé', 'Annulé'], default: 'Brouillon' },
         items: { label: 'Articles', type: 'json' }
       },
       views: {
@@ -62,13 +62,13 @@ export const SalesSchemas = {
       }
     },
     products: {
-      label: 'Produits',
+      label: 'Catalogue Articles & Services',
       fields: {
-        nom: { label: 'Nom du Produit', type: 'text', required: true, search: true },
-        ref: { label: 'Référence', type: 'text', required: true, search: true },
-        prix: { label: 'Prix de Vente', type: 'money', currency: 'FCFA' },
-        stock: { label: 'Stock Physique', type: 'number' },
-        categorie: { label: 'Catégorie', type: 'selection', options: ['Briques', 'Pavets', 'Bordures', 'Autre'] }
+        nom: { label: 'Désignation Commerciale', type: 'text', required: true, search: true, placeholder: 'Ex: Brique G-Block 20x20' },
+        ref: { label: 'Référence Catalogue', type: 'text', required: true, search: true, placeholder: 'Ex: GB-2020-01' },
+        prix: { label: 'Tarif Unitaire HT', type: 'money', currency: 'FCFA' },
+        stock: { label: 'Disponibilité Réelle', type: 'number' },
+        categorie: { label: 'Famille d\'Articles', type: 'selection', options: ['Briques', 'Pavets', 'Bordures', 'Autre'] }
       },
       views: {
         list: ['ref', 'nom', 'prix', 'stock', 'categorie'],

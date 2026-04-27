@@ -33,15 +33,15 @@ const Production = ({ onOpenDetail, appId }) => {
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
 
   const tabs = [
-    { id: 'analytics', label: t('nav.bi', { defaultValue: 'Efficacité OEE' }), icon: <BarChart3 size={16} /> },
-    { id: 'execution', label: t('nav.production', { defaultValue: 'Exécution (OF)' }), icon: <Factory size={16} /> },
-    { id: 'design', label: t('inventory.products', { defaultValue: 'Nomenclatures' }), icon: <Layers size={16} /> },
-    { id: 'maintenance', label: t('nav.maintenance', { defaultValue: 'Maintenance' }), icon: <Wrench size={16} /> },
+    { id: 'analytics', label: 'Efficacité & Rendement (OEE)', icon: <BarChart3 size={16} /> },
+    { id: 'execution', label: 'Atelier & Ordres de Fab.', icon: <Factory size={16} /> },
+    { id: 'design', label: 'Ingénierie & Nomenclatures', icon: <Layers size={16} /> },
+    { id: 'maintenance', label: 'Maintenance & Actifs', icon: <Wrench size={16} /> },
   ];
 
   const modalConfig = {
-    workOrders: { title: 'Nouvel Ordre de Fab.', schema: productionSchema.models.workOrders },
-    boms: { title: 'Nouvelle Nomenclature', schema: productionSchema.models.boms }
+    workOrders: { title: 'Lancement d\'Ordre de Fabrication', schema: productionSchema.models.workOrders },
+    boms: { title: 'Configuration de Nomenclature', schema: productionSchema.models.boms }
   };
 
   return (
@@ -73,7 +73,7 @@ const Production = ({ onOpenDetail, appId }) => {
             </span>
           </div>
           <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            Industrial Engine
+            Industrial Core
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
             Centre de commandement industriel : Optimisation des flux de production, maintenance prédictive et gestion intelligente des ordres.
@@ -94,7 +94,7 @@ const Production = ({ onOpenDetail, appId }) => {
                <button className="btn-primary" 
                   onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }}
                   style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4' }}>
-                  <Plus size={20} /> <span style={{ fontWeight: 800 }}>{t('production.launch_order', { defaultValue: 'Lancer Ordre' })}</span>
+                  <Plus size={20} /> <span style={{ fontWeight: 800 }}>Lancer la Production</span>
                </button>
             </PermissionGuard>
         </div>

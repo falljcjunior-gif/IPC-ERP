@@ -31,7 +31,7 @@ const Chatter = ({ targetId, targetType }) => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-subtle)', borderRadius: '1.5rem', padding: '1.5rem', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h3 style={{ fontSize: '1.1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MessageSquare size={18} color="var(--accent)" /> Fil d'activité 
+          <MessageSquare size={18} color="var(--accent)" /> Intelligence Feed 
           <span style={{ fontSize: '0.65rem', color: '#10B981', display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px', background: '#10B98115', padding: '2px 8px', borderRadius: '4px' }}>
              <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10B981' }} /> LIVE
           </span>
@@ -53,7 +53,7 @@ const Chatter = ({ targetId, targetType }) => {
                 textTransform: 'uppercase'
               }}
             >
-              {f === 'all' ? 'Tout' : f === 'note' ? 'Notes' : 'Logs'}
+              {f === 'all' ? 'Tout' : f === 'note' ? 'Annotations' : 'Audit'}
             </button>
           ))}
         </div>
@@ -68,7 +68,7 @@ const Chatter = ({ targetId, targetType }) => {
             if (e.target.value === '') setIsTyping(false);
           }}
           onBlur={() => setIsTyping(false)}
-          placeholder="Rédiger une note interne..."
+          placeholder="Contribuer à l'intelligence collective..."
           style={{
             width: '100%',
             padding: '1rem',

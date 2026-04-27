@@ -7,11 +7,11 @@ export const accountingSchema = {
   label: 'Comptabilité',
   models: {
     accounts: {
-      label: 'Plan Comptable',
+      label: 'Nomenclature du Plan Comptable',
       dataPath: 'finance.accounts',
       fields: {
-        code: { label: 'Code', type: 'text', required: true, search: true },
-        label: { label: 'Intitulé', type: 'text', required: true, search: true },
+        code: { label: 'Numéro de Compte', type: 'text', required: true, search: true, placeholder: 'Ex: 411000' },
+        label: { label: 'Libellé du Compte', type: 'text', required: true, search: true, placeholder: 'Ex: Clients Collectifs' },
         nature: { label: 'Nature', type: 'selection', options: ['Bilan', 'Gestion'], search: true },
         type: { label: 'Type', type: 'selection', options: ['Actif', 'Passif', 'Charge', 'Produit'], search: true },
         solde: { label: 'Solde', type: 'money', currency: 'FCFA' }
@@ -31,13 +31,13 @@ export const accountingSchema = {
       }
     },
     entries: {
-      label: 'Grand Livre',
+      label: 'Registre du Grand Livre',
       dataPath: 'finance.lines',
       fields: {
         date: { label: 'Date', type: 'date', required: true, search: true },
-        libelle: { label: 'Libellé', type: 'text', required: true, search: true },
-        piece: { label: 'Pièce', type: 'text', search: true },
-        journalCode: { label: 'Journal', type: 'text', search: true },
+        libelle: { label: 'Libellé de l\'Écriture', type: 'text', required: true, search: true, placeholder: 'Ex: Règlement Facture F-2024-001' },
+        piece: { label: 'Réf. Pièce Justificative', type: 'text', search: true, placeholder: 'Ex: CHQ-88271' },
+        journalCode: { label: 'Code Journal', type: 'text', search: true, placeholder: 'Ex: BQ (Banque)' },
         debit: { label: 'Débit', type: 'money', currency: 'FCFA' },
         credit: { label: 'Crédit', type: 'money', currency: 'FCFA' },
         analyticAccount: { label: 'Compte Analytique', type: 'text', search: true },

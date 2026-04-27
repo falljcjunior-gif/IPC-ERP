@@ -22,13 +22,13 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
   ].length;
 
   const tabs = [
-    { id: 'people', label: 'Annuaire & Paie', icon: <Users size={16} /> },
+    { id: 'people', label: 'Talents & Collaborateurs', icon: <Users size={16} /> },
     { 
       id: 'approvals', 
-      label: `Approbations${pendingCount > 0 ? ` (${pendingCount})` : ''}`, 
+      label: `Validations RH${pendingCount > 0 ? ` (${pendingCount})` : ''}`, 
       icon: <CheckSquare size={16} /> 
     },
-    { id: 'onboarding', label: 'Onboarding & Accès', icon: <UserPlus size={16} /> }
+    { id: 'onboarding', label: 'Intégration & Habilitations', icon: <UserPlus size={16} /> }
   ];
 
   return (
@@ -57,7 +57,7 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>IPC Talent Cloud</span>
           </div>
-          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>Ressources Humaines</h1>
+          <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>Talents & Culture</h1>
           <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '700px', lineHeight: 1.6 }}>
             Optimisez le capital humain et pilotez la performance de vos équipes avec une vision à 360°.
           </p>

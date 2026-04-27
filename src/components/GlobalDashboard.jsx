@@ -113,11 +113,11 @@ const GlobalDashboard = () => {
     const getRAG = (score) => score >= 90 ? 'green' : score >= 75 ? 'amber' : 'red';
 
     const deptHealth = [
-      { dept: 'Finance',      score: 95, rag: 'green', trend: 2, icon: <DollarSign size={18} />,  color:'#10B981', link:'accounting' },
-      { dept: 'Commercial',   score: 98, rag: 'green', trend: 5, icon: <Target size={18} />, color:'#3B82F6', link:'crm' },
-      { dept: 'Supply Chain', score: otif, rag: getRAG(otif), trend: -1, icon: <Truck size={18} />, color:'#F59E0B', link:'shipping' },
-      { dept: 'Production',   score: prodScore, rag: getRAG(prodScore), trend: 4, icon: <ActivityIcon size={18} />, color:'#8B5CF6', link:'production' },
-      { dept: 'RH',           score: 88, rag: 'amber', trend: 1, icon: <Users size={18} />, color:'#06B6D4', link:'hr' },
+      { dept: 'Finance',      score: 95, rag: 'green', trend: 2, icon: <DollarSign size={18} />,  color:'#10B981', link:'accounting', label: 'Performance Financière' },
+      { dept: 'Commercial',   score: 98, rag: 'green', trend: 5, icon: <Target size={18} />, color:'#3B82F6', link:'crm', label: 'Célérité Commerciale' },
+      { dept: 'Supply Chain', score: otif, rag: getRAG(otif), trend: -1, icon: <Truck size={18} />, color:'#F59E0B', link:'shipping', label: 'Excellence Logistique' },
+      { dept: 'Production',   score: prodScore, rag: getRAG(prodScore), trend: 4, icon: <ActivityIcon size={18} />, color:'#8B5CF6', link:'production', label: 'Industrial Intelligence' },
+      { dept: 'RH',           score: 88, rag: 'amber', trend: 1, icon: <Users size={18} />, color:'#06B6D4', link:'hr', label: 'Capital Humain' },
     ];
 
     // Dynamic AI Insights
@@ -174,7 +174,7 @@ const GlobalDashboard = () => {
             </span>
           </div>
           <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.04em' }}>
-            Bonjour, <span className="text-gradient" style={{ background: 'linear-gradient(to right, var(--text), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{currentUser?.nom}</span> 👋
+            Command Center <span className="text-gradient" style={{ background: 'linear-gradient(to right, var(--text), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{currentUser?.nom}</span> 👋
           </h1>
           <p style={{ color:'var(--text-muted)', fontSize:'1.1rem', margin:'0.6rem 0 0 0', fontWeight: 500 }}>
              {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
@@ -243,8 +243,8 @@ const GlobalDashboard = () => {
               <div style={{ background: 'rgba(255,255,255,0.1)', width: 'fit-content', padding: '10px', borderRadius: '12px', marginBottom: '1.5rem' }}>
                  <DollarSign size={24} />
               </div>
-              <div style={{ fontWeight: 800, fontSize: '0.9rem', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Chiffre d'Affaires</div>
-              <div style={{ fontSize: '3rem', fontWeight: 900, letterSpacing: '-0.05em' }}>{formatCurrency(metrics.sales.caRealise, true)}</div>
+               <div style={{ fontWeight: 800, fontSize: '0.9rem', opacity: 0.8, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Volume d'Affaires Réalisé</div>
+               <div style={{ fontSize: '3rem', fontWeight: 900, letterSpacing: '-0.05em' }}>{formatCurrency(metrics.sales.caRealise, true)}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6EE7B7', fontWeight: 800, fontSize: '0.9rem', marginTop: '0.5rem' }}>
                  <TrendingUp size={16} /> +12.4% vs N-1
               </div>
@@ -293,7 +293,7 @@ const GlobalDashboard = () => {
                        <div style={{ color: dept.color, background: `${dept.color}15`, padding: '8px', borderRadius: '10px' }}>{dept.icon}</div>
                        <RagBadge status={dept.rag} />
                     </div>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{dept.dept}</div>
+                     <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{dept.label}</div>
                     <div style={{ fontSize: '1.75rem', fontWeight: 900 }}>{dept.score}%</div>
                     <div style={{ marginTop: '1rem', height: '6px', background: 'var(--bg-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
                        <motion.div initial={{ width: 0 }} animate={{ width: `${dept.score}%` }} style={{ height: '100%', background: dept.color }} />

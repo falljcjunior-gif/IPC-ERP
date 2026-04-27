@@ -23,9 +23,9 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); 
 
   const tabs = [
-    { id: 'inventory', label: 'Stocks & Entrepôts', icon: <Package size={16} /> },
-    { id: 'purchase', label: 'Achats & Fournisseurs', icon: <ShoppingBag size={16} /> },
-    { id: 'project', label: 'Projets & Delivery', icon: <Briefcase size={16} /> },
+    { id: 'inventory', label: 'Disponibilité & Entrepôts', icon: <Package size={16} /> },
+    { id: 'purchase', label: 'Approvisionnements & Achats', icon: <ShoppingBag size={16} /> },
+    { id: 'project', label: 'Suivi des Livrables & Projets', icon: <Briefcase size={16} /> },
   ];
 
   const isPurchaseContext = appId === 'purchase';
@@ -59,7 +59,7 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
             </span>
           </div>
           <h1 style={{ fontSize: shellView?.mobile ? '2.5rem' : '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)', lineHeight: 1 }}>
-            {isPurchaseContext ? 'Gestion des Achats' : 'Supply Chain Hub'}
+            {isPurchaseContext ? 'Approvisionnements' : 'Flux Logistiques'}
           </h1>
           <p style={{ color: 'var(--text-muted)', margin: '1rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '750px', lineHeight: 1.6 }}>
             {isPurchaseContext 
@@ -85,9 +85,9 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
               }} 
               style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#4F46E5' }}>
               <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
-                mainTab === 'purchase' ? 'Nouveau PO' : 
-                mainTab === 'project' ? 'Nouvelle Tâche' : 
-                'Action Stock'
+                mainTab === 'purchase' ? 'Nouvelle Commande' : 
+                mainTab === 'project' ? 'Nouveau Jalon' : 
+                'Flux Logistique'
               }</span>
             </button>
            )}
@@ -119,32 +119,14 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={
-          modalMode === 'purchase' ? 'Nouvelle Commande Achat' :
-          modalMode === 'project' ? 'Nouvelle Tâche Projet' :
-          'Mouvement de Stock'
+          modalMode === 'purchase' ? 'Demande d\'Achat & Commande' :
+          modalMode === 'project' ? 'Action & Jalon Opérationnel' :
+          'Enregistrement de Flux Physique'
         }
         fields={
-          modalMode === 'purchase' ? [
-            { name: 'fournisseur', label: 'Fournisseur', type: 'text', required: true },
-            { name: 'ref', label: 'Référence PO', type: 'text', required: true },
-            { name: 'date', label: 'Date Commande', type: 'date', required: true },
-            { name: 'total', label: 'Montant Total (FCFA)', type: 'money', currency: 'FCFA' },
-            { name: 'statut', label: 'Statut', type: 'selection', options: ['Brouillon', 'Commandé', 'En Transit', 'Réceptionné', 'Annulé'], default: 'Brouillon' },
-            { name: 'notes', label: 'Notes', type: 'textarea' }
-          ] : modalMode === 'project' ? [
-            { name: 'titre', label: 'Titre de la Tâche', type: 'text', required: true },
-            { name: 'projet', label: 'Projet Parent', type: 'text', required: true },
-            { name: 'assigne', label: 'Assigné à', type: 'text' },
-            { name: 'priorite', label: 'Priorité', type: 'selection', options: ['Basse', 'Moyenne', 'Haute'], default: 'Moyenne' },
-            { name: 'dateEcheance', label: 'Échéance', type: 'date' },
-            { name: 'statut', label: 'Statut', type: 'selection', options: ['À faire', 'En cours', 'Terminé'], default: 'À faire' }
-          ] : [
-            { name: 'produit', label: 'Article', type: 'text', required: true },
-            { name: 'type', label: 'Type de Mouvement', type: 'selection', options: ['Réception', 'Expédition', 'Consommation', 'Ajustement Entrée', 'Ajustement Sortie'], required: true },
-            { name: 'qte', label: 'Quantité', type: 'number', required: true },
-            { name: 'ref', label: 'Document Source (ex: BL-001)', type: 'text' },
-            { name: 'date', label: 'Date', type: 'date' }
-          ]
+          modalMode === 'purchase' ? Object.entries(registry.getSchema('purchase')?.models?.orders?.fields || {}).map(([name, f]) => ({ ...f, name })) :
+          modalMode === 'project' ? Object.entries(registry.getSchema('projects')?.models?.tasks?.fields || {}).map(([name, f]) => ({ ...f, name })) :
+          Object.entries(registry.getSchema('inventory')?.models?.movements?.fields || {}).map(([name, f]) => ({ ...f, name }))
         }
         onSave={(f) => {
           if (modalMode === 'purchase') addRecord('purchase', 'orders', f);
