@@ -41,7 +41,7 @@ const CallInterface = ({
     const unsub = FirestoreService.subscribeToDocument('rooms', callId, (docData) => {
       if (docData?.status === 'ended') {
          webrtcService.hangup(callId, currentUser?.id);
-         if (onHangupRef.current) onHangupRef.current();
+         if (onClose) onClose();
       }
     });
 
@@ -130,8 +130,13 @@ const CallInterface = ({
   };
 
   const handleHangup = () => {
-    webrtcService.hangup(callId, currentUser?.id);
-    onHangup();
+    // Instant UI feedback: close the overlay first
+    if (onClose) onClose();
+    
+    // Background the heavy cleanup
+    webrtcService.hangup(callId, currentUser?.id).catch(err => {
+      logger.error("Hangup background error:", err);
+    });
   };
 
 
