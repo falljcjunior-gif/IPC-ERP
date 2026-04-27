@@ -382,10 +382,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
       <RecordModal 
         isOpen={!!details.context.appId && !details.record}
         onClose={() => setDetails({ record: null, context: { appId: '', subModule: '' } })}
-        title={registry.getSchema(details.context.appId)?.models[details.context.subModule]?.label || 'Nouvel Enregistrement'}
+        title={registry.getSchema(details.context.appId)?.models?.[details.context.subModule]?.label || 'Nouvel Enregistrement'}
         recordType={details.context.subModule}
         appId={details.context.appId}
-        fields={Object.entries(registry.getSchema(details.context.appId)?.models[details.context.subModule]?.fields || {}).map(([name, f]) => {
+        fields={Object.entries(registry.getSchema(details.context.appId)?.models?.[details.context.subModule]?.fields || {}).map(([name, f]) => {
           if (name === 'campagne_id') return { ...f, name, type: 'selection', options: activeCampaigns };
           return { ...f, name };
         })}

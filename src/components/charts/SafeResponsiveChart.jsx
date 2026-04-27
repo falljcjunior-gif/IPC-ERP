@@ -70,7 +70,7 @@ const SafeResponsiveChart = ({
       }}
     >
       {ready ? (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width={size.width || "100%"} height={size.height || "100%"}>
           {children}
         </ResponsiveContainer>
       ) : (

@@ -38,20 +38,47 @@ export const InventorySchemas = {
    */
   models: {
     products: {
+      label: 'Articles en Stock',
       fields: {
-        sku: { label: 'SKU / Référence', type: 'text', required: true },
-        label: { label: 'Désignation', type: 'text', required: true },
-        type: { label: 'Type', type: 'select', options: ['Matière Première', 'Produit Fini', 'Semi-Fini'], default: 'Produit Fini' },
-        prixUnitaire: { label: 'Prix Unitaire', type: 'number', required: true },
-        stockActuel: { label: 'Stock Initial', type: 'number', default: 0 }
+        nom: { label: 'Désignation', type: 'text', required: true, search: true },
+        ref: { label: 'Référence Interne', type: 'text', required: true, search: true },
+        stock_reel: { label: 'Quantité en Stock', type: 'number', required: true },
+        unite: { label: 'Unité', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³'], default: 'Unités' },
+        categorie: { label: 'Catégorie', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Consommables'] }
+      },
+      views: {
+        list: ['ref', 'nom', 'stock_reel', 'unite', 'categorie'],
+        search: {
+          filters: [
+            { id: 'low_stock', label: 'Rupture de Stock', domain: [['stock_reel', '<=', 10]] }
+          ],
+          groups: [
+            { id: 'categorie', label: 'Par Catégorie' }
+          ]
+        }
       }
     },
     movements: {
+      label: 'Mouvements de Stock',
       fields: {
-        productId: { label: 'Produit', type: 'text', required: true },
-        type: { label: 'Mouvement', type: 'select', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Entrée' },
-        quantity: { label: 'Quantité', type: 'number', required: true },
-        reason: { label: 'Motif', type: 'text' }
+        date: { label: 'Date', type: 'date', required: true },
+        produit: { label: 'Article', type: 'text', required: true, search: true },
+        quantite: { label: 'Quantité', type: 'number', required: true },
+        type: { label: 'Type', type: 'selection', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Sortie' },
+        reference: { label: 'Document Source', type: 'text', search: true }
+      },
+      views: {
+        list: ['date', 'produit', 'quantite', 'type', 'reference'],
+        search: {
+          filters: [
+            { id: 'in', label: 'Entrées', domain: [['type', '==', 'Entrée']] },
+            { id: 'out', label: 'Sorties', domain: [['type', '==', 'Sortie']] }
+          ],
+          groups: [
+            { id: 'produit', label: 'Par Article' },
+            { id: 'type', label: 'Par Type' }
+          ]
+        }
       }
     }
   }

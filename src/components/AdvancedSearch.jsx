@@ -24,7 +24,7 @@ const AdvancedSearch = ({
     onSearchChange?.(searchValue);
     
     // AI Smart Filter Detection
-    if (searchValue.length > 2) {
+    if (searchValue && searchValue.length > 2) {
       const detectFilters = () => {
         let found = false;
         let newSearchValue = searchValue;

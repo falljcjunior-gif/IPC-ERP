@@ -39,7 +39,7 @@ const EnterpriseView = ({
   const modelSchema = useMemo(() => {
     if (!schema || !schema.models || !schema.models[modelId]) return null;
     const base = schema.models[modelId];
-    const overrides = schemaOverrides[`${moduleId}.${modelId}`];
+    const overrides = (schemaOverrides || {})[`${moduleId}.${modelId}`];
     if (!overrides) return base;
     return { ...base, ...overrides };
   }, [schema, modelId, moduleId, schemaOverrides]);
@@ -91,9 +91,9 @@ const EnterpriseView = ({
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       result = result.filter(item => {
-        return Object.keys(modelSchema.fields).some(fieldKey => {
+        return Object.keys(modelSchema.fields || {}).some(fieldKey => {
           const field = modelSchema.fields[fieldKey];
-          if (!field.search) return false;
+          if (!field?.search) return false;
           return String(item[fieldKey] || '').toLowerCase().includes(q);
         });
       });
@@ -119,7 +119,7 @@ const EnterpriseView = ({
     }
 
     activeFilters.forEach(filterId => {
-      const filter = modelSchema.views.search?.filters.find(f => f.id === filterId);
+      const filter = modelSchema?.views?.search?.filters?.find(f => f.id === filterId);
       if (filter && filter.domain) {
         result = evaluateDomain(result, filter.domain);
       }
@@ -136,7 +136,7 @@ const EnterpriseView = ({
 
   // Renderers
   const renderList = () => {
-    const columns = modelSchema.views.list;
+    const columns = modelSchema?.views?.list || Object.keys(modelSchema?.fields || {});
 
     const renderRow = (item) => (
       <tr 
@@ -146,7 +146,7 @@ const EnterpriseView = ({
         style={{ borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: '0.2s' }}
       >
         {columns.map(col => {
-          const field = modelSchema.fields[col];
+          const field = modelSchema?.fields?.[col];
           let value = item[col];
           
           // Formatter based on schema type
@@ -208,11 +208,11 @@ const EnterpriseView = ({
   };
 
   const renderKanban = () => {
-    if (!modelSchema.views.kanban) return <div>Vue Kanban non configurée pour ce modèle.</div>;
-    const config = modelSchema.views.kanban;
+    if (!modelSchema.views?.kanban) return <div style={{ padding: '2rem', opacity: 0.6 }}>Vue Kanban non configurée.</div>;
+    const config = modelSchema?.views?.kanban;
     
     // Dynamically get columns from the group field options
-    const groupField = modelSchema.fields[config.groupField];
+    const groupField = modelSchema?.fields?.[config?.groupField];
     const columns = groupField ? groupField.options : ['Nouveau', 'En cours', 'Fait'];
 
     return (
@@ -233,8 +233,8 @@ const EnterpriseView = ({
       {/* Search & Action Bar */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
          <AdvancedSearch 
-           filters={modelSchema.views.search?.filters || []}
-           groups={modelSchema.views.search?.groups || []}
+           filters={modelSchema.views?.search?.filters || []}
+           groups={modelSchema.views?.search?.groups || []}
            onFilterChange={setActiveFilters}
            onGroupChange={(g) => setActiveGroup(g)}
            onSearch={setSearchTerm}
