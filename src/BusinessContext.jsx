@@ -23,12 +23,6 @@ export const BusinessProvider = ({ children }) => {
   const setUser = useStore(s => s.setUser);
   const userId = user?.id;
 
-  // Get STABLE setters from store once
-  const { 
-    setData, setWorkflows, setNotifications, 
-    setPermissions, setActiveCall, playRingtone
-  } = useStore.getState();
-
   // 1. Batched Sync Engine (memoized but stable)
   const applyBatchedUpdates = useCallback(() => {
     useStore.getState().setData(prev => {

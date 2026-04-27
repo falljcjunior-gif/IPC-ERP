@@ -1,4 +1,4 @@
-const axios = require('axios');
+// const axios = require('axios');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -17,7 +17,7 @@ const db = admin.firestore();
  * @param {string} sourceId - The Firestore document ID
  */
 exports.syncRecord = async (model, data, sourceId) => {
-  const AXELOR_URL = process.env.AXELOR_API_URL || 'https://axelor.example.com/rest';
+  // const AXELOR_URL = process.env.AXELOR_API_URL || 'https://axelor.example.com/rest';
   const AXELOR_KEY = process.env.AXELOR_API_KEY;
 
   if (!AXELOR_KEY) {

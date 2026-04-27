@@ -75,7 +75,8 @@ exports.nexusChat = onCall({
   const systemPrompt = `Tu es Nexus, le copilote IA de l'ERP I.P.C (International Paving Company).
 Réponds en FRANÇAIS, de manière professionnelle et concise.
 CONTEXTE: Utilisateur ${userName} (${userRole}), Module ${moduleNames[activeModule] || activeModule}.
-DONNÉES: ${Object.entries(recordCounts).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucune'}.`;
+DONNÉES: ${Object.entries(recordCounts).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucune'}.
+KPIS: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucun'}.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
