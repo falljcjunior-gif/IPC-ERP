@@ -119,8 +119,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(4px)',
+              background: 'rgba(15, 23, 42, 0.5)',
               zIndex: 1000
             }}
           />
@@ -131,7 +130,6 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="glass"
             style={{
               position: 'fixed',
               top: 0,

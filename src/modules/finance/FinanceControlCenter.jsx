@@ -14,6 +14,7 @@ import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
 import BankReconTab from './tabs/BankReconTab';
 import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
+import { IPCReportGenerator } from '../../utils/PDFExporter';
 
 const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const { data, addRecord, formatCurrency, addAccountingEntry, userRole, shellView } = useStore();
@@ -29,8 +30,30 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   ];
 
   const tabs = allTabs.filter(t => !t.permission || hasAccess(PERMISSIONS[t.permission]));
-
   const isBudgetContext = appId === 'budget';
+
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await IPCReportGenerator.generateFinancialStatement({
+        title: "Bilan de Performance Financière",
+        summary: "Synthèse institutionnelle des flux de trésorerie et de la performance comptable.",
+        metrics: [
+          { label: 'Période', value: 'Q2 2024' },
+          { label: 'Score Santé', value: '95%' }
+        ],
+        rows: [
+          { module: 'Trésorerie', description: 'Flux de trésorerie opérationnels', status: 'Stable' },
+          { module: 'Facturation', description: 'Taux de recouvrement des créances', status: 'Optimal' },
+          { module: 'Budget', description: 'Consommation des enveloppes budgétaires', status: '82%' }
+        ]
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div style={{ 
@@ -39,22 +62,22 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
       flexDirection: 'column', 
       gap: shellView?.mobile ? '1.5rem' : '3rem', 
       minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.05) 0%, transparent 50%)'
+      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(6, 78, 59, 0.05) 0%, transparent 50%)'
     }}>
       
       {/* --- NEXT GEN FINANCE HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#6366F1', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#064E3B', marginBottom: '0.75rem' }}>
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
-                boxShadow: ['0 0 0px rgba(99, 102, 241, 0)', '0 0 20px rgba(99, 102, 241, 0.3)', '0 0 0px rgba(99, 102, 241, 0)']
+                boxShadow: ['0 0 0px rgba(6, 78, 59, 0)', '0 0 20px rgba(6, 78, 59, 0.3)', '0 0 0px rgba(6, 78, 59, 0)']
               }} 
               transition={{ repeat: Infinity, duration: 5 }} 
-              style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+              style={{ background: 'rgba(6, 78, 59, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(6, 78, 59, 0.2)' }}
             >
-              <Landmark size={20} />
+              <Landmark size={20} color="#064E3B" />
             </motion.div>
             <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
               {isBudgetContext ? 'IPC Strategic Planning' : 'IPC Institutional Finance'}
@@ -71,13 +94,18 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #6366F140', background: 'rgba(99, 102, 241, 0.05)' }}>
-              <ShieldCheck size={18} color="#6366F1" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#6366F1' }}>Période Active : Q2 2024</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #064E3B40', background: 'rgba(6, 78, 59, 0.05)' }}>
+              <ShieldCheck size={18} color="#064E3B" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#064E3B' }}>Période Active : Q2 2024</span>
            </div>
 
-           <button className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <History size={20} />
+           <button 
+             onClick={handleExport}
+             disabled={isExporting}
+             className="btn-glass" 
+             style={{ width: 'auto', px: '1.5rem', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+           >
+             <Download size={20} /> {isExporting ? 'Export...' : 'Exporter'}
            </button>
            
            <button className="btn-primary" 

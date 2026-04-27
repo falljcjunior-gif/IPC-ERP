@@ -14,6 +14,8 @@ import PermissionGuard from '../../components/PermissionGuard';
 import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
 import BomBuilderModal from './components/BomBuilderModal';
+import BarcodeScanner from '../../components/BarcodeScanner';
+import { IPCReportGenerator } from '../../utils/PDFExporter';
 
 // Tabs
 import AnalyticsTab from './tabs/AnalyticsTab';
@@ -31,6 +33,34 @@ const Production = ({ onOpenDetail, appId }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
   const [isBomModalOpen, setIsBomModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleScan = (code) => {
+    setIsScannerOpen(false);
+    alert(`Ordre de Fabrication Détecté : ${code}. Synchronisation avec l'atelier...`);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await IPCReportGenerator.generateFinancialStatement({
+        title: "Rapport de Rendement Industriel (OEE)",
+        metrics: [
+          { label: 'Disponibilité', value: '98.5%' },
+          { label: 'Performance', value: '97.2%' },
+          { label: 'Qualité', value: '99.4%' }
+        ],
+        rows: [
+          { module: 'Ligne A', description: 'Production Briques Réfractaires', status: 'Optimal' },
+          { module: 'Ligne B', description: 'Broyage Matières Premières', status: 'Maintenance' },
+          { module: 'Ligne C', description: 'Conditionnement', status: 'Actif' }
+        ]
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const tabs = [
     { id: 'analytics', label: 'Efficacité & Rendement (OEE)', icon: <BarChart3 size={16} /> },
@@ -51,20 +81,30 @@ const Production = ({ onOpenDetail, appId }) => {
       flexDirection: 'column', 
       gap: shellView?.mobile ? '1.5rem' : '3rem', 
       minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(6, 182, 212, 0.05) 0%, transparent 50%)'
+      backgroundImage: 'radial-gradient(circle at 100% 100%, var(--accent-glow) 0%, transparent 50%)'
     }}>
       
+      {/* --- SCANNER OVERLAY --- */}
+      <AnimatePresence>
+        {isScannerOpen && (
+          <BarcodeScanner 
+            onScan={handleScan} 
+            onClose={() => setIsScannerOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
+
       {/* --- NEXT GEN INDUSTRIAL HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#06B6D4', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--accent)', marginBottom: '0.75rem' }}>
             <motion.div 
               animate={{ 
                 scale: [1, 1.1, 1],
                 boxShadow: ['0 0 0px rgba(6, 182, 212, 0)', '0 0 20px rgba(6, 182, 212, 0.3)', '0 0 0px rgba(6, 182, 212, 0)']
               }} 
               transition={{ repeat: Infinity, duration: 3 }} 
-              style={{ background: 'rgba(6, 182, 212, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(6, 182, 212, 0.2)' }}
+              style={{ background: 'var(--accent-glow)', padding: '8px', borderRadius: '12px', border: '1px solid var(--accent)' }}
             >
               <Factory size={20} />
             </motion.div>
@@ -81,19 +121,32 @@ const Production = ({ onOpenDetail, appId }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #06B6D440', background: 'rgba(6, 182, 212, 0.05)' }}>
-              <Activity size={18} color="#06B6D4" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#06B6D4' }}>Usine : 98% OEE</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--accent)', background: 'var(--accent-glow)' }}>
+              <Activity size={18} color="var(--accent)" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent)' }}>Usine : 98% OEE</span>
            </div>
 
-           <button onClick={() => alert('Génération du rapport de production industriel...')} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+           <button 
+             onClick={handleExport}
+             disabled={isExporting}
+             className="btn-glass" 
+             style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+           >
              <Download size={20} />
+           </button>
+
+           <button 
+             onClick={() => setIsScannerOpen(true)}
+             className="btn-glass" 
+             style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+           >
+             <Zap size={20} />
            </button>
            
             <PermissionGuard module="production" level="write">
                <button className="btn-primary" 
                   onClick={() => { setModalMode('workOrders'); setIsModalOpen(true); }}
-                  style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#06B6D4' }}>
+                  style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--primary)' }}>
                   <Plus size={20} /> <span style={{ fontWeight: 800 }}>Lancer la Production</span>
                </button>
             </PermissionGuard>

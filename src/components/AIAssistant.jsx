@@ -256,9 +256,9 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.92, filter: 'blur(8px)' }}
-            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: 20, scale: 0.92, filter: 'blur(8px)' }}
+            initial={{ opacity: 0, y: 20, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.92 }}
             transition={{ type: 'spring', stiffness: 350, damping: 28 }}
             style={{
               width: shellView?.mobile ? 'calc(100vw - 2rem)' : '420px',

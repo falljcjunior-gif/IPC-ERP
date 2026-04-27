@@ -13,6 +13,8 @@ import {
 import KpiCard from '../../../components/KpiCard';
 import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
+import { IPCReportGenerator } from '../../../utils/PDFExporter';
+
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
@@ -40,9 +42,24 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       revenue: rev,
       expenses: exp,
       cashOnHand: cash,
-      dso: 0, // Remains estimated or could be calculated if we have sales/payments link
+      dso: 0, 
     };
   }, [ledgerLines]);
+
+  const handleExport = () => {
+    IPCReportGenerator.generateFinancialReport({
+      totalCash: financialKPIs.cashOnHand,
+      revenue: financialKPIs.revenue,
+      ebitda: financialKPIs.netResult,
+      margin: financialKPIs.revenue > 0 ? Math.round((financialKPIs.netResult / financialKPIs.revenue) * 100) : 0,
+      transactions: ledgerLines.slice(0, 50).map(l => ({
+        date: l.date,
+        label: l.label,
+        category: l.accountId,
+        amount: l.debit || l.credit
+      }))
+    });
+  };
 
   const cashFlowData = useMemo(() => {
     // Group entries by month
@@ -142,7 +159,11 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
              </div>
           </div>
 
-          <button className="btn-primary" style={{ width: '100%', marginTop: 'auto', padding: '1rem', borderRadius: '1.25rem', fontWeight: 900, background: 'white', color: '#0F172A', border: 'none' }}>
+          <button 
+            className="btn-primary" 
+            onClick={handleExport}
+            style={{ width: '100%', marginTop: 'auto', padding: '1rem', borderRadius: '1.25rem', fontWeight: 900, background: 'white', color: '#0F172A', border: 'none' }}
+          >
              Générer le Rapport Mensuel
           </button>
         </motion.div>

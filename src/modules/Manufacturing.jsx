@@ -15,23 +15,45 @@ import {
   MoreVertical
 } from 'lucide-react';
 import { useStore } from '../store';
+import BarcodeScanner from '../components/BarcodeScanner';
+import { AnimatePresence } from 'framer-motion';
 
 const Manufacturing = ({ onOpenDetail }) => {
   const { data, formatCurrency } = useStore();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const workOrders = data.production?.workOrders || [];
-
   const boms = data.production?.boms || [];
+
+  const handleScan = (code) => {
+    setIsScannerOpen(false);
+    // Find OF by code
+    const order = workOrders.find(o => o.id === code);
+    if (order) {
+      onOpenDetail(order, 'production', 'warehouses');
+    } else {
+      alert(`Ordre de Fabrication non trouvé pour le code : ${code}`);
+    }
+  };
 
   return (
     <div style={{ padding: '2.5rem' }}>
+      <AnimatePresence>
+        {isScannerOpen && (
+          <BarcodeScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />
+        )}
+      </AnimatePresence>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Manufacturing (GPAO)</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Pilotez vos lignes de production et vos nomenclatures complexes.</p>
+          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, margin: 0, letterSpacing: '-0.04em', color: 'var(--text)' }}>Manufacturing (GPAO)</h1>
+          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem', fontWeight: 500 }}>Pilotez vos lignes de production et vos nomenclatures complexes.</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
+          <button className="btn-glass" onClick={() => setIsScannerOpen(true)} style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Factory size={20} />
+          </button>
           <div className="glass" style={{ display: 'flex', padding: '0.25rem', borderRadius: '0.8rem' }}>
             <button onClick={() => setView('orders')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'orders' ? 'var(--bg)' : 'transparent', color: view === 'orders' ? 'var(--accent)' : 'var(--text-(muted)', cursor: 'pointer', fontWeight: 600 }}>Ordres Fab.</button>
             <button onClick={() => setView('bom')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'bom' ? 'var(--bg)' : 'transparent', color: view === 'bom' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Nomenclatures</button>
@@ -47,15 +69,15 @@ const Manufacturing = ({ onOpenDetail }) => {
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>OF EN COURS</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #10B981' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--accent)' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>TERMINÉS (MOIS)</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #F59E0B' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid #EF4444' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>ARRÊT MACHINE</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0</div>
          </div>
-          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--accent)' }}>
+          <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', borderLeft: '4px solid var(--primary)' }}>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 700 }}>EFFICACITÉ (TRS)</div>
             <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>0%</div>
          </div>

@@ -104,8 +104,8 @@ const RecordModal = ({
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.4)',
-              backdropFilter: 'blur(10px)'
+              background: 'rgba(15, 23, 42, 0.5)',
+              zIndex: 1000
             }}
           />
 
@@ -114,16 +114,16 @@ const RecordModal = ({
             initial={{ scale: 0.95, opacity: 0, y: 30 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 30 }}
-            className="glass"
             style={{
               width: '100%',
               maxWidth: '1200px',
               height: '90vh',
               borderRadius: '2rem',
               position: 'relative',
+              zIndex: 1001,
               background: 'var(--bg)',
               border: '1px solid var(--border)',
-              boxShadow: '0 40px 100px -20px rgba(0,0,0,0.3)',
+              boxShadow: 'var(--shadow-premium)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden'

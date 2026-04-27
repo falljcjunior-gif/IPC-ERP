@@ -29,7 +29,7 @@ import PointageWidget from './PointageWidget';
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
-const PlatformShell = ({ toggleTheme, theme, setView }) => {
+const PlatformShell = ({ theme, setView }) => {
   const { t, i18n } = useTranslation();
   const globalSearch = useStore(s => s.globalSearch);
   const searchResults = useStore(s => s.searchResults);
@@ -184,13 +184,13 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           display: 'flex',
           flexDirection: 'column',
           transition: 'var(--transition)',
-          backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+          backgroundColor: 'var(--bg-card)',
+          backdropFilter: 'blur(8px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(8px) saturate(150%)',
           borderRadius: 'var(--radius-lg)',
-          boxShadow: '0 4px 24px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: 'var(--shadow-lg)',
           overflow: 'hidden',
-          border: '1px solid rgba(255, 255, 255, 0.3)'
+          border: '1px solid var(--border)'
         }}
       >
         {/* Sidebar Header / Logo */}
@@ -208,7 +208,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
             <Box size={24} color="white" />
           </div>
           {shellView.sidebar && (
-            <div style={{ color: '#1F363D' }}>
+            <div style={{ color: 'var(--primary)' }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
               <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.8, textTransform: 'uppercase', marginTop: '4px' }}>Control Center</div>
             </div>
@@ -251,10 +251,10 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
-                        color: isActive ? '#1F363D' : 'rgba(31, 54, 61, 0.6)',
-                        background: isActive ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
-                        boxShadow: isActive ? '0 4px 12px rgba(0,0,0,0.03)' : 'none',
-                        border: isActive ? '1px solid rgba(255,255,255,0.8)' : '1px solid transparent',
+                        color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+                        background: isActive ? 'var(--bg-subtle)' : 'transparent',
+                        boxShadow: isActive ? 'var(--shadow-sm)' : 'none',
+                        border: isActive ? '1px solid var(--border)' : '1px solid transparent',
                         transition: 'var(--transition)',
                         position: 'relative'
                       }}
@@ -281,7 +281,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
                 {currentUser?.nom?.charAt(0)}
              </div>
              {shellView.sidebar && (
-               <div style={{ color: '#1F363D', flex: 1, overflow: 'hidden' }}>
+               <div style={{ color: 'var(--primary)', flex: 1, overflow: 'hidden' }}>
                  <div style={{ fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser?.nom}</div>
                  <div style={{ fontSize: '0.7rem', opacity: 0.7 }}>{userRole}</div>
                </div>
@@ -310,7 +310,7 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
           marginBottom: '2.5rem',
           padding: '0.75rem 1.5rem',
           background: 'var(--glass-bg)',
-          backdropFilter: 'blur(10px)',
+          backdropFilter: 'blur(4px)',
           borderRadius: '1.5rem',
           border: '1px solid var(--border)',
           boxShadow: 'var(--shadow-sm)'
@@ -329,11 +329,6 @@ const PlatformShell = ({ toggleTheme, theme, setView }) => {
            </div>
            
            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <button 
-                onClick={toggleTheme}
-                className="btn-glass" style={{ width: '40px', height: '40px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                 {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-              </button>
               <button 
                 onClick={() => {
                   const newLng = i18n.language === 'fr' ? 'en' : 'fr';

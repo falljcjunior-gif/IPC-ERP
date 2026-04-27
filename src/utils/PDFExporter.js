@@ -1,142 +1,137 @@
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable"; // Using explicit import for autotable
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
+/**
+ * IPCReportGenerator
+ * Senior Architect Utility for Premium PDF Export
+ */
+export const IPCReportGenerator = {
+  /**
+   * Generates a branded header for the PDF
+   */
+  _drawHeader: (doc, title) => {
+    const pageWidth = doc.internal.pageSize.width;
+    
+    // Emerald Accent Bar
+    doc.setFillColor(6, 78, 59); // var(--primary-dark)
+    doc.rect(0, 0, pageWidth, 25, 'F');
+    
+    // Logo Text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('I.P.C - IVORY COAST', 15, 17);
+    
+    // Report Title
+    doc.setTextColor(15, 23, 42); // Slate 900
+    doc.setFontSize(24);
+    doc.text(title.toUpperCase(), 15, 45);
+    
+    // Date & metadata
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139); // Slate 500
+    doc.text(`Généré le: ${new Date().toLocaleString()}`, 15, 52);
+    doc.text('Document Officiel I.P.C Intelligence', pageWidth - 15, 52, { align: 'right' });
+    
+    // Divider
+    doc.setDrawColor(226, 232, 240); // Slate 200
+    doc.line(15, 58, pageWidth - 15, 58);
+  },
+
+  /**
+   * Generates a Financial Statement
+   */
+  generateFinancialStatement: async (options = {}) => {
+    const doc = new jsPDF();
+    const { title = "Bilan Financier", metrics = [], rows = [] } = options;
+    
+    IPCReportGenerator._drawHeader(doc, title);
+    
+    // Summary Cards
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(6, 78, 59);
+    doc.text('RÉSUMÉ ANALYTIQUE', 15, 70);
+    
+    const summaryData = metrics.map(m => [m.label, m.value]);
+    
+    doc.autoTable({
+      startY: 75,
+      head: [['Indicateur', 'Valeur']],
+      body: summaryData.length > 0 ? summaryData : [['Aucune donnée', '—']],
+      theme: 'striped',
+      headStyles: { fillStyle: 'F', fillColor: [6, 78, 59], textColor: 255 },
+      styles: { fontSize: 10, cellPadding: 5 }
+    });
+    
+    // Details
+    const nextY = doc.lastAutoTable.finalY + 15;
+    doc.text('DÉTAILS DES OPÉRATIONS', 15, nextY);
+    
+    doc.autoTable({
+      startY: nextY + 5,
+      head: [['Module', 'Description', 'Statut']],
+      body: rows.map(r => [r.module || '—', r.description || '—', r.status || '—']),
+      headStyles: { fillColor: [15, 23, 42] },
+      styles: { fontSize: 9 }
+    });
+    
+    // Footer
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      doc.text(`Page ${i} sur ${pageCount}`, doc.internal.pageSize.width / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+    }
+    
+    doc.save(`IPC_Report_${new Date().getTime()}.pdf`);
+  },
+
+  /**
+   * Generates an Inventory Report
+   */
+  generateStockReport: (items) => {
+    const doc = new jsPDF();
+    IPCReportGenerator._drawHeader(doc, 'État des Stocks & Valorisation');
+    
+    doc.autoTable({
+      startY: 70,
+      head: [['Ref', 'Désignation', 'Localisation', 'Qte', 'Unité', 'Valeur Est.']],
+      body: items.map(item => [
+        item.ref || '—',
+        item.nom || '—',
+        item.entrepot || 'Entrepôt Principal',
+        item.quantite || 0,
+        item.unite || 'pcs',
+        { content: `${(item.quantite * (item.prixUnitaire || 0)).toLocaleString()} FCFA`, styles: { halign: 'right' } }
+      ]),
+      headStyles: { fillColor: [6, 78, 59] },
+      styles: { fontSize: 9 }
+    });
+    
+    doc.save(`IPC_Stock_Report_${new Date().getTime()}.pdf`);
+  }
+};
+
+/**
+ * Legacy Proxy for generatePDF
+ * Used by DMS, StaffPortal, and DetailOverlay
+ */
 export const generatePDF = (record, appId, subModule) => {
   const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
+  IPCReportGenerator._drawHeader(doc, `${appId.toUpperCase()} - ${subModule.toUpperCase()}`);
   
-  // 1. COLORS & THEME
-  const primaryColor = [31, 54, 61]; // Teal/Pétrole IPC
-  const accentColor = [82, 153, 144]; 
+  const entries = Object.entries(record || {}).filter(([k]) => !k.startsWith('_'));
   
-  // 2. HEADER BANNER
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, pageWidth, 45, 'F');
-  
-  // LOGO PLACEHOLDER (TEXT)
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(28);
-  doc.setFont("helvetica", "bold");
-  doc.text("I.P.C", 15, 25);
-  
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("INTELLIGENCE PLATFORM FOR COMPANIES", 15, 33);
-  doc.text("Business OS - Enterprise Edition", 15, 38);
-  
-  // DOCUMENT TYPE & NUMBER
-  const docTypeName = {
-    'sales_orders': 'BON DE COMMANDE',
-    'crm_leads': 'FICHE PROSPECT',
-    'finance_invoices': 'FACTURE',
-    'inventory_movements': 'BON DE MOUVEMENT',
-    'hr_employees': 'FICHE EMPLOYÉ',
-    'hr_payslip': 'BULLETIN DE PAIE'
-  }[`${appId}_${subModule}`] || 'DOCUMENT INTERNE';
-
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text(docTypeName, pageWidth - 15, 25, { align: "right" });
-  
-  doc.setFontSize(12);
-  const docRef = record.num || (record.id ? String(record.id).slice(-6) : 'N/A');
-  doc.text(String(docRef), pageWidth - 15, 33, { align: "right" });
-
-  // 3. ADDRESSES SECTION (Sender vs Receiver)
-  doc.setTextColor(...primaryColor);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("ÉMETTEUR:", 15, 60);
-  doc.setFont("helvetica", "normal");
-  doc.text("IPC GreenBlocks S.A.", 15, 66);
-  doc.text("Siège Social - District Techno", 15, 71);
-  doc.text("support@ipc-erp.pro", 15, 76);
-
-  if (record.client || record.entreprise) {
-    doc.setFont("helvetica", "bold");
-    doc.text("DESTINATAIRE:", pageWidth - 80, 60);
-    doc.setFont("helvetica", "normal");
-    doc.text(record.client || record.entreprise || record.nom, pageWidth - 80, 66);
-    doc.text("Client ID: " + (record.id || 'N/A'), pageWidth - 80, 71);
-  }
-
-  // 4. MAIN CONTENT TABLE
-  let tableData = [];
-  let tableHeaders = [['DÉSIGNATION', 'VALEUR']];
-
-  if (appId === 'hr' && subModule === 'payslip') {
-    tableHeaders = [['RUBRIQUE', 'BASE', 'PART SALARIALE', 'PART PATRONALE']];
-    tableData = [
-      ['Salaire de base', `${Number(record.totalBrut || 0).toLocaleString()} FCFA`, '', ''],
-      ['Indemnité de Transport', 'Exonéré', '', ''],
-      ['Cotisations Sociales (CNPS)', '', '- 22%', '+ 18%'],
-      ['Impôts sur le Revenu (ITS)', '', 'Déduit', ''],
-      ['Avances & Acomptes', '', '0 FCFA', '']
-    ];
-  } else {
-    tableData = Object.entries(record)
-      .filter(([key]) => !['id', 'avatar', 'subModule', 'ownerId', 'updatedAt', '_appId', '_subModule'].includes(key))
-      .map(([key, value]) => [
-         key.replace(/([A-Z])/g, ' $1').toUpperCase(),
-         typeof value === 'object' ? JSON.stringify(value) : String(value)
-      ]);
-  }
-
-  autoTable(doc, {
-    startY: 90,
-    head: tableHeaders,
-    body: tableData,
-    theme: 'striped',
-    headStyles: { fillColor: primaryColor, textColor: [255, 255, 255], fontStyle: 'bold' },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
-    margin: { left: 15, right: 15 }
+  doc.autoTable({
+    startY: 70,
+    head: [['Champ', 'Valeur']],
+    body: entries.map(([k, v]) => [k, String(v)]),
+    headStyles: { fillColor: [6, 78, 59] },
+    styles: { fontSize: 10 }
   });
-
-  // 5. TOTALS
-  let finalY = doc.lastAutoTable.finalY + 10;
-  if (appId === 'hr' && subModule === 'payslip') {
-    doc.setDrawColor(...accentColor);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 80, finalY, pageWidth - 15, finalY);
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("NET À PAYER:", pageWidth - 80, finalY + 10);
-    doc.text(`${Number(record.netAPayer || 0).toLocaleString()} FCFA`, pageWidth - 15, finalY + 10, { align: "right" });
-    finalY += 20;
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Validé pour la période de : ${record.salariesMois || ''}`, 15, finalY);
-    doc.text(`Date de paiement : ${record.datePaiement || ''}`, 15, finalY + 5);
-  } else if (record.totalHT || record.montant) {
-    const total = record.totalTTC || record.montant || record.totalHT;
-    doc.setDrawColor(...accentColor);
-    doc.setLineWidth(0.5);
-    doc.line(pageWidth - 80, finalY, pageWidth - 15, finalY);
-    
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text("TOTAL NET:", pageWidth - 80, finalY + 10);
-    doc.text(`${total.toLocaleString()} FCFA`, pageWidth - 15, finalY + 10, { align: "right" });
-  }
-
-  // 6. FOOTER
-  const pageCount = doc.internal.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text(
-      "Ce document est une pièce officielle générée par IPC Business OS. Signé électroniquement.",
-      pageWidth / 2,
-      285,
-      { align: "center" }
-    );
-    doc.text(`Page ${i} sur ${pageCount}`, pageWidth / 2, 290, { align: "center" });
-  }
-
-  // SAVE
-  const name = record.num || record.nom || record.id;
-  doc.save(`IPC_${docTypeName.replace(/ /g, '_')}_${name}.pdf`);
+  
+  doc.save(`IPC_${appId}_${subModule}_${new Date().getTime()}.pdf`);
 };

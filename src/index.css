@@ -1,58 +1,55 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Colors - Space & Emerald (Next Gen ERP) */
-  --primary: #0F172A; /* Deep Obsidian */
-  --primary-light: #1E293B;
-  --accent: #10B981; /* Emerald Green */
+  /* 
+     IPC PRISTINE ARCHITECTURE (Senior Designer Palette) 
+     Focused on clarity, high-end emerald accents, and depth.
+  */
+  --primary: #064E3B; /* Deep Forest Emerald */
+  --primary-light: #065F46;
+  --accent: #10B981; /* Vibrant Mint */
   --accent-hover: #059669;
-  --accent-glow: rgba(16, 185, 129, 0.2);
+  --accent-glow: rgba(16, 185, 129, 0.15);
   
-  --bg: #F8FAFC;
-  --bg-subtle: #F1F5F9;
-  --bg-dark: #0B1120;
+  --bg: #FFFFFF;
+  --bg-subtle: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-dark: #F1F5F9;
   
-  --text: #0F172A;
-  --text-muted: #64748B;
-  --text-on-dark: #F8FAFC;
+  --text: #0F172A; /* Slate 900 */
+  --text-muted: #64748B; /* Slate 500 */
+  --text-on-dark: #FFFFFF;
   
   --border: #E2E8F0;
-  --border-glass: rgba(255, 255, 255, 0.4);
+  --border-light: #F1F5F9;
+  --border-glass: rgba(255, 255, 255, 0.6);
   
-  /* Glassmorphism Next-Gen */
-  --glass-bg: rgba(255, 255, 255, 0.75);
+  --overlay: rgba(15, 23, 42, 0.15);
+  
+  /* Senior Glassmorphism (High Fidelity) */
+  --glass-bg: rgba(255, 255, 255, 0.9);
   --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
   
-  /* Modern Tokens */
-  --radius: 1.5rem;
+  /* Design Tokens */
+  --radius: 1.25rem;
   --radius-sm: 0.75rem;
   --radius-lg: 2rem;
   
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-  --shadow-md: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
-  --shadow-lg: 0 20px 50px -12px rgba(0,0,0,0.1);
+  /* Layered 3D Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.03);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+  --shadow-premium: 0 25px 50px -12px rgba(15, 23, 42, 0.1);
   --shadow-accent: 0 10px 20px -5px rgba(16, 185, 129, 0.2);
 
   --font-main: 'Inter', sans-serif;
-  --font-heading: 'Plus Jakarta Sans', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
   
-  --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme='dark'] {
-  --primary: #10B981;
-  --primary-light: #34D399;
-  --accent: #10B981;
-  --bg: #0B1120;
-  --bg-subtle: #131C2E;
-  --text: #F8FAFC;
-  --text-muted: #94A3B8;
-  --border: #1E293B;
-  --glass-bg: rgba(15, 23, 42, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-}
+/* Dark Mode Removed as per User Request for Senior Refonte */
 
 /* ══ RESET & BASE ══ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -77,35 +74,51 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-/* ══ BENTO GRID ══ */
+/* ══ BENTO GRID (Dynamic Rhythm) ══ */
 .bento-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-auto-rows: minmax(100px, auto);
+  grid-auto-rows: minmax(120px, auto);
   gap: 1.5rem;
+  padding: 0.5rem;
 }
 
 .bento-card {
-  background: var(--bg);
+  background: var(--bg-card);
   border-radius: var(--radius);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
   transition: var(--transition);
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .bento-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: var(--shadow-premium);
   border-color: var(--accent);
 }
 
-/* ══ GLASSMORPHISM ══ */
+.bento-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.bento-card:hover::before {
+  opacity: 1;
+}
+
+/* ══ GLASSMORPHISM (Ultra Refined) ══ */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
   border-radius: var(--radius);
@@ -133,25 +146,17 @@ h1, h2, h3, h4, h5, h6 {
   overflow: hidden;
 }
 
-/* Primary — Emerald gradient with glow */
+/* Primary — Deep Emerald Senior */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  background: var(--primary);
   color: #fff;
-  box-shadow: 0 4px 15px -3px rgba(16, 185, 129, 0.45);
+  box-shadow: var(--shadow-md);
 }
-.btn-primary::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
-  background-size: 200% 100%;
-  animation: btn-shimmer 3s infinite linear;
-  pointer-events: none;
-}
+
 .btn-primary:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: var(--primary-light);
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 8px 25px -4px rgba(16, 185, 129, 0.55);
+  box-shadow: 0 8px 25px -4px rgba(6, 78, 59, 0.2);
 }
 
 /* Secondary — Subtle with border */
@@ -227,13 +232,10 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--glass-shadow);
 }
 .btn-glass:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-[data-theme='dark'] .btn-glass:hover {
-  background: rgba(30, 41, 59, 0.95);
+  box-shadow: var(--shadow-lg);
 }
 
 /* Sizes */

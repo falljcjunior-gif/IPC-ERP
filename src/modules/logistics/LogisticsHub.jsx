@@ -12,7 +12,7 @@ import { registry } from '../../services/Registry';
 import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
 
-// Tabs
+import BarcodeScanner from '../../components/BarcodeScanner';
 import InventoryTab from './tabs/InventoryTab';
 import PurchaseTab from './tabs/PurchaseTab';
 import ProjectTab from './tabs/ProjectTab';
@@ -21,7 +21,21 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const { data, addRecord, updateRecord, formatCurrency, shellView } = useStore();
   const [mainTab, setMainTab] = useState(appId === 'purchase' ? 'purchase' : 'inventory');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); 
+
+  const handleScan = (code) => {
+    setIsScannerOpen(false);
+    // Find product by ref or EAN
+    const product = data?.inventory?.products?.find(p => p.ref === code || p.ean === code);
+    if (product) {
+      onOpenDetail(product.id, 'inventory', 'products');
+    } else {
+      alert(`Produit non trouvé pour le code : ${code}. Création d'une nouvelle fiche...`);
+      setModalMode('movement');
+      setIsModalOpen(true);
+    }
+  };
 
   const tabs = [
     { id: 'inventory', label: 'Disponibilité & Entrepôts', icon: <Package size={16} /> },
@@ -38,24 +52,34 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
       flexDirection: 'column', 
       gap: shellView?.mobile ? '1.5rem' : '3rem', 
       minHeight: '100%',
-      backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.05) 0%, transparent 50%)'
+      backgroundImage: 'radial-gradient(circle at 100% 0%, var(--accent-glow) 0%, transparent 50%)'
     }}>
+      
+      {/* --- SCANNER OVERLAY --- */}
+      <AnimatePresence>
+        {isScannerOpen && (
+          <BarcodeScanner 
+            onScan={handleScan} 
+            onClose={() => setIsScannerOpen(false)} 
+          />
+        )}
+      </AnimatePresence>
       
       {/* --- NEXT GEN LOGISTICS HEADER --- */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#4F46E5', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--accent)', marginBottom: '0.75rem' }}>
             <motion.div 
               animate={{ 
                 rotate: [0, 90, 180, 270, 360],
-                boxShadow: ['0 0 0px rgba(79, 70, 229, 0)', '0 0 20px rgba(79, 70, 229, 0.3)', '0 0 0px rgba(79, 70, 229, 0)']
+                boxShadow: ['0 0 0px var(--accent-glow)', '0 0 20px var(--accent-glow)', '0 0 0px var(--accent-glow)']
               }} 
               transition={{ repeat: Infinity, duration: 10, ease: "linear" }} 
-              style={{ background: 'rgba(79, 70, 229, 0.1)', padding: '8px', borderRadius: '12px', border: '1px solid rgba(79, 70, 229, 0.2)' }}
+              style={{ background: 'var(--accent-glow)', padding: '8px', borderRadius: '12px', border: '1px solid var(--accent)' }}
             >
               <Link size={20} />
             </motion.div>
-            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px' }}>
+            <span style={{ fontWeight: 900, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '3px', color: 'var(--accent)' }}>
               {isPurchaseContext ? 'IPC Procurement Core' : 'IPC Unified Logistics'}
             </span>
           </div>
@@ -70,10 +94,14 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid #4F46E540', background: 'rgba(79, 70, 229, 0.05)' }}>
-              <Target size={18} color="#4F46E5" />
-              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#4F46E5' }}>OTIF Rate : 94.2%</span>
+           <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.85rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--accent)', background: 'var(--accent-glow)' }}>
+              <Target size={18} color="var(--accent)" />
+              <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--accent)' }}>OTIF Rate : 94.2%</span>
            </div>
+
+           <button onClick={() => setIsScannerOpen(true)} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+             <Package size={20} />
+           </button>
 
            <button onClick={() => alert('Consultation de l\'historique des flux logistiques...')} className="btn-glass" style={{ width: '48px', height: '48px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
              <History size={20} />
@@ -84,7 +112,7 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
                 setModalMode(mainTab === 'purchase' ? 'purchase' : mainTab === 'project' ? 'project' : 'movement');
                 setIsModalOpen(true); 
               }} 
-              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#4F46E5' }}>
+              style={{ padding: '0.85rem 2rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--primary)' }}>
               <Plus size={20} /> <span style={{ fontWeight: 800 }}>{
                 mainTab === 'purchase' ? 'Nouvelle Commande' : 
                 mainTab === 'project' ? 'Nouveau Jalon' : 

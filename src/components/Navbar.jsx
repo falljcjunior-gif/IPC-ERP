@@ -2,7 +2,7 @@ import React from 'react';
 import { Sun, Moon, Cpu, Menu, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const Navbar = ({ theme, toggleTheme, setView }) => {
+const Navbar = ({ theme, setView }) => {
   return (
     <nav className="glass" style={{
       position: 'fixed',
@@ -43,21 +43,6 @@ const Navbar = ({ theme, toggleTheme, setView }) => {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <button 
-              onClick={toggleTheme}
-              style={{
-                background: 'var(--bg-subtle)',
-                border: '1px solid var(--border)',
-                padding: '0.5rem',
-                borderRadius: '0.5rem',
-                cursor: 'pointer',
-                color: 'var(--text)',
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
             <button 
               onClick={() => setView('dashboard')}
               className="btn btn-primary"

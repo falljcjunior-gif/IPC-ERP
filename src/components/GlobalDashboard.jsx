@@ -5,7 +5,7 @@ import {
   ArrowUpRight, ArrowDownRight, Activity as ActivityIcon, Calendar,
   Zap, Briefcase, AlertTriangle, BrainCircuit, Package, Truck,
   HeartPulse, CheckCircle2, XCircle, Minus, ChevronRight, BarChart2,
-  Globe, Cpu, MessageSquare, ShieldAlert
+  Globe, Cpu, MessageSquare, ShieldAlert, Download
 } from 'lucide-react';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
@@ -15,6 +15,7 @@ import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
 import KpiCard from './KpiCard';
 import DrillDownModal from './DrillDownModal';
+import { IPCReportGenerator } from '../utils/PDFExporter';
 
 /* ────────────────────────────────
    Animations Helpers
@@ -80,6 +81,7 @@ const GlobalDashboard = () => {
   const navigateTo = useStore(state => state.navigateTo);
   const formatCurrency = useStore(state => state.formatCurrency);
   const [activeDrillDown, setActiveDrillDown] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // ─── Variables BI Dynamiques ───
   const { metrics, caComparaisonData, deptHealth, aiInsights } = useMemo(() => {
@@ -148,6 +150,44 @@ const GlobalDashboard = () => {
     return { metrics: { sales: { caRealise, caPrevu }, finance: { margeNette: 18.5 }, hr: { masseSalariale, effectif }, supply: { otif } }, caComparaisonData, deptHealth, aiInsights };
   }, [incomes, employees, shipments, workOrders, formatCurrency]);
 
+  const handleExport = async (type) => {
+    setIsExporting(true);
+    try {
+      if (type === 'nexus') {
+        await IPCReportGenerator.generateFinancialStatement({
+          title: "Rapport Stratégique Nexus",
+          summary: "Analyse prédictive et recommandations stratégiques générées par Nexus AI.",
+          metrics: [
+            { label: 'Projection Q2', value: formatCurrency(metrics.sales.caRealise * 1.15) },
+            { label: 'Efficacité Production', value: '88%' },
+            { label: 'OTIF Supply Chain', value: '94.2%' }
+          ],
+          rows: aiInsights.map(ins => ({ 
+            module: ins.type, 
+            description: ins.title, 
+            status: ins.content 
+          }))
+        });
+      } else if (type === 'kpi') {
+        await IPCReportGenerator.generateFinancialStatement({
+          title: "Dashboard KPI Performance",
+          metrics: [
+            { label: 'Volume Affaires', value: formatCurrency(metrics.sales.caRealise) },
+            { label: 'Marge Nette', value: '18.5%' },
+            { label: 'Croissance', value: '+12.4%' }
+          ],
+          rows: deptHealth.map(d => ({ 
+            module: d.dept, 
+            description: d.label, 
+            status: `${d.score}% (${d.rag})` 
+          }))
+        });
+      }
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <motion.div 
       variants={containerVariants} initial="hidden" animate="show"
@@ -195,7 +235,7 @@ const GlobalDashboard = () => {
       <div className="bento-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
         
         {/* 1. Nexus AI Intelligence Engine (Large Card) */}
-        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 8', gridRow: 'span 2', padding: 0, overflow: 'hidden', background: '#0F172A', border: '1px solid var(--accent-glow)' }}>
+        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 8', gridRow: 'span 2', padding: 0, overflow: 'hidden', background: 'var(--primary)', border: '1px solid var(--accent-glow)' }}>
            <div style={{ padding: '2.5rem', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
               <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '300px', height: '300px', background: 'var(--accent)', filter: 'blur(120px)', opacity: 0.1 }} />
               
@@ -232,13 +272,21 @@ const GlobalDashboard = () => {
                  <button className="btn-primary" onClick={() => navigateTo('connect')} style={{ background: 'white', color: 'black', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     Ouvrir Connect+ <MessageSquare size={16} />
                  </button>
+                 <button 
+                    className="btn-glass" 
+                    onClick={() => handleExport('nexus')}
+                    disabled={isExporting}
+                    style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    {isExporting ? 'Export...' : 'Exporter Rapport'} <Download size={16} />
+                 </button>
                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>Dernière mise à jour : instantané à {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
            </div>
         </motion.div>
 
         {/* 2. Main KPI - Finance / Performance (Vertical) */}
-        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 4', gridRow: 'span 2', background: 'linear-gradient(135deg, var(--accent) 0%, #064E3B 100%)', color: 'white', border: 'none', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        <motion.div variants={itemVariants} className="bento-card" style={{ gridColumn: 'span 4', gridRow: 'span 2', background: 'linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%)', color: 'white', border: 'none', padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
            <div>
               <div style={{ background: 'rgba(255,255,255,0.1)', width: 'fit-content', padding: '10px', borderRadius: '12px', marginBottom: '1.5rem' }}>
                  <DollarSign size={24} />
@@ -277,7 +325,17 @@ const GlobalDashboard = () => {
                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0 }}>Santé Systémique des Départements</h3>
                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.4rem' }}>Score consolidé basé sur 14 indicateurs temps-réel.</p>
               </div>
-              <button onClick={() => navigateTo('analytics')} className="btn-glass" style={{ border: '1px solid var(--border)' }}>Détails Ops</button>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    onClick={() => handleExport('kpi')} 
+                    disabled={isExporting}
+                    className="btn-glass" 
+                    style={{ border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                  >
+                    <Download size={16} /> Exporter PDF
+                  </button>
+                  <button onClick={() => navigateTo('analytics')} className="btn-glass" style={{ border: '1px solid var(--border)' }}>Détails Ops</button>
+               </div>
            </div>
            
            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>

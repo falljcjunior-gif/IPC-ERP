@@ -68,11 +68,21 @@ function App() {
     initRegistry();
   }, []);
   
-  const theme = globalSettings.theme || 'dark';
+  const theme = 'light';
 
   useEffect(() => {
     const setUser = useStore.getState().setUser;
+    
+    // Safety fallback: If Firebase doesn't respond in 5s, we force initialization
+    const fallbackTimer = setTimeout(() => {
+      if (isInitializing) {
+        console.warn('Firebase Auth took too long to respond. Forcing initialization.');
+        setIsInitializing(false);
+      }
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      clearTimeout(fallbackTimer);
       if (firebaseUser) {
         // [IDENTITY ENFORCEMENT] : Force Super Admin for the master mail
         const isAdmin = firebaseUser.email === 'fall.jcjunior@gmail.com';
@@ -88,17 +98,14 @@ function App() {
       }
       setIsInitializing(false);
     });
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(fallbackTimer);
+    };
   }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => setGlobalSettings({ theme: theme === 'light' ? 'dark' : 'light' });
-
-  // 🛡️ REHYDRATION GUARD: Wait for store to be ready
-  if (isInitializing || !_hasHydrated) return <InitializingView />;
+  if (isInitializing || !_hasHydrated) {
+    return <InitializingView label={isInitializing ? "Vérification de la session..." : "Chargement du profil..."} />;
+  }
 
   return (
     <ErrorBoundary>
@@ -108,7 +115,7 @@ function App() {
           <div className="app-container">
             {view === 'login' ? <Login onLogin={() => setView('dashboard')} /> : (
               <React.Suspense fallback={<InitializingView label="Chargement du Noyau..." />}>
-                <PlatformShell toggleTheme={toggleTheme} theme={theme} setView={setView} />
+                <PlatformShell theme={theme} setView={setView} />
               </React.Suspense>
             )}
           </div>
