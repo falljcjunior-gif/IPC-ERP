@@ -1,3 +1,11 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Trophy, Megaphone, Target, Camera, Heart, 
+  MessageCircle, Send, Sparkles, TrendingUp, 
+  HeartHandshake, Plus, X 
+} from 'lucide-react';
+import { useStore } from '../../../store';
 import { FirestoreService, StorageService } from '../../../services/firestore.service';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -21,7 +29,7 @@ const WallTab = ({ data, currentUser }) => {
   const [commentsData, setCommentsData] = useState({}); // { postId: [comments] }
 
   // ── Firestore Subscription ──
-  React.useEffect(() => {
+  useEffect(() => {
     const unsub = FirestoreService.subscribeToCollection(
       'posts', 
       { orderByField: '_createdAt', descending: true }, 
@@ -68,7 +76,7 @@ const WallTab = ({ data, currentUser }) => {
   };
 
   // Subscribe to comments when a post is expanded
-  React.useEffect(() => {
+  useEffect(() => {
     const unsubs = [];
     Object.keys(openComments).forEach(postId => {
       if (openComments[postId] && !commentsData[postId]) {
@@ -292,8 +300,8 @@ const WallTab = ({ data, currentUser }) => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {[
               { label: 'Publications ce mois', value: feed.length, icon: <TrendingUp size={15} color="#8B5CF6" /> },
-              { label: 'Réactions totales', value: feed.reduce((s, p) => s + p.reactions, 0), icon: <Heart size={15} color="#EC4899" /> },
-              { label: 'Commentaires', value: feed.reduce((s, p) => s + p.comments.length, 0), icon: <MessageCircle size={15} color="#6366F1" /> },
+              { label: 'Réactions totales', value: feed.reduce((s, p) => s + (p.reactionsCount || 0), 0), icon: <Heart size={15} color="#EC4899" /> },
+              { label: 'Commentaires', value: feed.reduce((s, p) => s + (p.commentsCount || 0), 0), icon: <MessageCircle size={15} color="#6366F1" /> },
               { label: 'Collaborateurs actifs', value: employeesCount, icon: <HeartHandshake size={15} color="#10B981" /> },
             ].map((s, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.75rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)' }}>
