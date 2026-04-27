@@ -143,6 +143,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       { field: 'members', operator: 'array-contains', value: currentUser.id }
     ]);
     return () => unsub();
+  }, [currentUser?.id]);
+
   // Typing Indicator Logic
   useEffect(() => {
     if (!activeRoom?.id || !currentUser?.id || !newMessage.trim()) {

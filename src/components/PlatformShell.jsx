@@ -22,6 +22,7 @@ import NotificationCenter from './NotificationCenter';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
+import CallRingingOverlay from './CallRingingOverlay';
 import MobileNavbar from './MobileNavbar';
 import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';

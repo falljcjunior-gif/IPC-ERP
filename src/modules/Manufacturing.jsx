@@ -12,7 +12,9 @@ import {
   Wrench,
   AlertTriangle,
   ChevronRight,
-  MoreVertical
+  MoreVertical,
+  Activity,
+  Sparkles
 } from 'lucide-react';
 import { useStore } from '../store';
 import BarcodeScanner from '../components/BarcodeScanner';

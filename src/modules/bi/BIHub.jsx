@@ -110,7 +110,5 @@ const BIHub = () => {
     </div>
   );
 };
-  );
-};
 
 export default BIHub;

@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, TrendingDown, DollarSign, Landmark, 
   BarChart3, PieChart, ArrowUpRight, ArrowDownRight, 
-  Activity, Scale, Wallet, Target, Clock, ShieldCheck 
+  Activity, Scale, Wallet, Target, Clock, ShieldCheck, Sparkles 
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis,

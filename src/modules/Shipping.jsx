@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Truck, Package, Plus, ChevronRight, MapPin, Clock, CheckCircle2,
   AlertTriangle, BarChart3, Zap, Target, Activity, XCircle, Globe,
@@ -17,6 +17,7 @@ import KpiCard from '../components/KpiCard';
 /* ─── Helpers ─── */
 const fadeIn = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
 const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.07 } } };
+const container = stagger;
 
 const Chip = ({ label, color = '#64748B' }) => (
   <span style={{ padding: '2px 9px', borderRadius: '999px', background: `${color}18`, color, fontSize: '0.71rem', fontWeight: 700 }}>{label}</span>
@@ -323,6 +324,23 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
         })}
       </div>
     </div>
+  );
+
+  const renderVolume = () => (
+    <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
+       <div className="nexus-card" style={{ gridColumn: 'span 12', padding: '2rem', background: 'white' }}>
+          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, color: 'var(--nexus-secondary)' }}>Analyse des Volumes d'Expédition</h4>
+          <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
+             <AreaChart data={SHIPMENTS.slice(-10)}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--nexus-border)" opacity={0.4} />
+                <XAxis dataKey="date" hide />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 11, fontWeight: 700 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="poids" stroke="var(--nexus-primary)" strokeWidth={4} fillOpacity={0.1} fill="var(--nexus-primary)" />
+             </AreaChart>
+          </SafeResponsiveChart>
+       </div>
+    </motion.div>
   );
 
   return (

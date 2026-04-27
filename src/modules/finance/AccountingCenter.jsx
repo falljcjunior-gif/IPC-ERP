@@ -92,7 +92,5 @@ const AccountingCenter = ({ onOpenDetail }) => {
     </div>
   );
 };
-  );
-};
 
 export default AccountingCenter;
