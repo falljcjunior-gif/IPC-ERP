@@ -32,7 +32,29 @@ export const InventorySchemas = {
     source: data.source || 'warehouse_default',
     _domain: 'inventory',
     _timestamp: new Date().toISOString()
-  })
+  }),
+  /**
+   * MODELS FOR REGISTRY
+   */
+  models: {
+    products: {
+      fields: {
+        sku: { label: 'SKU / Référence', type: 'text', required: true },
+        label: { label: 'Désignation', type: 'text', required: true },
+        type: { label: 'Type', type: 'select', options: ['Matière Première', 'Produit Fini', 'Semi-Fini'], default: 'Produit Fini' },
+        prixUnitaire: { label: 'Prix Unitaire', type: 'number', required: true },
+        stockActuel: { label: 'Stock Initial', type: 'number', default: 0 }
+      }
+    },
+    movements: {
+      fields: {
+        productId: { label: 'Produit', type: 'text', required: true },
+        type: { label: 'Mouvement', type: 'select', options: ['Entrée', 'Sortie', 'Ajustement'], default: 'Entrée' },
+        quantity: { label: 'Quantité', type: 'number', required: true },
+        reason: { label: 'Motif', type: 'text' }
+      }
+    }
+  }
 };
 
 // [COMPAT] Alias pour compatibilité avec l'existant

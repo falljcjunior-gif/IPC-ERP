@@ -45,30 +45,34 @@ service cloud.firestore {
     // ── FINANCE ──────────────────────────────────────────────────────────────
     // Covers finance_invoices, finance_accounting, finance_treasury
     match /{col}/{docId} {
-      allow read: if col.startsWith('finance_') && hasAnyRole(['FINANCE', 'ADMIN', 'MANAGER']);
+      allow read: if (col == 'finance' || col.startsWith('finance_')) && hasAnyRole(['FINANCE', 'ADMIN', 'MANAGER']);
       // Writing to finance is restricted to specialists, except invoices which Sales can create
-      allow create: if col == 'finance_invoices' && hasAnyRole(['SALES', 'FINANCE', 'ADMIN']);
-      allow update: if col == 'finance_invoices' && (hasAnyRole(['FINANCE', 'ADMIN']) || (hasAnyRole(['SALES']) && isOwner(resource.data)));
-      allow write: if col.startsWith('finance_') && hasAnyRole(['FINANCE', 'ADMIN']);
+      allow create: if (col == 'finance_invoices' || col == 'finance') && hasAnyRole(['SALES', 'FINANCE', 'ADMIN']);
+      allow update: if (col == 'finance_invoices' || col == 'finance') && (hasAnyRole(['FINANCE', 'ADMIN']) || (hasAnyRole(['SALES']) && isOwner(resource.data)));
+      allow write: if (col == 'finance' || col.startsWith('finance_')) && hasAnyRole(['FINANCE', 'ADMIN']);
     }
 
     // ── INVENTORY & PRODUCTION ──────────────────────────────────────────────
     match /{col}/{docId} {
-      allow read: if (col.startsWith('inventory_') || col.startsWith('production_')) && isAuthenticated();
-      allow write: if (col.startsWith('inventory_') || col.startsWith('production_')) && 
+      allow read: if (col == 'inventory' || col.startsWith('inventory_') || 
+                      col == 'production' || col.startsWith('production_')) && isAuthenticated();
+      allow write: if (col == 'inventory' || col.startsWith('inventory_') || 
+                       col == 'production' || col.startsWith('production_')) && 
                    hasAnyRole(['STOCK_MANAGER', 'PRODUCTION_MANAGER', 'ADMIN', 'MANAGER']);
     }
 
     // ── CRM & SALES ──────────────────────────────────────────────────────────
     match /{col}/{docId} {
-      allow read: if (col.startsWith('crm_') || col.startsWith('sales_')) && hasAnyRole(['SALES', 'MARKETING', 'ADMIN', 'MANAGER']);
-      allow write: if (col.startsWith('crm_') || col.startsWith('sales_')) && hasAnyRole(['SALES', 'MARKETING', 'ADMIN', 'MANAGER']);
+      allow read: if (col == 'crm' || col.startsWith('crm_') || 
+                      col == 'sales' || col.startsWith('sales_')) && hasAnyRole(['SALES', 'MARKETING', 'ADMIN', 'MANAGER']);
+      allow write: if (col == 'crm' || col.startsWith('crm_') || 
+                       col == 'sales' || col.startsWith('sales_')) && hasAnyRole(['SALES', 'MARKETING', 'ADMIN', 'MANAGER']);
     }
 
     // ── HR ─────────────────────────────────────────────────────────────────
     match /{col}/{docId} {
-      allow read: if col.startsWith('hr_') && hasAnyRole(['HR', 'ADMIN', 'MANAGER']);
-      allow write: if col.startsWith('hr_') && hasAnyRole(['HR', 'ADMIN']);
+      allow read: if (col == 'hr' || col.startsWith('hr_')) && hasAnyRole(['HR', 'ADMIN', 'MANAGER']);
+      allow write: if (col == 'hr' || col.startsWith('hr_')) && hasAnyRole(['HR', 'ADMIN']);
     }
 
     // ── SYSTEM & AUDIT (Admin Only) ─────────────────────────────────────────
