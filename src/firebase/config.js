@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
-export const messaging = getMessaging(app);
+export const messaging = (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? getMessaging(app) : null;
 
 // Activer le mode Offline-First (Désactivé temporairement pour bypasser l'erreur ca9 de corruption WebChannel)
 /* enableMultiTabIndexedDbPersistence(db).catch((err) => {
