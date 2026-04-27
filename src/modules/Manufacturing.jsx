@@ -21,9 +21,18 @@ import BarcodeScanner from '../components/BarcodeScanner';
 import { AnimatePresence } from 'framer-motion';
 
 const Manufacturing = ({ onOpenDetail }) => {
-  const { data, formatCurrency, shellView } = useStore();
+  const { data, formatCurrency, shellView, updateRecord, addRecord } = useStore();
   const [view, setView] = useState('orders'); // 'orders', 'bom'
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+
+  const toggleStatus = (of) => {
+    const nextStatus = of.status === 'En cours' ? 'Terminé' : 'En cours';
+    const nextProgress = nextStatus === 'Terminé' ? 100 : 50;
+    updateRecord('production', 'workOrders', of.id, { 
+      status: nextStatus,
+      progress: nextProgress
+    });
+  };
 
   const workOrders = data.production?.workOrders || [];
   const boms = data.production?.boms || [];
@@ -180,6 +189,15 @@ const Manufacturing = ({ onOpenDetail }) => {
                    }}>
                      {of.status}
                    </div>
+                   {of.status !== 'Terminé' && (
+                     <button 
+                       className="nexus-card" 
+                       onClick={(e) => { e.stopPropagation(); toggleStatus(of); }}
+                       style={{ padding: '0.6rem 1rem', background: 'var(--nexus-primary)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                     >
+                       <CheckCircle2 size={16} /> TERMINER
+                     </button>
+                   )}
                    <button className="nexus-card" style={{ padding: '0.6rem', background: 'white', border: '1px solid var(--nexus-border)' }}><MoreVertical size={20} color="var(--nexus-text-muted)" /></button>
                 </div>
               </motion.div>

@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './firebase/config';
 import { useStore } from './store';
+import { nexusWorkflowEngine } from './services/WorkflowEngine';
 
 /**
  * BusinessProvider (Passive Orchestrator)
@@ -75,6 +76,9 @@ export const BusinessProvider = ({ children }) => {
   // 2. Real-time Listeners (Separated & Atomic)
   useEffect(() => {
     if (!auth.currentUser || !userId) return;
+
+    // Initialize Workflow Engine
+    nexusWorkflowEngine.init();
 
     // A. Business Modules Sync
     const collections_to_sync = [

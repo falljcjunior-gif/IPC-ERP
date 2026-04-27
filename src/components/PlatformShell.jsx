@@ -418,6 +418,16 @@ const PlatformShell = ({ theme, setView }) => {
               </button>
               <div style={{ position: 'relative' }}>
                 <Bell size={22} color="var(--nexus-text-muted)" style={{ cursor: 'pointer' }} onClick={() => setShellView(p => ({ ...p, notifs: !p.notifs }))} />
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <div style={{ 
+                    position: 'absolute', top: -5, right: -5, width: '18px', height: '18px', 
+                    background: '#EF4444', color: 'white', borderRadius: '50%', 
+                    fontSize: '0.6rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '2px solid var(--bg)', boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'
+                  }}>
+                    {notifications.filter(n => !n.read).length}
+                  </div>
+                )}
                 <NotificationCenter isOpen={shellView.notifs} onClose={() => setShellView(p => ({ ...p, notifs: false }))} />
               </div>
               <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="nexus-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--nexus-secondary)', color: 'white', cursor: 'pointer' }}>

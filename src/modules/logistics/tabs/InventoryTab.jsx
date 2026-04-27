@@ -144,19 +144,15 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
                   <span style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>Mouvements Récents</span>
                </div>
                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {[
-                    { type: 'IN', item: 'Briques G12', qty: '+500', time: '12:40' },
-                    { type: 'OUT', item: 'Ciment CPJ', qty: '-120', time: '11:15' },
-                    { type: 'IN', item: 'Sable Fin', qty: '+20t', time: '09:30' }
-                  ].map((m, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem' }}>
+                  {(data?.inventory?.movements || []).slice(0, 5).map((m, i) => (
+                    <div key={m.id || i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem' }}>
                        <div style={{ 
                          padding: '4px 8px', borderRadius: '6px', fontWeight: 900, fontSize: '0.65rem',
-                         background: m.type === 'IN' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                         color: m.type === 'IN' ? 'var(--nexus-primary)' : '#EF4444'
-                       }}>{m.type}</div>
-                       <div style={{ flex: 1, fontWeight: 800 }}>{m.item}</div>
-                       <div style={{ color: 'var(--nexus-text-muted)', fontWeight: 700 }}>{m.qty}</div>
+                         background: m.type === 'Réception' || m.type === 'IN' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                         color: m.type === 'Réception' || m.type === 'IN' ? 'var(--nexus-primary)' : '#EF4444'
+                       }}>{m.type === 'Réception' || m.type === 'IN' ? 'IN' : 'OUT'}</div>
+                       <div style={{ flex: 1, fontWeight: 800 }}>{m.produit || m.product}</div>
+                       <div style={{ color: 'var(--nexus-text-muted)', fontWeight: 700 }}>{m.qte || m.quantity}</div>
                     </div>
                   ))}
                </div>
@@ -176,6 +172,14 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
                </button>
             </div>
          </div>
+
+         <EnterpriseView
+           appId="inventory"
+           subModule="products"
+           data={products}
+           schema={inventorySchema.models.products}
+           onOpenDetail={onOpenDetail}
+         />
       </div>
     </motion.div>
   );
