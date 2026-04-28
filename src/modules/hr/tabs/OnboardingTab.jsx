@@ -159,18 +159,18 @@ const EditAccessPanel = ({ employee, onClose }) => {
                    const level = localAccess[mod.id] || 'none';
                    const Icon = mod.icon;
                    return (
-                     <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg-subtle)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                         <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
+                     <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg-subtle)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
+                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1 1 200px', minWidth: 0 }}>
+                         <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
                            <Icon size={20} />
                          </div>
-                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                           <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
-                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{mod.desc}</span>
+                         <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                           <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{mod.label}</span>
+                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{mod.desc}</span>
                          </div>
                        </div>
                        
-                       <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                       <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)', flexShrink: 0 }}>
                          <button onClick={() => setAccess(mod.id, 'none')} title="Aucun accès" style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
                            <ShieldOff size={16} /> <span style={{ display: level === 'none' ? 'block' : 'none' }}>Aucun</span>
                          </button>
@@ -580,18 +580,18 @@ const OnboardingTab = ({ accessLevel }) => {
                               const level = localAccess[mod.id] || 'none';
                               const Icon = mod.icon;
                               return (
-                                <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
+                                <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: '1 1 200px', minWidth: 0 }}>
+                                    <div style={{ width: '38px', height: '38px', flexShrink: 0, borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
                                       <Icon size={20} />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                      <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
-                                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role} - {mod.desc}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                                      <span style={{ fontWeight: 700, fontSize: '0.9rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{mod.label}</span>
+                                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{mod.role} - {mod.desc}</span>
                                     </div>
                                   </div>
                                   
-                                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)', flexShrink: 0 }}>
                                     <button 
                                       type="button"
                                       onClick={() => setAccess(mod.id, 'none')} 
