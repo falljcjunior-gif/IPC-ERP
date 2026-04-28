@@ -7,6 +7,8 @@ import {
 import { useStore } from '../store';
 // [AUDIT] Correction: Utilisation du Registry pour un couplage lâche
 import { registry } from '../services/Registry';
+import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import '../components/GlobalDashboard.css';
 
 const Workflows = () => {
   const workflows = useStore(state => state.data?.workflows || []);
@@ -73,82 +75,70 @@ const Workflows = () => {
     setActionPayload('');
   };
 
-  return (
-    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem', minHeight: '100%' }}>
-      
-      {/* Nexus Header */}
-      {!shellView?.mobile && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
-                <Zap size={16} color="white" />
-              </div>
-              <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                Nexus Automator — Intelligent BPM
-              </span>
-            </div>
-            <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
-              Process & Automates
-            </h1>
-            <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
-              Concevez des règles métier intelligentes pour automatiser vos opérations et garantir une réactivité instantanée à chaque événement.
-            </p>
-          </div>
+  const activeCount = workflows.filter(w => w.active).length;
 
-          <button onClick={() => setIsBuilderOpen(true)} className="nexus-card" style={{ background: 'var(--nexus-secondary)', padding: '1rem 2rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+  return (
+    <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+      
+      {/* ── HEADER ── */}
+      <div className="luxury-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
+        <div>
+          <div className="luxury-subtitle">Nexus Automator — BPM Intelligent</div>
+          <h1 className="luxury-title">Process & <strong>Automates</strong></h1>
+        </div>
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-end' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Règles actives</div>
+            <div className="luxury-value-massive" style={{ fontSize: '3rem', color: '#10B981' }}>
+              <AnimatedCounter from={0} to={activeCount} duration={1.5} formatter={v => `${Math.round(v)}`} />
+            </div>
+          </div>
+          <button onClick={() => setIsBuilderOpen(true)} className="luxury-widget" style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
             <Plus size={20} /> Créer un Scénario
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Workflows Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
+      {/* ── WORKFLOWS GRID ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '2rem' }}>
         {workflows.length === 0 ? (
-          <div className="nexus-card" style={{ gridColumn: 'span 12', padding: '5rem', textAlign: 'center', background: 'white' }}>
-             <Activity size={64} color="var(--nexus-primary)" style={{ marginBottom: '1.5rem', opacity: 0.3 }} />
-             <h3 style={{ fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Nexus Automator est prêt</h3>
-             <p style={{ color: 'var(--nexus-text-muted)', maxWidth: '400px', margin: '1rem auto' }}>Commencez par créer votre première règle d'automatisation intelligente.</p>
-             <button onClick={() => setIsBuilderOpen(true)} style={{ background: 'var(--nexus-primary)', color: 'white', border: 'none', padding: '0.75rem 2rem', borderRadius: '12px', fontWeight: 900, cursor: 'pointer', marginTop: '1rem' }}>
-                Concevoir une règle
-             </button>
+          <div className="luxury-widget" style={{ gridColumn: 'span 12', padding: '5rem', textAlign: 'center', background: 'rgba(255,255,255,0.9)' }}>
+            <Activity size={64} color="#10B981" style={{ marginBottom: '1.5rem', opacity: 0.2, display: 'block', margin: '0 auto 1.5rem' }} />
+            <h3 style={{ fontWeight: 800, fontSize: '1.5rem', color: '#1e293b', marginBottom: '0.75rem' }}>Nexus Automator est prêt</h3>
+            <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto 2rem', lineHeight: 1.6 }}>Commencez par créer votre première règle d'automatisation intelligente.</p>
+            <button onClick={() => setIsBuilderOpen(true)} style={{ background: '#10B981', color: 'white', border: 'none', padding: '1rem 2.5rem', borderRadius: '1rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.25)' }}>
+              Concevoir une règle
+            </button>
           </div>
         ) : (
           workflows.map((wf) => (
-            <motion.div key={wf.id} whileHover={{ y: -5 }} className="nexus-card" style={{ gridColumn: 'span 4', padding: '2rem', background: 'white', borderTop: `4px solid ${wf.active ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)'}` }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                <h3 style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--nexus-secondary)', margin: 0 }}>{wf.name}</h3>
+            <motion.div key={wf.id} whileHover={{ y: -6, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}
+              className="luxury-widget"
+              style={{ gridColumn: 'span 4', padding: '2.5rem', borderTop: `4px solid ${wf.active ? '#10B981' : '#e2e8f0'}`, background: 'rgba(255,255,255,0.95)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+                <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1e293b', margin: 0 }}>{wf.name}</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                   <button onClick={() => updateRecord('workflows', '', wf.id, { active: !wf.active })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: wf.active ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)' }}>
-                     {wf.active ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-                   </button>
-                   <button onClick={() => deleteRecord('workflows', '', wf.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', opacity: 0.5 }}>
-                     <Trash2 size={20} />
-                   </button>
+                  <button onClick={() => updateRecord('workflows', '', wf.id, { active: !wf.active })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: wf.active ? '#10B981' : '#94a3b8' }}>
+                    {wf.active ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
+                  </button>
+                  <button onClick={() => deleteRecord('workflows', '', wf.id)} style={{ background: 'rgba(239,68,68,0.08)', border: 'none', cursor: 'pointer', color: '#EF4444', padding: '8px', borderRadius: '0.75rem', display: 'flex' }}>
+                    <Trash2 size={18} />
+                  </button>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)' }}>SI</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--nexus-secondary)' }}>
-                    {MODULES_MAP[wf.targetModule]} est {wf.triggerEvent === 'onUpdate' ? 'Modifié' : 'Créé'}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                {[
+                  { label: 'SI',   bg: '#f8fafc',              color: '#3B82F6', text: `${MODULES_MAP[wf.targetModule] || wf.targetModule} est ${wf.triggerEvent === 'onUpdate' ? 'Modifié' : 'Créé'}` },
+                  { label: 'ET',   bg: '#fffbeb',              color: '#F59E0B', text: `[${wf.conditionField}] ${wf.operator} "${wf.value}"` },
+                  { label: 'ALORS', bg: 'rgba(16,185,129,0.05)', color: '#10B981', text: wf.actionType === 'SEND_NOTIFICATION' ? `Notifier ${wf.actionTargetRole}` : 'Changer Statut' },
+                ].map(step => (
+                  <div key={step.label} style={{ background: step.bg, padding: '1rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: `1px solid ${step.color}18` }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '0.75rem', background: step.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: 'white', flexShrink: 0 }}>{step.label}</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b' }}>{step.text}</div>
                   </div>
-                </div>
-
-                <div style={{ background: 'var(--nexus-bg)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: '#F59E0B' }}>ET</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--nexus-secondary)' }}>
-                    [{wf.conditionField}] {wf.operator} "{wf.value}"
-                  </div>
-                </div>
-
-                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.7rem', color: 'white' }}>DO</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--nexus-primary)' }}>
-                    {wf.actionType === 'SEND_NOTIFICATION' ? `Notifier ${wf.actionTargetRole}` : `Changer Statut`}
-                  </div>
-                </div>
+                ))}
               </div>
             </motion.div>
           ))
@@ -157,16 +147,16 @@ const Workflows = () => {
 
       <AnimatePresence>
         {isBuilderOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} className="nexus-card" style={{ width: '100%', maxWidth: '900px', background: 'white', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} style={{ width: '100%', maxWidth: '900px', background: 'white', borderRadius: '2rem', padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh', boxShadow: '0 40px 80px -20px rgba(0,0,0,0.4)' }}>
               
-              <div style={{ padding: '2rem', background: 'var(--nexus-bg)', borderBottom: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '2.5rem 3rem', background: '#fafafa', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Nouvelle Automatisation</h3>
-                  <p style={{ margin: '0.25rem 0 0 0', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>Nexus Automator Intelligence Core</p>
+                  <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.75rem', color: '#1e293b' }}>Nouvelle Automatisation</h3>
+                  <p style={{ margin: '0.25rem 0 0 0', color: '#64748b', fontWeight: 600 }}>IPC Automator — BPM Intelligence Core</p>
                 </div>
-                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'white', border: 'none', width: 40, height: 40, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                  <X size={20} color="var(--nexus-secondary)" />
+                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'white', border: '1px solid #e2e8f0', width: 44, height: 44, borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                  <X size={20} color="#64748b" />
                 </button>
               </div>
 
@@ -219,9 +209,9 @@ const Workflows = () => {
                 </form>
               </div>
 
-              <div style={{ padding: '2rem', borderTop: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'flex-end', gap: '1.5rem' }}>
-                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'none', border: 'none', fontWeight: 800, color: 'var(--nexus-text-muted)', cursor: 'pointer' }}>Annuler</button>
-                <button type="submit" form="wf-form" style={{ background: 'var(--nexus-primary)', color: 'white', border: 'none', padding: '1rem 3rem', borderRadius: '16px', fontWeight: 900, cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.2)' }}>
+              <div style={{ padding: '2rem 3rem', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end', gap: '1.5rem', background: '#fafafa' }}>
+                <button onClick={() => setIsBuilderOpen(false)} style={{ background: 'none', border: 'none', fontWeight: 700, color: '#64748b', cursor: 'pointer', fontSize: '0.95rem' }}>Annuler</button>
+                <button type="submit" form="wf-form" style={{ background: '#10B981', color: 'white', border: 'none', padding: '1rem 3rem', borderRadius: '1rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.25)', fontSize: '0.95rem' }}>
                   Activer le Scénario
                 </button>
               </div>

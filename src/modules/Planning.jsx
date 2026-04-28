@@ -1,105 +1,107 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Calendar as CalIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  Plus, 
-  Clock, 
-  Briefcase, 
-  Users, 
-  Truck, 
-  Factory,
-  CheckCircle2
+  Calendar as CalIcon, ChevronLeft, ChevronRight, 
+  Filter, Plus, Briefcase, Users, Truck, Factory
 } from 'lucide-react';
+import '../components/GlobalDashboard.css';
+
+const LEGENDS = [
+  { icon: <Briefcase size={14} />, label: 'Projets',    color: '#3B82F6' },
+  { icon: <Truck size={14} />,     label: 'Flotte',     color: '#F59E0B' },
+  { icon: <Users size={14} />,     label: 'RH',         color: '#8B5CF6' },
+  { icon: <Factory size={14} />,   label: 'Production', color: '#10B981' },
+];
 
 const Planning = () => {
   const [currentMonth] = useState('Avril 2026');
-  
   const events = [];
-
-  // Simplified calendar grid generation for demo
-  const days = Array.from({ length: 30 }, (_, i) => i + 1);
+  const days   = Array.from({ length: 30 }, (_, i) => i + 1);
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+
+      {/* ── HEADER ── */}
+      <div className="luxury-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Planning Global</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Coordination unifiée des ressources et activités IPC.</p>
+          <div className="luxury-subtitle">Coordination Unifiée des Ressources</div>
+          <h1 className="luxury-title">Planning <strong>Global</strong></h1>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem 1rem', borderRadius: '0.8rem' }}>
-             <button className="btn" style={{ padding: '0.25rem' }}><ChevronLeft size={18} /></button>
-             <span style={{ fontWeight: 800 }}>{currentMonth}</span>
-             <button className="btn" style={{ padding: '0.25rem' }}><ChevronRight size={18} /></button>
+
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          {/* Month Navigator */}
+          <div className="luxury-widget" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0.75rem 1.5rem' }}>
+            <button style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronLeft size={18} /></button>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: '#1e293b', minWidth: '110px', textAlign: 'center' }}>{currentMonth}</span>
+            <button style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronRight size={18} /></button>
           </div>
-          <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+
+          <button className="luxury-widget" style={{ padding: '0.9rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#475569', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.9)' }}>
             <Filter size={18} /> Filtrer
           </button>
-          <button className="btn btn-primary">
+          <button className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
             <Plus size={18} /> Nouvel Événement
           </button>
         </div>
       </div>
 
-      <div className="grid grid-4" style={{ gap: '1.25rem', marginBottom: '2.5rem' }}>
-         {[
-           { icon: <Briefcase size={16} />, label: 'Projets', color: '#3B82F6' },
-           { icon: <Truck size={16} />, label: 'Flotte', color: '#F59E0B' },
-           { icon: <Users size={16} />, label: 'RH', color: '#8B5CF6' },
-           { icon: <Factory size={16} />, label: 'Production', color: '#10B981' },
-         ].map(legend => (
-           <div key={legend.label} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: legend.color }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>{legend.icon} {legend.label}</div>
-           </div>
-         ))}
+      {/* ── LEGEND ── */}
+      <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
+        {LEGENDS.map(l => (
+          <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', fontWeight: 700, color: '#64748b' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: l.color }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: l.color }}>{l.icon}</div>
+            {l.label}
+          </div>
+        ))}
       </div>
 
-      <div className="glass" style={{ borderRadius: '1.5rem', padding: '1rem', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px', background: 'var(--border)' }}>
-           {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
-             <div key={d} style={{ background: 'var(--bg-subtle)', padding: '1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>{d}</div>
-           ))}
-           {days.map(day => {
-             const dateStr = `2026-04-${day.toString().padStart(2, '0')}`;
-             const dayEvents = events.filter(e => e.date === dateStr);
-             
-             return (
-               <div key={day} style={{ background: 'var(--bg)', minHeight: '120px', padding: '0.75rem', border: '0.5px solid var(--border)' }}>
-                 <div style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '0.5rem', opacity: 0.6 }}>{day}</div>
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    {dayEvents.map(event => (
-                      <motion.div
-                        key={event.id}
-                        whileHover={{ scale: 1.02 }}
-                        style={{ 
-                          fontSize: '0.65rem', 
-                          padding: '4px 8px', 
-                          borderRadius: '4px', 
-                          background: `${event.color}15`, 
-                          color: event.color,
-                          borderLeft: `3px solid ${event.color}`,
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
-                        }}
-                      >
-                        {event.title}
-                      </motion.div>
-                    ))}
-                 </div>
-               </div>
-             );
-           })}
+      {/* ── CALENDAR GRID ── */}
+      <div className="luxury-widget" style={{ borderRadius: '2rem', overflow: 'hidden', padding: 0 }}>
+        {/* Day headers */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
+            <div key={d} style={{ background: '#fafafa', padding: '1.25rem', textAlign: 'center', fontSize: '0.8rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>{d}</div>
+          ))}
+        </div>
+
+        {/* Days */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          {days.map(day => {
+            const dateStr = `2026-04-${day.toString().padStart(2, '0')}`;
+            const dayEvents = events.filter(e => e.date === dateStr);
+            const isToday = day === 28;
+
+            return (
+              <div key={day} style={{ minHeight: '120px', padding: '1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: isToday ? 'rgba(16,185,129,0.02)' : 'white' }}>
+                <div style={{
+                  fontSize: '0.9rem', fontWeight: isToday ? 900 : 600, marginBottom: '0.5rem',
+                  color: isToday ? 'white' : '#94a3b8',
+                  width: isToday ? '28px' : 'auto', height: isToday ? '28px' : 'auto',
+                  background: isToday ? '#10B981' : 'transparent',
+                  borderRadius: isToday ? '50%' : 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {day}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {dayEvents.map(event => (
+                    <motion.div
+                      key={event.id}
+                      whileHover={{ scale: 1.02, x: 2 }}
+                      style={{ fontSize: '0.7rem', padding: '4px 10px', borderRadius: '6px', background: `${event.color}15`, color: event.color, borderLeft: `3px solid ${event.color}`, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
+                      {event.title}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-export default Planning;
+export default React.memo(Planning);

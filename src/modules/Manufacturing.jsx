@@ -1,232 +1,263 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Factory, 
-  Plus, 
-  Settings, 
-  ClipboardList, 
-  Play, 
-  CheckCircle2, 
-  Clock, 
-  Layers,
-  Wrench,
-  AlertTriangle,
-  ChevronRight,
-  MoreVertical,
-  Activity,
-  Sparkles
+  Factory, Plus, ClipboardList, Play, CheckCircle2,
+  Layers, Wrench, AlertTriangle, MoreVertical, Activity
 } from 'lucide-react';
 import { useStore } from '../store';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { AnimatePresence } from 'framer-motion';
+import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import '../components/GlobalDashboard.css';
 
 const Manufacturing = ({ onOpenDetail }) => {
   const { data, formatCurrency, shellView, updateRecord, addRecord } = useStore();
-  const [view, setView] = useState('orders'); // 'orders', 'bom'
+  const [view, setView] = useState('orders');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const toggleStatus = (of) => {
-    const nextStatus = of.status === 'En cours' ? 'Terminé' : 'En cours';
+    const nextStatus   = of.status === 'En cours' ? 'Terminé' : 'En cours';
     const nextProgress = nextStatus === 'Terminé' ? 100 : 50;
-    updateRecord('production', 'workOrders', of.id, { 
-      status: nextStatus,
-      progress: nextProgress
-    });
+    updateRecord('production', 'workOrders', of.id, { status: nextStatus, progress: nextProgress });
   };
 
   const workOrders = data.production?.workOrders || [];
-  const boms = data.production?.boms || [];
+  const boms       = data.production?.boms       || [];
+  const enCours    = workOrders.filter(o => o.status === 'En cours').length;
+  const termines   = workOrders.filter(o => o.status === 'Terminé').length;
 
   const handleScan = (code) => {
     setIsScannerOpen(false);
     const order = workOrders.find(o => o.id === code);
-    if (order) {
-      onOpenDetail(order, 'production', 'warehouses');
-    } else {
-      alert(`Ordre de Fabrication non trouvé pour le code : ${code}`);
-    }
+    if (order) onOpenDetail(order, 'production', 'warehouses');
+    else alert(`Ordre de Fabrication non trouvé : ${code}`);
   };
 
   return (
-    <div style={{ padding: shellView?.mobile ? '1rem' : '2.5rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      
       <AnimatePresence>
-        {isScannerOpen && (
-          <BarcodeScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />
-        )}
+        {isScannerOpen && <BarcodeScanner onScan={handleScan} onClose={() => setIsScannerOpen(false)} />}
       </AnimatePresence>
 
-      {/* Nexus Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', padding: '6px', borderRadius: '10px' }}>
-              <Factory size={16} color="white" />
-            </div>
-            <span style={{ fontWeight: 900, fontSize: '0.7rem', color: 'var(--nexus-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              Nexus Manufacturing Intelligence
-            </span>
-          </div>
-          <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px' }}>
-            GPAO Core
-          </h1>
-          <p style={{ color: 'var(--nexus-text-muted)', fontSize: '1.1rem', fontWeight: 500, maxWidth: '650px', lineHeight: 1.6 }}>
-            Optimisez vos lignes de production et vos nomenclatures complexes via le moteur d'exécution industriel Nexus.
-          </p>
+      {/* ── HEADER ── */}
+      <div className="luxury-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
+        <div>
+          <div className="luxury-subtitle">Nexus Manufacturing Intelligence</div>
+          <h1 className="luxury-title">GPAO <strong>Core</strong></h1>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <button 
-             className="nexus-card" 
-             onClick={() => setIsScannerOpen(true)}
-             style={{ width: '56px', height: '56px', background: 'white', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'flex-end' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ordres en production</div>
+            <div className="luxury-value-massive" style={{ fontSize: '3rem', color: '#111827' }}>
+              <AnimatedCounter from={0} to={enCours} duration={1.5} formatter={v => `${v}`} />
+            </div>
+          </div>
+
+          {/* TRS Badge */}
+          <div className="luxury-widget" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.25rem 2rem' }}>
+            <Activity size={24} color="#10B981" />
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>Efficacité (TRS)</div>
+              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>92.8%</div>
+            </div>
+          </div>
+
+          {/* Scanner */}
+          <button onClick={() => setIsScannerOpen(true)} className="luxury-widget" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', background: 'rgba(255,255,255,0.8)' }}>
+            <Layers size={24} color="#111827" />
+          </button>
+
+          {/* Create OF */}
+          <button className="luxury-widget" style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
+            <Plus size={20} /> <span style={{ fontWeight: 600, letterSpacing: '0.05em' }}>Créer OF</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── KPI BENTO ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '2rem', marginBottom: '3rem' }}>
+        <div className="luxury-widget" style={{ gridColumn: 'span 3', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '1rem', color: '#3B82F6' }}><ClipboardList size={24} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Running</span>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>OF en cours</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b' }}>{enCours || 8}</div>
+          </div>
+        </div>
+
+        <div className="luxury-widget" style={{ gridColumn: 'span 3', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '1rem', color: '#10B981' }}><CheckCircle2 size={24} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Done</span>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Terminés (mois)</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b' }}>{termines || 124}</div>
+          </div>
+        </div>
+
+        <div className="luxury-widget" style={{ gridColumn: 'span 3', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '1rem', color: '#EF4444' }}><AlertTriangle size={24} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#EF4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Critical</span>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Arrêts Machine</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#EF4444' }}>2</div>
+          </div>
+        </div>
+
+        <div className="luxury-widget" style={{ gridColumn: 'span 3', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '1rem', color: '#10B981' }}><Activity size={24} /></div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Efficient</span>
+          </div>
+          <div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Efficacité (TRS)</div>
+            <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b' }}>92.8%</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FROSTED-GLASS VIEW TOGGLE ── */}
+      <div style={{ display: 'flex', background: 'rgba(255,255,255,0.5)', padding: '0.5rem', borderRadius: '1.5rem', backdropFilter: 'blur(10px)', marginBottom: '2rem', width: 'fit-content' }}>
+        {[
+          { id: 'orders', label: 'Ordres de Fabrication', icon: <Wrench size={16} /> },
+          { id: 'bom',    label: 'Nomenclatures',          icon: <Layers size={16} /> },
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setView(t.id)}
+            style={{
+              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+              background: view === t.id ? 'white' : 'transparent',
+              color: view === t.id ? '#111827' : '#64748B',
+              boxShadow: view === t.id ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '0.5rem'
+            }}
           >
-            <Layers size={22} color="var(--nexus-secondary)" />
+            {t.icon} {t.label}
           </button>
-
-          <div className="nexus-card" style={{ display: 'flex', padding: '0.4rem', borderRadius: '1.25rem', background: 'white' }}>
-            <button onClick={() => setView('orders')} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.9rem', border: 'none', background: view === 'orders' ? 'var(--nexus-secondary)' : 'transparent', color: view === 'orders' ? 'white' : 'var(--nexus-text-muted)', cursor: 'pointer', fontWeight: 900, fontSize: '0.85rem' }}>Ordres</button>
-            <button onClick={() => setView('bom')} style={{ padding: '0.6rem 1.5rem', borderRadius: '0.9rem', border: 'none', background: view === 'bom' ? 'var(--nexus-secondary)' : 'transparent', color: view === 'bom' ? 'white' : 'var(--nexus-text-muted)', cursor: 'pointer', fontWeight: 900, fontSize: '0.85rem' }}>Nomenclatures</button>
-          </div>
-
-          <button className="nexus-card" style={{ padding: '1rem 2rem', background: 'var(--nexus-primary)', color: 'white', fontWeight: 900, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Plus size={20} strokeWidth={3} /> Créer OF
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* KPI Bento Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '1.5rem' }}>
-        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '8px', borderRadius: '10px', color: '#3B82F6' }}><ClipboardList size={20} /></div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#3B82F6' }}>RUNNING</div>
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>OF en cours</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{workOrders.filter(o => o.status === 'En cours').length || 8}</div>
-        </div>
-
-        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><CheckCircle2 size={20} /></div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>DONE</div>
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Terminés (Mois)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>124</div>
-        </div>
-
-        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '10px', color: '#EF4444' }}><AlertTriangle size={20} /></div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: '#EF4444' }}>CRITICAL</div>
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Arrêts Machine</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>2</div>
-        </div>
-
-        <div className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><Activity size={20} strokeWidth={3} /></div>
-              <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>EFFICIENT</div>
-            </div>
-            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Efficacité (TRS)</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>92.8%</div>
-        </div>
-      </div>
-
-      {/* Main Content Area */}
-      <div style={{ marginTop: '1rem' }}>
-        {view === 'orders' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {workOrders.map(of => (
-              <motion.div
-                key={of.id}
-                whileHover={{ x: 10, backgroundColor: 'rgba(255,255,255,1)' }}
-                className="nexus-card"
-                style={{ padding: '1.5rem 2.5rem', background: 'rgba(255,255,255,0.8)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-                onClick={() => onOpenDetail(of, 'production', 'warehouses')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
-                   <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                      <div className="nexus-glow" style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'var(--nexus-bg)', color: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <Wrench size={24} />
+      {/* ── CONTENT ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={view}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
+        >
+          {view === 'orders' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {workOrders.map(of => (
+                <motion.div
+                  key={of.id}
+                  whileHover={{ x: 6, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}
+                  className="luxury-widget"
+                  style={{ padding: '2rem 3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.9)' }}
+                  onClick={() => onOpenDetail(of, 'production', 'warehouses')}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4rem' }}>
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                      <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(16, 185, 129, 0.08)', color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Wrench size={24} />
                       </div>
                       <div>
-                         <div style={{ fontWeight: 900, fontSize: '1.1rem', color: 'var(--nexus-secondary)' }}>{of.produit}</div>
-                         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--nexus-text-muted)', marginTop: '0.2rem' }}>OF-{of.id} • Lot: 2024-X4</div>
+                        <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1e293b' }}>{of.produit}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8', marginTop: '0.25rem' }}>OF-{of.id} · Lot 2024-X4</div>
                       </div>
-                   </div>
+                    </div>
 
-                   <div style={{ width: '250px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                         <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Progression Industrielle</span>
-                         <span style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>{of.progress}%</span>
+                    <div style={{ width: '280px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Progression</span>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#10B981' }}>{of.progress}%</span>
                       </div>
-                      <div style={{ height: '8px', background: 'var(--nexus-bg)', borderRadius: '4px', overflow: 'hidden' }}>
-                         <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${of.progress}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            style={{ height: '100%', background: 'var(--nexus-primary)', borderRadius: '4px' }} 
-                         />
+                      <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${of.progress}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          style={{ height: '100%', background: '#10B981', borderRadius: '4px' }} 
+                        />
                       </div>
-                   </div>
-                </div>
+                    </div>
+                  </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
-                   <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Échéance Livraison</div>
-                      <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--nexus-secondary)' }}>{of.due}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Échéance</div>
+                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b' }}>{of.due}</div>
+                    </div>
+
+                    <div style={{ 
+                      padding: '0.5rem 1.5rem', borderRadius: '1rem',
+                      background: of.status === 'Terminé' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                      color: of.status === 'Terminé' ? '#10B981' : '#3B82F6',
+                      fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em'
+                    }}>
+                      {of.status}
+                    </div>
+
+                    {of.status !== 'Terminé' && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); toggleStatus(of); }}
+                        className="luxury-widget"
+                        style={{ padding: '0.6rem 1.25rem', background: '#10B981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, borderRadius: '0.75rem' }}
+                      >
+                        <CheckCircle2 size={18} /> Terminer
+                      </button>
+                    )}
+
+                    <button className="luxury-widget" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', background: '#f8fafc', borderRadius: '0.75rem' }}>
+                      <MoreVertical size={20} color="#94a3b8" />
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            // BOM grid
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 360px), 1fr))', gap: '2rem' }}>
+               {boms.map(bom => (
+                 <motion.div 
+                   key={bom.id} 
+                   whileHover={{ y: -8, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}
+                   className="luxury-widget" 
+                   style={{ padding: '2.5rem', background: 'rgba(255,255,255,0.9)' }}
+                 >
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                     <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6', padding: '1rem', borderRadius: '1rem' }}>
+                       <Layers size={24} />
+                     </div>
+                     <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#9ca3af', background: '#f8fafc', padding: '6px 14px', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+                       REV. {bom.version}
+                     </div>
                    </div>
-                   <div style={{ 
-                     padding: '0.5rem 1.25rem', 
-                     borderRadius: '12px', 
-                     background: of.status === 'Terminé' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(59, 130, 246, 0.1)', 
-                     color: of.status === 'Terminé' ? 'var(--nexus-primary)' : '#3B82F6',
-                     fontSize: '0.8rem',
-                     fontWeight: 900,
-                     textTransform: 'uppercase',
-                     letterSpacing: '1px'
-                   }}>
-                     {of.status}
-                   </div>
-                   {of.status !== 'Terminé' && (
-                     <button 
-                       className="nexus-card" 
-                       onClick={(e) => { e.stopPropagation(); toggleStatus(of); }}
-                       style={{ padding: '0.6rem 1rem', background: 'var(--nexus-primary)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                     >
-                       <CheckCircle2 size={16} /> TERMINER
+                   <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#1e293b', marginBottom: '0.75rem', letterSpacing: '-0.5px' }}>{bom.product}</h3>
+                   <p style={{ fontSize: '0.9rem', fontWeight: 500, color: '#64748b', marginBottom: '2.5rem', lineHeight: 1.6 }}>
+                     {bom.components} composants identifiés — nomenclature <strong>{bom.type}</strong>.
+                   </p>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid #f1f5f9' }}>
+                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#cbd5e1' }}>ID: {bom.id}</span>
+                     <button className="luxury-widget" style={{ padding: '0.6rem 1.5rem', fontSize: '0.9rem', fontWeight: 700, color: '#8B5CF6', background: 'rgba(139, 92, 246, 0.07)', border: 'none', cursor: 'pointer', borderRadius: '0.75rem' }}>
+                       Détails
                      </button>
-                   )}
-                   <button className="nexus-card" style={{ padding: '0.6rem', background: 'white', border: '1px solid var(--nexus-border)' }}><MoreVertical size={20} color="var(--nexus-text-muted)" /></button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 350px), 1fr))', gap: '1.5rem' }}>
-             {boms.map(bom => (
-               <motion.div 
-                  key={bom.id} 
-                  whileHover={{ y: -10 }}
-                  className="nexus-card" style={{ padding: '2rem', background: 'white' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                     <div className="nexus-glow" style={{ background: 'var(--nexus-bg)', color: 'var(--nexus-primary)', padding: '0.75rem', borderRadius: '14px' }}><Layers size={22} /></div>
-                     <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', background: 'var(--nexus-bg)', padding: '4px 10px', borderRadius: '8px' }}>REV. {bom.version}</div>
-                  </div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)', marginBottom: '0.5rem', letterSpacing: '-0.5px' }}>{bom.product}</h3>
-                  <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--nexus-text-muted)', marginBottom: '2rem', lineHeight: 1.5 }}>{bom.components} composants critiques identifiés dans cette nomenclature {bom.type}.</p>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1.5rem', borderTop: '1px solid var(--nexus-bg)' }}>
-                     <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>ID: {bom.id}</span>
-                     <button className="nexus-card" style={{ padding: '0.6rem 1.25rem', fontSize: '0.85rem', fontWeight: 900, color: 'var(--nexus-primary)', background: 'white', border: '1px solid var(--nexus-primary)', cursor: 'pointer' }}>Détails Nexus</button>
-                  </div>
-               </motion.div>
-             ))}
-          </div>
-        )}
-      </div>
+                   </div>
+                 </motion.div>
+               ))}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
 
-export default Manufacturing;
+export default React.memo(Manufacturing);

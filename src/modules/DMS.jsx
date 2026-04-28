@@ -1,188 +1,206 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Folder, 
-  File, 
-  Search, 
-  Upload, 
-  Plus, 
-  Grid, 
-  List as ListIcon, 
-  ChevronRight, 
-  FileText, 
-  Image as ImageIcon, 
-  Shield, 
-  MoreHorizontal,
-  FolderPlus
+  Folder, File, Upload, Plus, Grid, List as ListIcon, 
+  ChevronRight, FileText, Image as ImageIcon, Shield, 
+  MoreHorizontal, FolderPlus, X, Lock
 } from 'lucide-react';
 import { useStore } from '../store';
 import { generatePDF } from '../utils/PDFExporter';
-import { X } from 'lucide-react';
+import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import '../components/GlobalDashboard.css';
 
 const DMS = () => {
   const { data } = useStore();
-  const [viewMode, setViewMode] = useState('grid');
+  const [viewMode, setViewMode]     = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
-  const [previewFile, setPreviewFile] = useState(null);
+  const [previewFile, setPreviewFile]     = useState(null);
 
   const folders = data.dms?.folders || [];
-  const files = (data.dms?.files || []).filter(f => f.folder === currentFolder || (currentFolder === 'Racine' && !f.folder));
+  const files   = (data.dms?.files || []).filter(f => f.folder === currentFolder || (currentFolder === 'Racine' && !f.folder));
+  const totalFiles = (data.dms?.files || []).length;
 
   const getFileIcon = (type) => {
     switch (type) {
-      case 'PDF': return <FileText size={24} color="#EF4444" />;
+      case 'PDF':   return <FileText size={24} color="#EF4444" />;
       case 'IMAGE': return <ImageIcon size={24} color="#3B82F6" />;
-      default: return <File size={24} color="var(--text-muted)" />;
+      default:      return <File size={24} color="#64748b" />;
     }
   };
 
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh' }}>
+
+      {/* ── HEADER ── */}
+      <div className="luxury-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>G.E.D</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Gestion Électronique des Documents et archivage sécurisé.</p>
+          <div className="luxury-subtitle">Gestion Électronique des Documents</div>
+          <h1 className="luxury-title">G.E.D <strong>Secure</strong></h1>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div className="glass" style={{ display: 'flex', padding: '0.25rem', borderRadius: '0.75rem' }}>
-            <button onClick={() => setViewMode('grid')} className="btn" style={{ background: viewMode === 'grid' ? 'var(--bg)' : 'transparent', padding: '0.5rem' }}><Grid size={18} /></button>
-            <button onClick={() => setViewMode('list')} className="btn" style={{ background: viewMode === 'list' ? 'var(--bg)' : 'transparent', padding: '0.5rem' }}><ListIcon size={18} /></button>
+
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Documents stockés</div>
+            <div className="luxury-value-massive" style={{ fontSize: '3rem', color: '#111827' }}>
+              <AnimatedCounter from={0} to={totalFiles} duration={1.5} formatter={v => `${Math.round(v)}`} />
+            </div>
           </div>
-          <button onClick={() => alert('Ouverture du sélecteur de fichiers IPC Crypt...')} className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+
+          {/* View toggle */}
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.5)', padding: '0.4rem', borderRadius: '1rem', backdropFilter: 'blur(10px)' }}>
+            <button onClick={() => setViewMode('grid')} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', background: viewMode === 'grid' ? 'white' : 'transparent', color: '#111827' }}><Grid size={18} /></button>
+            <button onClick={() => setViewMode('list')} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', background: viewMode === 'list' ? 'white' : 'transparent', color: '#111827' }}><ListIcon size={18} /></button>
+          </div>
+
+          <button onClick={() => alert('IPC Crypt Upload...')} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(255,255,255,0.9)', borderRadius: '1.25rem' }}>
             <Upload size={18} /> Téléverser
           </button>
-          <button onClick={() => alert('Création d\'un nouveau document sémantique...')} className="btn btn-primary" style={{ cursor: 'pointer' }}>
+          <button onClick={() => alert('Nouveau document sémantique...')} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
             <Plus size={18} /> Nouveau
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-        <span>Mon IPC</span> <ChevronRight size={14} /> <span style={{ fontWeight: 700, color: 'var(--accent)' }}>{currentFolder}</span>
+      {/* ── BREADCRUMB ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem', color: '#64748b', fontSize: '0.95rem' }}>
+        <span style={{ fontWeight: 600 }}>Mon IPC</span>
+        <ChevronRight size={16} color="#cbd5e1" />
+        <span style={{ fontWeight: 800, color: '#111827', background: 'rgba(255,255,255,0.8)', padding: '4px 14px', borderRadius: '999px', fontSize: '0.85rem', border: '1px solid #e2e8f0' }}>{currentFolder}</span>
       </div>
 
-      {/* Folders Summary */}
+      {/* ── FOLDERS GRID ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
         {folders.map(folder => {
           const folderFiles = (data.dms?.files || []).filter(f => f.folder === folder.name || (folder.name === 'Racine' && !f.folder));
-          const numFiles = folderFiles.length;
-          
           return (
             <motion.div
               key={folder.name}
-              whileHover={{ y: -5 }}
-              className="glass"
-              style={{ padding: '1.5rem', borderRadius: '1.25rem', cursor: 'pointer' }}
+              whileHover={{ y: -6, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}
+              className="luxury-widget"
+              style={{ padding: '1.75rem', cursor: 'pointer', background: 'rgba(255,255,255,0.9)', borderRadius: '1.5rem' }}
               onClick={() => setCurrentFolder(folder.name)}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)15', color: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Folder size={24} />
-                 </div>
-                 <MoreHorizontal size={18} color="var(--text-muted)" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '1rem', background: 'rgba(245, 158, 11, 0.1)', color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Folder size={24} />
+                </div>
+                <MoreHorizontal size={20} color="#cbd5e1" />
               </div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.25rem' }}>{folder.name}</h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{numFiles} éléments</p>
+              <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '0.25rem', color: '#1e293b' }}>{folder.name}</h3>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>{folderFiles.length} éléments</p>
             </motion.div>
           );
         })}
-            <motion.div
-                whileHover={{ scale: 1.02 }}
-                onClick={() => alert('Configuration d\'un nouveau dossier partagé...')}
-                className="glass"
-                style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}
-            >
-                <FolderPlus size={24} />
-                <span style={{ fontSize: '0.8rem' }}>Créer Dossier</span>
-            </motion.div>
+
+        <motion.div
+          whileHover={{ y: -6 }}
+          onClick={() => alert('Création d\'un nouveau dossier partagé...')}
+          className="luxury-widget"
+          style={{ padding: '1.75rem', border: '2px dashed #e2e8f0', background: 'rgba(255,255,255,0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: '#94a3b8', borderRadius: '1.5rem', transition: 'all 0.3s' }}
+        >
+          <FolderPlus size={32} color="#cbd5e1" />
+          <span style={{ fontSize: '0.9rem', fontWeight: 700 }}>Créer Dossier</span>
+        </motion.div>
       </div>
 
-      <div className="glass" style={{ borderRadius: '1.5rem', padding: '1.5rem' }}>
-        <h3 style={{ marginBottom: '1.5rem', fontWeight: 700 }}>Derniers Fichiers</h3>
+      {/* ── FILES TABLE ── */}
+      <div className="luxury-widget" style={{ padding: '2.5rem', background: 'rgba(255,255,255,0.9)', borderRadius: '1.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1e293b', margin: 0 }}>Derniers Fichiers</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16,185,129,0.08)', padding: '6px 16px', borderRadius: '999px' }}>
+            <Lock size={14} color="#10B981" />
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#10B981' }}>Chiffrement AES actif</span>
+          </div>
+        </div>
+
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-          <thead style={{ fontSize: '0.8rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border)' }}>
-            <tr>
-              <th style={{ padding: '1rem' }}>Nom</th>
-              <th style={{ padding: '1rem' }}>Propriétaire</th>
-              <th style={{ padding: '1rem' }}>Dossier</th>
-              <th style={{ padding: '1rem' }}>Taille</th>
-              <th style={{ padding: '1rem' }}>Protection</th>
-              <th style={{ padding: '1rem' }}></th>
+          <thead>
+            <tr style={{ fontSize: '0.75rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>Nom</th>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>Propriétaire</th>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>Dossier</th>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>Taille</th>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>Sécurité</th>
+              <th style={{ padding: '1rem 1.25rem', fontWeight: 700 }}></th>
             </tr>
           </thead>
           <tbody>
             {files.map(file => (
-              <tr key={file.name} style={{ borderBottom: '1px solid var(--border)', fontSize: '0.9rem' }}>
-                <td style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }} onClick={() => setPreviewFile(file)}>
+              <motion.tr key={file.name} whileHover={{ background: '#f8fafc' }} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}>
+                <td style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }} onClick={() => setPreviewFile(file)}>
                   {getFileIcon(file.type)}
-                  <span style={{ fontWeight: 600, color: 'var(--accent)', textDecoration: 'underline' }}>{file.name}</span>
+                  <span style={{ fontWeight: 700, color: '#3B82F6', textDecoration: 'underline', fontSize: '0.95rem' }}>{file.name}</span>
                 </td>
-                <td style={{ padding: '1rem' }}>{file.owner}</td>
-                <td style={{ padding: '1rem' }}><span className="badge">{file.folder}</span></td>
-                <td style={{ padding: '1rem' }}>{file.size}</td>
-                <td style={{ padding: '1rem' }}>
-                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#10B981', fontSize: '0.75rem', fontWeight: 700 }}>
-                      <Shield size={12} /> Chiffré AES
-                   </div>
+                <td style={{ padding: '1.25rem', fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>{file.owner}</td>
+                <td style={{ padding: '1.25rem' }}>
+                  <span style={{ padding: '4px 12px', borderRadius: '999px', background: '#f1f5f9', color: '#64748b', fontSize: '0.8rem', fontWeight: 700 }}>{file.folder}</span>
                 </td>
-                <td style={{ padding: '1rem' }}>
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (file.type === 'PDF' && file.metadata) {
-                          generatePDF(file.metadata, file.metadata._appId || 'hr', file.metadata._subModule || 'payslip');
-                        }
-                      }}
-                      className="btn" 
-                      style={{ background: 'transparent', border: '1px solid var(--border)', fontSize: '0.8rem' }}
-                    >
-                      Télécharger
-                    </button>
-                    <MoreHorizontal size={18} cursor="pointer" style={{ marginLeft: '1rem' }} />
+                <td style={{ padding: '1.25rem', fontWeight: 600, color: '#64748b', fontSize: '0.9rem' }}>{file.size}</td>
+                <td style={{ padding: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10B981', fontSize: '0.8rem', fontWeight: 700 }}>
+                    <Shield size={14} /> Chiffré AES
+                  </div>
                 </td>
-              </tr>
+                <td style={{ padding: '1.25rem' }}>
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault(); e.stopPropagation();
+                      if (file.type === 'PDF' && file.metadata) generatePDF(file.metadata, file.metadata._appId || 'hr', file.metadata._subModule || 'payslip');
+                    }}
+                    style={{ background: 'white', border: '1px solid #e2e8f0', padding: '6px 16px', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#475569' }}
+                  >
+                    Télécharger
+                  </button>
+                </td>
+              </motion.tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal de Prévisualisation */}
+      {/* ── PREVIEW MODAL ── */}
       <AnimatePresence>
-         {previewFile && (
-            <motion.div
-               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-               style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', flexDirection: 'column', padding: '2rem' }}
-            >
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                     {getFileIcon(previewFile.type)}
-                     <h2 style={{ margin: 0, fontWeight: 700 }}>{previewFile.name}</h2>
-                  </div>
-                  <button onClick={() => setPreviewFile(null)} className="glass" style={{ color: 'white', padding: '0.6rem', borderRadius: '50%' }}>
-                     <X size={24} />
-                  </button>
-               </div>
+        {previewFile && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 99999, display: 'flex', flexDirection: 'column', padding: '3rem' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white', marginBottom: '3rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {getFileIcon(previewFile.type)}
+                <div>
+                  <h2 style={{ margin: 0, fontWeight: 800, fontSize: '1.5rem' }}>{previewFile.name}</h2>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem' }}>{previewFile.size} · {previewFile.owner}</p>
+                </div>
+              </div>
+              <button onClick={() => setPreviewFile(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', padding: '0.75rem', borderRadius: '50%', cursor: 'pointer', color: 'white', display: 'flex' }}>
+                <X size={24} />
+              </button>
+            </div>
 
-               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', overflow: 'hidden', position: 'relative' }}>
-                  {/* Fake viewer box */}
-                  <div style={{ margin: 'auto', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                     <File size={80} opacity={0.3} />
-                     <span style={{ fontSize: '1.2rem', fontWeight: 600 }}>Prévisualisation sémantique</span>
-                     <span>Taille: {previewFile.size} • Propriétaire: {previewFile.owner}</span>
-                     <button onClick={() => {
-                        if (previewFile.metadata) generatePDF(previewFile.metadata, previewFile.metadata._appId || 'hr', previewFile.metadata._subModule || 'payslip');
-                        else alert('Mode demo: Impossible de télécharger le fichier factice.');
-                     }} className="btn-primary" style={{ marginTop: '1rem', padding: '0.8rem 1.5rem', borderRadius: '2rem' }}>
-                        Télécharger la copie originale cryptée
-                     </button>
-                  </div>
-               </div>
-            </motion.div>
-         )}
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', borderRadius: '2rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2rem' }}>
+                <File size={80} opacity={0.3} />
+                <div>
+                  <p style={{ fontSize: '1.25rem', fontWeight: 700, color: 'white', margin: '0 0 0.5rem 0' }}>Prévisualisation sémantique</p>
+                  <p style={{ fontSize: '0.9rem', margin: 0 }}>Taille: {previewFile.size} · Propriétaire: {previewFile.owner}</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    if (previewFile.metadata) generatePDF(previewFile.metadata, previewFile.metadata._appId || 'hr', previewFile.metadata._subModule || 'payslip');
+                    else alert('Mode demo: fichier factice.');
+                  }} 
+                  style={{ padding: '1rem 2.5rem', borderRadius: '2rem', background: '#10B981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', boxShadow: '0 10px 25px rgba(16,185,129,0.3)' }}
+                >
+                  Télécharger la copie originale cryptée
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );
 };
 
-export default DMS;
+export default React.memo(DMS);

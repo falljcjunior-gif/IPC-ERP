@@ -1,32 +1,24 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ShieldCheck, 
-  AlertOctagon, 
-  CheckCircle2, 
-  ClipboardCheck, 
-  Plus, 
-  Search, 
-  ChevronRight,
-  Filter
+  ShieldCheck, AlertOctagon, CheckCircle2, ClipboardCheck,
+  Plus, ChevronRight, Filter, Target
 } from 'lucide-react';
 import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
+import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import '../components/GlobalDashboard.css';
 
 const Quality = ({ onOpenDetail }) => {
   const { data, addRecord } = useStore();
-  const [view, setView] = useState('controls'); // 'controls', 'non-conformities', 'plans'
+  const [view, setView] = useState('controls');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Initialize mock data if missing — using useMemo to avoid direct mutation
-  const qualityData = useMemo(() => {
-    return data.quality || {
-      controls: [],
-      nonConformities: []
-    };
-  }, [data.quality]);
-
+  const qualityData = useMemo(() => data.quality || { controls: [], nonConformities: [] }, [data.quality]);
   const { controls, nonConformities } = qualityData;
+
+  const ncOuvertes = nonConformities.filter(n => n.status === 'Ouvert').length;
+  const tauxConformite = controls.length > 0 ? Math.round((controls.filter(c => c.status === 'Conforme').length / controls.length) * 100) : 0;
 
   const handleSave = (formData) => {
     const subModule = view === 'controls' ? 'controls' : 'nonConformities';
@@ -34,121 +26,137 @@ const Quality = ({ onOpenDetail }) => {
     setIsModalOpen(false);
   };
 
-  const renderControls = () => (
-    <div className="glass" style={{ borderRadius: '1.25rem', overflow: 'hidden' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-        <thead style={{ background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-          <tr>
-            <th style={{ padding: '1rem 1.5rem' }}>Article / Lot</th>
-            <th style={{ padding: '1rem 1.5rem' }}>Type</th>
-            <th style={{ padding: '1rem 1.5rem' }}>Inspecteur</th>
-            <th style={{ padding: '1rem 1.5rem' }}>Date</th>
-            <th style={{ padding: '1rem 1.5rem' }}>Résultat</th>
-            <th style={{ padding: '1rem 1.5rem' }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {controls.map(c => (
-            <tr key={c.id} style={{ borderTop: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => onOpenDetail(c, 'quality', 'controls')}>
-              <td style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>{c.item}</td>
-              <td style={{ padding: '1rem 1.5rem' }}>{c.type}</td>
-              <td style={{ padding: '1rem 1.5rem' }}>{c.inspector}</td>
-              <td style={{ padding: '1rem 1.5rem' }}>{c.date}</td>
-              <td style={{ padding: '1rem 1.5rem' }}>
-                <span style={{ 
-                  padding: '0.2rem 0.6rem', 
-                  borderRadius: '0.5rem', 
-                  background: c.status === 'Conforme' ? '#10B98115' : '#EF444415', 
-                  color: c.status === 'Conforme' ? '#10B981' : '#EF4444',
-                  fontSize: '0.75rem',
-                  fontWeight: 700
-                }}>
-                  {c.status}
-                </span>
-              </td>
-              <td style={{ padding: '1rem 1.5rem' }}><ChevronRight size={18} color="var(--text-muted)" /></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
   return (
-    <div style={{ padding: '2.5rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+    <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+
+      {/* ── HEADER ── */}
+      <div className="luxury-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Gestion de la Qualité</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Assurez la conformité de vos produits et gérez les anomalies.</p>
+          <div className="luxury-subtitle">ISO & Conformité Produit</div>
+          <h1 className="luxury-title">Gestion de la <strong>Qualité</strong></h1>
         </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-           <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: '0.8rem', border: '1px solid var(--border)' }}>
-            <button onClick={() => setView('controls')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'controls' ? 'var(--bg)' : 'transparent', color: view === 'controls' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Points de Contrôle</button>
-            <button onClick={() => setView('non-conformities')} style={{ padding: '0.5rem 1rem', borderRadius: '0.6rem', border: 'none', background: view === 'non-conformities' ? 'var(--bg)' : 'transparent', color: view === 'non-conformities' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>Non-Conformités</button>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          {/* Frosted Tab Toggle */}
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.5)', padding: '0.4rem', borderRadius: '1.25rem', backdropFilter: 'blur(10px)' }}>
+            <button onClick={() => setView('controls')} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.875rem', border: 'none', cursor: 'pointer', fontWeight: 700, transition: 'all 0.3s', background: view === 'controls' ? 'white' : 'transparent', color: view === 'controls' ? '#111827' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ClipboardCheck size={16} /> Points de Contrôle
+            </button>
+            <button onClick={() => setView('non-conformities')} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.875rem', border: 'none', cursor: 'pointer', fontWeight: 700, transition: 'all 0.3s', background: view === 'non-conformities' ? 'white' : 'transparent', color: view === 'non-conformities' ? '#111827' : '#64748b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <AlertOctagon size={16} /> Non-Conformités
+            </button>
           </div>
-          <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>
-             <Plus size={18} /> Nouveau
+          <button onClick={() => setIsModalOpen(true)} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
+            <Plus size={18} /> Nouveau
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
-         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>TAUX DE CONFORMITÉ</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#10B981' }}>0%</div>
-         </div>
-         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>NC OUVERTES</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#EF4444' }}>{nonConformities.filter(n => n.status === 'Ouvert').length}</div>
-         </div>
-         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>CONTRÔLES / MOIS</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>0</div>
-         </div>
-         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>ACTIONS RÉUSSIES</div>
-            <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--accent)' }}>0%</div>
-         </div>
+      {/* ── KPI ROW ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem' }}>
+        {[
+          { label: 'Taux de Conformité', value: tauxConformite, suffix: '%',         color: '#10B981', icon: <ShieldCheck size={24} /> },
+          { label: 'NC Ouvertes',         value: ncOuvertes,    suffix: '',           color: '#EF4444', icon: <AlertOctagon size={24} /> },
+          { label: 'Contrôles / Mois',    value: controls.length, suffix: '',         color: '#3B82F6', icon: <ClipboardCheck size={24} /> },
+          { label: 'Actions Réussies',    value: 0,             suffix: '%',          color: '#8B5CF6', icon: <Target size={24} /> },
+        ].map((k, i) => (
+          <div key={i} className="luxury-widget" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ background: `${k.color}15`, padding: '12px', borderRadius: '1rem', color: k.color }}>{k.icon}</div>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: k.color, textTransform: 'uppercase' }}>●</span>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', marginBottom: '0.25rem' }}>{k.label}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1e293b' }}>
+                <AnimatedCounter from={0} to={k.value} duration={1.5} formatter={v => `${Math.round(v)}${k.suffix}`} />
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {view === 'controls' ? renderControls() : (
-         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {nonConformities.map(n => (
-              <div key={n.id} className="glass" style={{ padding: '1.25rem 2rem', borderRadius: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <div>
-                    <div style={{ fontSize: '0.7rem', color: '#EF4444', fontWeight: 800 }}>{n.ref} • Grave : {n.gravity}</div>
-                    <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{n.item}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Détecté le {n.detection} ({n.source})</div>
-                 </div>
-                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{n.status}</span>
-                    <button className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>Ouvrir Plan d'Action</button>
-                 </div>
-              </div>
-            ))}
-         </div>
-      )}
+      {/* ── CONTENT ── */}
+      <AnimatePresence mode="wait">
+        <motion.div key={view} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+          {view === 'controls' ? (
+            <div className="luxury-widget" style={{ padding: '2.5rem', borderRadius: '1.5rem', overflow: 'hidden' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ fontSize: '0.75rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #f1f5f9' }}>
+                    {['Article / Lot', 'Type', 'Inspecteur', 'Date', 'Résultat', ''].map(h => (
+                      <th key={h} style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {controls.map(c => (
+                    <motion.tr key={c.id} whileHover={{ background: '#f8fafc' }} style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }} onClick={() => onOpenDetail(c, 'quality', 'controls')}>
+                      <td style={{ padding: '1.25rem', fontWeight: 700, color: '#1e293b' }}>{c.item}</td>
+                      <td style={{ padding: '1.25rem', color: '#475569' }}>{c.type}</td>
+                      <td style={{ padding: '1.25rem', color: '#475569' }}>{c.inspector}</td>
+                      <td style={{ padding: '1.25rem', color: '#475569' }}>{c.date}</td>
+                      <td style={{ padding: '1.25rem' }}>
+                        <span style={{ padding: '4px 14px', borderRadius: '999px', fontSize: '0.8rem', fontWeight: 700,
+                          background: c.status === 'Conforme' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                          color: c.status === 'Conforme' ? '#10B981' : '#EF4444' }}>
+                          {c.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1.25rem' }}><ChevronRight size={18} color="#cbd5e1" /></td>
+                    </motion.tr>
+                  ))}
+                  {controls.length === 0 && (
+                    <tr><td colSpan={6} style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>
+                      <CheckCircle2 size={48} opacity={0.2} style={{ margin: '0 auto 1rem', display: 'block' }} />
+                      Aucun contrôle enregistré
+                    </td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {nonConformities.map(n => (
+                <motion.div key={n.id} whileHover={{ x: 4 }} className="luxury-widget" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #EF4444' }}>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#EF4444', fontWeight: 800, marginBottom: '0.25rem' }}>{n.ref} · Gravité: {n.gravity}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#1e293b', marginBottom: '0.25rem' }}>{n.item}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Détecté le {n.detection} ({n.source})</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <span style={{ padding: '4px 14px', borderRadius: '999px', background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontSize: '0.8rem', fontWeight: 700 }}>{n.status}</span>
+                    <button className="luxury-widget" style={{ padding: '0.6rem 1.25rem', background: '#f8fafc', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', color: '#475569', borderRadius: '0.75rem' }}>Plan d'Action</button>
+                  </div>
+                </motion.div>
+              ))}
+              {nonConformities.length === 0 && (
+                <div className="luxury-widget" style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
+                  <ShieldCheck size={48} opacity={0.2} style={{ margin: '0 auto 1rem', display: 'block' }} />
+                  <p style={{ fontWeight: 600 }}>Aucune non-conformité déclarée</p>
+                </div>
+              )}
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
-      <RecordModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        title={view === 'controls' ? "Nouveau Point de Contrôle" : "Déclarer une Non-Conformité"}
+      <RecordModal
+        isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave}
+        title={view === 'controls' ? 'Nouveau Point de Contrôle' : 'Déclarer une Non-Conformité'}
         fields={view === 'controls' ? [
-          { name: 'item', label: 'Article / Lot', required: true },
-          { name: 'type', label: 'Type de contrôle', type: 'select', options: ['Réception', 'Encours Production', 'Final', 'Périodique'], required: true },
-          { name: 'inspector', label: 'Inspecteur', type: 'select', options: data.hr.employees.map(e => e.nom), required: true },
-          { name: 'status', label: 'Résultat', type: 'select', options: ['Conforme', 'Échec', 'Mise en quarantaine'], required: true },
-          { name: 'result', label: 'Observations détaillées', type: 'textarea' },
+          { name: 'item',      label: 'Article / Lot',      required: true },
+          { name: 'type',      label: 'Type de contrôle',   type: 'select', options: ['Réception', 'Encours Production', 'Final', 'Périodique'], required: true },
+          { name: 'inspector', label: 'Inspecteur',         type: 'select', options: data.hr?.employees?.map(e => e.nom) || [], required: true },
+          { name: 'status',    label: 'Résultat',           type: 'select', options: ['Conforme', 'Échec', 'Mise en quarantaine'], required: true },
+          { name: 'result',    label: 'Observations',       type: 'textarea' },
         ] : [
-          { name: 'item', label: 'Article défectueux', required: true },
-          { name: 'gravity', label: 'Gravité', type: 'select', options: ['Bénigne', 'Mineure', 'Majeure', 'Critique'], required: true },
-          { name: 'source', label: 'Origine', type: 'select', options: ['Production', 'Fournisseur', 'Client', 'Logistique'], required: true },
-          { name: 'detection', label: 'Date de détection', type: 'date', required: true },
+          { name: 'item',      label: 'Article défectueux', required: true },
+          { name: 'gravity',   label: 'Gravité',            type: 'select', options: ['Bénigne', 'Mineure', 'Majeure', 'Critique'], required: true },
+          { name: 'source',    label: 'Origine',            type: 'select', options: ['Production', 'Fournisseur', 'Client', 'Logistique'], required: true },
+          { name: 'detection', label: 'Date de détection',  type: 'date',   required: true },
         ]}
       />
     </div>
   );
 };
 
-export default Quality;
+export default React.memo(Quality);
