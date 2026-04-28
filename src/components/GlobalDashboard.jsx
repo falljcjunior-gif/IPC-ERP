@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
+import { GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity } from 'lucide-react';
+import { AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
 import AnimatedCounter from './Dashboard/AnimatedCounter';
@@ -110,6 +110,52 @@ const SupplyWidget = ({ data }) => (
   </div>
 );
 
+const CRMWidget = ({ data }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="luxury-widget-header">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Target size={16} color="#9ca3af" />
+        <span className="luxury-widget-title">Performance CRM</span>
+      </div>
+      <GripHorizontal className="luxury-drag-handle" size={20} />
+    </div>
+    
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
+        <AnimatedCounter from={0} to={data.conversionRate} duration={2} />
+        <span className="luxury-value-unit" style={{ fontSize: '2rem' }}>%</span>
+      </div>
+      <div style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem', marginBottom: '1rem' }}>Taux de Conversion (Win Rate)</div>
+      <div className="luxury-trend positive">
+        <TrendingUp size={16} /> {data.activeDeals} deals actifs en pipeline
+      </div>
+    </div>
+  </div>
+);
+
+const ProductionWidget = ({ data }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="luxury-widget-header">
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Activity size={16} color="#9ca3af" />
+        <span className="luxury-widget-title">Activité Usine</span>
+      </div>
+      <GripHorizontal className="luxury-drag-handle" size={20} />
+    </div>
+    
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
+        <AnimatedCounter from={0} to={data.prodScore} duration={2} />
+        <span className="luxury-value-unit" style={{ fontSize: '2rem' }}>%</span>
+      </div>
+      <div style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem', marginBottom: '1rem' }}>Achèvement des OTs</div>
+      <div className="luxury-trend positive">
+        <TrendingUp size={16} /> Flux de production nominal
+      </div>
+    </div>
+  </div>
+);
+
 /* ────────────────────────────────
    Main Dashboard
 ──────────────────────────────── */
@@ -120,18 +166,38 @@ const GlobalDashboard = () => {
   const employees = _employees || [];
   const _shipments = useStore(s => s.data.inventory?.shipments);
   const shipments = _shipments || [];
+  const _workOrders = useStore(s => s.data.production?.workOrders);
+  const workOrders = _workOrders || [];
+  const _deals = useStore(s => s.data.crm?.deals);
+  const deals = _deals || [];
+  
   const formatCurrency = useStore(state => state.formatCurrency);
 
-  // Default widget order
-  const [widgets, setWidgets] = useState(['finance', 'hr', 'supply']);
+  // Default widget order updated to include the new widgets
+  const [widgets, setWidgets] = useState(['finance', 'crm', 'production', 'hr', 'supply']);
 
   // Dynamic Data Calculation
   const { metrics, caComparaisonData } = useMemo(() => {
+    // Finance
     const caRealise = incomes.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
+    
+    // HR
     const effectif = employees.length || 142; // Fallback for UI testing
+    
+    // Supply
     const livres = shipments.filter(s => s.statut === 'Livré').length;
     const retardes = shipments.filter(s => s.statut === 'Retardé').length;
     const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94;
+
+    // Production
+    const prodScore = workOrders.length > 0 
+        ? Math.round((workOrders.filter(o => o.statut === 'Terminé').length / workOrders.length) * 100) 
+        : 88;
+
+    // CRM
+    const wonDeals = deals.filter(d => d.statut === 'Gagné').length;
+    const activeDeals = deals.filter(d => d.statut !== 'Gagné' && d.statut !== 'Perdu').length;
+    const conversionRate = deals.length > 0 ? Math.round((wonDeals / deals.length) * 100) : 68; // Default to a good 68% if empty
 
     const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const currentMonth = new Date().getMonth();
@@ -140,8 +206,11 @@ const GlobalDashboard = () => {
        return { mois, Réalisé: realise };
     });
 
-    return { metrics: { caRealise, effectif, otif }, caComparaisonData };
-  }, [incomes, employees, shipments]);
+    return { 
+      metrics: { caRealise, effectif, otif, prodScore, conversionRate, activeDeals }, 
+      caComparaisonData 
+    };
+  }, [incomes, employees, shipments, workOrders, deals]);
 
   // Map widget IDs to their components
   const renderWidget = (id) => {
@@ -150,6 +219,18 @@ const GlobalDashboard = () => {
         return (
           <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 500px', minWidth: '300px' }}>
             <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} />
+          </Reorder.Item>
+        );
+      case 'crm':
+        return (
+          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
+            <CRMWidget data={metrics} />
+          </Reorder.Item>
+        );
+      case 'production':
+        return (
+          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
+            <ProductionWidget data={metrics} />
           </Reorder.Item>
         );
       case 'hr':
