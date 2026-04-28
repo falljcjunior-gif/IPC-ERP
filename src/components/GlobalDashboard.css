@@ -1,101 +1,166 @@
-/* Immersive Light / Glass Theme for Global Dashboard */
+/* LUXURY HIGH-TECH MINIMALISM - Global Dashboard */
 
-.dashboard-nexus-container {
-  min-height: 100%;
-  padding: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 3rem;
-  /* Light theme background with subtle animated gradients */
-  background-color: #f8fafc;
+.luxury-dashboard-container {
+  min-height: 100vh;
+  padding: 4rem 3rem;
+  background-color: #fdfdfd;
   background-image: 
-    radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
-  color: #0f172a;
-  font-family: 'Inter', sans-serif;
+    radial-gradient(circle at 50% 0%, rgba(240, 244, 248, 1) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(248, 250, 252, 0.8) 100%);
+  color: #111827;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
 }
 
-.dashboard-nexus-card {
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 1);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255,255,255,0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  position: relative;
-  overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+.luxury-header {
+  margin-bottom: 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 }
 
-.dashboard-nexus-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(56, 189, 248, 0.2);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,1);
+.luxury-title {
+  font-size: 3rem;
+  font-weight: 200; /* Extremely thin/elegant */
+  letter-spacing: -0.04em;
+  margin: 0;
+  color: #000;
 }
 
-.dashboard-glow-text {
-  background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+.luxury-title strong {
+  font-weight: 600;
+  background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
 }
 
-/* Recharts Customizations for Light Theme */
-.dashboard-nexus-container .recharts-cartesian-grid-horizontal line,
-.dashboard-nexus-container .recharts-cartesian-grid-vertical line {
-  stroke: rgba(0, 0, 0, 0.05);
-}
-
-.dashboard-nexus-container .recharts-text {
-  fill: #64748b;
+.luxury-subtitle {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #9ca3af;
   font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
-/* Custom Tooltip */
-.nexus-tooltip {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: 0.75rem;
-  padding: 1rem;
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-  color: #0f172a;
-}
-
-/* Grid layout for Dashboard */
-.dashboard-bento-grid {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
+/* Draggable Grid */
+.luxury-grid {
+  display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
-  auto-rows: minmax(150px, auto);
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-@media (max-width: 1200px) {
-  .dashboard-bento-grid {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-/* Typing effect for AI */
-.typewriter-text {
+.luxury-widget {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 2rem;
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.03), 
+    0 1px 3px rgba(0,0,0,0.01),
+    inset 0 1px 1px rgba(255, 255, 255, 1);
+  padding: 2.5rem;
+  position: relative;
   overflow: hidden;
-  border-right: .15em solid #0ea5e9;
-  white-space: nowrap;
-  animation: 
-    typing 3s steps(40, end),
-    blink-caret .75s step-end infinite;
+  transition: box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
 }
 
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
+.luxury-widget:hover {
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.06), 
+    0 1px 3px rgba(0,0,0,0.02),
+    inset 0 1px 1px rgba(255, 255, 255, 1);
 }
 
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: #0ea5e9; }
+.luxury-widget.dragging {
+  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 1);
+  z-index: 50;
+  cursor: grabbing !important;
+}
+
+.luxury-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.luxury-widget-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.luxury-drag-handle {
+  color: #d1d5db;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.luxury-widget:hover .luxury-drag-handle {
+  opacity: 1;
+}
+
+.luxury-drag-handle:hover {
+  color: #4b5563;
+}
+
+/* Value Displays */
+.luxury-value-massive {
+  font-size: 4.5rem;
+  font-weight: 300;
+  letter-spacing: -0.05em;
+  color: #030712;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.luxury-value-unit {
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #9ca3af;
+  margin-left: 0.5rem;
+}
+
+.luxury-trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.luxury-trend.positive { color: #10b981; }
+.luxury-trend.negative { color: #ef4444; }
+.luxury-trend.neutral { color: #6b7280; }
+
+/* Recharts Overrides for Minimalist Look */
+.luxury-dashboard-container .recharts-cartesian-grid-horizontal line,
+.luxury-dashboard-container .recharts-cartesian-grid-vertical line {
+  stroke: rgba(0, 0, 0, 0.02);
+}
+
+.luxury-dashboard-container .recharts-text {
+  fill: #9ca3af;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.luxury-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
 }
