@@ -1,0 +1,101 @@
+/* Immersive Light / Glass Theme for Global Dashboard */
+
+.dashboard-nexus-container {
+  min-height: 100%;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+  /* Light theme background with subtle animated gradients */
+  background-color: #f8fafc;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+  color: #0f172a;
+  font-family: 'Inter', sans-serif;
+}
+
+.dashboard-nexus-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255,255,255,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+.dashboard-nexus-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255,255,255,1);
+}
+
+.dashboard-glow-text {
+  background: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
+}
+
+/* Recharts Customizations for Light Theme */
+.dashboard-nexus-container .recharts-cartesian-grid-horizontal line,
+.dashboard-nexus-container .recharts-cartesian-grid-vertical line {
+  stroke: rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-nexus-container .recharts-text {
+  fill: #64748b;
+  font-weight: 600;
+}
+
+/* Custom Tooltip */
+.nexus-tooltip {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+  color: #0f172a;
+}
+
+/* Grid layout for Dashboard */
+.dashboard-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 2rem;
+  auto-rows: minmax(150px, auto);
+}
+
+@media (max-width: 1200px) {
+  .dashboard-bento-grid {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Typing effect for AI */
+.typewriter-text {
+  overflow: hidden;
+  border-right: .15em solid #0ea5e9;
+  white-space: nowrap;
+  animation: 
+    typing 3s steps(40, end),
+    blink-caret .75s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0 }
+  to { width: 100% }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: #0ea5e9; }
+}

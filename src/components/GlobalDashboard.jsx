@@ -5,58 +5,43 @@ import {
   ArrowUpRight, ArrowDownRight, Activity as ActivityIcon, Calendar,
   Zap, Briefcase, AlertTriangle, BrainCircuit, Package, Truck,
   HeartPulse, CheckCircle2, XCircle, Minus, ChevronRight, BarChart2,
-  Globe, Cpu, MessageSquare, ShieldAlert, Download
+  Globe, Cpu, MessageSquare, ShieldAlert, Download, Layers
 } from 'lucide-react';
 import { 
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, 
-  LineChart, Line, Legend, ReferenceLine
+  AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, 
+  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
 import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
-import KpiCard from './KpiCard';
-import DrillDownModal from './DrillDownModal';
 import { IPCReportGenerator } from '../utils/PDFExporter';
+import RadialHealthIndicator from './Dashboard/RadialHealthIndicator';
+import AnimatedCounter from './Dashboard/AnimatedCounter';
+import './GlobalDashboard.css';
 
 /* ────────────────────────────────
    Animations Helpers
 ──────────────────────────────── */
 const containerVariants = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } }
+  show: { opacity: 1, transition: { staggerChildren: 0.15 } }
 };
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } }
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, type: 'spring', bounce: 0.4 } }
 };
 
 /* ────────────────────────────────
-   RAG Score Badge
+   Custom Tooltips
 ──────────────────────────────── */
-const RagBadge = ({ status }) => {
-  const map = {
-    green:  { icon: <CheckCircle2 size={14} />, label: 'Nominal',   color: '#10B981', bg: '#10B98115' },
-    amber:  { icon: <Minus size={14} />,         label: 'Attention', color: '#F59E0B', bg: '#F59E0B15' },
-    red:    { icon: <XCircle size={14} />,        label: 'Critique',  color: '#EF4444', bg: '#EF444415' },
-  };
-  const s = map[status] || map.green;
-  return (
-    <span style={{ display:'inline-flex', alignItems:'center', gap:'4px', padding:'3px 8px', borderRadius:'999px', background: s.bg, color: s.color, fontSize:'0.72rem', fontWeight:700 }}>
-      {s.icon} {s.label}
-    </span>
-  );
-};
-
-/* ────────────────────────────────
-   CA vs Prévisions Tooltip Custom
-──────────────────────────────── */
-const CustomTooltip = ({ active, payload, label }) => {
+const AreaTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="glass" style={{ padding:'1rem', borderRadius:'0.75rem', fontSize:'0.8rem', minWidth:'160px' }}>
-        <p style={{ fontWeight:700, marginBottom:'0.5rem' }}>{label}</p>
+      <div className="nexus-tooltip">
+        <p style={{ fontWeight:800, marginBottom:'0.5rem', color: '#0f172a' }}>{label}</p>
         {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color, margin:'0.2rem 0' }}>
-            {p.name}: {(p.value / 1e6).toFixed(1)} M
+          <p key={i} style={{ color: p.color, margin:'0.2rem 0', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: '8px', height: '8px', background: p.color, borderRadius: '50%' }} />
+            {p.name}: {(p.value / 1e6).toFixed(1)} M FCFA
           </p>
         ))}
       </div>
@@ -80,11 +65,10 @@ const GlobalDashboard = () => {
   const currentUser = useStore(state => state.user);
   const navigateTo = useStore(state => state.navigateTo);
   const formatCurrency = useStore(state => state.formatCurrency);
-  const [activeDrillDown, setActiveDrillDown] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
 
   // ─── Variables BI Dynamiques ───
-  const { metrics, caComparaisonData, deptHealth, aiInsights } = useMemo(() => {
+  const { metrics, caComparaisonData, deptHealth, aiInsights, radarData } = useMemo(() => {
     // 1. Finance & Ventes
     const caRealise = incomes.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
     const caPrevu = 2800000000;
@@ -96,31 +80,38 @@ const GlobalDashboard = () => {
     // 3. Logistique
     const livres = shipments.filter(s => s.statut === 'Livré').length;
     const retardes = shipments.filter(s => s.statut === 'Retardé').length;
-    const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94.2;
+    const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94;
 
     // 4. Production
     const prodScore = workOrders.length > 0 
         ? Math.round((workOrders.filter(o => o.statut === 'Terminé').length / workOrders.length) * 100) 
         : 88;
 
-    // Chart Data
+    // Chart Data (Area)
     const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const currentMonth = new Date().getMonth();
     const caComparaisonData = moisFr.map((mois, index) => {
        const prevuMensuel = caPrevu / 12;
        let realise = index <= currentMonth ? (caRealise > 0 ? (caRealise / (currentMonth + 1)) * (0.9 + Math.random() * 0.2) : 150000000 * (0.8 + Math.random() * 0.4)) : null;
-       return { mois, prevu: prevuMensuel, realise };
+       return { mois, Objectif: prevuMensuel, Réalisé: realise };
     });
 
     const getRAG = (score) => score >= 90 ? 'green' : score >= 75 ? 'amber' : 'red';
 
     const deptHealth = [
-      { dept: 'Finance',      score: 95, rag: 'green', trend: 2, icon: <DollarSign size={18} />,  color:'#10B981', link:'accounting', label: 'Performance Financière' },
-      { dept: 'Commercial',   score: 98, rag: 'green', trend: 5, icon: <Target size={18} />, color:'#3B82F6', link:'crm', label: 'Célérité Commerciale' },
-      { dept: 'Supply Chain', score: otif, rag: getRAG(otif), trend: -1, icon: <Truck size={18} />, color:'#F59E0B', link:'shipping', label: 'Excellence Logistique' },
-      { dept: 'Production',   score: prodScore, rag: getRAG(prodScore), trend: 4, icon: <ActivityIcon size={18} />, color:'#8B5CF6', link:'production', label: 'Industrial Intelligence' },
-      { dept: 'RH',           score: 88, rag: 'amber', trend: 1, icon: <Users size={18} />, color:'#06B6D4', link:'hr', label: 'Capital Humain' },
+      { dept: 'Finance',      score: 95, rag: 'green', trend: 2, icon: DollarSign,  color:'#10B981', link:'accounting', label: 'Performance Fin.' },
+      { dept: 'Commercial',   score: 98, rag: 'green', trend: 5, icon: Target, color:'#0ea5e9', link:'crm', label: 'Célérité Com.' },
+      { dept: 'Logistique',   score: otif, rag: getRAG(otif), trend: -1, icon: Truck, color:'#F59E0B', link:'shipping', label: 'Supply Chain' },
+      { dept: 'Production',   score: prodScore, rag: getRAG(prodScore), trend: 4, icon: ActivityIcon, color:'#8B5CF6', link:'production', label: 'Industrie' },
+      { dept: 'RH',           score: 88, rag: 'amber', trend: 1, icon: Users, color:'#ec4899', link:'hr', label: 'Capital Humain' },
     ];
+
+    // Radar Data
+    const radarData = deptHealth.map(d => ({
+      sujet: d.dept,
+      A: d.score,
+      fullMark: 100,
+    }));
 
     // Dynamic AI Insights
     const aiInsights = [
@@ -134,20 +125,20 @@ const GlobalDashboard = () => {
       { 
         type: 'LOGISTICS',
         title: "Optimisation Supply",
-        content: `L'OTIF de ${otif}% est nominal. Nexus suggère de renégocier les contrats de fret sur l'axe Nord pour gagner 3% de marge.`,
+        content: `L'OTIF de ${otif}% est nominal. Nexus suggère de renégocier les contrats de fret sur l'axe Nord.`,
         icon: <Zap size={16} />,
         color: '#F59E0B'
       },
       { 
         type: 'RISK',
         title: "Alerte Turnover",
-        content: "Turnover RH en hausse légère (4.2%). Recommandation : Activer le plan de rétention dans le pôle Production.",
+        content: "Turnover RH en hausse légère (4.2%). Activer le plan de rétention Production.",
         icon: <ShieldAlert size={16} />,
-        color: '#EF4444'
+        color: '#ef4444'
       }
     ];
 
-    return { metrics: { sales: { caRealise, caPrevu }, finance: { margeNette: 18.5 }, hr: { masseSalariale, effectif }, supply: { otif } }, caComparaisonData, deptHealth, aiInsights };
+    return { metrics: { sales: { caRealise, caPrevu }, finance: { margeNette: 18.5 }, hr: { masseSalariale, effectif }, supply: { otif } }, caComparaisonData, deptHealth, aiInsights, radarData };
   }, [incomes, employees, shipments, workOrders, formatCurrency]);
 
   const handleExport = async (type) => {
@@ -168,20 +159,6 @@ const GlobalDashboard = () => {
             status: ins.content 
           }))
         });
-      } else if (type === 'kpi') {
-        await IPCReportGenerator.generateFinancialStatement({
-          title: "Dashboard KPI Performance",
-          metrics: [
-            { label: 'Volume Affaires', value: formatCurrency(metrics.sales.caRealise) },
-            { label: 'Marge Nette', value: '18.5%' },
-            { label: 'Croissance', value: '+12.4%' }
-          ],
-          rows: deptHealth.map(d => ({ 
-            module: d.dept, 
-            description: d.label, 
-            status: `${d.score}% (${d.rag})` 
-          }))
-        });
       }
     } finally {
       setIsExporting(false);
@@ -190,228 +167,171 @@ const GlobalDashboard = () => {
 
   return (
     <motion.div 
+      className="dashboard-nexus-container"
       variants={containerVariants} initial="hidden" animate="show"
-      style={{ 
-        padding: '2.5rem', 
-        display: 'flex', 
-        flexDirection: 'column', 
-        gap: '3rem',
-        backgroundImage: 'radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)'
-      }}
     >
 
       {/* ── Header ── */}
       <motion.div variants={itemVariants} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:'2rem' }}>
         <div>
-          <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', color:'var(--nexus-primary)', marginBottom:'0.75rem' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:'0.75rem', color:'#0ea5e9', marginBottom:'0.75rem' }}>
             <motion.div 
-               animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} 
+               animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }} 
                transition={{ repeat: Infinity, duration: 2 }}
-               style={{ background: 'var(--nexus-primary)', width: '8px', height: '8px', borderRadius: '50%' }} 
+               style={{ background: '#0ea5e9', width: '8px', height: '8px', borderRadius: '50%', boxShadow: '0 0 10px #0ea5e9' }} 
             />
             <span style={{ fontWeight:900, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'3px' }}>
               Intelligence Core • Systémique v5.0
             </span>
           </div>
-          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.05em', color: 'var(--nexus-secondary)' }}>
-            Nexus <span className="nexus-gradient-text">Command Center</span>
+          <h1 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, margin: 0, letterSpacing: '-0.05em', color: '#0f172a' }}>
+            Vue <span className="dashboard-glow-text">360°</span>
           </h1>
-          <p style={{ color:'var(--nexus-text-muted)', fontSize:'1.1rem', margin:'0.6rem 0 0 0', fontWeight: 600 }}>
+          <p style={{ color:'#64748b', fontSize:'1.1rem', margin:'0.6rem 0 0 0', fontWeight: 600 }}>
              Bienvenue, {currentUser?.nom} • {new Date().toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
           </p>
         </div>
         <div style={{ display:'flex', gap:'1.25rem', flexWrap:'wrap' }}>
-           <div className="nexus-card" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1.5rem', background: 'white' }}>
-              <Globe size={18} color="var(--nexus-primary)" />
-              <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>Dakar HQ : OPÉRATIONNEL</span>
-           </div>
-           <button onClick={() => navigateTo('analytics')} className="nexus-card" style={{ padding: '0.75rem 1.5rem', background: 'var(--nexus-secondary)', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', border: 'none' }}>
-              Deep Analytics <Zap size={18} fill="var(--nexus-primary)" stroke="none" />
+           <button onClick={() => navigateTo('analytics')} className="dashboard-nexus-card" style={{ padding: '0.85rem 2rem', background: '#0f172a', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', border: 'none', fontWeight: 800 }}>
+              Deep Analytics <Zap size={18} fill="#0ea5e9" stroke="none" />
            </button>
         </div>
       </motion.div>
 
       {/* ── BENTO GRID MAIN ── */}
-      <div className="nexus-bento-rhythm">
+      <div className="dashboard-bento-grid">
         
-        {/* 1. Nexus AI Intelligence Engine (Large Card) */}
-        <motion.div variants={itemVariants} className="nexus-card" style={{ gridColumn: 'span 8', gridRow: 'span 2', padding: 0, overflow: 'hidden', background: 'var(--nexus-secondary)', border: 'none' }}>
-           <div style={{ padding: '3rem', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-              <div style={{ position: 'absolute', top: '-100px', right: '-100px', width: '400px', height: '400px', background: 'var(--nexus-primary)', filter: 'blur(150px)', opacity: 0.15 }} />
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '3rem' }}>
-                 <motion.div 
-                    whileHover={{ rotate: 180 }}
-                    className="nexus-glow" 
-                    style={{ background: 'var(--nexus-primary)', padding: '12px', borderRadius: '14px' }}
-                  >
-                    <Cpu size={28} color="white" />
-                 </motion.div>
-                 <div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>Nexus Strategy Core</h2>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--nexus-primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px' }}>Autonomous Enterprise OS</div>
-                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '2rem', flex: 1 }}>
-                 {aiInsights.map((insight, i) => (
-                    <motion.div 
-                       key={i}
-                       style={{ 
-                         padding: '1.75rem', 
-                         borderRadius: '1.5rem', 
-                         background: 'rgba(255,255,255,0.03)', 
-                         border: '1px solid rgba(255,255,255,0.08)', 
-                         display: 'flex', 
-                         flexDirection: 'column', 
-                         gap: '1.25rem',
-                         backdropFilter: 'blur(10px)'
-                       }}
-                       whileHover={{ y: -8, background: 'rgba(255,255,255,0.05)', borderColor: insight.color }}
-                    >
-                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: insight.color }}>
-                          <div style={{ background: `${insight.color}20`, padding: '8px', borderRadius: '10px' }}>{insight.icon}</div>
-                          <span style={{ fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{insight.title}</span>
-                       </div>
-                       <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
-                          {insight.content}
-                       </p>
-                    </motion.div>
-                 ))}
-              </div>
-
-              <div style={{ marginTop: '3rem', display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                 <button className="nexus-card" onClick={() => navigateTo('connect')} style={{ background: 'white', color: 'var(--nexus-secondary)', padding: '0.85rem 2rem', border: 'none', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
-                    Ouvrir Nexus Connect <MessageSquare size={18} />
-                 </button>
-                 <button 
-                    className="nexus-card" 
-                    onClick={() => handleExport('nexus')}
-                    disabled={isExporting}
-                    style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', padding: '0.85rem 2rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
-                  >
-                    {isExporting ? 'Génération...' : 'Exporter Stratégie'} <Download size={18} />
-                 </button>
-                 <div style={{ marginLeft: 'auto', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--nexus-primary)' }} /> 
-                    Live Sync : {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                 </div>
-              </div>
-           </div>
-        </motion.div>
-
-        {/* 2. Main KPI - Finance (Vertical) */}
-        <motion.div variants={itemVariants} className="nexus-card" style={{ gridColumn: 'span 4', gridRow: 'span 2', background: 'white', padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {/* 1. Main KPI - Finance (Wide Top Left) */}
+        <motion.div variants={itemVariants} className="dashboard-nexus-card" style={{ gridColumn: 'span 8', padding: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
            <div>
-              <div className="nexus-glow" style={{ background: 'var(--nexus-primary)', width: 'fit-content', padding: '12px', borderRadius: '14px', marginBottom: '2rem' }}>
-                 <DollarSign size={28} color="white" />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '12px', borderRadius: '14px', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                   <DollarSign size={28} color="#0ea5e9" />
+                </div>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px' }}>Revenu Systémique YTD</div>
               </div>
-               <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '1px' }}>Revenu Systémique</div>
-               <div style={{ fontSize: '3.5rem', fontWeight: 950, letterSpacing: '-0.06em', color: 'var(--nexus-secondary)', lineHeight: 1 }}>{formatCurrency(metrics.sales.caRealise, true)}</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 800, fontSize: '1rem', marginTop: '1.5rem' }}>
-                 <div style={{ background: '#10b98115', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ fontSize: '4.5rem', fontWeight: 950, letterSpacing: '-0.06em', color: '#0f172a', lineHeight: 1 }}>
+                <AnimatedCounter 
+                  from={0} 
+                  to={metrics.sales.caRealise} 
+                  duration={2.5} 
+                  formatter={(val) => formatCurrency(val, true)} 
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                 <div style={{ background: '#10b98120', padding: '6px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: 800 }}>
                     <TrendingUp size={18} /> +14.2%
                  </div>
-                 <span style={{ color: 'var(--nexus-text-muted)', fontWeight: 600, fontSize: '0.85rem' }}>vs dernier mois</span>
+                 <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.9rem' }}>vs dernier mois</span>
               </div>
            </div>
 
-           <div style={{ height: '140px', width: '100%', background: 'var(--bg-subtle)', borderRadius: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--nexus-border)', marginTop: '2rem', overflow: 'hidden', position: 'relative' }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, white, transparent)', zIndex: 1 }} />
-              <svg width="100%" height="100" viewBox="0 0 200 100" style={{ position: 'relative', zIndex: 0 }}>
-                 <defs>
-                    <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                       <stop offset="0%" stopColor="var(--nexus-primary)" stopOpacity="0.5" />
-                       <stop offset="100%" stopColor="var(--nexus-primary)" stopOpacity="0" />
+           {/* Small Area Sparkline inside the main card */}
+           <div style={{ width: '300px', height: '150px' }}>
+              <SafeResponsiveChart>
+                <AreaChart data={caComparaisonData.slice(-6)}>
+                  <defs>
+                    <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
                     </linearGradient>
-                 </defs>
-                 <motion.path 
-                    d="M0,80 Q20,60 40,75 T80,40 T120,60 T160,20 T200,45" 
-                    fill="none" 
-                    stroke="var(--nexus-primary)" 
-                    strokeWidth="4" 
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
-                 />
-                 <path d="M0,80 Q20,60 40,75 T80,40 T120,60 T160,20 T200,45 L200,100 L0,100 Z" fill="url(#lineGrad)" />
-              </svg>
-           </div>
-
-           <div style={{ marginTop: '2rem', padding: '1rem', background: 'var(--bg-subtle)', borderRadius: '1rem', border: '1px solid var(--nexus-border)', display: 'flex', justifyContent: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>OBJECTIF Q2 : {formatCurrency(metrics.sales.caPrevu / 2, true)}</span>
+                  </defs>
+                  <Area type="monotone" dataKey="Réalisé" stroke="#0ea5e9" strokeWidth={4} fillOpacity={1} fill="url(#sparklineGrad)" />
+                </AreaChart>
+              </SafeResponsiveChart>
            </div>
         </motion.div>
 
-        {/* 3. Department Health Pulse (Wide) */}
-        <motion.div variants={itemVariants} className="nexus-card" style={{ gridColumn: 'span 12', padding: '2.5rem' }}>
+        {/* 2. Nexus AI Intelligence Engine (Right Square) */}
+        <motion.div variants={itemVariants} className="dashboard-nexus-card" style={{ gridColumn: 'span 4', padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+               <Cpu size={24} color="#8b5cf6" />
+               <h2 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Nexus Intelligence</h2>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1 }}>
+               {aiInsights.map((insight, i) => (
+                  <div key={i} style={{ paddingLeft: '1rem', borderLeft: `3px solid ${insight.color}` }}>
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: insight.color, marginBottom: '0.5rem' }}>
+                        {insight.icon}
+                        <span style={{ fontWeight: 800, fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{insight.title}</span>
+                     </div>
+                     <div className={i === 0 ? "typewriter-text" : ""} style={{ fontSize: '0.9rem', color: '#475569', fontWeight: 500, lineHeight: 1.5 }}>
+                        {insight.content}
+                     </div>
+                  </div>
+               ))}
+            </div>
+        </motion.div>
+
+        {/* 3. Radial Health Pulse (Wide middle) */}
+        <motion.div variants={itemVariants} className="dashboard-nexus-card" style={{ gridColumn: 'span 12', padding: '2.5rem' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
               <div>
-                 <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: 'var(--nexus-secondary)', letterSpacing: '-0.02em' }}>État de Santé des Pôles Stratégiques</h3>
-                 <p style={{ color: 'var(--nexus-text-muted)', fontSize: '0.95rem', marginTop: '0.5rem', fontWeight: 500 }}>Diagnostic temps-réel via Nexus Telemetry.</p>
+                 <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: '#0f172a', letterSpacing: '-0.02em' }}>Diagnostic Multi-Pôles</h3>
+                 <p style={{ color: '#64748b', fontSize: '0.95rem', marginTop: '0.5rem', fontWeight: 500 }}>Évaluation temps-réel de l'efficience opérationnelle.</p>
               </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button 
-                    onClick={() => handleExport('kpi')} 
-                    disabled={isExporting}
-                    className="nexus-card" 
-                    style={{ background: 'white', padding: '0.75rem 1.5rem', border: '1px solid var(--nexus-border)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, cursor: 'pointer' }}
-                  >
-                    <Download size={18} color="var(--nexus-primary)" /> Rapport PDF
-                  </button>
-                  <button onClick={() => navigateTo('analytics')} className="nexus-card" style={{ background: 'var(--nexus-secondary)', color: 'white', padding: '0.75rem 1.5rem', border: 'none', fontWeight: 800, cursor: 'pointer' }}>Vues Opérationnelles</button>
-               </div>
            </div>
            
-           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem' }}>
               {deptHealth.map((dept, i) => (
-                 <motion.div 
-                    key={i} 
-                    className="nexus-card" 
-                    whileHover={{ y: -5 }}
-                    onClick={() => navigateTo(dept.link)}
-                    style={{ padding: '2rem', background: 'white', cursor: 'pointer' }}
-                 >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                       <div style={{ color: dept.color, background: `${dept.color}10`, padding: '10px', borderRadius: '12px' }}>{dept.icon}</div>
-                       <RagBadge status={dept.rag} />
-                    </div>
-                     <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '1px' }}>{dept.label}</div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 950, color: 'var(--nexus-secondary)', letterSpacing: '-0.04em' }}>{dept.score}%</div>
-                    <div style={{ marginTop: '1.5rem', height: '8px', background: 'var(--bg-subtle)', borderRadius: '10px', overflow: 'hidden' }}>
-                       <motion.div initial={{ width: 0 }} animate={{ width: `${dept.score}%` }} style={{ height: '100%', background: dept.color, borderRadius: '10px' }} />
-                    </div>
-                 </motion.div>
+                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => navigateTo(dept.link)}>
+                    <RadialHealthIndicator score={dept.score} color={dept.color} icon={dept.icon} />
+                    <span style={{ marginTop: '1.5rem', fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      {dept.label}
+                    </span>
+                 </div>
               ))}
            </div>
         </motion.div>
 
-        {/* 4. Real-time Charts (Wide) */}
-        <motion.div variants={itemVariants} className="nexus-card" style={{ gridColumn: 'span 12', padding: '2.5rem', background: 'white' }}>
+        {/* 4. Trajectory Area Chart & Radar (Bottom Split) */}
+        <motion.div variants={itemVariants} className="dashboard-nexus-card" style={{ gridColumn: 'span 8', padding: '2.5rem' }}>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: 'var(--nexus-secondary)', letterSpacing: '-0.02em' }}>Trajectoire de Performance</h3>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 900, margin: 0, color: '#0f172a', letterSpacing: '-0.02em' }}>Trajectoire & Objectifs</h3>
               <div style={{ display: 'flex', gap: '2rem', fontSize: '0.85rem', fontWeight: 800 }}>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--nexus-primary)' }}>
-                    <div style={{ width: '12px', height: '12px', background: 'var(--nexus-primary)', borderRadius: '4px' }} /> 
-                    CA Réalisé
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#0ea5e9' }}>
+                    <div style={{ width: '12px', height: '12px', background: '#0ea5e9', borderRadius: '4px' }} /> Réalisé
                  </div>
-                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8B5CF6' }}>
-                    <div style={{ width: '12px', height: '12px', border: '3px dashed #8B5CF6', borderRadius: '4px' }} /> 
-                    Objectif Stratégique
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8b5cf6' }}>
+                    <div style={{ width: '12px', height: '12px', background: 'rgba(139, 92, 246, 0.2)', border: '2px solid #8b5cf6', borderRadius: '4px' }} /> Objectif
                  </div>
               </div>
            </div>
-           <SafeResponsiveChart minHeight={400}>
-              <LineChart data={caComparaisonData}>
-                 <CartesianGrid strokeDasharray="3 3" stroke="var(--nexus-border)" vertical={false} />
-                 <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 13, fontWeight: 700 }} dy={10} />
-                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--nexus-text-muted)', fontSize: 12, fontWeight: 600 }} tickFormatter={v => `${(v/1e6).toFixed(0)}M`} />
-                 <Tooltip content={<CustomTooltip />} />
-                 <Line type="monotone" dataKey="prevu" stroke="#8B5CF6" strokeWidth={3} strokeDasharray="10 6" dot={false} />
-                 <Line type="monotone" dataKey="realise" stroke="var(--nexus-primary)" strokeWidth={5} dot={{ r: 8, fill: 'var(--nexus-primary)', strokeWidth: 4, stroke: 'white' }} activeDot={{ r: 10, strokeWidth: 0 }} />
-              </LineChart>
+           <SafeResponsiveChart minHeight={350}>
+              <AreaChart data={caComparaisonData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorRealise" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorPrevu" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
+                <XAxis dataKey="mois" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 13, fontWeight: 700 }} dy={15} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }} tickFormatter={v => `${(v/1e6).toFixed(0)}M`} width={60} />
+                <Tooltip content={<AreaTooltip />} />
+                <Area type="monotone" dataKey="Objectif" stroke="#8b5cf6" strokeWidth={2} strokeDasharray="5 5" fillOpacity={1} fill="url(#colorPrevu)" />
+                <Area type="monotone" dataKey="Réalisé" stroke="#0ea5e9" strokeWidth={4} fillOpacity={1} fill="url(#colorRealise)" activeDot={{ r: 8, strokeWidth: 0, fill: '#0ea5e9' }} />
+              </AreaChart>
            </SafeResponsiveChart>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="dashboard-nexus-card" style={{ gridColumn: 'span 4', padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
+           <h3 style={{ fontSize: '1.25rem', fontWeight: 900, margin: 0, marginBottom: '1rem', color: '#0f172a', letterSpacing: '-0.02em', textAlign: 'center' }}>Balance Opérationnelle</h3>
+           <div style={{ flex: 1 }}>
+              <SafeResponsiveChart>
+                <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
+                  <PolarGrid stroke="rgba(0,0,0,0.1)" />
+                  <PolarAngleAxis dataKey="sujet" tick={{ fill: '#64748b', fontSize: 11, fontWeight: 700 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                  <Radar name="Performance" dataKey="A" stroke="#0ea5e9" strokeWidth={2} fill="#0ea5e9" fillOpacity={0.5} />
+                </RadarChart>
+              </SafeResponsiveChart>
+           </div>
         </motion.div>
 
       </div>
