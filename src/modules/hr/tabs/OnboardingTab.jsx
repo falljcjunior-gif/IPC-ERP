@@ -6,38 +6,61 @@ import {
   Shield, Check, Calendar, Settings, AlertCircle, Loader,
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
   Eye, Pencil, ShieldOff,
-  User, MessageCircle, Target, ShoppingCart, Megaphone, Package, ShoppingBag, PieChart, Scale, Kanban, Headphones, Activity, BarChart2
+  User, MessageCircle, Target, ShoppingCart, Megaphone, Package, ShoppingBag, PieChart, Scale, Kanban, Headphones, Activity, BarChart2,
+  Zap, Layout, Truck, Factory, CreditCard, Landmark as LandmarkIcon, Wallet, Users2, Heart, LifeBuoy, Folder, FileSignature
 } from 'lucide-react';
 import { FirestoreService } from '../../../services/firestore.service';
 import { logger } from '../../../utils/logger';
 
 
 const availableModules = [
-  { id: 'home',       category: 'Général', label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: User, color: '#10B981', locked: true, desc: 'Profil et base employés' },
-  { id: 'connect',    category: 'Général', label: 'IPC Connect (Réseau)',        role: 'STAFF',      icon: MessageCircle, color: '#8B5CF6', desc: 'Messagerie & Appels' },
-  { id: 'crm',        category: 'Ventes & Marketing', label: 'CRM & Acquisition',           role: 'SALES',      icon: Target, color: '#3B82F6', desc: 'Clients & Prospection' },
-  { id: 'sales',      category: 'Ventes & Marketing', label: 'Gestion des Ventes',          role: 'SALES',      icon: ShoppingCart, color: '#06B6D4', desc: 'Devis & Facturation' },
-  { id: 'marketing',  category: 'Ventes & Marketing', label: 'Marketing & Coms',            role: 'MARKETING',  icon: Megaphone, color: '#F59E0B', desc: 'Campagnes & Reseaux' },
-  { id: 'production', category: 'Production & Log', label: 'Atelier & Production',        role: 'PRODUCTION', icon: Settings, color: '#F59E0B', desc: 'Ordres & Machines' },
-  { id: 'inventory',  category: 'Production & Log', label: 'Logistique & Stocks',         role: 'LOGISTICS',  icon: Package, color: '#F97316', desc: 'Entrepôts & Flux' },
-  { id: 'purchase',   category: 'Production & Log', label: 'Achats & Approvis.',          role: 'PURCHASE',   icon: ShoppingBag, color: '#64748B', desc: 'Fournisseurs & Commandes' },
-  { id: 'finance',    category: 'Admin & Finance', label: 'Finance & Comptabilité',      role: 'FINANCE',    icon: PieChart, color: '#6366F1', desc: 'Trésorerie & Bilans' },
-  { id: 'hr',         category: 'Admin & Finance', label: 'Ressources Humaines',         role: 'HR',         icon: Users, color: '#EC4899', desc: 'Paie & Contrats' },
-  { id: 'legal',      category: 'Admin & Finance', label: 'Juridique & Conformité',      role: 'LEGAL',      icon: Scale, color: '#14B8A6', desc: 'Litiges & Contrats' },
-  { id: 'projects',   category: 'Projets & Support', label: 'Gestion de Projets',          role: 'PROJECTS',   icon: Kanban, color: '#8B5CF6', desc: 'Tâches & Planification' },
-  { id: 'support',    category: 'Projets & Support', label: 'Support & SAV',               role: 'SUPPORT',    icon: Headphones, color: '#0EA5E9', desc: 'Tickets & Assistance' },
-  { id: 'executive',  category: 'Direction & IT', label: 'Direction & Pilotage',        role: 'EXECUTIVE',  icon: Activity, color: '#F43F5E', desc: 'Stratégie & KPIs' },
-  { id: 'data',       category: 'Direction & IT', label: 'Data & BI',                   role: 'DATA',       icon: BarChart2, color: '#8B5CF6', desc: 'Analytique & Stats' },
-  { id: 'admin',      category: 'Direction & IT', label: 'Administration Système',      role: 'ADMIN',      icon: Shield, color: '#EF4444', desc: 'Sécurité & Accès' },
+  // --- Cockpit ---
+  { id: 'command_center', category: 'Cockpit', label: 'Vue 360°', role: 'ADMIN', icon: Activity, color: '#3B82F6', desc: 'Tableau de bord global' },
+  { id: 'connect', category: 'Cockpit', label: 'Connect Plus', role: 'STAFF', icon: Zap, color: '#8B5CF6', desc: 'Communications' },
+
+  // --- CRM & Ventes ---
+  { id: 'crm', category: 'CRM & Ventes', label: 'CRM & Ventes', role: 'SALES', icon: Users, color: '#3B82F6', desc: 'Pistes & Clients' },
+  { id: 'sales', category: 'CRM & Ventes', label: 'Ventes & Devis', role: 'SALES', icon: ShoppingCart, color: '#06B6D4', desc: 'Devis & Commandes' },
+  { id: 'commerce', category: 'CRM & Ventes', label: 'PdV & Abonnements', role: 'SALES', icon: ShoppingBag, color: '#10B981', desc: 'Ventes & Retail' },
+  { id: 'website', category: 'CRM & Ventes', label: 'Sites Web', role: 'MARKETING', icon: Layout, color: '#8B5CF6', desc: 'Gestion site' },
+  { id: 'marketing', category: 'CRM & Ventes', label: 'Marketing Digital', role: 'MARKETING', icon: Mail, color: '#F59E0B', desc: 'Campagnes & SEO' },
+
+  // --- Opérations & Logistique ---
+  { id: 'inventory', category: 'Opérations & Logistique', label: 'Stocks & Logistique', role: 'LOGISTICS', icon: Package, color: '#F97316', desc: 'Gestion des stocks' },
+  { id: 'shipping', category: 'Opérations & Logistique', label: 'Expéditions', role: 'LOGISTICS', icon: Truck, color: '#F59E0B', desc: 'Livrables & Transports' },
+  { id: 'purchase', category: 'Opérations & Logistique', label: 'Achats', role: 'PURCHASE', icon: ShoppingBag, color: '#64748B', desc: 'Commandes fournisseurs' },
+  { id: 'production', category: 'Opérations & Logistique', label: 'Production & Usine', role: 'PRODUCTION', icon: Factory, color: '#10B981', desc: 'Atelier & Nomenclatures' },
+  { id: 'projects', category: 'Opérations & Logistique', label: 'Projets', role: 'PROJECTS', icon: Briefcase, color: '#8B5CF6', desc: 'Tâches & Délais' },
+  { id: 'fleet', category: 'Opérations & Logistique', label: 'Flotte', role: 'LOGISTICS', icon: Truck, color: '#06B6D4', desc: 'Parc automobile' },
+
+  // --- Finance & Stratégie ---
+  { id: 'finance', category: 'Finance & Stratégie', label: 'Finance & Comptabilité', role: 'FINANCE', icon: CreditCard, color: '#6366F1', desc: 'Trésorerie globale' },
+  { id: 'legal', category: 'Finance & Stratégie', label: 'Juridique', role: 'LEGAL', icon: Scale, color: '#14B8A6', desc: 'Conformité & Contrats' },
+  { id: 'accounting', category: 'Finance & Stratégie', label: 'Comptabilité', role: 'FINANCE', icon: LandmarkIcon, color: '#8B5CF6', desc: 'Bilans & Opérations' },
+  { id: 'budget', category: 'Finance & Stratégie', label: 'Budget', role: 'FINANCE', icon: PieChart, color: '#F43F5E', desc: 'Planification budgétaire' },
+  { id: 'expenses', category: 'Finance & Stratégie', label: 'Notes de Frais', role: 'FINANCE', icon: Wallet, color: '#EC4899', desc: 'Dépenses employés' },
+  { id: 'bi', category: 'Finance & Stratégie', label: 'Business Intelligence', role: 'FINANCE', icon: PieChart, color: '#0EA5E9', desc: 'Tableaux de bord' },
+  { id: 'analytics', category: 'Finance & Stratégie', label: 'Analyses Avancées', role: 'FINANCE', icon: BarChart2, color: '#6366F1', desc: 'Analytiques' },
+
+  // --- RH & Collaboration ---
+  { id: 'hr', category: 'RH & Collaboration', label: 'Ressources Humaines', role: 'HR', icon: Users2, color: '#EC4899', desc: 'Employés & Paie' },
+  { id: 'talent', category: 'RH & Collaboration', label: 'People & Culture', role: 'HR', icon: Heart, color: '#F43F5E', desc: 'Recrutement & Talents' },
+  { id: 'planning', category: 'RH & Collaboration', label: 'Planning & Événements', role: 'HR', icon: Calendar, color: '#10B981', desc: 'Absences & Horaires' },
+  { id: 'helpdesk', category: 'RH & Collaboration', label: 'Support & Helpdesk', role: 'SUPPORT', icon: LifeBuoy, color: '#3B82F6', desc: 'Assistance tickets' },
+  { id: 'dms', category: 'RH & Collaboration', label: 'Documents Cloud', role: 'STAFF', icon: Folder, color: '#8B5CF6', desc: 'Stockage & GED' },
+  { id: 'signature', category: 'RH & Collaboration', label: 'Signature Électronique', role: 'ADMIN', icon: FileSignature, color: '#14B8A6', desc: 'Contrats signés' },
+
+  // --- Configuration ---
+  { id: 'control_hub', category: 'Configuration', label: 'Administration', role: 'ADMIN', icon: Settings, color: '#EF4444', desc: 'Paramètres système' },
 ];
 
 const moduleCategories = [
-  'Général',
-  'Ventes & Marketing',
-  'Production & Log',
-  'Admin & Finance',
-  'Projets & Support',
-  'Direction & IT'
+  'Cockpit',
+  'CRM & Ventes',
+  'Opérations & Logistique',
+  'Finance & Stratégie',
+  'RH & Collaboration',
+  'Configuration'
 ];
 
 // ─────────────────────────────────────────────────────────────────

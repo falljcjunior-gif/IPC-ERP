@@ -85,183 +85,177 @@ export const initRegistry = () => {
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
     baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema].forEach(s => registry.registerSchema(s));
 
-  // --- Cœur de Métier ---
+  // --- Cockpit ---
   registry.register({
     id: 'home', label: 'Espace Personnel', icon: <UserCircle size={18} />,
-    category: 'core', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF', 'PRODUCTION'],
-    component: PersonalWorkspace, priority: 1
+    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF', 'PRODUCTION'],
+    component: PersonalWorkspace, priority: 1, hidden: true
   });
 
   registry.register({
     id: 'command_center', label: 'Vue 360°', icon: <Activity size={18} />,
-    category: 'core', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
+    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
     component: GlobalDashboard, priority: 2
   });
 
   registry.register({
     id: 'connect', label: 'Connect Plus', icon: <Zap size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
-    component: Connect, priority: 2
+    category: 'cockpit', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
+    component: Connect, priority: 3
   });
 
+  // --- CRM & Ventes ---
   registry.register({
-    id: 'crm', label: 'CRM & Pistes de Vente', icon: <Users size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES'],
-    component: CRM, priority: 2
+    id: 'crm', label: 'CRM & Ventes', icon: <Users size={18} />,
+    category: 'crm', roles: ['ADMIN', 'SALES'],
+    component: CRM, priority: 10
   });
 
   registry.register({
     id: 'sales', label: 'Ventes & Devis', icon: <ShoppingCart size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: Sales, priority: 3
+    category: 'crm', roles: ['ADMIN', 'SALES', 'FINANCE'],
+    component: Sales, priority: 11
   });
 
   registry.register({
     id: 'commerce', label: 'PdV & Abonnements', icon: <ShoppingBag size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: CommerceHub, priority: 3
+    category: 'crm', roles: ['ADMIN', 'SALES', 'FINANCE'],
+    component: CommerceHub, priority: 12
   });
 
   registry.register({
     id: 'website', label: 'Sites Web', icon: <Layout size={18} />,
-    category: 'core', roles: ['ADMIN', 'SALES', 'MARKETING', 'STAFF'],
-    component: WebsiteHub, priority: 4
+    category: 'crm', roles: ['ADMIN', 'SALES', 'MARKETING', 'STAFF'],
+    component: WebsiteHub, priority: 13
   });
 
   registry.register({
-    id: 'marketing', label: 'Marketing & Croissance', icon: <Mail size={18} />,
-    category: 'core', roles: ['ADMIN', 'HR', 'SALES'],
-    component: Marketing, priority: 4
+    id: 'marketing', label: 'Marketing Digital', icon: <Mail size={18} />,
+    category: 'crm', roles: ['ADMIN', 'HR', 'SALES'],
+    component: Marketing, priority: 14
   });
 
   // --- Opérations & Logistique ---
   registry.register({
     id: 'inventory', label: 'Stocks & Logistique', icon: <Package size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: LogisticsHub, priority: 10
+    component: LogisticsHub, priority: 20
   });
 
   registry.register({
     id: 'shipping', label: 'Expéditions', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: Shipping, priority: 11
+    component: Shipping, priority: 21
   });
 
   registry.register({
     id: 'purchase', label: 'Achats', icon: <ShoppingBag size={18} />,
     category: 'operations', roles: ['ADMIN', 'FINANCE'],
-    component: LogisticsHub, priority: 12
+    component: LogisticsHub, priority: 22
   });
 
   registry.register({
-    id: 'production', label: 'Production', icon: <Factory size={18} />,
+    id: 'production', label: 'Production & Usine', icon: <Factory size={18} />,
     category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'],
-    component: Production, priority: 13
+    component: Production, priority: 23
   });
 
   registry.register({
     id: 'projects', label: 'Projets', icon: <Briefcase size={18} />,
     category: 'operations', roles: ['ADMIN', 'FINANCE', 'SALES'],
-    component: Project, priority: 14
+    component: Project, priority: 24
   });
 
   registry.register({
     id: 'fleet', label: 'Flotte', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'LOGISTICS', 'SUPER_ADMIN'],
-    component: FleetHub, priority: 15
+    component: FleetHub, priority: 25
   });
 
   // --- Finance & Stratégie ---
   registry.register({
-    id: 'finance', label: 'Finance', icon: <CreditCard size={18} />,
+    id: 'finance', label: 'Finance & Comptabilité', icon: <CreditCard size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: FinanceControlCenter, priority: 20
+    component: FinanceControlCenter, priority: 30
   });
 
   registry.register({
     id: 'legal', label: 'Juridique', icon: <Scale size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE', 'LEGAL'],
-    component: LegalHub, priority: 20.5
+    component: LegalHub, priority: 31
   });
 
   registry.register({
     id: 'accounting', label: 'Comptabilité', icon: <LandmarkIcon size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: lazy(() => import('./modules/finance/AccountingCenter')), priority: 21
+    component: lazy(() => import('./modules/finance/AccountingCenter')), priority: 32
   });
 
   registry.register({
     id: 'budget', label: 'Budget', icon: <PiggyBank size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: FinanceControlCenter, priority: 22
+    component: FinanceControlCenter, priority: 33
   });
 
   registry.register({
     id: 'expenses', label: 'Notes de Frais', icon: <Wallet size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE', 'HR', 'STAFF'],
-    component: Expenses, priority: 23
+    component: Expenses, priority: 34
   });
 
   registry.register({
     id: 'bi', label: 'Business Intelligence', icon: <PieChart size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE', 'SALES'],
-    component: BI, priority: 24
+    component: BI, priority: 35
   });
 
   registry.register({
     id: 'analytics', label: 'Analyses Avancées', icon: <BarChart3 size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: Analytics, priority: 25
+    component: Analytics, priority: 36
   });
 
   // --- RH & Collaboration ---
   registry.register({
-    id: 'hr', label: 'RH & Talents', icon: <Users2 size={18} />,
+    id: 'hr', label: 'Ressources Humaines', icon: <Users2 size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
-    component: HR, priority: 30
+    component: HR, priority: 40
   });
 
   registry.register({
     id: 'talent', label: 'People & Culture', icon: <Heart size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR'],
-    component: TalentHub, priority: 31
+    component: TalentHub, priority: 41
   });
 
   registry.register({
-    id: 'dms', label: 'G.E.D', icon: <Folder size={18} />,
-    category: 'hr', roles: ['ADMIN', 'HR', 'FINANCE', 'SALES', 'STAFF'],
-    component: DMS, priority: 35
-  });
-
-  registry.register({
-    id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
-    category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
-    component: SignatureHub, priority: 37
-  });
-
-  registry.register({
-    id: 'planning', label: 'Planning & Temps', icon: <Calendar size={18} />,
+    id: 'planning', label: 'Planning & Événements', icon: <Calendar size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
-    component: PlanningTemps, priority: 33
+    component: PlanningTemps, priority: 42
   });
 
   registry.register({
     id: 'helpdesk', label: 'Support & Helpdesk', icon: <LifeBuoy size={18} />,
     category: 'hr', roles: ['ADMIN', 'STAFF', 'SUPER_ADMIN'],
-    component: HelpdeskHub, priority: 34
+    component: HelpdeskHub, priority: 43
   });
 
   registry.register({
-    id: 'timesheets', label: 'Feuilles de Temps', icon: <Clock size={18} />,
-    hidden: true,
-    category: 'hr', roles: ['ADMIN', 'HR', 'STAFF', 'SALES', 'FINANCE', 'PRODUCTION', 'SUPER_ADMIN'],
-    component: PlanningTemps, priority: 34
+    id: 'dms', label: 'Documents Cloud', icon: <Folder size={18} />,
+    category: 'hr', roles: ['ADMIN', 'HR', 'FINANCE', 'SALES', 'STAFF'],
+    component: DMS, priority: 44
+  });
+
+  registry.register({
+    id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
+    category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
+    component: SignatureHub, priority: 45
   });
 
   // --- Configuration & Admin ---
   registry.register({
     id: 'control_hub', label: 'Administration', icon: <Settings size={18} />,
     category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN'],
-    component: ControlHub, priority: 90
+    component: ControlHub, priority: 50
   });
 };

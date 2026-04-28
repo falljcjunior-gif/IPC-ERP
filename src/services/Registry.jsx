@@ -10,7 +10,8 @@ class ModuleRegistry {
   constructor() {
     this.modules = new Map();
     this.categories = [
-      { id: 'core', label: 'Cœur de Métier' },
+      { id: 'cockpit', label: 'Cockpit' },
+      { id: 'crm', label: 'CRM & Ventes' },
       { id: 'operations', label: 'Opérations & Logistique' },
       { id: 'finance', label: 'Finance & Stratégie' },
       { id: 'hr', label: 'RH & Collaboration' },
