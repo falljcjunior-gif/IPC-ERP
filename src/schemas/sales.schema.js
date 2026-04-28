@@ -38,6 +38,26 @@ export const SalesSchemas = {
    * BACKWARD COMPATIBILITY & REGISTRY MODELS
    */
   models: {
+    invoices: {
+      label: 'Factures Clients',
+      fields: {
+        client: { label: 'Client', type: 'text', required: true, search: true, placeholder: 'Nom du client...' },
+        date: { label: 'Date d\'Émission', type: 'date', required: true },
+        dateEcheance: { label: 'Date d\'Échéance', type: 'date' },
+        montant: { label: 'Montant Total TTC', type: 'money', currency: 'FCFA', search: true },
+        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Envoyé', 'Payé', 'En attente', 'En retard', 'Annulé'], default: 'Brouillon' }
+      }
+    },
+    quotes: {
+      label: 'Devis & Propositions',
+      fields: {
+        client: { label: 'Client', type: 'text', required: true, search: true, placeholder: 'Nom du prospect/client...' },
+        date: { label: 'Date de Création', type: 'date', required: true },
+        valideJusquau: { label: 'Valable jusqu\'au', type: 'date' },
+        montant: { label: 'Montant Total TTC', type: 'money', currency: 'FCFA', search: true },
+        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Envoyé', 'Accepté', 'Refusé', 'Expiré'], default: 'Brouillon' }
+      }
+    },
     orders: {
       label: 'Commandes & Contrats Vente',
       fields: {
