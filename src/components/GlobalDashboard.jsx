@@ -1,6 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
-import { GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity, Plus, X, Megaphone } from 'lucide-react';
+import { 
+  GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity, Plus, X, Megaphone,
+  Store, ShoppingBag, Globe, ShoppingCart, Factory, FolderOpen, Briefcase, FileText, PieChart, Receipt, Scale, LineChart, Calendar, Headphones, FileDigit, Settings, Shield
+} from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
@@ -92,7 +95,7 @@ const HRWidget = ({ data, onRemove }) => (
 );
 
 const SupplyWidget = ({ data, onRemove }) => (
-  <BaseWidget title="Chaîne Logistique" icon={Truck} onRemove={onRemove}>
+  <BaseWidget title="Stocks & Logistique" icon={Truck} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.otif} duration={2} />
@@ -107,7 +110,7 @@ const SupplyWidget = ({ data, onRemove }) => (
 );
 
 const CRMWidget = ({ data, onRemove }) => (
-  <BaseWidget title="Performance CRM" icon={Target} onRemove={onRemove}>
+  <BaseWidget title="CRM & Pipeline" icon={Target} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.conversionRate} duration={2} />
@@ -151,19 +154,60 @@ const MarketingWidget = ({ data, onRemove }) => (
   </BaseWidget>
 );
 
+const GenericWidget = ({ id, WIDGET_REGISTRY, onRemove }) => {
+  const widgetDef = WIDGET_REGISTRY[id];
+  const Icon = widgetDef?.icon || Shield;
+  return (
+    <BaseWidget title={widgetDef?.label || 'Département'} icon={Icon} onRemove={onRemove}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', opacity: 0.3 }}>
+        <div style={{ marginBottom: '1rem' }}><Icon size={48} strokeWidth={1} /></div>
+        <div style={{ color: '#111827', fontWeight: 500, fontSize: '0.9rem', letterSpacing: '0.05em' }}>En attente de synchronisation...</div>
+      </div>
+    </BaseWidget>
+  );
+};
+
 /* ────────────────────────────────
    Main Dashboard
 ──────────────────────────────── */
 const WIDGET_REGISTRY = {
-  'finance': { id: 'finance', label: 'Trésorerie & Cash-Flow', icon: DollarSign },
-  'crm': { id: 'crm', label: 'Performance CRM', icon: Target },
-  'production': { id: 'production', label: 'Activité Usine', icon: Activity },
-  'hr': { id: 'hr', label: 'Pulsation RH', icon: Users },
-  'supply': { id: 'supply', label: 'Chaîne Logistique', icon: Truck },
-  'marketing': { id: 'marketing', label: 'Impact Marketing', icon: Megaphone },
+  // CRM & Ventes
+  'crm': { id: 'crm', category: 'CRM & Ventes', label: 'CRM & Pipeline', icon: Target },
+  'sales': { id: 'sales', category: 'CRM & Ventes', label: 'Ventes & Devis', icon: ShoppingBag },
+  'pos': { id: 'pos', category: 'CRM & Ventes', label: 'Point de Vente', icon: Store },
+  'website': { id: 'website', category: 'CRM & Ventes', label: 'Sites Web', icon: Globe },
+  'marketing': { id: 'marketing', category: 'CRM & Ventes', label: 'Marketing Digital', icon: Megaphone },
+
+  // Opérations
+  'supply': { id: 'supply', category: 'Opérations', label: 'Stocks & Logistique', icon: Truck },
+  'shipping': { id: 'shipping', category: 'Opérations', label: 'Expéditions', icon: ShoppingCart },
+  'purchase': { id: 'purchase', category: 'Opérations', label: 'Achats', icon: Briefcase },
+  'production': { id: 'production', category: 'Opérations', label: 'Production & Usine', icon: Factory },
+  'projects': { id: 'projects', category: 'Opérations', label: 'Projets', icon: FolderOpen },
+  'fleet': { id: 'fleet', category: 'Opérations', label: 'Flotte', icon: Truck },
+
+  // Finance & Stratégie
+  'finance': { id: 'finance', category: 'Finance & Stratégie', label: 'Trésorerie & Cash-Flow', icon: DollarSign },
+  'accounting': { id: 'accounting', category: 'Finance & Stratégie', label: 'Comptabilité', icon: FileText },
+  'legal': { id: 'legal', category: 'Finance & Stratégie', label: 'Juridique', icon: Scale },
+  'budget': { id: 'budget', category: 'Finance & Stratégie', label: 'Budget', icon: PieChart },
+  'expenses': { id: 'expenses', category: 'Finance & Stratégie', label: 'Notes de Frais', icon: Receipt },
+  'bi': { id: 'bi', category: 'Finance & Stratégie', label: 'Business Intelligence', icon: LineChart },
+
+  // RH & Collaboration
+  'hr': { id: 'hr', category: 'RH & Collaboration', label: 'Ressources Humaines', icon: Users },
+  'planning': { id: 'planning', category: 'RH & Collaboration', label: 'Planning', icon: Calendar },
+  'support': { id: 'support', category: 'RH & Collaboration', label: 'Support & Helpdesk', icon: Headphones },
+  'docs': { id: 'docs', category: 'RH & Collaboration', label: 'Documents Cloud', icon: FileDigit },
+
+  // Configuration
+  'config': { id: 'config', category: 'Configuration', label: 'Administration', icon: Settings },
 };
 
 const GlobalDashboard = () => {
+  const dashboardPreferences = useStore(state => state.dashboardPreferences);
+  const setDashboardPreferences = useStore(state => state.setDashboardPreferences);
+
   const _incomes = useStore(s => s.data.finance?.incomes);
   const incomes = _incomes || [];
   const _employees = useStore(s => s.data.hr?.employees);
@@ -177,10 +221,15 @@ const GlobalDashboard = () => {
   
   const formatCurrency = useStore(state => state.formatCurrency);
 
-  // Default widget order
-  const [widgets, setWidgets] = useState(['finance', 'crm', 'production', 'hr', 'supply']);
+  // Default widget order using store preferences or fallback
+  const [widgets, setWidgets] = useState(dashboardPreferences || ['finance', 'crm', 'production', 'hr', 'supply']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverRef = useRef(null);
+
+  // Sync to store when widgets change
+  useEffect(() => {
+    setDashboardPreferences(widgets);
+  }, [widgets, setDashboardPreferences]);
 
   // Handle outside click for popover
   useEffect(() => {
@@ -194,6 +243,13 @@ const GlobalDashboard = () => {
   }, []);
 
   const availableWidgets = Object.values(WIDGET_REGISTRY).filter(w => !widgets.includes(w.id));
+  
+  // Group available widgets by category
+  const groupedAvailable = availableWidgets.reduce((acc, w) => {
+    if (!acc[w.category]) acc[w.category] = [];
+    acc[w.category].push(w);
+    return acc;
+  }, {});
 
   const addWidget = (id) => {
     setWidgets([...widgets, id]);
@@ -232,19 +288,13 @@ const GlobalDashboard = () => {
   // Map widget IDs to their components
   const renderWidget = (id) => {
     switch(id) {
-      case 'finance':
-        return <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} onRemove={() => removeWidget(id)} />;
-      case 'crm':
-        return <CRMWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'production':
-        return <ProductionWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'hr':
-        return <HRWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'supply':
-        return <SupplyWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'marketing':
-        return <MarketingWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      default: return null;
+      case 'finance': return <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} onRemove={() => removeWidget(id)} />;
+      case 'crm': return <CRMWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'production': return <ProductionWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'hr': return <HRWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'supply': return <SupplyWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'marketing': return <MarketingWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      default: return <GenericWidget id={id} WIDGET_REGISTRY={WIDGET_REGISTRY} onRemove={() => removeWidget(id)} />;
     }
   };
 
@@ -309,15 +359,21 @@ const GlobalDashboard = () => {
                   exit={{ opacity: 0, y: 10 }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div style={{ padding: '0.5rem', fontWeight: 700, fontSize: '0.75rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    Départements Disponibles
+                  <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '0.5rem' }}>
+                    {Object.entries(groupedAvailable).map(([category, items]) => (
+                      <div key={category} style={{ marginBottom: '1rem' }}>
+                        <div style={{ padding: '0.5rem', fontWeight: 700, fontSize: '0.65rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: '0.5rem' }}>
+                          {category}
+                        </div>
+                        {items.map(w => (
+                          <div key={w.id} className="luxury-popover-item" onClick={() => addWidget(w.id)}>
+                            <w.icon size={16} strokeWidth={1.5} />
+                            {w.label}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
                   </div>
-                  {availableWidgets.map(w => (
-                    <div key={w.id} className="luxury-popover-item" onClick={() => addWidget(w.id)}>
-                      <w.icon size={18} />
-                      {w.label}
-                    </div>
-                  ))}
                 </motion.div>
               )}
             </AnimatePresence>

@@ -192,7 +192,8 @@ export const useStore = create(
       partialize: (state) => ({ 
         user: state.user, 
         globalSettings: state.globalSettings,
-        activeApp: state.activeApp
+        activeApp: state.activeApp,
+        dashboardPreferences: state.dashboardPreferences
       }),
     }
   )
