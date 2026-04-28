@@ -366,13 +366,23 @@ const PlatformShell = ({ theme, setView }) => {
               </button>
               <div 
                 onClick={() => setSearch(p => ({ ...p, nexusOpen: true }))}
-                style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-subtle)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid transparent', transition: 'var(--transition-nexus)' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--nexus-primary)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}
+                style={{ 
+                  display: 'flex', alignItems: 'center', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid rgba(56, 189, 248, 0.2)', transition: 'var(--transition-nexus)' 
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
+                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.1)';
+                  e.currentTarget.style.boxShadow = '0 0 15px rgba(56, 189, 248, 0.2)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.2)';
+                  e.currentTarget.style.background = 'rgba(56, 189, 248, 0.05)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
               >
-                <Search size={18} color="var(--nexus-text-muted)" />
-                <span style={{ fontSize: '0.9rem', color: 'var(--nexus-text-muted)', flex: 1 }}>Recherche globale Nexus...</span>
-                <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'white', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--nexus-border)', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                <Zap size={16} fill="#38bdf8" color="#38bdf8" />
+                <span style={{ fontSize: '0.9rem', color: '#38bdf8', flex: 1, fontWeight: 500, letterSpacing: '0.5px' }}>Nexus Command Center...</span>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Command size={10} /> K
                 </div>
               </div>

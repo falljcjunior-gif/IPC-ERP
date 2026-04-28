@@ -1,0 +1,200 @@
+.nexus-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 10vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nexus-container {
+  width: 100%;
+  max-width: 720px;
+  background: rgba(15, 23, 42, 0.75);
+  border-radius: 1.5rem;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 
+              0 25px 50px -12px rgba(0,0,0,0.5),
+              0 0 40px rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  position: relative;
+  z-index: 10000;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Glow animation */
+.nexus-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent);
+  animation: scanline 3s linear infinite;
+  opacity: 0.5;
+  z-index: 10;
+}
+
+@keyframes scanline {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.nexus-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.nexus-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 1.25rem;
+  color: #fff;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.nexus-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.nexus-kbd {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: monospace;
+}
+
+.nexus-results {
+  max-height: 450px;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
+
+.nexus-results::-webkit-scrollbar {
+  width: 6px;
+}
+.nexus-results::-webkit-scrollbar-track {
+  background: transparent;
+}
+.nexus-results::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+.nexus-results::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nexus-item {
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid transparent;
+}
+
+.nexus-item.active, .nexus-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+.nexus-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  background: #38bdf8;
+  border-radius: 0 4px 4px 0;
+}
+
+.nexus-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  transition: all 0.2s;
+}
+
+.nexus-item.active .nexus-item-icon {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+.nexus-item-content {
+  flex: 1;
+}
+
+.nexus-item-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 0.1rem;
+}
+
+.nexus-item-subtitle {
+  font-size: 0.75rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nexus-item-arrow {
+  color: #475569;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all 0.2s;
+}
+
+.nexus-item.active .nexus-item-arrow,
+.nexus-item:hover .nexus-item-arrow {
+  opacity: 1;
+  transform: translateX(0);
+  color: #38bdf8;
+}
+
+.nexus-footer {
+  padding: 0.75rem 1.5rem;
+  background: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nexus-widget-container {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+}
