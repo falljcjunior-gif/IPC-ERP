@@ -5,6 +5,7 @@ import { useStore } from '../../store';
 import { salesSchema } from '../../schemas/sales.schema';
 import RecordModal from '../../components/RecordModal';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
+import { generateCommercialDocument } from '../../utils/InvoicePDFGenerator';
 import '../../components/GlobalDashboard.css';
 
 const SalesItem = ({ item, type, formatCurrency, onOpenDetail }) => {
@@ -236,7 +237,10 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
         title={activeTab === 'invoices' ? "Créer une Facture" : "Créer un Devis"}
         fields={Object.entries(salesSchema.models[activeTab]?.fields || {}).map(([name, f]) => ({ ...f, name }))}
         onSave={(f) => {
-          addRecord('sales', activeTab, { statut: activeTab === 'invoices' ? 'Brouillon' : 'Envoyé', ...f });
+          const newRecord = { statut: activeTab === 'invoices' ? 'Brouillon' : 'Envoyé', ...f };
+          addRecord('sales', activeTab, newRecord);
+          // Génération et téléchargement automatique du PDF
+          generateCommercialDocument(newRecord, activeTab);
           setIsModalOpen(false);
         }}
       />
