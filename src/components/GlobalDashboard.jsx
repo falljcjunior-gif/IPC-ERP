@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { motion, Reorder } from 'framer-motion';
-import { GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity } from 'lucide-react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { motion, Reorder, AnimatePresence } from 'framer-motion';
+import { GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity, Plus, X, Megaphone } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useStore } from '../store';
 import SafeResponsiveChart from './charts/SafeResponsiveChart';
@@ -27,16 +27,28 @@ const LuxuryTooltip = ({ active, payload, label }) => {
 /* ────────────────────────────────
    Widgets Components
 ──────────────────────────────── */
-const CashFlowWidget = ({ data, caComparaisonData, formatCurrency }) => (
+const BaseWidget = ({ title, icon: Icon, children, onRemove }) => (
   <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '2rem' }}>
     <div className="luxury-widget-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <DollarSign size={16} color="#9ca3af" />
-        <span className="luxury-widget-title">Trésorerie & Cash-Flow</span>
+        <Icon size={16} color="#9ca3af" />
+        <span className="luxury-widget-title">{title}</span>
       </div>
-      <GripHorizontal className="luxury-drag-handle" size={20} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <GripHorizontal className="luxury-drag-handle" size={20} />
+      </div>
     </div>
-    
+    <button onClick={onRemove} className="luxury-remove-btn" title="Masquer ce widget">
+      <X size={16} />
+    </button>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {children}
+    </div>
+  </div>
+);
+
+const CashFlowWidget = ({ data, caComparaisonData, formatCurrency, onRemove }) => (
+  <BaseWidget title="Trésorerie & Cash-Flow" icon={DollarSign} onRemove={onRemove}>
     <div>
       <div className="luxury-value-massive">
         <AnimatedCounter from={0} to={data.caRealise} duration={2} formatter={(v) => formatCurrency(v, true)} />
@@ -62,19 +74,11 @@ const CashFlowWidget = ({ data, caComparaisonData, formatCurrency }) => (
         </AreaChart>
       </SafeResponsiveChart>
     </div>
-  </div>
+  </BaseWidget>
 );
 
-const HRWidget = ({ data }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <div className="luxury-widget-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Users size={16} color="#9ca3af" />
-        <span className="luxury-widget-title">Pulsation RH</span>
-      </div>
-      <GripHorizontal className="luxury-drag-handle" size={20} />
-    </div>
-    
+const HRWidget = ({ data, onRemove }) => (
+  <BaseWidget title="Pulsation RH" icon={Users} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.effectif} duration={1.5} />
@@ -84,19 +88,11 @@ const HRWidget = ({ data }) => (
         <Minus size={16} /> Turnover stable (2.1%)
       </div>
     </div>
-  </div>
+  </BaseWidget>
 );
 
-const SupplyWidget = ({ data }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <div className="luxury-widget-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Truck size={16} color="#9ca3af" />
-        <span className="luxury-widget-title">Chaîne Logistique</span>
-      </div>
-      <GripHorizontal className="luxury-drag-handle" size={20} />
-    </div>
-    
+const SupplyWidget = ({ data, onRemove }) => (
+  <BaseWidget title="Chaîne Logistique" icon={Truck} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.otif} duration={2} />
@@ -107,19 +103,11 @@ const SupplyWidget = ({ data }) => (
         <TrendingDown size={16} /> -1.2% dû aux retards portuaires
       </div>
     </div>
-  </div>
+  </BaseWidget>
 );
 
-const CRMWidget = ({ data }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <div className="luxury-widget-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Target size={16} color="#9ca3af" />
-        <span className="luxury-widget-title">Performance CRM</span>
-      </div>
-      <GripHorizontal className="luxury-drag-handle" size={20} />
-    </div>
-    
+const CRMWidget = ({ data, onRemove }) => (
+  <BaseWidget title="Performance CRM" icon={Target} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.conversionRate} duration={2} />
@@ -130,19 +118,11 @@ const CRMWidget = ({ data }) => (
         <TrendingUp size={16} /> {data.activeDeals} deals actifs en pipeline
       </div>
     </div>
-  </div>
+  </BaseWidget>
 );
 
-const ProductionWidget = ({ data }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-    <div className="luxury-widget-header">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Activity size={16} color="#9ca3af" />
-        <span className="luxury-widget-title">Activité Usine</span>
-      </div>
-      <GripHorizontal className="luxury-drag-handle" size={20} />
-    </div>
-    
+const ProductionWidget = ({ data, onRemove }) => (
+  <BaseWidget title="Activité Usine" icon={Activity} onRemove={onRemove}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.prodScore} duration={2} />
@@ -153,12 +133,36 @@ const ProductionWidget = ({ data }) => (
         <TrendingUp size={16} /> Flux de production nominal
       </div>
     </div>
-  </div>
+  </BaseWidget>
+);
+
+const MarketingWidget = ({ data, onRemove }) => (
+  <BaseWidget title="Impact Marketing" icon={Megaphone} onRemove={onRemove}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
+        <AnimatedCounter from={0} to={1240} duration={2} />
+        <span className="luxury-value-unit" style={{ fontSize: '2rem' }}>K</span>
+      </div>
+      <div style={{ color: '#6b7280', fontWeight: 500, fontSize: '0.9rem', marginBottom: '1rem' }}>Portée Globale (Reach)</div>
+      <div className="luxury-trend positive">
+        <TrendingUp size={16} /> Campagne en cours ultra performante
+      </div>
+    </div>
+  </BaseWidget>
 );
 
 /* ────────────────────────────────
    Main Dashboard
 ──────────────────────────────── */
+const WIDGET_REGISTRY = {
+  'finance': { id: 'finance', label: 'Trésorerie & Cash-Flow', icon: DollarSign },
+  'crm': { id: 'crm', label: 'Performance CRM', icon: Target },
+  'production': { id: 'production', label: 'Activité Usine', icon: Activity },
+  'hr': { id: 'hr', label: 'Pulsation RH', icon: Users },
+  'supply': { id: 'supply', label: 'Chaîne Logistique', icon: Truck },
+  'marketing': { id: 'marketing', label: 'Impact Marketing', icon: Megaphone },
+};
+
 const GlobalDashboard = () => {
   const _incomes = useStore(s => s.data.finance?.incomes);
   const incomes = _incomes || [];
@@ -173,31 +177,44 @@ const GlobalDashboard = () => {
   
   const formatCurrency = useStore(state => state.formatCurrency);
 
-  // Default widget order updated to include the new widgets
+  // Default widget order
   const [widgets, setWidgets] = useState(['finance', 'crm', 'production', 'hr', 'supply']);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const popoverRef = useRef(null);
+
+  // Handle outside click for popover
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target)) {
+        setIsPopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const availableWidgets = Object.values(WIDGET_REGISTRY).filter(w => !widgets.includes(w.id));
+
+  const addWidget = (id) => {
+    setWidgets([...widgets, id]);
+    setIsPopoverOpen(false);
+  };
+
+  const removeWidget = (id) => {
+    setWidgets(widgets.filter(wId => wId !== id));
+  };
 
   // Dynamic Data Calculation
   const { metrics, caComparaisonData } = useMemo(() => {
-    // Finance
     const caRealise = incomes.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
-    
-    // HR
     const effectif = employees.length || 142; // Fallback for UI testing
-    
-    // Supply
     const livres = shipments.filter(s => s.statut === 'Livré').length;
     const retardes = shipments.filter(s => s.statut === 'Retardé').length;
     const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94;
-
-    // Production
-    const prodScore = workOrders.length > 0 
-        ? Math.round((workOrders.filter(o => o.statut === 'Terminé').length / workOrders.length) * 100) 
-        : 88;
-
-    // CRM
+    const prodScore = workOrders.length > 0 ? Math.round((workOrders.filter(o => o.statut === 'Terminé').length / workOrders.length) * 100) : 88;
     const wonDeals = deals.filter(d => d.statut === 'Gagné').length;
     const activeDeals = deals.filter(d => d.statut !== 'Gagné' && d.statut !== 'Perdu').length;
-    const conversionRate = deals.length > 0 ? Math.round((wonDeals / deals.length) * 100) : 68; // Default to a good 68% if empty
+    const conversionRate = deals.length > 0 ? Math.round((wonDeals / deals.length) * 100) : 68; 
 
     const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const currentMonth = new Date().getMonth();
@@ -216,35 +233,17 @@ const GlobalDashboard = () => {
   const renderWidget = (id) => {
     switch(id) {
       case 'finance':
-        return (
-          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 500px', minWidth: '300px' }}>
-            <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} />
-          </Reorder.Item>
-        );
+        return <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} onRemove={() => removeWidget(id)} />;
       case 'crm':
-        return (
-          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <CRMWidget data={metrics} />
-          </Reorder.Item>
-        );
+        return <CRMWidget data={metrics} onRemove={() => removeWidget(id)} />;
       case 'production':
-        return (
-          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <ProductionWidget data={metrics} />
-          </Reorder.Item>
-        );
+        return <ProductionWidget data={metrics} onRemove={() => removeWidget(id)} />;
       case 'hr':
-        return (
-          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <HRWidget data={metrics} />
-          </Reorder.Item>
-        );
+        return <HRWidget data={metrics} onRemove={() => removeWidget(id)} />;
       case 'supply':
-        return (
-          <Reorder.Item key={id} value={id} className="luxury-widget" style={{ flex: '1 1 300px', minWidth: '300px' }}>
-            <SupplyWidget data={metrics} />
-          </Reorder.Item>
-        );
+        return <SupplyWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'marketing':
+        return <MarketingWidget data={metrics} onRemove={() => removeWidget(id)} />;
       default: return null;
     }
   };
@@ -270,7 +269,60 @@ const GlobalDashboard = () => {
         className="luxury-grid"
         style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch' }}
       >
-        {widgets.map(id => renderWidget(id))}
+        <AnimatePresence>
+          {widgets.map(id => (
+            <Reorder.Item 
+              key={id} 
+              value={id} 
+              className="luxury-widget" 
+              style={{ flex: id === 'finance' ? '1 1 500px' : '1 1 300px', minWidth: '300px' }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+            >
+              {renderWidget(id)}
+            </Reorder.Item>
+          ))}
+        </AnimatePresence>
+
+        {/* Add Widget Button */}
+        {availableWidgets.length > 0 && (
+          <motion.div 
+            layout
+            className="luxury-widget luxury-add-widget" 
+            style={{ flex: '1 1 300px', minWidth: '300px', position: 'relative' }}
+            onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+          >
+            <Plus size={48} strokeWidth={1} />
+            <span style={{ fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: '0.85rem' }}>
+              Ajouter un Département
+            </span>
+
+            {/* Popover */}
+            <AnimatePresence>
+              {isPopoverOpen && (
+                <motion.div 
+                  ref={popoverRef}
+                  className="luxury-popover"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div style={{ padding: '0.5rem', fontWeight: 700, fontSize: '0.75rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Départements Disponibles
+                  </div>
+                  {availableWidgets.map(w => (
+                    <div key={w.id} className="luxury-popover-item" onClick={() => addWidget(w.id)}>
+                      <w.icon size={18} />
+                      {w.label}
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </Reorder.Group>
 
     </motion.div>
