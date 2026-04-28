@@ -5,29 +5,30 @@ import {
   UserPlus, Mail, Lock, Briefcase, DollarSign, 
   Shield, Check, Calendar, Settings, AlertCircle, Loader,
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
-  Eye, Pencil, ShieldOff
+  Eye, Pencil, ShieldOff,
+  User, MessageCircle, Target, ShoppingCart, Megaphone, Package, ShoppingBag, PieChart, Scale, Kanban, Headphones, Activity, BarChart2
 } from 'lucide-react';
 import { FirestoreService } from '../../../services/firestore.service';
 import { logger } from '../../../utils/logger';
 
 
 const availableModules = [
-  { id: 'home',       category: 'Général', label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: '👤', color: '#10B981', locked: true, desc: 'Profil et base employés' },
-  { id: 'connect',    category: 'Général', label: 'IPC Connect (Réseau)',        role: 'STAFF',      icon: '💬', color: '#8B5CF6', desc: 'Messagerie & Appels' },
-  { id: 'crm',        category: 'Ventes & Marketing', label: 'CRM & Acquisition',           role: 'SALES',      icon: '🎯', color: '#3B82F6', desc: 'Clients & Prospection' },
-  { id: 'sales',      category: 'Ventes & Marketing', label: 'Gestion des Ventes',          role: 'SALES',      icon: '🛒', color: '#06B6D4', desc: 'Devis & Facturation' },
-  { id: 'marketing',  category: 'Ventes & Marketing', label: 'Marketing & Coms',            role: 'MARKETING',  icon: '📢', color: '#F59E0B', desc: 'Campagnes & Reseaux' },
-  { id: 'production', category: 'Production & Log', label: 'Atelier & Production',        role: 'PRODUCTION', icon: '⚙️', color: '#F59E0B', desc: 'Ordres & Machines' },
-  { id: 'inventory',  category: 'Production & Log', label: 'Logistique & Stocks',         role: 'LOGISTICS',  icon: '📦', color: '#F97316', desc: 'Entrepôts & Flux' },
-  { id: 'purchase',   category: 'Production & Log', label: 'Achats & Approvis.',          role: 'PURCHASE',   icon: '🛍️', color: '#64748B', desc: 'Fournisseurs & Commandes' },
-  { id: 'finance',    category: 'Admin & Finance', label: 'Finance & Comptabilité',      role: 'FINANCE',    icon: '💰', color: '#6366F1', desc: 'Trésorerie & Bilans' },
-  { id: 'hr',         category: 'Admin & Finance', label: 'Ressources Humaines',         role: 'HR',         icon: '👥', color: '#EC4899', desc: 'Paie & Contrats' },
-  { id: 'legal',      category: 'Admin & Finance', label: 'Juridique & Conformité',      role: 'LEGAL',      icon: '⚖️', color: '#14B8A6', desc: 'Litiges & Contrats' },
-  { id: 'projects',   category: 'Projets & Support', label: 'Gestion de Projets',          role: 'PROJECTS',   icon: '📋', color: '#8B5CF6', desc: 'Tâches & Planification' },
-  { id: 'support',    category: 'Projets & Support', label: 'Support & SAV',               role: 'SUPPORT',    icon: '🎧', color: '#0EA5E9', desc: 'Tickets & Assistance' },
-  { id: 'executive',  category: 'Direction & IT', label: 'Direction & Pilotage',        role: 'EXECUTIVE',  icon: '👑', color: '#F43F5E', desc: 'Stratégie & KPIs' },
-  { id: 'data',       category: 'Direction & IT', label: 'Data & BI',                   role: 'DATA',       icon: '📊', color: '#8B5CF6', desc: 'Analytique & Stats' },
-  { id: 'admin',      category: 'Direction & IT', label: 'Administration Système',      role: 'ADMIN',      icon: '🛡️', color: '#EF4444', desc: 'Sécurité & Accès' },
+  { id: 'home',       category: 'Général', label: 'Espace Personnel (Base)',     role: 'STAFF',      icon: User, color: '#10B981', locked: true, desc: 'Profil et base employés' },
+  { id: 'connect',    category: 'Général', label: 'IPC Connect (Réseau)',        role: 'STAFF',      icon: MessageCircle, color: '#8B5CF6', desc: 'Messagerie & Appels' },
+  { id: 'crm',        category: 'Ventes & Marketing', label: 'CRM & Acquisition',           role: 'SALES',      icon: Target, color: '#3B82F6', desc: 'Clients & Prospection' },
+  { id: 'sales',      category: 'Ventes & Marketing', label: 'Gestion des Ventes',          role: 'SALES',      icon: ShoppingCart, color: '#06B6D4', desc: 'Devis & Facturation' },
+  { id: 'marketing',  category: 'Ventes & Marketing', label: 'Marketing & Coms',            role: 'MARKETING',  icon: Megaphone, color: '#F59E0B', desc: 'Campagnes & Reseaux' },
+  { id: 'production', category: 'Production & Log', label: 'Atelier & Production',        role: 'PRODUCTION', icon: Settings, color: '#F59E0B', desc: 'Ordres & Machines' },
+  { id: 'inventory',  category: 'Production & Log', label: 'Logistique & Stocks',         role: 'LOGISTICS',  icon: Package, color: '#F97316', desc: 'Entrepôts & Flux' },
+  { id: 'purchase',   category: 'Production & Log', label: 'Achats & Approvis.',          role: 'PURCHASE',   icon: ShoppingBag, color: '#64748B', desc: 'Fournisseurs & Commandes' },
+  { id: 'finance',    category: 'Admin & Finance', label: 'Finance & Comptabilité',      role: 'FINANCE',    icon: PieChart, color: '#6366F1', desc: 'Trésorerie & Bilans' },
+  { id: 'hr',         category: 'Admin & Finance', label: 'Ressources Humaines',         role: 'HR',         icon: Users, color: '#EC4899', desc: 'Paie & Contrats' },
+  { id: 'legal',      category: 'Admin & Finance', label: 'Juridique & Conformité',      role: 'LEGAL',      icon: Scale, color: '#14B8A6', desc: 'Litiges & Contrats' },
+  { id: 'projects',   category: 'Projets & Support', label: 'Gestion de Projets',          role: 'PROJECTS',   icon: Kanban, color: '#8B5CF6', desc: 'Tâches & Planification' },
+  { id: 'support',    category: 'Projets & Support', label: 'Support & SAV',               role: 'SUPPORT',    icon: Headphones, color: '#0EA5E9', desc: 'Tickets & Assistance' },
+  { id: 'executive',  category: 'Direction & IT', label: 'Direction & Pilotage',        role: 'EXECUTIVE',  icon: Activity, color: '#F43F5E', desc: 'Stratégie & KPIs' },
+  { id: 'data',       category: 'Direction & IT', label: 'Data & BI',                   role: 'DATA',       icon: BarChart2, color: '#8B5CF6', desc: 'Analytique & Stats' },
+  { id: 'admin',      category: 'Direction & IT', label: 'Administration Système',      role: 'ADMIN',      icon: Shield, color: '#EF4444', desc: 'Sécurité & Accès' },
 ];
 
 const moduleCategories = [
@@ -133,22 +134,28 @@ const EditAccessPanel = ({ employee, onClose }) => {
                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                  {mods.map(mod => {
                    const level = localAccess[mod.id] || 'none';
+                   const Icon = mod.icon;
                    return (
-                     <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg-subtle)' : 'transparent', border: '1px solid var(--border)' }}>
+                     <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg-subtle)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                         <span style={{ fontSize: '1.1rem' }}>{mod.icon}</span>
-                         <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
+                         <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
+                           <Icon size={20} />
+                         </div>
+                         <div style={{ display: 'flex', flexDirection: 'column' }}>
+                           <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
+                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{mod.desc}</span>
+                         </div>
                        </div>
                        
-                       <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '4px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
-                         <button onClick={() => setAccess(mod.id, 'none')} title="Aucun accès" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)' }}>
-                           <ShieldOff size={16} />
+                       <div style={{ display: 'flex', gap: '4px', background: 'var(--bg)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                         <button onClick={() => setAccess(mod.id, 'none')} title="Aucun accès" style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                           <ShieldOff size={16} /> <span style={{ display: level === 'none' ? 'block' : 'none' }}>Aucun</span>
                          </button>
-                         <button onClick={() => setAccess(mod.id, 'read')} title="Regard (Lecture)" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)' }}>
-                           <Eye size={16} />
+                         <button onClick={() => setAccess(mod.id, 'read')} title="Regard (Lecture)" style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                           <Eye size={16} /> <span style={{ display: level === 'read' ? 'block' : 'none' }}>Lecture</span>
                          </button>
-                         <button onClick={() => setAccess(mod.id, 'write')} title="Modification (Écriture)" style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)' }}>
-                           <Pencil size={16} />
+                         <button onClick={() => setAccess(mod.id, 'write')} title="Modification (Écriture)" style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)', transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                           <Pencil size={16} /> <span style={{ display: level === 'write' ? 'block' : 'none' }}>Écriture</span>
                          </button>
                        </div>
                      </div>
@@ -548,37 +555,40 @@ const OnboardingTab = ({ accessLevel }) => {
                           <div style={{ padding: '0.75rem', display: 'grid', gap: '4px' }}>
                             {mods.map(mod => {
                               const level = localAccess[mod.id] || 'none';
+                              const Icon = mod.icon;
                               return (
-                                <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg)' : 'transparent', border: '1px solid var(--border)' }}>
+                                <div key={mod.id} className="glass" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: level !== 'none' ? 'var(--bg)' : 'transparent', border: '1px solid var(--border)', transition: '0.2s' }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <span style={{ fontSize: '1.2rem' }}>{mod.icon}</span>
+                                    <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: `${mod.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mod.color }}>
+                                      <Icon size={20} />
+                                    </div>
                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                                       <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{mod.label}</span>
-                                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role}</span>
+                                      <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800 }}>{mod.role} - {mod.desc}</span>
                                     </div>
                                   </div>
                                   
-                                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '4px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
+                                  <div style={{ display: 'flex', gap: '4px', background: 'var(--bg-subtle)', padding: '6px', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
                                     <button 
                                       type="button"
                                       onClick={() => setAccess(mod.id, 'none')} 
                                       title="Aucun accès" 
-                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
-                                      <ShieldOff size={16} />
+                                      style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'none' ? '#EF4444' : 'transparent', color: level === 'none' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1, transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                                      <ShieldOff size={16} /> <span style={{ display: level === 'none' ? 'block' : 'none' }}>Aucun</span>
                                     </button>
                                     <button 
                                       type="button"
                                       onClick={() => setAccess(mod.id, 'read')} 
                                       title="Lecture" 
-                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
-                                      <Eye size={16} />
+                                      style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'read' ? 'var(--accent)' : 'transparent', color: level === 'read' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1, transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                                      <Eye size={16} /> <span style={{ display: level === 'read' ? 'block' : 'none' }}>Lecture</span>
                                     </button>
                                     <button 
                                       type="button"
                                       onClick={() => setAccess(mod.id, 'write')} 
                                       title="Écriture" 
-                                      style={{ padding: '0.4rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1 }}>
-                                      <Pencil size={16} />
+                                      style={{ padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: 'none', cursor: mod.locked ? 'not-allowed' : 'pointer', background: level === 'write' ? '#10B981' : 'transparent', color: level === 'write' ? 'white' : 'var(--text-muted)', opacity: mod.locked ? 0.5 : 1, transition: '0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.75rem' }}>
+                                      <Pencil size={16} /> <span style={{ display: level === 'write' ? 'block' : 'none' }}>Écriture</span>
                                     </button>
                                   </div>
                                 </div>

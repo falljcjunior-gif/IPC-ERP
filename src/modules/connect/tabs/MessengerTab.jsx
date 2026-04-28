@@ -153,8 +153,25 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     return () => unsub();
   }, [activeRoom?.id]);
 
-  // Groups/Rooms Subscription
   useEffect(() => {
+    // 0. Ensure Global Room exists in Firestore
+    const initGlobalRoom = async () => {
+      try {
+        const room = await FirestoreService.getDocument('rooms', 'team_global');
+        if (!room) {
+          await FirestoreService.setDocument('rooms', 'team_global', {
+            status: 'active',
+            type: 'team',
+            label: 'Espace Général',
+            createdAt: new Date()
+          });
+        }
+      } catch (err) {
+        console.warn("Global Room Init error:", err);
+      }
+    };
+    initGlobalRoom();
+
     if (!currentUser?.id) return;
     const unsub = FirestoreService.subscribeToCollection('rooms', (rooms) => {
       setCustomRooms(rooms);
@@ -169,16 +186,20 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   useEffect(() => {
     if (!activeRoom?.id || !currentUser?.id || !newMessage.trim()) {
       if (activeRoom?.id && currentUser?.id) {
-         FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false });
+         FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false }, true);
       }
       return;
     }
 
-    FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: true });
-    
     const timer = setTimeout(() => {
-      FirestoreService.updateDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false });
-    }, 3000);
+      FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: true }, true);
+      
+      const idleTimer = setTimeout(() => {
+        FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false }, true);
+      }, 3000);
+      
+      return () => clearTimeout(idleTimer);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [newMessage, activeRoom?.id, currentUser?.id]);
@@ -197,9 +218,9 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     
     if (unreadMessages.length > 0) {
       unreadMessages.forEach(msg => {
-        FirestoreService.updateDocument('messages', msg.id, {
+        FirestoreService.setDocument('messages', msg.id, {
           readBy: FirestoreService.arrayUnion(currentUser.id)
-        });
+        }, true);
       });
     }
   }, [messages, activeRoom?.id, currentUser?.id]);

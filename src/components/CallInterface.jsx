@@ -39,6 +39,7 @@ const CallInterface = ({
     
     // Listen for room ending from any side
     const unsub = FirestoreService.subscribeToDocument('rooms', callId, (docData) => {
+      // Only hangup if the room specifically transitions to 'ended'
       if (docData?.status === 'ended') {
          webrtcService.hangup(callId, currentUser?.id);
          if (onClose) onClose();
@@ -221,6 +222,13 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
     
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current.play().catch(e => {
+          logger.warn(`[CallInterface] Autoplay prevented for ${id}`, e);
+          // Fallback: Show a "Click to unmute" button if needed, 
+          // but usually user interaction happened already.
+        });
+      };
       
       // Analyze remote audio track
       const audioTrack = stream.getAudioTracks()[0];
@@ -275,7 +283,9 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
       boxShadow: (isSpeaking && !strip && !full) ? '0 0 15px rgba(16, 185, 129, 0.4)' : (strip && isSpeaking ? 'inset 0 0 0 3px #10B981' : 'none'),
       transition: 'all 0.2s ease-in-out'
     }}>
-      <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      {/* Hidden audio element to ensure audio plays even if video is broken/invisible */}
+      <audio ref={el => { if (el && el.srcObject !== stream) { el.srcObject = stream; el.play().catch(() => {}); } }} autoPlay style={{ display: 'none' }} />
       {!strip && (
         <div style={{ position: 'absolute', bottom: full ? '1.5rem' : '1rem', left: full ? '1.5rem' : '1rem', padding: '6px 16px', borderRadius: '20px', background: 'rgba(0,0,0,0.6)', fontSize: full ? '0.9rem' : '0.8rem', fontWeight: 600 }}>
           {id.startsWith('dm_') ? 'Contact' : 'Participant'}

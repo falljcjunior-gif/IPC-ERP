@@ -1,15 +1,4 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  setDoc, 
-  onSnapshot, 
-  deleteDoc, 
-  query,
-  where,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { FirestoreService } from '../services/firestore.service';
 import logger from './logger';
 
 const servers = {
@@ -32,9 +21,10 @@ export class WebRTCService {
     this.pcs = new Map(); // { participantId: RTCPeerConnection }
     this.localStream = null;
     this.remoteStreams = new Map(); // { participantId: MediaStream }
-    this.roomUnsubscribe = null;
-    this.signalUnsubscribes = {};
-    this.candidateQueues = {}; // { participantId: [candidates] }
+    this.candidateQueues = {}; // { participantId: RTCIceCandidateInit[] }
+    this.unsubscribeParticipants = null;
+    this.unsubscribeSignals = null;
+    this.processedSignals = new Set();
   }
 
   async startLocalStream(type = 'video') {
@@ -47,212 +37,258 @@ export class WebRTCService {
     return this.localStream;
   }
 
-  // Multi-party Room Joing (Mesh)
+  // Multi-party Room Joining (Mesh Architecture)
   async joinRoom(roomId, userId, userName, onParticipantsUpdate) {
-    const roomRef = doc(db, 'rooms', roomId);
-    const participantRef = doc(collection(roomRef, 'participants'), userId);
+    logger.info(`[WebRTC] Joining room: ${roomId} as ${userName}`);
+    
+    // 1. Ensure room exists (Defensive)
+    const room = await FirestoreService.getDocument('rooms', roomId);
+    if (!room) {
+      await FirestoreService.setDocument('rooms', roomId, {
+        status: 'active',
+        createdAt: new Date(),
+        type: 'call'
+      });
+    } else if (room.status === 'ended') {
+      // Re-activate room if it was ended
+      await FirestoreService.updateDocument('rooms', roomId, { status: 'active' });
+    }
 
-    // 1. Register self
-    await setDoc(participantRef, {
+    // 2. Register self defensively
+    await FirestoreService.setDocument(`rooms/${roomId}/participants`, userId, {
       userId,
       userName,
-      joinedAt: serverTimestamp()
+      joinedAt: new Date()
     });
 
-    // 2. Listen for other participants
-    this.roomUnsubscribe = onSnapshot(collection(roomRef, 'participants'), async (snapshot) => {
-      snapshot.docChanges().forEach(async (change) => {
-        const participant = change.doc.data();
-        if (participant.userId === userId) return; // Skip self
-
-        if (change.type === 'added') {
-          // New participant joined. 
-          // Compare strings to deterministically decide who initiates the offer
-          if (userId < participant.userId) {
-            this.initiatePeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
+    // 3. Listen for other participants
+    this.unsubscribeParticipants = FirestoreService.subscribeToCollection(
+      `rooms/${roomId}/participants`,
+      {},
+      (participants) => {
+        // Setup peer connections for newcomers
+        participants.forEach(participant => {
+          if (participant.userId !== userId && !this.pcs.has(participant.userId)) {
+            // Deterministic offerer selection (lowest ID initiates)
+            if (userId < participant.userId) {
+              this.setupPeerConnection(roomId, userId, participant.userId, onParticipantsUpdate);
+            }
           }
-        } else if (change.type === 'removed') {
-          this.closePeerConnection(participant.userId);
-          if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
-        }
-      });
-    });
-
-    // 3. Listen for incoming signals (Offers/Answers/Candidates targeted to ME)
-    const signalsRef = collection(roomRef, 'signals');
-    const signalsQuery = query(signalsRef, where('targetId', '==', userId));
-    
-    this.signalUnsubscribes[userId] = onSnapshot(signalsQuery, async (snapshot) => {
-      snapshot.docChanges().forEach(async (change) => {
-        if (change.type === 'added') {
-          const signal = change.doc.data();
-          if (signal.type === 'offer') {
-            await this.handleOffer(roomId, userId, signal, onParticipantsUpdate);
-          } else if (signal.type === 'answer') {
-            await this.handleAnswer(signal);
-          } else if (signal.type === 'candidate') {
-            await this.handleCandidate(signal);
+        });
+        
+        // Cleanup disconnected peers
+        this.pcs.forEach((pc, pid) => {
+          if (!participants.find(p => p.userId === pid)) {
+            this.closePeerConnection(pid);
           }
-          // Remove signal document after processing to keep it clean
-          await deleteDoc(doc(signalsRef, change.doc.id));
+        });
+
+        if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
+      }
+    );
+
+    // 4. Listen for incoming signals
+    this.unsubscribeSignals = FirestoreService.subscribeToCollection(
+      `rooms/${roomId}/signals`,
+      { filters: [['to', '==', userId]] },
+      async (signals) => {
+        for (const signal of signals) {
+          if (this.processedSignals.has(signal.id)) continue;
+          this.processedSignals.add(signal.id);
+          
+          try {
+            await this.handleSignal(roomId, userId, signal, onParticipantsUpdate);
+          } catch (err) {
+            logger.error(`[WebRTC] Error handling signal: ${err.message}`);
+          } finally {
+            FirestoreService.deleteDocument(`rooms/${roomId}/signals`, signal.id).catch(() => {});
+          }
         }
-      });
+      }
+    );
+  }
+
+  async handleSignal(roomId, myId, signal, onParticipantsUpdate) {
+    const data = JSON.parse(signal.signal);
+    const senderId = signal.from;
+
+    if (data.type === 'offer') {
+      await this.handleOffer(roomId, myId, senderId, data, onParticipantsUpdate);
+    } else if (data.type === 'answer') {
+      await this.handleAnswer(senderId, data);
+    } else if (data.type === 'candidate') {
+      await this.handleCandidate(senderId, data);
+    }
+  }
+
+  async sendSignal(roomId, from, to, signal) {
+    await FirestoreService.addDocument(`rooms/${roomId}/signals`, {
+      from,
+      to,
+      signal: JSON.stringify(signal),
+      timestamp: new Date()
     });
   }
 
-  async initiatePeerConnection(roomId, myId, targetId, onParticipantsUpdate) {
+  async setupPeerConnection(roomId, myId, targetId, onParticipantsUpdate) {
     const pc = new RTCPeerConnection(servers);
     this.pcs.set(targetId, pc);
-
-    pc.oniceconnectionstatechange = () => {
-      logger.info(`ICE Connection State (${targetId}): ${pc.iceConnectionState}`);
-      if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
-        // Optionnel: Tenter une renégociation ou informer l'UI
-      }
-    };
-
-    pc.onconnectionstatechange = () => {
-      logger.info(`Peer Connection State (${targetId}): ${pc.connectionState}`);
-    };
-
-    pc.ontrack = (event) => {
-      if (!this.remoteStreams.has(targetId)) {
-        this.remoteStreams.set(targetId, new MediaStream());
-      }
-      event.streams[0].getTracks().forEach(track => this.remoteStreams.get(targetId).addTrack(track));
-      if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
-    };
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        this.sendSignal(roomId, myId, targetId, { type: 'candidate', candidate: event.candidate.toJSON() });
-      }
-    };
-
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    
-    logger.info(`WebRTCService: Sending offer to ${targetId}`);
-    this.sendSignal(roomId, myId, targetId, { type: 'offer', sdp: offer.sdp });
-  }
-
-  async handleOffer(roomId, myId, signal, onParticipantsUpdate) {
-    const targetId = signal.senderId;
-    const pc = new RTCPeerConnection(servers);
-    this.pcs.set(targetId, pc);
-
-    pc.oniceconnectionstatechange = () => {
-      logger.info(`ICE Connection State (${targetId}): ${pc.iceConnectionState}`);
-    };
 
     if (this.localStream) {
       this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
     }
 
-    pc.ontrack = (event) => {
-      if (!this.remoteStreams.has(targetId)) {
-        this.remoteStreams.set(targetId, new MediaStream());
-      }
-      event.streams[0].getTracks().forEach(track => this.remoteStreams.get(targetId).addTrack(track));
-      if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
-    };
-
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         this.sendSignal(roomId, myId, targetId, { type: 'candidate', candidate: event.candidate.toJSON() });
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      logger.info(`[WebRTC] ICE state with ${targetId}: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+        logger.warn(`[WebRTC] Connection with ${targetId} failed, cleanup...`);
+        this.closePeerConnection(targetId);
+        if (onParticipantsUpdate) onParticipantsUpdate(Object.fromEntries(this.remoteStreams));
+      }
+    };
+
+    pc.ontrack = (event) => {
+      logger.info(`[WebRTC] Received track from ${targetId}: ${event.track.kind}`);
+      
+      let remoteStream;
+      if (event.streams && event.streams[0]) {
+        remoteStream = event.streams[0];
+      } else {
+        remoteStream = this.remoteStreams.get(targetId) || new MediaStream();
+        remoteStream.addTrack(event.track);
+      }
+      
+      this.remoteStreams.set(targetId, remoteStream);
+      if (onParticipantsUpdate) onParticipantsUpdate({ ...Object.fromEntries(this.remoteStreams) });
+    };
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await this.sendSignal(roomId, myId, targetId, { type: 'offer', sdp: offer.sdp });
+  }
+
+  async handleOffer(roomId, myId, senderId, signal, onParticipantsUpdate) {
+    const pc = new RTCPeerConnection(servers);
+    this.pcs.set(senderId, pc);
+
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream));
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.sendSignal(roomId, myId, senderId, { type: 'candidate', candidate: event.candidate.toJSON() });
+      }
+    };
+
+    pc.oniceconnectionstatechange = () => {
+      logger.info(`[WebRTC] ICE state with ${senderId}: ${pc.iceConnectionState}`);
+    };
+
+    pc.ontrack = (event) => {
+      logger.info(`[WebRTC] Received track from ${senderId}: ${event.track.kind}`);
+      
+      let remoteStream;
+      if (event.streams && event.streams[0]) {
+        remoteStream = event.streams[0];
+      } else {
+        remoteStream = this.remoteStreams.get(senderId) || new MediaStream();
+        remoteStream.addTrack(event.track);
+      }
+
+      this.remoteStreams.set(senderId, remoteStream);
+      if (onParticipantsUpdate) onParticipantsUpdate({ ...Object.fromEntries(this.remoteStreams) });
+    };
+
     await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: signal.sdp }));
     
-    // Process queued candidates if any
-    const queue = this.candidateQueues[targetId] || [];
+    // Process queued candidates
+    const queue = this.candidateQueues[senderId] || [];
     while (queue.length > 0) {
       const candidate = queue.shift();
       await pc.addIceCandidate(new RTCIceCandidate(candidate));
     }
-    delete this.candidateQueues[targetId];
+    delete this.candidateQueues[senderId];
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    this.sendSignal(roomId, myId, targetId, { type: 'answer', sdp: answer.sdp });
+    await this.sendSignal(roomId, myId, senderId, { type: 'answer', sdp: answer.sdp });
   }
 
-  async handleAnswer(signal) {
-    const pc = this.pcs.get(signal.senderId);
+  async handleAnswer(senderId, signal) {
+    const pc = this.pcs.get(senderId);
     if (pc) {
       await pc.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: signal.sdp }));
       
-      // Process queued candidates
-      const queue = this.candidateQueues[signal.senderId] || [];
+      const queue = this.candidateQueues[senderId] || [];
       while (queue.length > 0) {
         const candidate = queue.shift();
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
-      delete this.candidateQueues[signal.senderId];
+      delete this.candidateQueues[senderId];
     }
   }
 
-  async handleCandidate(signal) {
-    const pc = this.pcs.get(signal.senderId);
+  async handleCandidate(senderId, signal) {
+    const pc = this.pcs.get(senderId);
     if (pc && pc.remoteDescription) {
       await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
     } else {
-      // Queue candidate if remote description not set yet
-      if (!this.candidateQueues[signal.senderId]) {
-        this.candidateQueues[signal.senderId] = [];
-      }
-      this.candidateQueues[signal.senderId].push(signal.candidate);
+      if (!this.candidateQueues[senderId]) this.candidateQueues[senderId] = [];
+      this.candidateQueues[senderId].push(signal.candidate);
     }
   }
 
-  async sendSignal(roomId, senderId, targetId, data) {
-    const signalsRef = collection(db, 'rooms', roomId, 'signals');
-    await addDoc(signalsRef, { ...data, senderId, targetId, createdAt: serverTimestamp() });
-  }
-
   closePeerConnection(participantId) {
+    logger.info(`[WebRTC] Closing peer connection with ${participantId}`);
     const pc = this.pcs.get(participantId);
     if (pc) {
       pc.close();
       this.pcs.delete(participantId);
     }
-    if (this.remoteStreams.has(participantId)) {
-      this.remoteStreams.delete(participantId);
-    }
+    this.remoteStreams.delete(participantId);
   }
 
   async leaveRoom(roomId, userId) {
-    if (this.roomUnsubscribe) {
-      this.roomUnsubscribe();
-      this.roomUnsubscribe = null;
+    logger.info(`[WebRTC] leavingRoom called for room: ${roomId}, user: ${userId}`);
+    if (this.unsubscribeParticipants) {
+      logger.info("[WebRTC] Unsubscribing from participants");
+      this.unsubscribeParticipants();
+      this.unsubscribeParticipants = null;
     }
-    if (this.signalUnsubscribes[userId]) {
-      this.signalUnsubscribes[userId]();
-      delete this.signalUnsubscribes[userId];
+    if (this.unsubscribeSignals) {
+      logger.info("[WebRTC] Unsubscribing from signals");
+      this.unsubscribeSignals();
+      this.unsubscribeSignals = null;
     }
     
-    // Close all connections
-    this.pcs.forEach((pc, id) => this.closePeerConnection(id));
-    
-    // Delete participant from Firestore room
     if (roomId && userId) {
-      const participantRef = doc(db, 'rooms', roomId, 'participants', userId);
-      try {
-        await deleteDoc(participantRef);
-      } catch (e) {
-        console.error("Error deleting participant from room", e);
-      }
+      await FirestoreService.deleteDocument(`rooms/${roomId}/participants`, userId);
+    }
+    
+    this.pcs.forEach((pc, id) => {
+      logger.info(`[WebRTC] Closing peer ${id} during leaveRoom`);
+      pc.close();
+    });
+    this.pcs.clear();
+    this.remoteStreams.clear();
+    
+    if (this.localStream) {
+      logger.info("[WebRTC] Stopping local stream tracks");
+      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream = null;
     }
   }
 
   async hangup(roomId, userId) {
+    logger.info(`[WebRTC] Hangup called for room: ${roomId}`);
     await this.leaveRoom(roomId, userId);
-
-    if (this.localStream) {
-      this.localStream.getTracks().forEach(track => track.stop());
-      this.localStream = null;
-    }
   }
 }
 

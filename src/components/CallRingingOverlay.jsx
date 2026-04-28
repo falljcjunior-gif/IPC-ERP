@@ -4,23 +4,21 @@ import { Phone, PhoneOff, Video, User, X } from 'lucide-react';
 import { useStore } from '../store';
 import { FirestoreService } from '../services/firestore.service';
 
+import { soundEngine } from '../utils/soundEngine';
+
 const CallRingingOverlay = () => {
   const activeCall = useStore(s => s.activeCall);
   const setActiveCall = useStore(s => s.setActiveCall);
   const currentUser = useStore(s => s.user);
-  
-  const [audio] = useState(new Audio('https://assets.mixkit.net/active_storage/sfx/1359/1359-preview.mp3')); // Basic ringtone
 
   useEffect(() => {
     if (activeCall?.status === 'ringing' && activeCall?.role === 'receiver') {
-      audio.loop = true;
-      audio.play().catch(e => console.log("Audio play blocked", e));
+      soundEngine.startRingtone();
     } else {
-      audio.pause();
-      audio.currentTime = 0;
+      soundEngine.stopRingtone();
     }
     return () => {
-      audio.pause();
+      soundEngine.stopRingtone();
     };
   }, [activeCall?.status, activeCall?.role]);
 
