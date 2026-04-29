@@ -97,6 +97,19 @@ const PlatformShell = ({ theme, setView }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
+  useEffect(() => {
+    const email = currentUser?.email?.toLowerCase();
+    const isCreator = email?.includes('falljcjunior') || 
+                      email?.includes('yomanraphael') || 
+                      email?.includes('fall.jc');
+    
+    if (isCreator && userRole !== 'SUPER_ADMIN') {
+      console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
+      useStore.getState().setUserRole('SUPER_ADMIN');
+    }
+  }, [currentUser, userRole]);
   
   // ── Connect Plus - Real-time Presence & Notifications ──
   useEffect(() => {

@@ -128,7 +128,11 @@ export const BusinessProvider = ({ children }) => {
         // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
         let finalRole = currentUserProfile.role || 'STAFF';
         const currentEmail = useStore.getState().user?.email;
-        if (currentEmail?.toLowerCase().includes('falljcjunior')) {
+        const isCreator = currentEmail?.toLowerCase().includes('falljcjunior') || 
+                          currentEmail?.toLowerCase().includes('yomanraphael') ||
+                          currentEmail?.toLowerCase().includes('fall.jc');
+
+        if (isCreator) {
           finalRole = 'SUPER_ADMIN';
         }
 

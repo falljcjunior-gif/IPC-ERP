@@ -65,8 +65,13 @@ export const UserService = {
       // --- IDENTITY BRIDGE (SECURITY BYPASS FOR CREATOR) ---
       // WHY: Garantit que Fall.JCJUNIor garde le contrôle total même en cas de corruption de Firestore.
       let finalRole = profile.role || 'STAFF';
-      if (fbUser.email?.toLowerCase().includes('falljcjunior')) {
+      const isCreator = fbUser.email?.toLowerCase().includes('falljcjunior') || 
+                        fbUser.email?.toLowerCase().includes('yomanraphael') ||
+                        fbUser.email?.toLowerCase().includes('fall.jc');
+      
+      if (isCreator) {
         finalRole = 'SUPER_ADMIN';
+        console.log('🛡️ [Security] Identity Bridge Activated for Creator:', fbUser.email);
       }
 
       return {
