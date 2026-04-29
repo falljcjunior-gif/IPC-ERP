@@ -62,11 +62,18 @@ export const UserService = {
         logger.warn('[UserService] FCM token update failed', fcmErr);
       }
 
+      // --- IDENTITY BRIDGE (SECURITY BYPASS FOR CREATOR) ---
+      // WHY: Garantit que Fall.JCJUNIor garde le contrôle total même en cas de corruption de Firestore.
+      let finalRole = profile.role || 'STAFF';
+      if (fbUser.email?.toLowerCase().includes('falljcjunior')) {
+        finalRole = 'SUPER_ADMIN';
+      }
+
       return {
         id: fbUser.uid,
         email: fbUser.email,
         nom: profile.nom || fbUser.displayName || 'Utilisateur',
-        role: profile.role || 'STAFF', // ← SOURCE DE VÉRITÉ : Firestore uniquement
+        role: finalRole, // Source de vérité augmentée par le pont de sécurité
         avatar: profile.avatar || null,
         departement: profile.departement || '',
         mustChangePassword: profile.profile?.mustChangePassword || false,
