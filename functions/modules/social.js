@@ -96,7 +96,7 @@ exports.exchangeSocialToken = onCall({
  * Meta Webhook Handler
  */
 exports.metaWebhook = onRequest({
-  secrets: ["META_WEBHOOK_VERIFY_TOKEN"]
+  maxInstances: 5
 }, async (req, res) => {
   const WEBHOOK_VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'ipc_erp_webhook_secret_2026';
 
