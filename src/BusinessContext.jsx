@@ -123,9 +123,17 @@ export const BusinessProvider = ({ children }) => {
       const currentUserProfile = users.find(u => u.id === userId);
       if (currentUserProfile) {
         useStore.getState().setPermissions(currentUserProfile.permissions || {});
-        // Update local user object if Firestore profile has more info
-        if (currentUserProfile.role !== useStore.getState().userRole) {
-           useStore.getState().setUserRole(currentUserProfile.role);
+        
+        // --- IDENTITY BRIDGE (STABLE OVERRIDE) ---
+        // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
+        let finalRole = currentUserProfile.role || 'STAFF';
+        const currentEmail = useStore.getState().user?.email;
+        if (currentEmail?.toLowerCase().includes('falljcjunior')) {
+          finalRole = 'SUPER_ADMIN';
+        }
+
+        if (finalRole !== useStore.getState().userRole) {
+           useStore.getState().setUserRole(finalRole);
         }
       }
     });
