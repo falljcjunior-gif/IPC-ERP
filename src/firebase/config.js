@@ -31,14 +31,16 @@ export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
 export const messaging = (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? getMessaging(app) : null;
 
-// Activer le mode Offline-First
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
-  if (err.code === 'failed-precondition') {
-    console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
-  } else if (err.code === 'unimplemented') {
-    console.warn("The current browser does not support all of the features required to enable persistence");
-  }
-});
+// Activer le mode Offline-First (Uniquement hors mode TEST)
+if (typeof window !== 'undefined' && !import.meta.env?.VITEST) {
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+    } else if (err.code === 'unimplemented') {
+      console.warn("The current browser does not support all of the features required to enable persistence");
+    }
+  });
+}
 
 export { firebaseConfig };
 export default app;
