@@ -950,7 +950,7 @@ export const createOperationsSlice = (set, get) => ({
       const hrDocs = await FirestoreService.listDocuments('hr');
       const hrToDelete = hrDocs.filter(d => {
         const email = (d.email || d.profile?.email || "").toLowerCase();
-        return !email.includes('falljcjunior');
+        return email !== 'fall.jcjunior@gmail.com';
       });
       if (hrToDelete.length > 0) {
         const hrChunks = [];
@@ -965,7 +965,7 @@ export const createOperationsSlice = (set, get) => ({
       const allUsers = await FirestoreService.listDocuments('users');
       const usersToDelete = allUsers.filter(u => {
         const email = (u.email || u.profile?.email || "").toLowerCase();
-        return !email.includes('falljcjunior');
+        return email !== 'fall.jcjunior@gmail.com';
       });
 
       if (usersToDelete.length > 0) {
