@@ -24,10 +24,13 @@ export const AuthService = {
    * Récupère le token FCM pour les notifications
    */
   async getFCMToken() {
+    const vapidKey = import.meta.env.VITE_FCM_VAPID_KEY;
+    if (!vapidKey) {
+      logger.warn('[AuthService] VITE_FCM_VAPID_KEY manquante — notifications push désactivées. Ajoutez-la dans .env');
+      return null;
+    }
     try {
-      const token = await getToken(messaging, {
-        vapidKey: 'BJp_9p1X0-8Zz8X_X_X_X_X_X' // Replace with real VAPID key if needed
-      });
+      const token = await getToken(messaging, { vapidKey });
       return token;
     } catch (err) {
       logger.warn('AuthService:getFCMToken:failed', err);

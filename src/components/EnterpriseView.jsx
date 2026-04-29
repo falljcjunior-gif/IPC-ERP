@@ -73,15 +73,7 @@ const EnterpriseView = ({
   const _rawData = useStore(useCallback(state => {
     return getNestedValue(state.data, dataPath);
   }, [dataPath]));
-  const rawDataFromStore = Array.isArray(_rawData) ? _rawData : [];
-
-  const rawData = useMemo(() => {
-    let raw = [...rawDataFromStore];
-    if (modelId === 'users') {
-      raw = raw.filter(u => u.email !== 'fall.jcjunior@gmail.com');
-    }
-    return raw;
-  }, [rawDataFromStore, modelId]);
+  const rawData = Array.isArray(_rawData) ? _rawData : [];
 
   // 2. Filter & Search Logic
   const processedData = useMemo(() => {

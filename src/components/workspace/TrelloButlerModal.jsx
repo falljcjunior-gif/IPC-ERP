@@ -61,7 +61,9 @@ const TrelloButlerModal = ({ project, updateProject, onClose }) => {
     if (rule.effect.type === 'mark_done') t += 'Marquer la tâche comme terminée et cocher les cases';
     if (rule.effect.type === 'add_green_label') t += 'Ajouter une étiquette verte "Validé"';
     if (rule.effect.type === 'assign_me') t += "M'assigner automatiquement";
+    if (rule.effect.type === 'notify_manager') t += "Alerter le manager (Push)";
     return t;
+
   };
 
   return (
@@ -136,7 +138,9 @@ const TrelloButlerModal = ({ project, updateProject, onClose }) => {
                     <option value="mark_done">Marquer la tâche comme terminée</option>
                     <option value="add_green_label">Ajouter une étiquette verte "Validé"</option>
                     <option value="assign_me">M'assigner automatiquement</option>
+                    <option value="notify_manager">🔔 Notifier le Manager par Push</option>
                   </select>
+
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
                    <button onClick={() => setIsCreating(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>

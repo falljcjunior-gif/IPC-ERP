@@ -2,6 +2,10 @@
   "nav": {
     "dashboard": "Tableau de Bord",
     "home": "Cockpit",
+    "intelligence": "Intelligence Stratégique",
+    "missions": "Missions",
+    "signature": "Signature Électronique",
+
     "crm": "CRM & Ventes",
     "hr": "Ressources Humaines",
     "finance": "Finance & Comptabilité",
@@ -11,7 +15,9 @@
     "dms": "Documents Cloud",
     "planning": "Planning & Événements",
     "marketing": "Marketing Digital",
-    "settings": "Configuration"
+    "settings": "Configuration",
+    "command_center": "Vue 360°"
+
   },
   "common": {
     "welcome": "Bienvenue sur l'Intelligence Engine",

@@ -6,11 +6,10 @@ import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import { initRegistry } from './registry_init';
 import { httpsCallable, getFunctions } from 'firebase/functions';
-import { FirestoreService } from './services/firestore.service';
-import './index.css';
-import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { useStore } from './store';
+import { UserService } from './services/user.service';
+import './index.css';
 
 const AuthObserver = () => {
   const { addToast } = useToast();
@@ -80,18 +79,30 @@ function App() {
       }
     }, 5000);
 
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(fallbackTimer);
       if (firebaseUser) {
-        // [IDENTITY ENFORCEMENT] : Force Super Admin for the master mail
-        const isAdmin = firebaseUser.email === 'fall.jcjunior@gmail.com';
-        setUser({
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          nom: isAdmin ? 'Fall J.C. Junior' : (firebaseUser.displayName || 'Utilisateur'),
-          role: isAdmin ? 'SUPER_ADMIN' : 'STAFF'
-        });
-        setView('dashboard');
+        try {
+          const userProfile = await UserService.syncProfile(firebaseUser);
+          setUser(userProfile);
+          
+          // Initialize Realtime Presence
+          import('./services/presence.service').then(({ PresenceService }) => {
+            PresenceService.setPresence(firebaseUser.uid);
+          });
+
+          setView('dashboard');
+        } catch (error) {
+          console.error("[App] Erreur sync profil:", error);
+          // Fallback minimal si Firestore bloque (ex: pas encore de profil)
+          setUser({
+            id: firebaseUser.uid,
+            email: firebaseUser.email,
+            nom: firebaseUser.displayName || 'Utilisateur',
+            role: 'GUEST'
+          });
+          setView('login');
+        }
       } else {
         setView('login');
       }

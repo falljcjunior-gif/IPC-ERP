@@ -3,13 +3,12 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useEffect, useRef, useCallback } from 'react';
-import { 
-  collection, query, onSnapshot, orderBy, where, limit
-} from 'firebase/firestore';
-import { auth, db } from './firebase/config';
+import { auth } from './firebase/config';
 import { useStore } from './store';
 import { nexusWorkflowEngine } from './services/WorkflowEngine';
 import { CallListener } from './services/CallListener';
+import { UserService } from './services/user.service';
+import { FirestoreService } from './services/firestore.service';
 import { logger } from './utils/logger';
 
 /**
@@ -92,54 +91,67 @@ export const BusinessProvider = ({ children }) => {
     // Initialize Workflow Engine
     nexusWorkflowEngine.init();
 
-    // A. Business Modules Sync
+    // A. Business Modules Sync — [SOFT-DELETE ENABLED] via FirestoreService
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase',
-      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature'
+      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents'
     ];
     
     const unsubscribes = collections_to_sync.map(colName => {
-      const q = query(collection(db, colName), orderBy('createdAt', 'desc'), limit(200));
-      return onSnapshot(q, (snapshot) => {
-        const docs = snapshot.docs.map(d => ({ ...d.data(), id: d.id }));
-        scheduleUpdate(colName, docs);
-      });
+      return FirestoreService.subscribeToCollection(
+        colName, 
+        { orderByField: '_createdAt', descending: true, limitTo: 300 },
+        (docs) => scheduleUpdate(colName, docs),
+        (err) => logger.error(`[BusinessContext] Sync failed for ${colName}`, err)
+      );
     });
 
     // B. BPM Workflows
-    const unsubWorkflows = onSnapshot(collection(db, 'workflows'), (snap) => {
-      const wfs = snap.docs.map(d => ({ ...d.data(), id: d.id }));
+    const unsubWorkflows = FirestoreService.subscribeToCollection('workflows', {}, (wfs) => {
       useStore.getState().setWorkflows(wfs);
     });
 
     // C. Global Notifications
-    const unsubNotify = onSnapshot(query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(50)), (snap) => {
-      const ns = snap.docs.map(d => ({ ...d.data(), id: d.id }));
-      useStore.getState().setNotifications(ns);
-    });
+    const unsubNotify = FirestoreService.subscribeToCollection(
+      'notifications', 
+      { orderByField: '_createdAt', descending: true, limitTo: 100 },
+      (ns) => useStore.getState().setNotifications(ns)
+    );
 
     // D. User Permissions
-    const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
-      const userPermissions = {};
-      snap.docs.forEach(d => {
-        const data = d.data();
-        if (data.permissions) userPermissions[d.id] = data.permissions;
-      });
-      useStore.getState().setPermissions(userPermissions);
+    const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
+      const currentUserProfile = users.find(u => u.id === userId);
+      if (currentUserProfile) {
+        useStore.getState().setPermissions(currentUserProfile.permissions || {});
+        // Update local user object if Firestore profile has more info
+        if (currentUserProfile.role !== useStore.getState().userRole) {
+           useStore.getState().setUserRole(currentUserProfile.role);
+        }
+      }
     });
 
     // E. Call Listener (Decoupled Service)
     CallListener.init(userId);
 
-    // 0. Auth Identity Bridge
-    const unsubAuth = auth.onAuthStateChanged(fbUser => {
+    // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
+    const unsubAuth = auth.onAuthStateChanged(async fbUser => {
       if (fbUser) {
-        setUser({
-          id: fbUser.uid,
-          email: fbUser.email,
-          nom: fbUser.displayName || 'Utilisateur',
-          role: fbUser.email === 'fall.jcjunior@gmail.com' ? 'SUPER_ADMIN' : 'STAFF'
-        });
+        try {
+          const userProfile = await UserService.syncProfile(fbUser);
+          setUser(userProfile);
+          logger.info('[BusinessContext] Profil synchronisé', { uid: fbUser.uid, role: userProfile.role });
+        } catch (err) {
+          logger.error('[BusinessContext] Erreur sync profil', err);
+          // Fallback minimal si Firestore indisponible
+          setUser({
+            id: fbUser.uid,
+            email: fbUser.email,
+            nom: fbUser.displayName || 'Utilisateur',
+            role: 'STAFF'
+          });
+        }
+      } else {
+        setUser({ id: 'guest', nom: 'Utilisateur', email: '', role: 'GUEST' });
       }
     });
 

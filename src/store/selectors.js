@@ -138,3 +138,9 @@ export const useAcceptCall = () => useStore(s => s.acceptCall);
 
 /** Rejeter un appel */
 export const useRejectCall = () => useStore(s => s.rejectCall);
+
+// ── Admin Actions ────────────────────────────────────────────────────────────
+
+/** Déclencher un backup Firestore manuel */
+export const useTriggerManualBackup = () => useStore(s => s.triggerManualBackup);
+

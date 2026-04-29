@@ -150,5 +150,29 @@ export const createAdminSlice = (set, get) => ({
     }));
     
     get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
+  },
+
+  triggerManualBackup: async () => {
+    try {
+      const functions = getFunctions();
+      const backupFunc = httpsCallable(functions, 'manualFirestoreExport');
+      const result = await backupFunc();
+      
+      get().addHint({ 
+        title: "Sauvegarde Lancée", 
+        message: `L'opération de backup ${result.data.operationName} a démarré sur le bucket ${result.data.bucket}.`, 
+        type: 'success' 
+      });
+      return result.data;
+    } catch (err) {
+      console.error("Erreur déclenchement Backup:", err);
+      get().addHint({ 
+        title: "Échec du Backup", 
+        message: err.message || "Une erreur est survenue lors du lancement de la sauvegarde.", 
+        type: 'danger' 
+      });
+      throw err;
+    }
   }
 });
+

@@ -19,29 +19,51 @@ import { createOperationsSlice } from './slices/createOperationsSlice';
 // ══════════════════════════════════════════════════════════════════════════
 
 // 🔒 COUCHE DE SÉCURITÉ : CHIFFREMENT DU STOCKAGE LOCAL
-const ENCRYPTION_KEY = 'ipc-erp-secure-v4-2026'; // À déplacer en variable d'env
+// La clé est lue depuis la variable d'environnement VITE_STORE_KEY.
+// Si absente, une clé éphémère par session est générée (les données ne
+// survivront pas au rechargement — comportement sécurisé par défaut).
+const _envKey = import.meta.env.VITE_STORE_KEY;
+const _sessionFallback = (() => {
+  const k = sessionStorage.getItem('_ipc_sk');
+  if (k) return k;
+  const generated = crypto.randomUUID();
+  sessionStorage.setItem('_ipc_sk', generated);
+  return generated;
+})();
+const ENCRYPTION_KEY = _envKey || _sessionFallback;
+
+const xorEncrypt = (str, key) =>
+  btoa(str.split('').map((c, i) =>
+    String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+  ).join(''));
+
+const xorDecrypt = (encoded, key) => {
+  try {
+    return atob(encoded).split('').map((c, i) =>
+      String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
+    ).join('');
+  } catch { return null; }
+};
 
 const secureStorage = {
   getItem: (name) => {
     try {
       const encrypted = localStorage.getItem(name);
       if (!encrypted) return null;
-      // Déchiffrement simple pour l'audit, à renforcer avec SubtleCrypto pour la prod
-      const decrypted = atob(encrypted).split('').map((char, i) => 
-        String.fromCharCode(char.charCodeAt(0) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length))
-      ).join('');
-      return JSON.parse(decrypted);
+      const decrypted = xorDecrypt(encrypted, ENCRYPTION_KEY);
+      return decrypted ? JSON.parse(decrypted) : null;
     } catch (e) {
-      console.error("Erreur de déchiffrement du store:", e);
+      console.error('[SecureStorage] Erreur de déchiffrement:', e);
       return null;
     }
   },
   setItem: (name, value) => {
-    const stringValue = JSON.stringify(value);
-    const encrypted = btoa(stringValue.split('').map((char, i) => 
-      String.fromCharCode(char.charCodeAt(0) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length))
-    ).join(''));
-    localStorage.setItem(name, encrypted);
+    try {
+      const encrypted = xorEncrypt(JSON.stringify(value), ENCRYPTION_KEY);
+      localStorage.setItem(name, encrypted);
+    } catch (e) {
+      console.error('[SecureStorage] Erreur de chiffrement:', e);
+    }
   },
   removeItem: (name) => localStorage.removeItem(name),
 };
@@ -129,11 +151,8 @@ export const useStore = create(
       // Exposed as a plain setter so BusinessContext can sync it after Firebase auth
       currentUser: null,
       setCurrentUser: (u) => {
-        // [SECURITY OVERRIDE] : Root Admin Hardlink
-        if (u?.email === 'fall.jcjunior@gmail.com') {
-          u.role = 'SUPER_ADMIN';
-          u.nom = 'Fall J.C. Junior';
-        }
+        // Role is always sourced from Firestore /users/{uid}.role
+        // No client-side role override — server is the source of truth
         set({ 
           currentUser: u, 
           user: u,
@@ -180,12 +199,8 @@ export const useStore = create(
       storage: createJSONStorage(() => secureStorage), // [SÉCURISÉ] Chiffrement XOR actif
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // [HYDRATION GUARD] : Ensure Root Admin Clearance
-          if (state.user?.email === 'fall.jcjunior@gmail.com') {
-             state.user.role = 'SUPER_ADMIN';
-             if (state.user.nom === 'Utilisateur') state.user.nom = 'Fall J.C. Junior';
-             state.userRole = 'SUPER_ADMIN';
-          }
+          // [HYDRATION GUARD] : State is sourced from encrypted localStorage
+          // Role consistency is verified during BusinessContext sync with UserService
           state.setHasHydrated(true);
         }
       },
@@ -200,13 +215,16 @@ export const useStore = create(
 );
 
 // ── PERSISTENCE SYNCHRONISÉE (HORS CYCLE REACT) ──────────────────────────────
-// Pourquoi : Evite que BusinessContext ne doive s'abonner à 'data', ce qui cause
-// des re-renders massifs à chaque synchro Firestore.
+// Les données métier (data) proviennent de Firestore en temps réel.
+// Elles ne sont PAS persistées en localStorage (risque de fuite de données sensibles).
+// La source de vérité est Firestore — au reload, BusinessContext re-écoute les collections.
+// Seuls user, globalSettings, activeApp et dashboardPreferences sont persistés (via partialize).
 useStore.subscribe(
-  (state) => state.data,
-  (data) => {
-    if (data && Object.keys(data).length > 0) {
-      localStorage.setItem('daxcelor_data', JSON.stringify(data));
+  (state) => state.userRole,
+  (role) => {
+    // Audit: log les changements de rôle (dev uniquement)
+    if (import.meta.env.DEV) {
+      console.info('[Store] userRole changed:', role);
     }
   }
 );

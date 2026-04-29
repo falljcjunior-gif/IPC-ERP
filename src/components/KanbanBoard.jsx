@@ -21,7 +21,12 @@ const KanbanBoard = ({
       alignItems: 'flex-start'
     }}>
       {columns.map((column) => {
-        const columnItems = items.filter(item => item[columnMapping] === column);
+        const columnItems = items.filter(item => {
+          const val = typeof columnMapping === 'function' 
+            ? columnMapping(item) 
+            : item[columnMapping];
+          return val === column;
+        });
         
         return (
           <div 

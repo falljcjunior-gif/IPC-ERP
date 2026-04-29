@@ -13,7 +13,7 @@ const IdentityTab = ({ onOpenDetail }) => {
   const { data } = useStore();
 
   const allUsers = data?.base?.users || [];
-  const visibleUsers = allUsers.filter(u => u.email !== 'fall.jcjunior@gmail.com');
+  const visibleUsers = allUsers;
   const userCount = visibleUsers.length;
   
   const stats = [

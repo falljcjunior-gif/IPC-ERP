@@ -1,18 +1,31 @@
 import { FirestoreService } from '../services/firestore.service';
 import logger from './logger';
 
+// ── ICE Servers Configuration ─────────────────────────────────────────────────
+// STUN : gratuit, fonctionne pour ~70% des réseaux
+// TURN : requis pour NAT strict, réseaux d'entreprise, VPN
+// Configurez VITE_TURN_URL, VITE_TURN_USERNAME, VITE_TURN_CREDENTIAL dans .env
+const buildIceServers = () => {
+  const iceServers = [
+    { urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }
+  ];
+
+  const turnUrl = import.meta.env.VITE_TURN_URL;
+  const turnUser = import.meta.env.VITE_TURN_USERNAME;
+  const turnCred = import.meta.env.VITE_TURN_CREDENTIAL;
+
+  if (turnUrl && turnUser && turnCred) {
+    iceServers.push({ urls: [turnUrl], username: turnUser, credential: turnCred });
+  } else {
+    // eslint-disable-next-line no-console
+    console.warn('[WebRTC] TURN server non configuré — les appels peuvent échouer sur NAT strict. Voir .env.example');
+  }
+
+  return iceServers;
+};
+
 const servers = {
-  iceServers: [
-    {
-      urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'],
-    },
-    // [TURN CONFIG] Added for enterprise/strict NAT support
-    // {
-    //   urls: ['turn:your-turn-server.com:3478'],
-    //   username: 'your-username',
-    //   credential: 'your-password'
-    // }
-  ],
+  iceServers: buildIceServers(),
   iceCandidatePoolSize: 10,
 };
 

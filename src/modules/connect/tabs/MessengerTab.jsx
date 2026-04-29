@@ -12,6 +12,7 @@ import {
 import { FirestoreService, StorageService } from '../../../services/firestore.service';
 import logger from '../../../utils/logger';
 import { webrtcService } from '../../../utils/WebRTCService';
+import { PresenceService } from '../../../services/presence.service';
 
 const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const HighlightText = ({ text, highlight }) => {
@@ -51,6 +52,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const [searchInChat, setSearchInChat] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState(null);
+  const [rtdbTypingUsers, setRtdbTypingUsers] = useState([]);
   
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -182,48 +184,45 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     return () => unsub();
   }, [currentUser?.id]);
 
-  // Typing Indicator Logic
+  // Typing Indicator Logic (RTDB Optimized)
   useEffect(() => {
-    if (!activeRoom?.id || !currentUser?.id || !newMessage.trim()) {
-      if (activeRoom?.id && currentUser?.id) {
-         FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false }, true);
-      }
-      return;
+    if (!activeRoom?.id || !currentUser?.id) return;
+    
+    const isTyping = newMessage.trim().length > 0;
+    PresenceService.setTyping(activeRoom.id, currentUser.id, isTyping);
+
+    // Stop typing indicator if inactive for 3s
+    let idleTimer;
+    if (isTyping) {
+      idleTimer = setTimeout(() => {
+        PresenceService.setTyping(activeRoom.id, currentUser.id, false);
+      }, 3000);
     }
 
-    const timer = setTimeout(() => {
-      FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: true }, true);
-      
-      const idleTimer = setTimeout(() => {
-        FirestoreService.setDocument(`rooms/${activeRoom.id}/participants`, currentUser.id, { isTyping: false }, true);
-      }, 3000);
-      
-      return () => clearTimeout(idleTimer);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    return () => {
+      if (idleTimer) clearTimeout(idleTimer);
+    };
   }, [newMessage, activeRoom?.id, currentUser?.id]);
 
-  const typingUsers = useMemo(() => {
-    return Object.values(activeParticipants)
-      .filter(p => p.id !== currentUser?.id && p.isTyping)
-      .map(p => p.nom || 'Quelqu\'un');
-  }, [activeParticipants, currentUser?.id]);
-
-  // Read Receipts Logic
   useEffect(() => {
-    if (!activeRoom?.id || !currentUser?.id || messages.length === 0) return;
-    
-    const unreadMessages = messages.filter(m => m.userId !== currentUser.id && (!Array.isArray(m.readBy) || !m.readBy.includes(currentUser.id)));
-    
-    if (unreadMessages.length > 0) {
-      unreadMessages.forEach(msg => {
-        FirestoreService.setDocument('messages', msg.id, {
-          readBy: FirestoreService.arrayUnion(currentUser.id)
-        }, true);
-      });
-    }
-  }, [messages, activeRoom?.id, currentUser?.id]);
+    if (!activeRoom?.id) return;
+    const unsub = PresenceService.subscribeToTyping(activeRoom.id, (uids) => {
+      const names = uids
+        .filter(uid => uid !== currentUser?.id)
+        .map(uid => employees.find(e => e.id === uid)?.nom || 'Quelqu\'un');
+      setRtdbTypingUsers(names);
+    });
+    return () => unsub();
+  }, [activeRoom?.id, employees, currentUser?.id]);
+
+  const typingUsersDisplay = useMemo(() => rtdbTypingUsers, [rtdbTypingUsers]);
+
+
+  // NOTE: La logique de read receipt est gérée dans l'effet d'abonnement aux messages ci-dessus
+  // (batch write debounced avec processedReadReceiptsRef). Ce second effet a été supprimé
+  // pour éviter la double écriture Firestore et les race conditions.
+
+
 
   const startRecording = async () => {
     try {
@@ -381,18 +380,24 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     }
   };
 
-  const deleteMessage = async (msgId) => {
-    if (!window.confirm("Supprimer ce message ?")) return;
+  const deleteMessage = async (msgId, global = true) => {
+    if (!window.confirm(global ? "Supprimer ce message pour tout le monde ?" : "Supprimer ce message pour moi ?")) return;
     try {
-      await FirestoreService.updateDocument('messages', msgId, {
-        text: "🚫 Ce message a été supprimé",
-        isDeleted: true,
-        fileUrl: null
-      });
+      if (global) {
+        // [SOFT-DELETE GLOBAL] Le message disparaîtra de tous les flux car subscribeToCollection filtre _deletedAt
+        await FirestoreService.updateDocument('messages', msgId, {
+          _deletedAt: new Date().toISOString(),
+          isDeleted: true
+        });
+      } else {
+        // [LOCAL DELETE] Optionnel : on pourrait ajouter l'ID de l'utilisateur à une liste 'hiddenFor'
+        // Pour l'instant, on se concentre sur le 'Delete for everyone' demandé.
+      }
     } catch (err) {
       logger.error("Delete Error", err);
     }
   };
+
 
   const createRoom = async () => {
     if (!newGroupData.label || newGroupData.members.length === 0) return;
@@ -618,10 +623,10 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                <div>
                   <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}>{activeRoom.label}</h4>
                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Circle size={8} fill={typingUsers.length > 0 ? "#8B5CF6" : "#10B981"} color={typingUsers.length > 0 ? "#8B5CF6" : "#10B981"} />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: typingUsers.length > 0 ? "#8B5CF6" : "#10B981" }}>
-                        {typingUsers.length > 0 
-                          ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'écrivent...' : 'écrit...'}`
+                      <Circle size={8} fill={typingUsersDisplay.length > 0 ? "#8B5CF6" : "#10B981"} color={typingUsersDisplay.length > 0 ? "#8B5CF6" : "#10B981"} />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: typingUsersDisplay.length > 0 ? "#8B5CF6" : "#10B981" }}>
+                        {typingUsersDisplay.length > 0 
+                          ? `${typingUsersDisplay.join(', ')} ${typingUsersDisplay.length > 1 ? 'écrivent...' : 'écrit...'}`
                           : (Object.keys(activeParticipants).length > 0 ? `${Object.keys(activeParticipants).length} en appel` : 'Actif')}
                       </span>
                    </div>

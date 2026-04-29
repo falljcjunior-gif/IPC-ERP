@@ -123,6 +123,11 @@ export const FirestoreService = {
    * Injecte automatiquement les métadonnées d'audit.
    * @returns {Promise<string>} ID du document créé
    */
+  /**
+   * Crée un document avec ID auto-généré.
+   * Injecte automatiquement les métadonnées d'audit et de cycle de vie.
+   * @returns {Promise<string>} ID du document créé
+   */
   async createDocument(collectionName, data) {
     const user = requireAuth();
     try {
@@ -131,6 +136,7 @@ export const FirestoreService = {
         _createdAt: serverTimestamp(),
         _createdBy: user.uid,
         _updatedAt: serverTimestamp(),
+        _deletedAt: null, // [SOFT-DELETE] Initialisé à null
       });
       const docRef = await addDoc(collection(db, collectionName), safeData);
       return { id: docRef.id };
@@ -157,6 +163,9 @@ export const FirestoreService = {
         _updatedAt: serverTimestamp(),
         _updatedBy: user.uid,
       });
+      // Si c'est une création (pas merge), on s'assure que _deletedAt est là
+      if (!merge) safeData._deletedAt = null;
+      
       await setDoc(doc(db, collectionName, documentId), safeData, { merge });
     } catch (err) {
       throw wrapFirestoreError(err, `setDocument(${collectionName}/${documentId})`);
@@ -181,28 +190,51 @@ export const FirestoreService = {
   },
 
   /**
-   * Supprime un document.
-   * WHY: Centralisé pour pouvoir ajouter du soft-delete ou audit trail plus tard.
+   * Supprime un document (Soft-Delete par défaut).
+   * WHY: Sécurité et piste d'audit. Le document reste en base mais marqué comme supprimé.
    */
   async deleteDocument(collectionName, documentId) {
-    requireAuth();
+    const user = requireAuth();
     try {
-      await deleteDoc(doc(db, collectionName, documentId));
+      // [SOFT-DELETE] On ne supprime pas, on marque comme supprimé
+      await updateDoc(doc(db, collectionName, documentId), {
+        _deletedAt: serverTimestamp(),
+        _deletedBy: user.uid,
+        _updatedAt: serverTimestamp()
+      });
     } catch (err) {
       throw wrapFirestoreError(err, `deleteDocument(${collectionName}/${documentId})`);
     }
   },
 
   /**
-   * Abonnement temps réel à une collection.
+   * Suppression définitive (Admin uniquement en théorie via Rules).
+   */
+  async permanentDelete(collectionName, documentId) {
+    requireAuth();
+    try {
+      await deleteDoc(doc(db, collectionName, documentId));
+    } catch (err) {
+      throw wrapFirestoreError(err, `permanentDelete(${collectionName}/${documentId})`);
+    }
+  },
+
+  /**
+   * Abonnement temps réel à une collection avec filtrage automatique du soft-delete.
    * @returns {Function} Fonction de désabonnement (unsubscribe)
    */
   subscribeToCollection(collectionName, options = {}, onData, onError) {
     requireAuth();
-    const { filters = [], orderByField, limitTo, descending = false } = options;
+    const { filters = [], orderByField, limitTo, descending = false, includeDeleted = false } = options;
     try {
       let q = collection(db, collectionName);
       const constraints = [];
+      
+      // [SOFT-DELETE FILTER] Par défaut, on ne montre pas les supprimés
+      if (!includeDeleted) {
+        constraints.push(where('_deletedAt', '==', null));
+      }
+
       for (const filter of filters) {
         if (Array.isArray(filter)) {
           const [field, op, value] = filter;
@@ -212,8 +244,10 @@ export const FirestoreService = {
           constraints.push(where(field, operator, value));
         }
       }
+      
       if (orderByField) constraints.push(orderBy(orderByField, descending ? 'desc' : 'asc'));
       if (limitTo) constraints.push(limit(limitTo));
+      
       return onSnapshot(
         query(q, ...constraints),
         (snap) => onData(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
@@ -227,20 +261,23 @@ export const FirestoreService = {
 
   /**
    * Abonnement temps réel à un document unique.
-   * @returns {Function} Fonction de désabonnement
    */
   subscribeToDocument(collectionName, documentId, onData, onError) {
     requireAuth();
     return onSnapshot(
       doc(db, collectionName, documentId),
-      (snap) => onData(snap.exists() ? { id: snap.id, ...snap.data() } : null),
+      (snap) => {
+        const data = snap.exists() ? { id: snap.id, ...snap.data() } : null;
+        // On renvoie null si le document est marqué comme supprimé
+        if (data && data._deletedAt) return onData(null);
+        onData(data);
+      },
       (err) => onError?.(wrapFirestoreError(err, `subscribeDoc(${collectionName}/${documentId})`))
     );
   },
 
   /**
    * Écriture atomique en batch (multi-documents).
-   * @param {Array<{op: 'set'|'update'|'delete', collection, id, data}>} operations
    */
   async batchWrite(operations) {
     const user = requireAuth();
@@ -248,9 +285,16 @@ export const FirestoreService = {
       const batch = writeBatch(db);
       for (const op of operations) {
         const ref = doc(db, op.collection, op.id);
-        if (op.op === 'set') batch.set(ref, sanitizeData({ ...op.data, _updatedBy: user.uid }), { merge: true });
-        else if (op.op === 'update') batch.update(ref, sanitizeData({ ...op.data, _updatedBy: user.uid }));
-        else if (op.op === 'delete') batch.delete(ref);
+        if (op.op === 'set') {
+          batch.set(ref, sanitizeData({ ...op.data, _updatedBy: user.uid, _deletedAt: null }), { merge: true });
+        } else if (op.op === 'update') {
+          batch.update(ref, sanitizeData({ ...op.data, _updatedBy: user.uid, _updatedAt: serverTimestamp() }));
+        } else if (op.op === 'delete') {
+          // [SOFT-DELETE] Conversion en update
+          batch.update(ref, { _deletedAt: serverTimestamp(), _deletedBy: user.uid, _updatedAt: serverTimestamp() });
+        } else if (op.op === 'permanentDelete') {
+          batch.delete(ref);
+        }
       }
       await batch.commit();
     } catch (err) {

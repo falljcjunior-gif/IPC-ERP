@@ -35,31 +35,57 @@ class WorkflowEngine {
 
     // Détecter les changements sur les modules critiques
     const modulesToWatch = ['production', 'sales', 'inventory', 'purchase', 'hr'];
-    
+
+    // Champs métier surveillés — comparaison ciblée O(1) au lieu de JSON.stringify O(n)
+    const WATCHED_FIELDS = {
+      'workOrders': ['status', 'statut', 'progress', 'completedAt'],
+      'products':   ['stock', 'statut', 'status', 'prix'],
+      'orders':     ['statut', 'status', 'montant', 'total', 'paymentStatus'],
+      'employees':  ['statut', 'status', 'contrat'],
+      'default':    ['statut', 'status', 'montant', 'stock', 'progress']
+    };
+
     modulesToWatch.forEach(moduleKey => {
       const currentModule = currentData[moduleKey] || {};
       const prevModule = this.prevData[moduleKey] || {};
 
-      // Pour chaque sous-module (ex: workOrders, products)
       Object.keys(currentModule).forEach(subKey => {
         const currentItems = currentModule[subKey] || [];
         const prevItems = prevModule[subKey] || [];
+        const watchedFields = WATCHED_FIELDS[subKey] || WATCHED_FIELDS['default'];
 
         currentItems.forEach(currentItem => {
           const prevItem = prevItems.find(p => p.id === currentItem.id);
-          
+
           if (!prevItem) {
-            // Nouvel enregistrement (Trigger: onCreate)
             this.evaluateWorkflows(moduleKey, subKey, 'onCreate', currentItem, null);
-          } else if (JSON.stringify(currentItem) !== JSON.stringify(prevItem)) {
-            // Modification (Trigger: onUpdate)
-            this.evaluateWorkflows(moduleKey, subKey, 'onUpdate', currentItem, prevItem);
+          } else {
+            // Comparaison ciblée : uniquement les champs métier critiques
+            const hasChanged = watchedFields.some(
+              field => currentItem[field] !== prevItem[field]
+            );
+            if (hasChanged) {
+              this.evaluateWorkflows(moduleKey, subKey, 'onUpdate', currentItem, prevItem);
+            }
           }
         });
       });
     });
 
-    this.prevData = JSON.parse(JSON.stringify(currentData));
+    // Snapshot léger : on ne clone que les champs surveillés pour économiser la mémoire
+    this.prevData = {};
+    modulesToWatch.forEach(mk => {
+      if (!currentData[mk]) return;
+      this.prevData[mk] = {};
+      Object.keys(currentData[mk]).forEach(sk => {
+        this.prevData[mk][sk] = (currentData[mk][sk] || []).map(item => {
+          const fields = WATCHED_FIELDS[sk] || WATCHED_FIELDS['default'];
+          const snapshot = { id: item.id };
+          fields.forEach(f => { snapshot[f] = item[f]; });
+          return snapshot;
+        });
+      });
+    });
   }
 
   evaluateWorkflows(module, subModule, event, currentItem, prevItem) {

@@ -6,7 +6,8 @@ import {
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart
+  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain
+
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -46,6 +47,9 @@ const Shipping = lazy(() => import('./modules/Shipping'));
 const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
 const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
+const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
+const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
+const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -93,16 +97,30 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'command_center', label: 'Vue 360°', icon: <Activity size={18} />,
+    id: 'intelligence', label: 'Intelligence Stratégique', icon: <Brain size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
-    component: GlobalDashboard, priority: 2
+    component: ExecutiveIntelligence, priority: 2
+  });
+
+  registry.register({
+    id: 'missions', label: 'Portail des Missions', icon: <Rocket size={18} />,
+    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
+    component: MissionsPortal, priority: 3
+  });
+
+
+  registry.register({
+    id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
+    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'FINANCE'],
+    component: SignatureModule, priority: 5
   });
 
   registry.register({
     id: 'connect', label: 'Connect Plus', icon: <Zap size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
-    component: Connect, priority: 3
+    component: Connect, priority: 4
   });
+
 
   // --- CRM & Ventes ---
   registry.register({

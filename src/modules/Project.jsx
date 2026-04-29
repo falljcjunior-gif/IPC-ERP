@@ -67,7 +67,12 @@ const ProjectHub = ({ onOpenDetail }) => {
           mergedChanges.membresId = [...new Set([...(taskBefore?.membresId||[]), currentUser?.nom || 'Moi'])];
           actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : Vous a affecté à la carte', author: '🤖 Butler', date: new Date().toISOString() });
         }
+        if (rule.effect.type === 'notify_manager') {
+          mergedChanges._notifyManagerRequested = true;
+          actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : A alerté le manager par push', author: '🤖 Butler', date: new Date().toISOString() });
+        }
       }
+
     });
 
     if (actionLogs.length > 0) {
@@ -217,7 +222,21 @@ const ProjectHub = ({ onOpenDetail }) => {
                    
                    <div>
                      <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.25rem', fontWeight: 800, color: '#111827' }}>{p.nom}</h3>
-                     <p style={{ margin: 0, fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>{p.client}</p>
+                      <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', color: '#64748b', fontWeight: 500 }}>{p.client}</p>
+                      
+                      {/* 🤖 BUTLER AUTO-TAGS */}
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        {p.tags?.map(tag => (
+                          <span key={tag} style={{ 
+                            fontSize: '0.65rem', fontWeight: 800, padding: '0.25rem 0.6rem', 
+                            borderRadius: '2rem', background: tag === 'Stratégique' ? '#8B5CF6' : '#64748B', 
+                            color: 'white', textTransform: 'uppercase' 
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
                    </div>
                    
                    <div>

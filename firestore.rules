@@ -1,8 +1,239 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getRole() {
+      return isAuthenticated() ? getUserData().role : 'GUEST';
+    }
+
+    function isSuperAdmin() {
+      return isAuthenticated() && getRole() == 'SUPER_ADMIN';
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (getRole() == 'ADMIN' || getRole() == 'SUPER_ADMIN');
+    }
+
+    function isManager() {
+      return isAuthenticated() && (getRole() == 'MANAGER' || isAdmin());
+    }
+
+    function hasRole(role) {
+      return isAuthenticated() && getRole() == role;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isNotDeleted() {
+      return !('_deletedAt' in resource.data) || resource.data._deletedAt == null;
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Chaque utilisateur peut lire son propre profil. Les admins lisent tous.
+    // Seuls les admins peuvent modifier les rôles.
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && (
+        isOwner(userId) ||
+        isAdmin()
+      ) && !(request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) || isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Messages ─────────────────────────────────────────────────────────────
+    // Lecture : tout utilisateur authentifié membre du room
+    // Création : authentifié, avec son propre userId
+    // Mise à jour : auteur (édition) ou tout le monde (readBy/reactions uniquement)
+    // Suppression (soft) : auteur ou admin
+    match /messages/{msgId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['text', 'roomId', 'userId', 'userName']);
+      allow update: if isAuthenticated() && (
+        // Auteur peut modifier son message
+        resource.data.userId == request.auth.uid ||
+        // N'importe qui peut marquer comme lu ou ajouter une réaction
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['readBy', 'reactions', 'isDeleted', 'text']) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Rooms (salons de discussion) ──────────────────────────────────────────
+    match /rooms/{roomId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+
+      // Sous-collections room
+      match /participants/{uid} {
+        allow read, write: if isAuthenticated();
+      }
+      match /signals/{sigId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // ── Calls ─────────────────────────────────────────────────────────────────
+    match /calls/{callId} {
+      allow read: if isAuthenticated() && (
+        resource.data.callerId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.resource.data.callerId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.callerId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      allow delete: if isAuthenticated();
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuthenticated() && (
+        !('targetUserId' in resource.data) ||
+        resource.data.targetUserId == null ||
+        resource.data.targetUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated(); // Workflow engine crée des notifs
+      allow update: if isAuthenticated() && (
+        resource.data.targetUserId == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ── Workflows (BPM) ───────────────────────────────────────────────────────
+    match /workflows/{wfId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // ── Modules Métier ────────────────────────────────────────────────────────
+    // Règle par défaut : authentifié peut lire/écrire dans son périmètre
+    // Les suppressions sont réservées aux managers/admins (soft-delete préféré)
+
+    match /hr/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('STAFF'));
+      allow delete: if isManager();
+    }
+
+    match /finance/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow write: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow delete: if isAdmin();
+    }
+
+    match /accounting/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow write: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow delete: if isAdmin();
+    }
+
+    match /sales/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('STAFF'));
+      allow delete: if isManager();
+    }
+
+    match /crm/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('CRM'));
+      allow delete: if isManager();
+    }
+
+    match /inventory/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('LOGISTICS') || hasRole('PRODUCTION'));
+      allow delete: if isManager();
+    }
+
+    match /production/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('PRODUCTION'));
+      allow delete: if isManager();
+    }
+
+    match /purchase/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('LOGISTICS') || hasRole('PURCHASE'));
+      allow delete: if isManager();
+    }
+
+    match /logistics/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('LOGISTICS'));
+      allow delete: if isManager();
+    }
+
+    match /legal/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('LEGAL'));
+      allow write: if isAuthenticated() && (isManager() || hasRole('LEGAL'));
+      allow delete: if isAdmin();
+    }
+
+    match /signature/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /base/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /activities/{docId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        resource.data._createdBy == request.auth.uid || isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    match /marketing/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && (isManager() || hasRole('MARKETING'));
+      allow delete: if isManager();
+    }
+
+    // ── Audit Trail (lecture seule pour tous, écriture Cloud Functions) ────────
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated() && (isAdmin() || hasRole('AUDIT') || hasRole('SECURITY'));
+      allow write: if false; // Écrit uniquement par Cloud Functions (admin SDK)
+    }
+
+    // ── DMS / Documents ───────────────────────────────────────────────────────
+    match /documents/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isManager();
+    }
+
+    // ── Refus par défaut (sécurité) ────────────────────────────────────────────
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
