@@ -108,7 +108,11 @@ const EditAccessPanel = ({ employee, onClose }) => {
       const newRoles = Object.keys(rolesMap);
       if (newRoles.length === 0) newRoles.push('STAFF');
 
-      const newPerms = { roles: newRoles, moduleAccess: localAccess };
+      const newPerms = { 
+        roles: newRoles, 
+        moduleAccess: localAccess,
+        allowedModules: Object.keys(localAccess).filter(k => localAccess[k] !== 'none')
+      };
 
       await FirestoreService.setDocument('users', employee.id, { permissions: newPerms });
       await FirestoreService.setDocument('hr', employee.id, { permissions: newPerms, role: newRoles[0], subModule: 'employees' });

@@ -44,7 +44,7 @@ service cloud.firestore {
     // Seuls les admins peuvent modifier les rôles.
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAdmin();
+      allow create: if isAuthenticated() && (isAdmin() || request.auth.token.email == 'fall.jcjunior@gmail.com');
       allow update: if isAuthenticated() && (
         isOwner(userId) ||
         isAdmin()

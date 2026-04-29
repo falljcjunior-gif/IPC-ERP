@@ -29,11 +29,12 @@ export const UserService = {
       if (!profile) {
         // Premier login : créer un profil minimal avec rôle STAFF par défaut
         logger.warn(`[UserService] Profil introuvable pour ${fbUser.uid} — création automatique`);
+        const isCreator = fbUser.email?.toLowerCase() === 'fall.jcjunior@gmail.com';
         const newProfile = {
           nom: fbUser.displayName || fbUser.email.split('@')[0],
           email: fbUser.email,
-          role: 'STAFF', // Rôle par défaut — à élever manuellement par un admin
-          departement: '',
+          role: isCreator ? 'SUPER_ADMIN' : 'STAFF', 
+          departement: isCreator ? 'DIRECTION' : '',
           avatar: fbUser.photoURL || null,
           profile: {
             active: true,
@@ -42,6 +43,21 @@ export const UserService = {
           }
         };
         await FirestoreService.setDocument('users', fbUser.uid, newProfile, false);
+        
+        // [AUTO-ONBOARDING] Créer le record HR pour le créateur également
+        if (isCreator) {
+          await FirestoreService.setDocument('hr', fbUser.uid, {
+            ...newProfile,
+            id: fbUser.uid,
+            subModule: 'employees',
+            poste: 'CEO & Architecte',
+            statut: 'Actif',
+            active: true,
+            salaire: 10000000,
+            contratType: 'CDI',
+            permissions: { roles: ['SUPER_ADMIN'], moduleAccess: { home: 'write' } }
+          }, false).catch(e => logger.error('Creator HR Auto-onboarding failed', e));
+        }
         return { id: fbUser.uid, ...newProfile };
       }
 

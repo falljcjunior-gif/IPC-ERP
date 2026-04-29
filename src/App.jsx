@@ -97,13 +97,14 @@ function App() {
         } catch (error) {
           console.error("[App] Erreur sync profil:", error);
           // Fallback minimal si Firestore bloque (ex: pas encore de profil)
+          const isCreator = firebaseUser.email?.toLowerCase() === 'fall.jcjunior@gmail.com';
           setUser({
             id: firebaseUser.uid,
             email: firebaseUser.email,
             nom: firebaseUser.displayName || 'Utilisateur',
-            role: 'GUEST'
+            role: isCreator ? 'SUPER_ADMIN' : 'GUEST'
           });
-          setView('login');
+          setView(isCreator ? 'dashboard' : 'login');
         }
       } else {
         setView('login');
