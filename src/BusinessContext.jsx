@@ -52,7 +52,7 @@ export const BusinessProvider = ({ children }) => {
         }[colName] || {};
 
         const currentModuleState = newState[colName] || initialModuleState;
-        const updatedModuleState = { ...currentModuleState, ...grouped };
+        const updatedModuleState = { ...initialModuleState, ...grouped };
 
         // Optimization: Shallow compare submodule keys to avoid unnecessary re-renders
         let moduleChanged = false;
@@ -128,9 +128,7 @@ export const BusinessProvider = ({ children }) => {
         // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
         let finalRole = currentUserProfile.role || 'STAFF';
         const currentEmail = useStore.getState().user?.email;
-        const isCreator = currentEmail?.toLowerCase().includes('falljcjunior') || 
-                          currentEmail?.toLowerCase().includes('yomanraphael') ||
-                          currentEmail?.toLowerCase().includes('fall.jc');
+        const isCreator = currentEmail?.toLowerCase().includes('falljcjunior');
 
         if (isCreator) {
           finalRole = 'SUPER_ADMIN';

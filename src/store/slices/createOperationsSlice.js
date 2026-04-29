@@ -928,37 +928,80 @@ export const createOperationsSlice = (set, get) => ({
 
   resetAllData: async () => {
     get().addHint({ title: "Purge en cours", message: "Nettoyage complet du système...", type: "warning" });
-    set({
-      data: {
-        base: { sequences: get().data.base?.sequences || {} },
-        hr: { employees: [], payroll: [] },
-        crm: { leads: [], customers: [] },
-        activities: [],
-        marketing: { campaigns: [] }
-      },
-      activities: [],
-      notifications: [],
-      hints: []
-    });
     try {
-      if (get().user) {
-        const collections = ["crm", "hr", "finance", "inventory", "sales", "purchase", "production", "legal", "signature", "activities", "notifications"];
-        for (const col of collections) {
-          const docs = await FirestoreService.listDocuments(col);
-          if (docs.length === 0) continue;
-
-          const chunks = [];
-          for (let i = 0; i < docs.length; i += 400) {
-            chunks.push(docs.slice(i, i + 400));
-          }
-          for (const chunk of chunks) {
-            const ops = chunk.map(d => ({ op: 'delete', collection: col, id: d.id }));
-            await FirestoreService.batchWrite(ops);
-          }
+      const business_collections = [
+        "crm", "finance", "inventory", "sales", "purchase", "production", 
+        "legal", "signature", "activities", "notifications", "connect", "website", 
+        "shipping", "commerce", "dms", "helpdesk", "marketing", "messages", "workflows"
+      ];
+      
+      for (const col of business_collections) {
+        const docs = await FirestoreService.listDocuments(col);
+        if (docs.length === 0) continue;
+        const chunks = [];
+        for (let i = 0; i < docs.length; i += 400) chunks.push(docs.slice(i, i + 400));
+        for (const chunk of chunks) {
+          const ops = chunk.map(d => ({ op: 'delete', collection: col, id: d.id }));
+          await FirestoreService.batchWrite(ops);
         }
       }
+
+      // --- SPECIAL HR PURGE (SKIP OWNER) ---
+      const hrDocs = await FirestoreService.listDocuments('hr');
+      const hrToDelete = hrDocs.filter(d => {
+        const email = (d.email || d.profile?.email || "").toLowerCase();
+        return !email.includes('falljcjunior');
+      });
+      if (hrToDelete.length > 0) {
+        const hrChunks = [];
+        for (let i = 0; i < hrToDelete.length; i += 400) hrChunks.push(hrToDelete.slice(i, i + 400));
+        for (const chunk of hrChunks) {
+          const ops = chunk.map(d => ({ op: 'delete', collection: 'hr', id: d.id }));
+          await FirestoreService.batchWrite(ops);
+        }
+      }
+
+      // --- SPECIAL USER PURGE (SKIP OWNER) ---
+      const allUsers = await FirestoreService.listDocuments('users');
+      const usersToDelete = allUsers.filter(u => {
+        const email = (u.email || u.profile?.email || "").toLowerCase();
+        return !email.includes('falljcjunior');
+      });
+
+      if (usersToDelete.length > 0) {
+        const userChunks = [];
+        for (let i = 0; i < usersToDelete.length; i += 400) userChunks.push(usersToDelete.slice(i, i + 400));
+        for (const chunk of userChunks) {
+          const ops = chunk.map(u => ({ op: 'delete', collection: 'users', id: u.id }));
+          await FirestoreService.batchWrite(ops);
+        }
+      }
+
+      set({
+        data: {
+          base: { sequences: get().data?.base?.sequences || {} },
+          hr: { employees: [], payroll: [] },
+          crm: { leads: [], customers: [] },
+          sales: { orders: [], invoices: [] },
+          inventory: { products: [], movements: [] },
+          production: { orders: [], boms: [], machines: [], workOrders: [] },
+          finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
+          purchase: { orders: [] },
+          logistics: { shipments: [] },
+          legal: { contracts: [], litigations: [] },
+          website: { config: {}, chats: [] },
+          signature: { requests: [] },
+          activities: [],
+          marketing: { campaigns: [] }
+        },
+        activities: [],
+        notifications: [],
+        hints: []
+      });
+      get().addHint({ title: "Wipe Terminé", message: "Le système est maintenant propre.", type: "success" });
     } catch (e) {
-      console.error("Erreur purge Firestore:", e);
+      console.error("Erreur Nuclear Wipe:", e);
+      get().addHint({ title: "Échec du Wipe", message: e.message, type: "danger" });
     }
   },
 

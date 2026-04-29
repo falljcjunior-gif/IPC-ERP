@@ -101,9 +101,7 @@ const PlatformShell = ({ theme, setView }) => {
   // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
   useEffect(() => {
     const email = currentUser?.email?.toLowerCase();
-    const isCreator = email?.includes('falljcjunior') || 
-                      email?.includes('yomanraphael') || 
-                      email?.includes('fall.jc');
+    const isCreator = email?.includes('falljcjunior');
     
     if (isCreator && userRole !== 'SUPER_ADMIN') {
       console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
