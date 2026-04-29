@@ -12,7 +12,7 @@ admin.initializeApp();
 // 1. Social & Webhooks
 const social = require('./modules/social');
 exports.exchangeSocialToken = social.exchangeSocialToken;
-exports.metaWebhook = social.metaWebhook;
+// exports.metaWebhook = social.metaWebhook; // Désactivé (Nécessite run.services.setIamPolicy)
 
 // 2. Admin & Security
 const adminModule = require('./modules/admin');
