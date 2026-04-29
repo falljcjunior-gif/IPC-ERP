@@ -9,6 +9,8 @@ import { httpsCallable, getFunctions } from 'firebase/functions';
 import { ToastProvider, useToast } from './components/ToastProvider';
 import { useStore } from './store';
 import { UserService } from './services/user.service';
+import { FirestoreService } from './services/firestore.service';
+import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
 const AuthObserver = () => {

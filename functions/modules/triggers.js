@@ -346,7 +346,6 @@ exports.onProjectAutoTag = onDocumentWritten('projects/{projectId}', async (even
  * 🤖 BUTLER: DEADLINE MONITOR (Scheduled every 24h)
  * WHY: Relance les managers si des tâches critiques n'avancent pas.
  */
-const { onSchedule } = require('firebase-functions/v2/scheduler');
 exports.checkTaskDeadlines = onSchedule('every 24 hours', async (event) => {
   const now = new Date();
   const threshold = new Date(now.getTime() - (48 * 60 * 60 * 1000)); // 48h

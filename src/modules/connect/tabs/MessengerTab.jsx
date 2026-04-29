@@ -865,7 +865,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
 
          {/* Typing Indicator */}
          <AnimatePresence>
-            {typingUsers.length > 0 && (
+            {typingUsersDisplay.length > 0 && (
                <motion.div 
                  initial={{ opacity: 0, y: 5 }} 
                  animate={{ opacity: 1, y: 0 }} 
@@ -875,7 +875,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
                   <div className="typing-dots">
                      <span /> <span /> <span />
                   </div>
-                  {typingUsers.join(', ')} {typingUsers.length > 1 ? 'sont en train d\'écrire...' : 'est en train d\'écrire...'}
+                  {typingUsersDisplay.join(', ')} {typingUsersDisplay.length > 1 ? 'sont en train d\'écrire...' : 'est en train d\'écrire...'}
                </motion.div>
             )}
          </AnimatePresence>
