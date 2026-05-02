@@ -395,7 +395,7 @@ exports.checkTaskDeadlines = onSchedule('every 24 hours', async (event) => {
  * 🤖 BUTLER: MESSENGER CLEANUP (Scheduled every 7 days)
  * WHY: Garde le Messenger fluide en archivant les discussions mortes.
  */
-exports.archiveInactiveRooms = onSchedule('every 7 days', async (event) => {
+exports.archiveInactiveRooms = onSchedule({ schedule: '0 0 * * 0', timeZone: 'UTC' }, async (event) => {
   const threshold = new Date();
   threshold.setDate(threshold.getDate() - 30); // 30 jours
 
