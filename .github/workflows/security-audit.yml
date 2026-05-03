@@ -67,11 +67,11 @@ jobs:
             p/nodejs
             p/owasp-top-ten
             p/secrets
-          generateSarif: true
+          args: --sarif --output semgrep.sarif
 
       - name: Upload SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('semgrep.sarif') != ''
         with:
           sarif_file: semgrep.sarif
 

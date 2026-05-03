@@ -61,7 +61,6 @@ function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const _hasHydrated = useStore(state => state._hasHydrated);
   const globalSettings = useStore(state => state.globalSettings);
-  const setGlobalSettings = useStore(state => state.setGlobalSettings);
 
   useEffect(() => {
     initRegistry();

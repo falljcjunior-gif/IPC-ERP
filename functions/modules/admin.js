@@ -29,6 +29,7 @@ exports.deleteUserAccount = onCall({
   // 3. Privilege Check: Custom Claims (immuable côté client)
   // ── [SECURITY FIX V-03] : Ne plus lire le rôle depuis Firestore (contournable)
   // Les Custom Claims sont signés par le SDK Admin et non modifiables côté client.
+  const callerUid = request.auth.uid;
   const isSuperAdmin = request.auth.token?.role === 'SUPER_ADMIN';
 
   if (!isSuperAdmin) {
