@@ -116,7 +116,7 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
 });
 
 /**
- * 💹 FINANCE: AUTOMATED ACCOUNTING — Hardened with Idempotency
+ * 💹 FINANCE: AUTOMATED ACCOUNTING — Hardened with Idempotency and Outbox
  */
 exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoiceId}', async (event) => {
   const newData = event.data.after.data();
@@ -152,16 +152,39 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoi
         };
 
         t.set(accountingRef, entry);
+
+        // 🛡️ Outbox pattern: write sync task within the same transaction
+        const syncTaskRef = db.collection('sync_queue').doc(`axelor_acc_${event.id}`);
+        t.set(syncTaskRef, {
+          target: 'axelor',
+          model: 'com.axelor.apps.account.db.AccountMove',
+          payload: {
+            name: `INV-${invoiceId}`,
+            amount: amount,
+            ref: invoiceId
+          },
+          status: 'pending',
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
       });
       
-      // SSOT Synchronization
-      await axelor.syncRecord('com.axelor.apps.account.db.AccountMove', {
-        name: `INV-${invoiceId}`,
-        amount: amount,
-        ref: invoiceId
-      }, invoiceId);
+      // SSOT Synchronization (Best-effort inline)
+      try {
+        await axelor.syncRecord('com.axelor.apps.account.db.AccountMove', {
+          name: `INV-${invoiceId}`,
+          amount: amount,
+          ref: invoiceId
+        }, invoiceId);
 
-      logger.info(`Accounting synced for invoice ${invoiceId}`);
+        // Mark as completed if successful
+        await db.collection('sync_queue').doc(`axelor_acc_${event.id}`).update({
+          status: 'completed',
+          completedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        logger.info(`Accounting synced for invoice ${invoiceId}`);
+      } catch (err) {
+        logger.error(`Axelor sync failed for invoice ${invoiceId}, task remains in sync_queue.`, err);
+      }
     } catch (err) {
       logger.error('Accounting Sync Error:', err);
     }
@@ -196,23 +219,55 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{
           return;
         }
 
+        // 🛡️ Idempotency check: prevent double-counting if trigger runs twice
+        const processedEvents = doc.data().processedEvents || [];
+        if (processedEvents.includes(event.id)) {
+          logger.warn(`Event ${event.id} already processed for product ${productId}. Skipping.`);
+          return;
+        }
+
         const currentStock = doc.data().stockActuel || 0;
         t.update(productRef, { 
           stockActuel: currentStock + quantity,
           lastRefillAt: admin.firestore.FieldValue.serverTimestamp(),
-          lastOfProcessed: ofId
+          lastOfProcessed: ofId,
+          processedEvents: admin.firestore.FieldValue.arrayUnion(event.id)
+        });
+
+        // 🛡️ Outbox pattern: write sync task within the same transaction
+        const syncTaskRef = db.collection('sync_queue').doc(event.id);
+        t.set(syncTaskRef, {
+          target: 'axelor',
+          model: 'com.axelor.apps.stock.db.StockMove',
+          payload: {
+            productId,
+            quantity,
+            origin: ofId,
+            type: 'PRODUCTION'
+          },
+          status: 'pending',
+          createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
       });
 
-      // SSOT Synchronization
-      await axelor.syncRecord('com.axelor.apps.stock.db.StockMove', {
-        productId,
-        quantity,
-        origin: ofId,
-        type: 'PRODUCTION'
-      }, ofId);
-
-      logger.info(`Stock updated for product ${productId} (+${quantity}) from OF ${ofId}`);
+      // SSOT Synchronization (Best-effort inline)
+      try {
+        await axelor.syncRecord('com.axelor.apps.stock.db.StockMove', {
+          productId,
+          quantity,
+          origin: ofId,
+          type: 'PRODUCTION'
+        }, ofId);
+        
+        // Mark as completed if successful
+        await db.collection('sync_queue').doc(event.id).update({
+          status: 'completed',
+          completedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        logger.info(`Stock updated for product ${productId} (+${quantity}) from OF ${ofId}`);
+      } catch (err) {
+        logger.error(`Axelor sync failed for event ${event.id}, task remains in sync_queue.`, err);
+      }
     } catch (err) {
       logger.error('Stock Update Error:', err);
     }
