@@ -24,17 +24,22 @@ export const UserService = {
     if (!fbUser?.uid) throw new Error('[UserService] fbUser invalide');
 
     try {
+      // ── [SECURITY] Lire le rôle depuis les Custom Claims (token signé côté serveur) ──
+      // Immuable côté client — seul le SDK Admin peut modifier les claims.
+      const tokenResult = await fbUser.getIdTokenResult(true); // force refresh
+      const claimedRole = tokenResult.claims?.role || null;
+
       const profile = await FirestoreService.getDocument('users', fbUser.uid);
 
       if (!profile) {
-        // Premier login : créer un profil minimal avec rôle STAFF par défaut
         logger.warn(`[UserService] Profil introuvable pour ${fbUser.uid} — création automatique`);
-        const isCreator = fbUser.email?.toLowerCase() === 'fall.jcjunior@gmail.com';
+        // Le rôle initial vient des claims, sinon STAFF
+        const defaultRole = claimedRole || 'STAFF';
         const newProfile = {
           nom: fbUser.displayName || fbUser.email.split('@')[0],
           email: fbUser.email,
-          role: isCreator ? 'SUPER_ADMIN' : 'STAFF', 
-          departement: isCreator ? 'DIRECTION' : '',
+          role: defaultRole,
+          departement: defaultRole === 'SUPER_ADMIN' ? 'DIRECTION' : '',
           avatar: fbUser.photoURL || null,
           profile: {
             active: true,
@@ -43,30 +48,13 @@ export const UserService = {
           }
         };
         await FirestoreService.setDocument('users', fbUser.uid, newProfile, false);
-        
-        // [AUTO-ONBOARDING] Créer le record HR pour le créateur également
-        if (isCreator) {
-          await FirestoreService.setDocument('hr', fbUser.uid, {
-            ...newProfile,
-            id: fbUser.uid,
-            subModule: 'employees',
-            poste: 'CEO & Architecte',
-            statut: 'Actif',
-            active: true,
-            salaire: 10000000,
-            contratType: 'CDI',
-            permissions: { roles: ['SUPER_ADMIN'], moduleAccess: { home: 'write' } }
-          }, false).catch(e => logger.error('Creator HR Auto-onboarding failed', e));
-        }
         return { id: fbUser.uid, ...newProfile };
       }
 
-      // Vérification du statut du compte
       if (profile.profile?.active === false) {
         throw new Error('Votre compte a été désactivé par l\'administrateur.');
       }
 
-      // Mise à jour du token FCM si changé (changement d'appareil, navigateur)
       try {
         const fcmToken = await AuthService.getFCMToken();
         if (fcmToken && fcmToken !== profile.fcmToken) {
@@ -74,25 +62,18 @@ export const UserService = {
           logger.info('[UserService] FCM token mis à jour', { uid: fbUser.uid });
         }
       } catch (fcmErr) {
-        // Non bloquant — l'app fonctionne sans FCM
         logger.warn('[UserService] FCM token update failed', fcmErr);
       }
 
-      // --- IDENTITY BRIDGE (SECURITY BYPASS FOR CREATOR) ---
-      // WHY: Garantit que Fall.JCJUNIor garde le contrôle total même en cas de corruption de Firestore.
-      let finalRole = profile.role || 'STAFF';
-      const isCreator = fbUser.email?.toLowerCase() === 'fall.jcjunior@gmail.com';
-      
-      if (isCreator) {
-        finalRole = 'SUPER_ADMIN';
-        console.log('🛡️ [Security] Identity Bridge Activated for Creator:', fbUser.email);
-      }
+      // ── [SECURITY] Source de vérité du rôle = Custom Claims (token) ──
+      // Si aucun claim défini, on utilise le rôle Firestore comme fallback de migration.
+      const finalRole = claimedRole || profile.role || 'STAFF';
 
       return {
         id: fbUser.uid,
         email: fbUser.email,
         nom: profile.nom || fbUser.displayName || 'Utilisateur',
-        role: finalRole, // Source de vérité augmentée par le pont de sécurité
+        role: finalRole,
         avatar: profile.avatar || null,
         departement: profile.departement || '',
         mustChangePassword: profile.profile?.mustChangePassword || false,

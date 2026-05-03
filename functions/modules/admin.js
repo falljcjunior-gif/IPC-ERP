@@ -26,12 +26,10 @@ exports.deleteUserAccount = onCall({
   // 2. Security Check
   if (!request.auth) throw new Error('unauthenticated');
 
-  // 3. Privilege Check: Only SUPER_ADMIN allowed
-  const callerUid = request.auth.uid;
-  const callerSnap = await db.collection('users').doc(callerUid).get();
-  const callerData = callerSnap.data();
-  
-  const isSuperAdmin = callerData?.permissions?.roles?.includes('SUPER_ADMIN');
+  // 3. Privilege Check: Custom Claims (immuable côté client)
+  // ── [SECURITY FIX V-03] : Ne plus lire le rôle depuis Firestore (contournable)
+  // Les Custom Claims sont signés par le SDK Admin et non modifiables côté client.
+  const isSuperAdmin = request.auth.token?.role === 'SUPER_ADMIN';
 
   if (!isSuperAdmin) {
     logger.warn(`Unauthorized delete attempt by ${callerUid}`);

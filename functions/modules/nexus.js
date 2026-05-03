@@ -42,19 +42,38 @@ exports.nexusChat = onCall({
     throw new Error('unauthenticated');
   }
 
+  const uid = request.auth.uid;
   const { message, history = [], erpContext = {} } = validation.data;
 
-  // 2. Fetch API Key (Prioritize Secret Manager, Fallback to Firestore for legacy compatibility)
-  let apiKey = process.env.GEMINI_API_KEY; 
-  if (!apiKey) {
-    logger.debug('GEMINI_API_KEY secret not found, falling back to Firestore config');
-    const configSnap = await db.collection('system_config').doc('ai_config').get();
-    apiKey = configSnap.data()?.geminiApiKey;
-  }
+  // ── [SECURITY] Rate Limiting : max 30 requêtes/utilisateur/heure ──
+  const rateLimitRef = db.collection('_rate_limits').doc(`nexus_${uid}`);
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(rateLimitRef);
+    const now = Date.now();
+    const windowMs = 60 * 60 * 1000; // 1 heure
+    const maxRequests = 30;
 
+    if (doc.exists) {
+      const { count, windowStart } = doc.data();
+      if (now - windowStart < windowMs) {
+        if (count >= maxRequests) {
+          throw new Error('resource-exhausted: Limite de requêtes atteinte. Réessayez dans une heure.');
+        }
+        t.update(rateLimitRef, { count: count + 1 });
+      } else {
+        t.set(rateLimitRef, { count: 1, windowStart: now });
+      }
+    } else {
+      t.set(rateLimitRef, { count: 1, windowStart: now });
+    }
+  });
+
+  // ── [SECURITY FIX V-06] Clé API uniquement depuis Secret Manager ──
+  // Le fallback Firestore est supprimé (exposait la clé Gemini aux lecteurs Firestore).
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    logger.error('Gemini API Key missing');
-    throw new Error('failed-precondition');
+    logger.error('GEMINI_API_KEY not configured in Secret Manager');
+    throw new Error('failed-precondition: Service IA non configuré.');
   }
 
   const {

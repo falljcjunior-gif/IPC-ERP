@@ -1,0 +1,128 @@
+name: 🔒 Security Audit — SAST & Dependency Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Tous les lundis à 08h00 UTC (audit hebdomadaire)
+    - cron: '0 8 * * 1'
+
+jobs:
+  # ── 1. Dependency Vulnerability Scanning ─────────────────────────────
+  dependency-audit:
+    name: 📦 Dependency Audit (npm audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: 🔍 Frontend — npm audit (high + critical)
+        run: npm audit --audit-level=high --json > npm-audit-frontend.json || true
+
+      - name: Install functions dependencies
+        run: npm ci
+        working-directory: ./functions
+
+      - name: 🔍 Functions — npm audit (high + critical)
+        run: npm audit --audit-level=high --json > npm-audit-functions.json || true
+        working-directory: ./functions
+
+      - name: Upload audit reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-reports
+          path: |
+            npm-audit-frontend.json
+            functions/npm-audit-functions.json
+
+  # ── 2. SAST — Semgrep Static Analysis ────────────────────────────────
+  sast-semgrep:
+    name: 🛡️ SAST — Semgrep
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔍 Semgrep SAST Scan
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/firebase
+            p/javascript
+            p/react
+            p/nodejs
+            p/owasp-top-ten
+            p/secrets
+          generateSarif: true
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  # ── 3. Secret Detection ───────────────────────────────────────────────
+  secret-detection:
+    name: 🔑 Secret Detection (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git log scanning
+
+      - name: 🔍 Gitleaks — Scan for exposed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ── 4. Firestore Rules Validation ────────────────────────────────────
+  firestore-rules:
+    name: 🔥 Firestore Rules Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: 🔍 Validate Firestore Rules syntax
+        run: firebase firestore:rules --project ipc-erp --check
+        continue-on-error: true
+
+  # ── 5. Security Summary Report ────────────────────────────────────────
+  security-summary:
+    name: 📊 Security Summary
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, sast-semgrep, secret-detection]
+    if: always()
+    steps:
+      - name: Security Scan Summary
+        run: |
+          echo "## 🔒 Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|:------|:-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Audit | ${{ needs.dependency-audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SAST Semgrep | ${{ needs.sast-semgrep.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret Detection | ${{ needs.secret-detection.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Rapport généré le $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY

@@ -21,27 +21,27 @@ const AuthObserver = () => {
     const code = urlParams.get('code');
     
     if (code) {
+      // ── [SECURITY FIX V-07] Validation du state CSRF ──────────────────────
+      const expectedState = sessionStorage.getItem('oauth_state');
+      const receivedState = urlParams.get('state');
+      sessionStorage.removeItem('oauth_state');
+
+      if (!expectedState || expectedState !== receivedState) {
+        console.error('[OAuth] CSRF détecté ou state manquant. Callback rejeté.');
+        addToast('Connexion refusée : anomalie de sécurité détectée.', 'error');
+        window.history.replaceState({}, document.title, '/');
+        return;
+      }
+
       const handleCallback = async () => {
         try {
           const functions = getFunctions();
           const exchangeFunc = httpsCallable(functions, 'exchangeSocialToken');
-          
-          const result = await exchangeFunc({
-            provider: 'facebook',
-            code: code,
-            redirectUri: window.location.origin + '/'
-          });
-
+          const result = await exchangeFunc({ provider: 'facebook', code, redirectUri: window.location.origin + '/' });
           const { accessToken } = result.data;
-
           await FirestoreService.setDocument('marketing', 'accounts_live', {
-            facebook: {
-              accessToken,
-              statut: 'Connecté',
-              derniereSynchro: new Date().toISOString()
-            }
+            facebook: { accessToken, statut: 'Connecté', derniereSynchro: new Date().toISOString() }
           }, true);
-
           window.history.replaceState({}, document.title, "/");
           addToast("Compte Marketing connecté avec succès !", 'success');
         } catch (error) {
@@ -49,7 +49,6 @@ const AuthObserver = () => {
           addToast("Échec de la connexion API. Vérifiez vos accès.", 'error');
         }
       };
-      
       handleCallback();
     }
   }, [addToast]);
@@ -96,15 +95,20 @@ function App() {
           setView('dashboard');
         } catch (error) {
           console.error("[App] Erreur sync profil:", error);
-          // Fallback minimal si Firestore bloque (ex: pas encore de profil)
-          const isCreator = firebaseUser.email?.toLowerCase() === 'fall.jcjunior@gmail.com';
-          setUser({
-            id: firebaseUser.uid,
-            email: firebaseUser.email,
-            nom: firebaseUser.displayName || 'Utilisateur',
-            role: isCreator ? 'SUPER_ADMIN' : 'GUEST'
-          });
-          setView(isCreator ? 'dashboard' : 'login');
+          // Fallback minimal — rôle depuis Custom Claims (token signé, non modifiable côté client)
+          try {
+            const tokenResult = await firebaseUser.getIdTokenResult();
+            const claimedRole = tokenResult.claims?.role || 'GUEST';
+            setUser({
+              id: firebaseUser.uid,
+              email: firebaseUser.email,
+              nom: firebaseUser.displayName || 'Utilisateur',
+              role: claimedRole,
+            });
+            setView(claimedRole !== 'GUEST' ? 'dashboard' : 'login');
+          } catch {
+            setView('login');
+          }
         }
       } else {
         setView('login');

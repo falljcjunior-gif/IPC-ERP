@@ -96,9 +96,15 @@ exports.exchangeSocialToken = onCall({
  * Meta Webhook Handler
  */
 exports.metaWebhook = onRequest({
-  maxInstances: 5
+  maxInstances: 5,
+  secrets: ['META_WEBHOOK_VERIFY_TOKEN'],
 }, async (req, res) => {
-  const WEBHOOK_VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'ipc_erp_webhook_secret_2026';
+  // ── [SECURITY FIX V-05] Pas de fallback hardcodé — échec sécurisé si non configuré ──
+  const WEBHOOK_VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN;
+  if (!WEBHOOK_VERIFY_TOKEN) {
+    logger.error('[Webhook] META_WEBHOOK_VERIFY_TOKEN not set in environment.');
+    return res.status(500).send('Server configuration error.');
+  }
 
   if (req.method === 'GET') {
     const mode = req.query['hub.mode'];

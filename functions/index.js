@@ -18,6 +18,11 @@ exports.exchangeSocialToken = social.exchangeSocialToken;
 const adminModule = require('./modules/admin');
 exports.deleteUserAccount = adminModule.deleteUserAccount;
 
+// 2b. RBAC — Custom Claims (source de vérité des rôles)
+const rbac = require('./modules/rbac');
+exports.setUserRole = rbac.setUserRole;
+exports.bootstrapSuperAdmin = rbac.bootstrapSuperAdmin;
+
 // 3. AI Copilot (Nexus)
 const nexus = require('./modules/nexus');
 exports.nexusChat = nexus.nexusChat;

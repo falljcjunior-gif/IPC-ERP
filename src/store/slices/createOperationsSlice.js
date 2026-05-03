@@ -1,5 +1,13 @@
 import { FirestoreService, StorageService } from '../../services/firestore.service';
 import { AuthService } from '../../services/auth.service';
+import {
+  cascadeDevisToSaleOrder,
+  cascadeBCToDelivery,
+  runThreeWayMatch,
+  applyThreeWayMatchResult,
+  checkDocumentLock,
+  imputerCoutAnalytique,
+} from '../../services/IpcEngine';
 
 export const createOperationsSlice = (set, get) => ({
   addHint: (hint) => {
@@ -360,6 +368,23 @@ export const createOperationsSlice = (set, get) => ({
 
 
   updateRecord: (appId, subModule, id, newData) => {
+    // ── [AXELOR] Verrouillage de Document ──────────────────────────────
+    // Un document verrouillé (_locked) ne peut pas être modifié directement.
+    // Seul un Avenant peut porter les modifications — logique Axelor pure.
+    const stateSnapshot = get();
+    const existingRecord = (stateSnapshot.data?.[appId]?.[subModule] || stateSnapshot[appId]?.[subModule] || []).find(i => i.id === id);
+    if (existingRecord?._locked) {
+      const lockCheck = checkDocumentLock(existingRecord, stateSnapshot.userRole);
+      if (lockCheck.blocked) {
+        stateSnapshot.addHint({
+          title: '🔒 Document Verrouillé',
+          message: lockCheck.reason,
+          type: 'error',
+        });
+        return; // Annule la modification
+      }
+    }
+
     set(prev => {
       if (!prev[appId] || !prev[appId][subModule]) return prev;
       const oldRecord = prev[appId][subModule].find(i => i.id === id);
@@ -385,6 +410,19 @@ export const createOperationsSlice = (set, get) => ({
       if (appId === 'crm' && subModule === 'opportunities' && newData.etape === 'Gagné' && oldRecord.etape !== 'Gagné') {
         get().addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => get().convertOppToSalesOrder(id) });
       }
+
+      // ── [AXELOR] Cascade Devis → BC ──────────────────────────────────────
+      // Quand un devis passe à "Accepté" ou "Signé" → engrenage complet
+      if (appId === 'sales' && subModule === 'quotes' && ['Accepté', 'Signé'].includes(newData.statut) && !['Accepté', 'Signé'].includes(oldRecord.statut)) {
+        setTimeout(() => cascadeDevisToSaleOrder(record, get, set), 0);
+      }
+
+      // ── [AXELOR] Cascade BC → Livraison ──────────────────────────────────
+      // Quand un BC passe à "Expédié" → BL + Facture finale + stock physique
+      if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Expédié' && oldRecord.statut !== 'Expédié') {
+        setTimeout(() => cascadeBCToDelivery(record, get, set), 0);
+      }
+
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {
         // Workflow: Sales ↔ Legal (Lock if modified)
         if (record.modifieHorsTemplate) {
@@ -394,7 +432,6 @@ export const createOperationsSlice = (set, get) => ({
              type: 'error', 
              appId: 'legal' 
            });
-           // Revert Confirmé to 'Attente Visa'
            const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Attente Visa Juridique' } : item);
            nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
            get().sendNotification('Juridique', 'Visa requis pour commande', 'Une commande modifiée hors template nécessite un visa juridique.', 'warning', 'legal');
@@ -455,27 +492,8 @@ export const createOperationsSlice = (set, get) => ({
         get().generateExpenseEntry(record);
       }
       if (appId === 'hr' && subModule === 'timesheets' && newData.statut === 'Validé' && oldRecord.statut !== 'Validé') {
-         const employee = (prev.hr?.employees || []).find(e => e.nom === record.collaborateur);
-         const salaireMensuel = parseFloat(employee?.salaire || 150000); // Estimation si non renseigné
-         const tauxHoraire = parseFloat((salaireMensuel / 160).toFixed(2));
-         const heures = parseFloat(record.heures || 0);
-         const coutTotal = Math.round(heures * tauxHoraire);
-         
-         const entryNum = get().getNextSequence('finance_entries');
-         const analyticalEntry = {
-            num: entryNum,
-            date: new Date().toISOString().split('T')[0],
-            libelle: `Imputation Analytique - ${record.collaborateur} (${heures}h sur ${record.projet})`,
-            journal: 'OD',
-            statut: 'Brouillon',
-         };
-         const lines = [
-            { accountId: '641100', label: 'Frais de Personnel', debit: coutTotal, credit: 0, profitCenter: record.projet || 'Général' },
-            { accountId: '421000', label: 'Personnel - Rémunérations dues', debit: 0, credit: coutTotal, profitCenter: 'Administration' }
-         ];
-         get().addAccountingEntry(analyticalEntry, lines);
-         get().addHint({ title: "Comptabilité Analytique", message: `Pointage validé. Coût affecté: ${coutTotal} FCFA sur [${record.projet}].`, type: 'success', appId: 'finance' });
-         get().logAction('Imputation Analytique', `${coutTotal} FCFA pour ${heures}h affectés à ${record.projet}`, 'hr');
+         // ── [AXELOR] Comptabilité Analytique — Imputation par Centre de Coût
+         imputerCoutAnalytique(record, get);
       }
       if (appId === 'purchase' && subModule === 'orders') {
         if (newData.statut === 'Réceptionné' && oldRecord.statut !== 'Réceptionné') {
@@ -494,36 +512,29 @@ export const createOperationsSlice = (set, get) => ({
         if (newData.statut === 'Facturé' && oldRecord.statut !== 'Facturé') {
            const billNum = get().getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
            
-           // Three-Way Match Engine
-           const qteCommandee = parseFloat(record.qte || 0);
-           const qteRecue = parseFloat(record.qteRecue || qteCommandee);
-           const qteFacturee = parseFloat(record.qteFacturee || qteCommandee);
-           
-           const threeWayMatch = (qteCommandee === qteRecue && qteRecue === qteFacturee);
+           // ── [AXELOR] Three-Way Match Engine (Anti-Fraude) ─────────────
+           const receptionData = { qteRecue: record.qteRecue || record.qte };
+           const invoiceData  = { qteFacturee: record.qteFacturee || record.qte, prixUnitaire: record.prixUnitaire };
+           const matchResult  = runThreeWayMatch(record, receptionData, invoiceData);
 
            const newBill = {
              id: Date.now().toString(),
              num: billNum,
              fournisseur: record.fournisseur,
              date: new Date().toISOString().split('T')[0],
-             montant: record.total,
-             statut: threeWayMatch ? 'À payer' : 'Bloqué (Anomalie 3-Way Match)',
+             montant: matchResult.montantPayable || record.total,
+             statut: matchResult.statut,
              orderId: record.id,
-             qteCommandee,
-             qteRecue,
-             qteFacturee,
-             anomalie: !threeWayMatch,
-             createdAt: new Date().toISOString()
+             qteCommandee: parseFloat(record.qte || 0),
+             qteRecue: parseFloat(record.qteRecue || record.qte || 0),
+             qteFacturee: parseFloat(record.qteFacturee || record.qte || 0),
+             anomalies: matchResult.anomalies,
+             createdAt: new Date().toISOString(),
            };
            nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
-           
-           if (!threeWayMatch) {
-             get().addHint({ title: "Alerte Fraude (3-Way Match)", message: `Facture bloquée ! Divergence QTE: Cmd(${qteCommandee}) ≠ Reçue(${qteRecue}) ≠ Fact(${qteFacturee})`, type: 'error', appId: 'finance' });
-             get().logAction('Alerte Financière', `Blocage Facture ${newBill.num} (Anomalie 3-Way Match)`, 'finance');
-           } else {
-             get().addHint({ title: "Facture Fournisseur Créée", message: `La facture ${newBill.num} est validée (Match Parfait).`, type: 'success', appId: 'finance' });
-             get().logAction('Facturation Achat', `Facture ${newBill.num} générée pour ${record.num}`, 'finance');
-           }
+
+           // Notifier le résultat du match (via AxelorEngine)
+           setTimeout(() => applyThreeWayMatchResult(record.id, matchResult, get, set), 0);
         }
       }
 
