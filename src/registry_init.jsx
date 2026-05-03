@@ -6,8 +6,7 @@ import {
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain
-
+  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -50,6 +49,7 @@ const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
 const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
+const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -73,6 +73,7 @@ import { websiteSchema } from './schemas/website.schema';
 import { shippingSchema } from './schemas/shipping.schema';
 import { commerceSchema } from './schemas/commerce.schema';
 import { dmsSchema } from './schemas/dms.schema';
+import { officeAdminSchema } from './schemas/office_admin.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -87,7 +88,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema].forEach(s => registry.registerSchema(s));
+    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cockpit ---
   registry.register({
@@ -262,6 +263,12 @@ export const initRegistry = () => {
     id: 'dms', label: 'Documents Cloud', icon: <Folder size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR', 'FINANCE', 'SALES', 'STAFF'],
     component: DMS, priority: 44
+  });
+
+  registry.register({
+    id: 'office_admin', label: 'Services Généraux', icon: <Inbox size={18} />,
+    category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'HR', 'STAFF', 'MANAGER'],
+    component: OfficeAdmin, priority: 45
   });
 
   registry.register({

@@ -23,6 +23,11 @@ const app = initializeApp(firebaseConfig);
 // ── [SECURITY] Firebase App Check (reCAPTCHA v3) ─────────────────────
 // Bloque tous les appels non-autorisés même si les clés publiques sont connues.
 if (typeof window !== 'undefined' && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+  // Activation du mode Debug pour localhost (affiche le token dans la console)
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+  
   initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
     isTokenAutoRefreshEnabled: true,

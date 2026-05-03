@@ -106,6 +106,7 @@ const PlatformShell = ({ theme, setView }) => {
     if (isCreator && userRole !== 'SUPER_ADMIN') {
       console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
       useStore.getState().setUserRole('SUPER_ADMIN');
+      useStore.getState().setUser({ ...currentUser, role: 'SUPER_ADMIN' });
     }
   }, [currentUser, userRole]);
   

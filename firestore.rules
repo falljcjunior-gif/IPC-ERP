@@ -132,9 +132,12 @@ service cloud.firestore {
     // Les suppressions sont réservées aux managers/admins (soft-delete préféré)
 
     match /hr/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('STAFF'));
-      allow delete: if isManager();
+      allow read: if isAuthenticated() && (
+        isManager() || hasRole('HR') || hasRole('SUPER_ADMIN') || 
+        resource.data.userId == request.auth.uid
+      );
+      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('SUPER_ADMIN'));
+      allow delete: if isManager() || hasRole('SUPER_ADMIN');
     }
 
     match /finance/{docId} {
@@ -229,6 +232,28 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
       allow delete: if isManager();
+    }
+
+    // ── Services Généraux / Administration ────────────────────────────────────
+    match /mail_logs/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+    match /office_supplies/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+    match /visitors_log/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+    match /facilities_tickets/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAdmin();
     }
 
     // ── Refus par défaut (sécurité) ────────────────────────────────────────────
