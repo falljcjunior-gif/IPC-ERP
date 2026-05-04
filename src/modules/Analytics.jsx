@@ -31,8 +31,7 @@ const Analytics = () => {
   const activeWorkflows = (Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || [])).filter(w => w.active).length;
   const signedDocs     = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
 
-  const oppStageCount = opportunities.reduce((acc, o) => { acc[o.etape] = (acc[o.etape] || 0) + 1; return acc; }, {});
-  const pieData       = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
+
 
   const cashflowTrend = useMemo(() => {
     if (enableDemoHistory) {
