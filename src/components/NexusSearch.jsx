@@ -1,43 +1,45 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command, X, ArrowRight, Zap, Database, User, Settings, FileText, Banknote, ShieldCheck, MailPlus } from 'lucide-react';
 import { useStore } from '../store';
 import './NexusSearch.css';
 
-const AntigravitySearch = ({ isOpen, onClose }) => {
+// Move static data outside to prevent re-creation on every render (Fixes re-renders)
+const GLOBAL_ACTIONS = [
+  { id: 'sales-new', label: 'Créer un nouveau devis', icon: <FileText size={18} strokeWidth={1.5} />, category: 'CRM & Ventes', actionPath: 'sales', tags: ['devis', 'facture', 'nouveau'] },
+  { id: 'inv-crit', label: 'Consulter les stocks critiques', icon: <Database size={18} strokeWidth={1.5} />, category: 'Opérations', actionPath: 'inventory', tags: ['stock', 'alerte', 'inventaire'] },
+  { id: 'hr-leave', label: 'Valider les congés en attente', icon: <User size={18} strokeWidth={1.5} />, category: 'RH & Collaboration', actionPath: 'hr', tags: ['rh', 'congés', 'validation'] },
+  { id: 'fin-dash', label: 'Vue d\'ensemble Trésorerie', icon: <Banknote size={18} strokeWidth={1.5} />, category: 'Finance & Stratégie', actionPath: 'finance', tags: ['finance', 'argent', 'banque'] },
+  { id: 'sec-audit', label: 'Matrice des habilitations', icon: <ShieldCheck size={18} strokeWidth={1.5} />, category: 'Configuration', actionPath: 'admin', tags: ['sécurité', 'droits', 'admin'] },
+  { id: 'com-msg', label: 'Envoyer un message', icon: <MailPlus size={18} strokeWidth={1.5} />, category: 'Cockpit', actionPath: 'connect', tags: ['chat', 'message', 'collègue'] },
+];
+
+const NexusSearch = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   
   const navigateTo = useStore(state => state.navigateTo);
-  const user = useStore(state => state.user);
 
   useEffect(() => {
     if (isOpen) {
       setQuery('');
       setSelectedIndex(0);
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // Small delay to allow animation before focus
+      setTimeout(() => inputRef.current?.focus(), 150);
     }
   }, [isOpen]);
 
-  const globalActions = [
-    { id: 'sales-new', label: 'Créer un nouveau devis', icon: <FileText size={18} />, category: 'CRM & Ventes', action: () => navigateTo('sales'), tags: ['devis', 'facture', 'nouveau'] },
-    { id: 'inv-crit', label: 'Consulter les stocks critiques', icon: <Database size={18} />, category: 'Opérations', action: () => navigateTo('inventory'), tags: ['stock', 'alerte', 'inventaire'] },
-    { id: 'hr-leave', label: 'Valider les congés en attente', icon: <User size={18} />, category: 'RH & Collaboration', action: () => navigateTo('hr'), tags: ['rh', 'congés', 'validation'] },
-    { id: 'fin-dash', label: 'Vue d\'ensemble Trésorerie', icon: <Banknote size={18} />, category: 'Finance & Stratégie', action: () => navigateTo('finance'), tags: ['finance', 'argent', 'banque'] },
-    { id: 'sec-audit', label: 'Matrice des habilitations', icon: <ShieldCheck size={18} />, category: 'Configuration', action: () => navigateTo('admin'), tags: ['sécurité', 'droits', 'admin'] },
-    { id: 'com-msg', label: 'Envoyer un message', icon: <MailPlus size={18} />, category: 'Cockpit', action: () => navigateTo('connect'), tags: ['chat', 'message', 'collègue'] },
-  ];
+  const filtered = useMemo(() => {
+    if (!query) return GLOBAL_ACTIONS;
+    const lowerQuery = query.toLowerCase();
+    return GLOBAL_ACTIONS.filter(s => 
+      s.label.toLowerCase().includes(lowerQuery) || 
+      s.category.toLowerCase().includes(lowerQuery) ||
+      s.tags.some(t => t.includes(lowerQuery))
+    );
+  }, [query]);
 
-  const filtered = query 
-    ? globalActions.filter(s => 
-        s.label.toLowerCase().includes(query.toLowerCase()) || 
-        s.category.toLowerCase().includes(query.toLowerCase()) ||
-        s.tags.some(t => t.includes(query.toLowerCase()))
-      )
-    : globalActions;
-
-  // Keydown handler for navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -59,7 +61,7 @@ const AntigravitySearch = ({ isOpen, onClose }) => {
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filtered[selectedIndex]) {
-          filtered[selectedIndex].action();
+          navigateTo(filtered[selectedIndex].actionPath);
           onClose(false);
         }
       }
@@ -67,9 +69,8 @@ const AntigravitySearch = ({ isOpen, onClose }) => {
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, filtered, selectedIndex]);
+  }, [isOpen, onClose, filtered, selectedIndex, navigateTo]);
 
-  // Reset selected index when query changes
   useEffect(() => {
     setSelectedIndex(0);
   }, [query]);
@@ -77,78 +78,63 @@ const AntigravitySearch = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="antigravity-overlay">
+        <div className="luxe-search-overlay" onClick={() => onClose(false)}>
           <motion.div
-            initial={{ opacity: 0, y: -20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="antigravity-container"
+            initial={{ opacity: 0, y: -10, scale: 0.98, filter: 'blur(4px)' }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: -10, scale: 0.98, filter: 'blur(4px)' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400, mass: 0.8 }}
+            className="luxe-search-container"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="antigravity-header">
-              <Command size={22} color="#10b981" />
+            <div className="luxe-search-header">
+              <Command size={20} className="luxe-search-icon" />
               <input
                 ref={inputRef}
-                className="antigravity-input"
-                placeholder="Antigravity Command Center... (Demandez ce que vous voulez)"
+                className="luxe-search-input"
+                placeholder="What would you like to do?"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                spellCheck={false}
               />
-              <div className="antigravity-kbd">ESC</div>
+              <div className="luxe-kbd">ESC</div>
             </div>
 
-            <div className="antigravity-results">
-              {/* Future Integration: Si l'utilisateur tape "CA", afficher un widget financier */}
-              {query.toLowerCase() === 'ca' && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }} 
-                  animate={{ opacity: 1, height: 'auto' }} 
-                  className="antigravity-widget-container"
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Chiffre d'Affaires Mensuel</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>45 250 000 FCFA</div>
-                    </div>
-                    <div style={{ padding: '0.5rem 1rem', background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: 600 }}>
-                      +12.5% vs M-1
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
+            <div className="luxe-search-results">
               {filtered.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`antigravity-item ${idx === selectedIndex ? 'active' : ''}`}
-                  onClick={() => { item.action(); onClose(false); }}
+                  className={`luxe-search-item ${idx === selectedIndex ? 'active' : ''}`}
+                  onClick={() => { navigateTo(item.actionPath); onClose(false); }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                 >
-                  <div className="antigravity-item-icon">{item.icon}</div>
-                  <div className="antigravity-item-content">
-                    <div className="antigravity-item-title">{item.label}</div>
-                    <div className="antigravity-item-subtitle">{item.category}</div>
+                  <div className="luxe-item-icon">{item.icon}</div>
+                  <div className="luxe-item-content">
+                    <div className="luxe-item-title">{item.label}</div>
+                    <div className="luxe-item-subtitle">{item.category}</div>
                   </div>
-                  <ArrowRight size={16} className="antigravity-item-arrow" />
+                  <ArrowRight size={16} className="luxe-item-arrow" />
+                  {idx === selectedIndex && (
+                    <motion.div layoutId="active-indicator" className="luxe-item-indicator" />
+                  )}
                 </div>
               ))}
               
-              {filtered.length === 0 && query.toLowerCase() !== 'ca' && (
-                <div style={{ padding: '3rem 2rem', textAlign: 'center', color: '#64748b' }}>
-                  <Search size={32} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+              {filtered.length === 0 && (
+                <div className="luxe-search-empty">
+                  <Search size={24} strokeWidth={1} />
                   <div>Aucune commande trouvée pour "{query}"</div>
-                  <div style={{ fontSize: '0.8rem', marginTop: '0.5rem', opacity: 0.7 }}>Essayez des mots-clés comme "devis", "rh", ou "stock".</div>
                 </div>
               )}
             </div>
 
-            <div className="antigravity-footer">
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: '#64748b' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="antigravity-kbd" style={{ padding: '0.1rem 0.3rem' }}>↑↓</kbd> Naviguer</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="antigravity-kbd" style={{ padding: '0.1rem 0.3rem' }}>↵</kbd> Ouvrir</span>
+            <div className="luxe-search-footer">
+              <div className="luxe-footer-nav">
+                <span><kbd>↑↓</kbd> Naviguer</span>
+                <span><kbd>↵</kbd> Ouvrir</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 700, color: '#10b981', letterSpacing: '1px' }}>
-                <Zap size={14} fill="#10b981" /> ANTIGRAVITY OS
+              <div className="luxe-footer-brand">
+                NEXUS OS
               </div>
             </div>
           </motion.div>
@@ -158,4 +144,4 @@ const AntigravitySearch = ({ isOpen, onClose }) => {
   );
 };
 
-export default AntigravitySearch;
+export default NexusSearch;

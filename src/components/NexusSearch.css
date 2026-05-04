@@ -1,200 +1,207 @@
-.nexus-overlay {
+/* NexusSearch.css - LUXE SOBRE DESIGN SYSTEM */
+
+:root {
+  --luxe-bg: rgba(10, 10, 11, 0.65);
+  --luxe-blur: blur(24px);
+  --luxe-border: rgba(255, 255, 255, 0.08);
+  --luxe-text-primary: #ffffff;
+  --luxe-text-secondary: #888888;
+  --luxe-accent: #d4af37; /* Brushed Gold */
+  --luxe-accent-glow: rgba(212, 175, 55, 0.15);
+  --luxe-item-hover: rgba(255, 255, 255, 0.04);
+}
+
+.luxe-search-overlay {
   position: fixed;
   inset: 0;
   z-index: 9999;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 10vh;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  padding-top: 15vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-.nexus-container {
+.luxe-search-container {
   width: 100%;
-  max-width: 720px;
-  background: rgba(15, 23, 42, 0.75);
-  border-radius: 1.5rem;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05), 
-              0 25px 50px -12px rgba(0,0,0,0.5),
-              0 0 40px rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 680px;
+  background: var(--luxe-bg);
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--luxe-border), 
+              0 30px 60px -15px rgba(0, 0, 0, 0.8),
+              0 0 80px var(--luxe-accent-glow);
   overflow: hidden;
   position: relative;
-  z-index: 10000;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: var(--luxe-blur);
+  -webkit-backdrop-filter: var(--luxe-blur);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Glow animation */
-.nexus-container::before {
+/* Subtle top highlight to simulate glass edge */
+.luxe-search-container::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent);
-  animation: scanline 3s linear infinite;
-  opacity: 0.5;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
   z-index: 10;
 }
 
-@keyframes scanline {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.nexus-header {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+.luxe-search-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--luxe-border);
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background: rgba(255, 255, 255, 0.02);
+  gap: 16px;
 }
 
-.nexus-input {
+.luxe-search-icon {
+  color: var(--luxe-text-secondary);
+}
+
+.luxe-search-input {
   flex: 1;
   background: transparent;
   border: none;
   outline: none;
   font-size: 1.25rem;
-  color: #fff;
-  font-weight: 500;
-  font-family: 'Inter', sans-serif;
-  letter-spacing: -0.01em;
+  color: var(--luxe-text-primary);
+  font-weight: 300;
+  letter-spacing: -0.015em;
 }
 
-.nexus-input::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+.luxe-search-input::placeholder {
+  color: #555555;
+  font-weight: 300;
 }
 
-.nexus-kbd {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
+.luxe-kbd {
+  font-size: 0.65rem;
+  color: var(--luxe-text-secondary);
   background: rgba(255, 255, 255, 0.05);
-  padding: 0.3rem 0.6rem;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: monospace;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--luxe-border);
+  letter-spacing: 1px;
 }
 
-.nexus-results {
-  max-height: 450px;
+.luxe-search-results {
+  max-height: 400px;
   overflow-y: auto;
-  padding: 0.75rem;
+  padding: 12px;
 }
 
-.nexus-results::-webkit-scrollbar {
-  width: 6px;
+.luxe-search-results::-webkit-scrollbar {
+  width: 0px; /* Hidden scrollbar for extreme minimalism */
 }
-.nexus-results::-webkit-scrollbar-track {
-  background: transparent;
-}
-.nexus-results::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+
+.luxe-search-item {
+  padding: 14px 16px;
   border-radius: 10px;
-}
-.nexus-results::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.nexus-item {
-  padding: 0.875rem 1rem;
-  border-radius: 0.75rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
-  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  z-index: 1;
 }
 
-.nexus-item.active, .nexus-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.05);
-}
-
-.nexus-item.active::before {
-  content: '';
+.luxe-item-indicator {
   position: absolute;
-  left: 0;
-  top: 10%;
-  bottom: 10%;
-  width: 3px;
-  background: #38bdf8;
-  border-radius: 0 4px 4px 0;
+  inset: 0;
+  background: var(--luxe-item-hover);
+  border-radius: 10px;
+  z-index: -1;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
-.nexus-item-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 0.5rem;
+.luxe-item-icon {
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
-  transition: all 0.2s;
+  color: var(--luxe-text-secondary);
+  transition: color 0.3s ease;
 }
 
-.nexus-item.active .nexus-item-icon {
-  color: #38bdf8;
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.2);
+.luxe-search-item.active .luxe-item-icon {
+  color: var(--luxe-accent);
 }
 
-.nexus-item-content {
+.luxe-item-content {
   flex: 1;
 }
 
-.nexus-item-title {
+.luxe-item-title {
   font-size: 0.95rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  margin-bottom: 0.1rem;
+  font-weight: 400;
+  color: var(--luxe-text-primary);
+  margin-bottom: 2px;
+  letter-spacing: -0.01em;
 }
 
-.nexus-item-subtitle {
+.luxe-item-subtitle {
   font-size: 0.75rem;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  color: var(--luxe-text-secondary);
+  font-weight: 300;
 }
 
-.nexus-item-arrow {
-  color: #475569;
+.luxe-item-arrow {
+  color: var(--luxe-accent);
   opacity: 0;
-  transform: translateX(-10px);
-  transition: all 0.2s;
+  transform: translateX(-8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.nexus-item.active .nexus-item-arrow,
-.nexus-item:hover .nexus-item-arrow {
+.luxe-search-item.active .luxe-item-arrow {
   opacity: 1;
   transform: translateX(0);
-  color: #38bdf8;
 }
 
-.nexus-footer {
-  padding: 0.75rem 1.5rem;
-  background: rgba(15, 23, 42, 0.9);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+.luxe-search-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: #555555;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-weight: 300;
+}
+
+.luxe-search-footer {
+  padding: 12px 24px;
+  border-top: 1px solid var(--luxe-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(0, 0, 0, 0.2);
 }
 
-.nexus-widget-container {
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 1rem;
+.luxe-footer-nav {
+  display: flex;
+  gap: 16px;
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.luxe-footer-nav kbd {
+  font-family: -apple-system, sans-serif;
+  margin-right: 6px;
+  color: #888;
+}
+
+.luxe-footer-brand {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--luxe-text-secondary);
+  letter-spacing: 2px;
 }
