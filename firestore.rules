@@ -19,7 +19,7 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return hasRole('SUPER_ADMIN');
+      return (isAuthenticated() && request.auth.token.email == 'fall.jcjunior@gmail.com') || hasRole('SUPER_ADMIN');
     }
 
     function isAdmin() {
