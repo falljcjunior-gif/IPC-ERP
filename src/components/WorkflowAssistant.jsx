@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, ArrowRight, X, Info, GitPullRequest, 
   Check, Clock, Zap, AlertCircle 
 } from 'lucide-react';
 import { useStore } from '../store';
+import SmartButton from './SmartButton';
+import { useToastStore } from '../store/useToastStore';
+import { debugInteraction } from '../utils/InteractionAuditor';
 
 /**
  * ⚙️ NEXUS OS: WORKFLOW & BPM ASSISTANT
@@ -12,17 +15,33 @@ import { useStore } from '../store';
  */
 const WorkflowAssistant = () => {
   const { hints = [], dismissHint, navigateTo } = useStore();
+  const { addToast } = useToastStore();
 
-  // Simulated BPM Approvals (In a real app, these would come from a workflow store)
-  const pendingApprovals = [
+  // Local state for simulated BPM Approvals to make them "active"
+  const [bpmItems, setBpmItems] = useState([
     { 
       id: 'WF-001', type: 'BPM', title: 'Purchase Authorization', appId: 'Finance',
       message: 'MacBook Pro M3 for Raphael (IT Dept). Amount: €2,400.',
       priority: 'high', deadline: '2h'
     }
-  ];
+  ]);
 
-  const allItems = [...pendingApprovals, ...hints];
+  const handleBpmAction = async (id, action) => {
+    await debugInteraction(`BPM ${action}: ${id}`, async () => {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setBpmItems(prev => prev.filter(item => item.id !== id));
+      addToast(
+        action === 'approve' 
+          ? 'Workflow approuvé avec succès' 
+          : 'Workflow refusé et archivé', 
+        action === 'approve' ? 'success' : 'error'
+      );
+    });
+  };
+
+  const allItems = [...bpmItems, ...hints];
 
   if (allItems.length === 0) return null;
 
@@ -73,7 +92,7 @@ const WorkflowAssistant = () => {
                 </div>
               </div>
               <button 
-                onClick={() => item.type === 'BPM' ? null : dismissHint(item.id)}
+                onClick={() => item.type === 'BPM' ? setBpmItems(prev => prev.filter(i => i.id !== item.id)) : dismissHint(item.id)}
                 style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '0.25rem' }}
               >
                 <X size={16} />
@@ -89,17 +108,22 @@ const WorkflowAssistant = () => {
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
               {item.type === 'BPM' ? (
                 <>
-                  <button 
-                    className="btn btn-primary"
-                    style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                  <SmartButton 
+                    onClick={() => handleBpmAction(item.id, 'approve')}
+                    variant="primary"
+                    style={{ flex: 1, borderRadius: '1rem' }}
+                    successMessage="Approuvé"
                   >
-                    <Check size={16} /> Approve
-                  </button>
-                  <button 
-                    style={{ flex: 1, padding: '0.75rem', borderRadius: '1rem', background: 'white', color: '#EF4444', border: '1px solid #EF4444', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
+                    <Check size={16} /> Approuver
+                  </SmartButton>
+                  <SmartButton 
+                    onClick={() => handleBpmAction(item.id, 'deny')}
+                    variant="secondary"
+                    style={{ flex: 1, borderRadius: '1rem', border: '1px solid #EF4444', color: '#EF4444' }}
+                    successMessage="Refusé"
                   >
-                    Deny
-                  </button>
+                    Refuser
+                  </SmartButton>
                 </>
               ) : (
                 item.actionLabel && (
