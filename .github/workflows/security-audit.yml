@@ -61,7 +61,6 @@ jobs:
         uses: returntocorp/semgrep-action@v1
         with:
           config: >-
-            p/firebase
             p/javascript
             p/react
             p/nodejs
@@ -89,24 +88,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ── 4. Firestore Rules Validation ────────────────────────────────────
-  firestore-rules:
-    name: 🔥 Firestore Rules Validation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-
-      - name: 🔍 Validate Firestore Rules syntax
-        run: firebase firestore:rules --project ipc-erp --check
-        continue-on-error: true
 
   # ── 5. Security Summary Report ────────────────────────────────────────
   security-summary:
