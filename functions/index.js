@@ -48,3 +48,15 @@ exports.manualFirestoreExport = backups.manualFirestoreExport;
 // 5. Outbox & Retry Worker (Cron)
 const outbox = require('./modules/outbox');
 exports.processOutboxQueue = outbox.processOutboxQueue;
+
+// 6. RFM Engine — Client Segmentation (Runs daily)
+const rfm = require('./modules/rfm_engine');
+exports.computeRFMScores = rfm.computeRFMScores;
+exports.recomputeClientRFMOnInvoice = rfm.recomputeClientRFMOnInvoice;
+
+// 7. Sales Automation — Quote follow-ups, Stock reorders, Recurring Invoices
+const salesAuto = require('./modules/automation_sales');
+exports.devisRelanceAutomatic = salesAuto.devisRelanceAutomatic;
+exports.stockReorderAlert = salesAuto.stockReorderAlert;
+exports.generateRecurringInvoices = salesAuto.generateRecurringInvoices;
+exports.clientEngagementAlerts = salesAuto.clientEngagementAlerts;

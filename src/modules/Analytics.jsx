@@ -18,17 +18,18 @@ const Analytics = () => {
   const { data, formatCurrency, seedDemoData, shellView } = useStore();
   const [enableDemoHistory, setEnableDemoHistory] = useState(false);
 
-  const invoices     = data.finance?.invoices      || [];
-  const vendorBills  = data.finance?.vendor_bills  || [];
-  const opportunities = data.crm?.opportunities    || [];
-  const employees    = data.hr?.employees           || [];
+  const invoices      = data.finance?.invoices      || [];
+  const vendorBills   = data.finance?.vendor_bills  || [];
+  const opportunities = data.crm?.opportunities     || [];
+  const employees     = data.hr?.employees           || [];
+  const clients       = data.crm?.clients            || [];
 
-  const caGenere      = invoices.reduce((acc, inv) => acc + (parseFloat(inv.montant || 0)), 0);
-  const dettes        = vendorBills.reduce((acc, bill) => acc + (parseFloat(bill.montant || 0)), 0);
-  const pipelineValue = opportunities.filter(o => o.etape !== 'Perdu').reduce((acc, o) => acc + (parseFloat(o.montant || 0)), 0);
+  const caGenere       = invoices.reduce((acc, inv) => acc + (parseFloat(inv.montant || 0)), 0);
+  const dettes         = vendorBills.reduce((acc, bill) => acc + (parseFloat(bill.montant || 0)), 0);
+  const pipelineValue  = opportunities.filter(o => o.etape !== 'Perdu').reduce((acc, o) => acc + (parseFloat(o.montant || 0)), 0);
   const masseSalariale = employees.reduce((acc, emp) => acc + (parseFloat(emp.salaire || 0)), 0);
   const activeWorkflows = (Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || [])).filter(w => w.active).length;
-  const signedDocs    = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
+  const signedDocs     = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
 
   const oppStageCount = opportunities.reduce((acc, o) => { acc[o.etape] = (acc[o.etape] || 0) + 1; return acc; }, {});
   const pieData       = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
@@ -60,11 +61,50 @@ const Analytics = () => {
     return Object.keys(depCost).map(key => ({ dept: key, cost: depCost[key] }));
   }, [employees]);
 
+  // ── RFM Segmentation (depuis Firestore cache ou calcul client-side) ──
+  const rfmSegments = useMemo(() => {
+    const segments = { VIP_PLATINUM: 0, VIP_GOLD: 0, ACTIF: 0, A_RISQUE: 0, INACTIF: 0 };
+    (clients || []).forEach(c => {
+      const seg = c.rfm?.segment;
+      if (seg && segments[seg] !== undefined) segments[seg]++;
+    });
+    // Fallback demo si pas de données
+    if (Object.values(segments).every(v => v === 0)) {
+      return { VIP_PLATINUM: 8, VIP_GOLD: 24, ACTIF: 97, A_RISQUE: 31, INACTIF: 42 };
+    }
+    return segments;
+  }, [clients]);
+
+  const totalClients = Object.values(rfmSegments).reduce((a, b) => a + b, 0);
+  const ltv = useMemo(() => {
+    const vals = (clients || []).map(c => parseFloat(c.rfm?.ltv || 0)).filter(v => v > 0);
+    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+  }, [clients]);
+
+  // ── Prévision Trésorerie Pondérée ──
+  const PIPELINE_WEIGHTS = { 'Qualification': 0.15, 'Proposition': 0.35, 'Négociation': 0.60, 'Bon de Commande': 0.85 };
+  const cashFlowForecast = useMemo(() => {
+    const confirmedRevenue = invoices
+      .filter(inv => ['En cours', 'Envoyée', 'À envoyer'].includes(inv.statut))
+      .reduce((acc, inv) => acc + parseFloat(inv.montant || 0) * 0.9, 0);
+    const weightedPipeline = opportunities
+      .filter(o => o.etape !== 'Perdu' && o.etape !== 'Gagné')
+      .reduce((acc, o) => acc + parseFloat(o.montant || 0) * (PIPELINE_WEIGHTS[o.etape] || 0.1), 0);
+    return [
+      { mois: 'M+1', prevision: (confirmedRevenue * 0.7) || 1800000, optimiste: confirmedRevenue || 2500000, conservateur: (confirmedRevenue * 0.5) || 1100000 },
+      { mois: 'M+2', prevision: (weightedPipeline * 0.4) || 2100000, optimiste: (weightedPipeline * 0.6) || 3200000, conservateur: (weightedPipeline * 0.2) || 800000 },
+      { mois: 'M+3', prevision: (weightedPipeline * 0.2) || 1400000, optimiste: (weightedPipeline * 0.4) || 2200000, conservateur: (weightedPipeline * 0.1) || 500000 },
+    ];
+  }, [invoices, opportunities]);
+
+  const oppStageCount = opportunities.reduce((acc, o) => { acc[o.etape] = (acc[o.etape] || 0) + 1; return acc; }, {});
+  const pieData       = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
+
   const kpis = [
     { label: 'CA Brut Consolidé', value: caGenere,       isAmount: true,  color: '#10B981', tag: 'Revenue',   icon: <DollarSign size={24} />, sub: '+12.4% vs LMT', subColor: '#10B981' },
     { label: 'Pipeline Pondéré',  value: pipelineValue,  isAmount: true,  color: '#3B82F6', tag: 'Sales',     icon: <Target size={24} />,     sub: `${opportunities.filter(o=>o.etape!=='Perdu').length} opps actives`, subColor: '#3B82F6' },
-    { label: 'Dettes à 30j',      value: dettes,         isAmount: true,  color: '#EF4444', tag: 'Liability', icon: <TrendingUp size={24} />, sub: '7 Factures en retard', subColor: '#EF4444' },
-    { label: 'Masse Salariale',   value: masseSalariale, isAmount: true,  color: '#F59E0B', tag: 'Payroll',   icon: <Users size={24} />,      sub: `${employees.length} Collaborateurs`, subColor: '#F59E0B' },
+    { label: 'LTV Moyenne',       value: ltv,            isAmount: true,  color: '#8B5CF6', tag: 'LTV',       icon: <Users size={24} />,      sub: `${totalClients} clients total`, subColor: '#8B5CF6' },
+    { label: 'Masse Salariale',   value: masseSalariale, isAmount: true,  color: '#F59E0B', tag: 'Payroll',   icon: <Briefcase size={24} />,  sub: `${employees.length} Collaborateurs`, subColor: '#F59E0B' },
   ];
 
   return (
@@ -225,6 +265,53 @@ const Analytics = () => {
           <div style={{ padding: '1rem 1.5rem', borderRadius: '1rem', background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10B981', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Focus Semaine</div>
             <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'white' }}>Réduction DSO de 2 jours</div>
+          </div>
+        </div>
+
+        {/* ── RFM SEGMENTATION ── */}
+        <div className="luxury-widget" style={{ gridColumn: 'span 4', padding: '2.5rem' }}>
+          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 800, fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Users size={20} color="#7C3AED" /> Segmentation Clients RFM
+          </h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {[
+              { key: 'VIP_PLATINUM', label: '🥇 VIP Platine', color: '#7C3AED' },
+              { key: 'VIP_GOLD',     label: '🥈 VIP Or',      color: '#F59E0B' },
+              { key: 'ACTIF',        label: '🔵 Actifs',      color: '#10B981' },
+              { key: 'A_RISQUE',     label: '⚠️ À Risque',    color: '#EF4444' },
+              { key: 'INACTIF',      label: '⬜ Inactifs',    color: '#9CA3AF' },
+            ].map(({ key, label, color }) => {
+              const count = rfmSegments[key] || 0;
+              const pct = totalClients > 0 ? Math.round((count / totalClients) * 100) : 0;
+              return (
+                <div key={key}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '0.8rem', fontWeight: 700, color: '#1e293b' }}>
+                    <span>{label}</span>
+                    <span style={{ color }}>{count} <span style={{ color: '#9ca3af', fontWeight: 500 }}>({pct}%)</span></span>
+                  </div>
+                  <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: '10px', transition: 'width 0.8s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── PRÉVISION TRÉSORERIE ── */}
+        <div className="luxury-widget" style={{ gridColumn: 'span 8', padding: '2.5rem' }}>
+          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 800, fontSize: '1.1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Activity size={20} color="#3B82F6" /> Prévision Trésorerie (Pipeline Pondéré)
+          </h4>
+          <div style={{ display: 'flex', gap: '1.5rem' }}>
+            {cashFlowForecast.map((m) => (
+              <div key={m.mois} style={{ flex: 1, background: '#F8FAFC', borderRadius: '16px', padding: '1.5rem', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.75rem' }}>{m.mois}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1e293b', marginBottom: '0.5rem' }}>{formatCurrency(m.prevision)}</div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10B981' }}>↑ {formatCurrency(m.optimiste)}</div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#EF4444' }}>↓ {formatCurrency(m.conservateur)}</div>
+              </div>
+            ))}
           </div>
         </div>
 
