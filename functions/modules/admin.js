@@ -58,12 +58,12 @@ exports.deleteUserAccount = onCall({
   }
 });
 
-const functions = require('firebase-functions');
+const functionsV1 = require('firebase-functions/v1');
 
 /**
  * Trigger onCreate: Automatically mirror Auth user to Firestore
  */
-exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
+exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
   const uid = user.uid;
   const email = user.email;
   const displayName = user.displayName || email.split('@')[0];
