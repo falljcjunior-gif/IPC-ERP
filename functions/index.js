@@ -60,3 +60,11 @@ exports.devisRelanceAutomatic = salesAuto.devisRelanceAutomatic;
 exports.stockReorderAlert = salesAuto.stockReorderAlert;
 exports.generateRecurringInvoices = salesAuto.generateRecurringInvoices;
 exports.clientEngagementAlerts = salesAuto.clientEngagementAlerts;
+
+// 8. Rate Limiter (middleware — importé par les autres modules)
+// Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
+// const { RATE_PRESETS } = require('./modules/rate_limiter');
+
+// 9. Firestore Partitioning Utilities
+// Pas d'export Cloud Function — utilitaires pour la migration
+// const partitioning = require('./modules/firestore_partitioning');
