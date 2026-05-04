@@ -11,24 +11,23 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
-    function getRole() {
-      return isAuthenticated() ? getUserData().role : 'GUEST';
+    function hasRole(roleName) {
+      return isAuthenticated() && (
+        getUserData().role == roleName ||
+        ('permissions' in getUserData() && 'roles' in getUserData().permissions && roleName in getUserData().permissions.roles)
+      );
     }
 
     function isSuperAdmin() {
-      return isAuthenticated() && getRole() == 'SUPER_ADMIN';
+      return hasRole('SUPER_ADMIN');
     }
 
     function isAdmin() {
-      return isAuthenticated() && (getRole() == 'ADMIN' || getRole() == 'SUPER_ADMIN');
+      return isSuperAdmin() || hasRole('ADMIN');
     }
 
     function isManager() {
-      return isAuthenticated() && (getRole() == 'MANAGER' || isAdmin());
-    }
-
-    function hasRole(role) {
-      return isAuthenticated() && getRole() == role;
+      return isAdmin() || hasRole('MANAGER');
     }
 
     function isOwner(uid) {
