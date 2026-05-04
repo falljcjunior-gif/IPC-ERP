@@ -19,24 +19,23 @@ exports.cleanupOldWebRTCSignals = onSchedule('every 1 hours', async (event) => {
   const cutoff = admin.firestore.Timestamp.fromDate(oneHourAgo);
 
   try {
-    const roomsSnap = await db.collection('rooms').get();
-    let totalDeleted = 0;
-
-    for (const roomDoc of roomsSnap.docs) {
-      const signalsRef = roomDoc.ref.collection('signals');
-      const oldSignalsSnap = await signalsRef.where('createdAt', '<', cutoff).get();
-      
-      if (oldSignalsSnap.empty) continue;
-
-      const batch = db.batch();
-      oldSignalsSnap.docs.forEach(doc => {
-        batch.delete(doc.ref);
-        totalDeleted++;
-      });
-      await batch.commit();
+    const oldSignalsSnap = await db.collectionGroup('signals')
+      .where('createdAt', '<', cutoff)
+      .limit(500) // Protection contre les gros volumes
+      .get();
+    
+    if (oldSignalsSnap.empty) {
+      logger.info('[Cleanup] Aucun signal WebRTC périmé trouvé.');
+      return;
     }
 
-    logger.info(`[Cleanup] WebRTC Signals: ${totalDeleted} documents supprimés.`);
+    const batch = db.batch();
+    oldSignalsSnap.docs.forEach(doc => {
+      batch.delete(doc.ref);
+    });
+    await batch.commit();
+
+    logger.info(`[Cleanup] WebRTC Signals: ${oldSignalsSnap.size} documents supprimés.`);
   } catch (err) {
     logger.error('[Cleanup] WebRTC Signals Error:', err);
   }
@@ -73,7 +72,7 @@ exports.onRoomDeleted = onDocumentDeleted('rooms/{roomId}', async (event) => {
  * SECURITY: GLOBAL AUDIT TRAIL — Hardened
  * ══════════════════════════════════════════════════════════════
  */
-const SENSITIVE_COLLECTIONS = ['finance', 'inventory', 'users', 'hr', 'sales_leads', 'production_orders'];
+const SENSITIVE_COLLECTIONS = ['finance', 'inventory', 'users', 'hr', 'crm', 'production', 'sales', 'projects'];
 
 exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (event) => {
   const { collection, docId } = event.params;
@@ -118,13 +117,16 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
 /**
  * 💹 FINANCE: AUTOMATED ACCOUNTING — Hardened with Idempotency and Outbox
  */
-exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoiceId}', async (event) => {
+exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance/{invoiceId}', async (event) => {
   const newData = event.data.after.data();
   const oldData = event.data.before.data();
   const { invoiceId } = event.params;
 
-  // Trigger only on status change to 'paid'
-  if (newData.status === 'paid' && oldData.status !== 'paid') {
+  // Guard: ensure this is an invoice record
+  if (newData.subModule !== 'invoices') return null;
+
+  // Trigger only on status change to 'Payé' (French status used in frontend)
+  if (newData.statut === 'Payé' && oldData.statut !== 'Payé') {
     const amount = newData.amountTTC || newData.amount || 0;
     
     // Idempotency check: use a deterministic ID based on invoiceId
@@ -195,21 +197,26 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoi
 /**
  * 🧱 PRODUCTION: INVENTORY AUTO-SYNC — Hardened with Transactions
  */
-exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{ofId}', async (event) => {
+exports.updateStockOnProductionComplete = onDocumentUpdated('production/{ofId}', async (event) => {
   const newData = event.data.after.data();
   const oldData = event.data.before.data();
   const { ofId } = event.params;
 
-  if (newData.status === 'completed' && oldData.status !== 'completed') {
-    const productId = newData.productId;
-    const quantity = newData.quantityProduced || newData.quantity || 0;
+  // Guard: ensure this is a work order
+  if (newData.subModule !== 'workOrders') return null;
+
+  if (newData.statut === 'Terminé' && oldData.statut !== 'Terminé') {
+    const productId = newData.productId || newData.produitId;
+    const quantity = newData.quantityProduced || newData.qte || 0;
     
     if (!productId) {
       logger.error(`Missing productId in production order ${ofId}`);
       return null;
     }
 
-    const productRef = db.collection('inventory_products').doc(productId);
+    // Reference the generic 'inventory' collection with subModule: 'products'
+    // Note: We need to find the specific document ID in the 'inventory' collection.
+    const productRef = db.collection('inventory').doc(productId);
 
     try {
       await db.runTransaction(async (t) => {
@@ -388,9 +395,12 @@ exports.onProjectAutoTag = onDocumentWritten('projects/{projectId}', async (even
     tags.push('Maintenance');
   }
 
-  // Si des tags ont été ajoutés, on met à jour
-  if (tags.length > initialTagsCount) {
-    await event.data.after.ref.update({ tags });
+  // Si des tags ont été ajoutés et sont différents de l'existant, on met à jour
+  const currentTags = newData.tags || [];
+  const hasChanges = tags.length !== currentTags.length || !tags.every(t => currentTags.includes(t));
+
+  if (hasChanges) {
+    await event.data.after.ref.update({ tags, _autoTaggedAt: admin.firestore.FieldValue.serverTimestamp() });
     logger.info(`Auto-tags applied to project ${event.params.projectId}`);
   }
 

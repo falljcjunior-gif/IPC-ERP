@@ -196,14 +196,34 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
     };
   });
 
-  // Persistance Firestore
+  // Persistance Firestore Atomique
   try {
     if (get().user) {
-      await FirestoreService.setDocument('sales', bonDeCommande.id, { ...bonDeCommande, subModule: 'orders' });
-      await FirestoreService.updateDocument('sales', devis.id, { _locked: true, _lockedAt: new Date().toISOString(), statut: 'Accepté' });
+      const ops = [
+        { 
+          op: 'set', 
+          collection: 'sales', 
+          id: bonDeCommande.id, 
+          data: { ...bonDeCommande, subModule: 'orders' } 
+        },
+        { 
+          op: 'update', 
+          collection: 'sales', 
+          id: devis.id, 
+          data: { _locked: true, _lockedAt: new Date().toISOString(), statut: 'Accepté' } 
+        }
+      ];
+
       if (factureAcompte) {
-        await FirestoreService.setDocument('finance', factureAcompte.id, { ...factureAcompte, subModule: 'invoices' });
+        ops.push({ 
+          op: 'set', 
+          collection: 'finance', 
+          id: factureAcompte.id, 
+          data: { ...factureAcompte, subModule: 'invoices' } 
+        });
       }
+
+      await FirestoreService.batchWrite(ops);
     }
   } catch (err) {
     logger.error('[IPC Green BlockEngine] Firestore cascade failed', err);
@@ -289,6 +309,35 @@ export async function cascadeBCToDelivery(bc, get, set) {
       sales: { ...prev.sales, orders: nextOrders },
     };
   });
+
+  // Persistance Firestore Atomique
+  try {
+    if (get().user) {
+      const ops = [
+        { 
+          op: 'set', 
+          collection: 'logistics', 
+          id: bonLivraison.id, 
+          data: { ...bonLivraison, subModule: 'shipments' } 
+        },
+        { 
+          op: 'set', 
+          collection: 'finance', 
+          id: factureFinale.id, 
+          data: { ...factureFinale, subModule: 'invoices' } 
+        },
+        { 
+          op: 'update', 
+          collection: 'sales', 
+          id: bc.id, 
+          data: { statut: 'Expédié', _locked: true, _lockedAt: new Date().toISOString() } 
+        }
+      ];
+      await FirestoreService.batchWrite(ops);
+    }
+  } catch (err) {
+    logger.error('[IPC Green BlockEngine] Firestore delivery cascade failed', err);
+  }
 
   get().addHint({
     title: '🚚 Expédition Validée',

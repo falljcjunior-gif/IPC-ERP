@@ -30,49 +30,48 @@ exports.processOutboxQueue = onSchedule("every 5 minutes", async (event) => {
     }
 
     logger.info(`[Outbox Worker] ${pendingTasks.size} tâches trouvées.`);
+    const now = admin.firestore.FieldValue.serverTimestamp();
 
-    const batch = db.batch();
-    
     for (const doc of pendingTasks.docs) {
       const task = doc.data();
       
+      // 🛡️ [SECURITY FIX AUD-003] Atomicity: Mark as processing immediately
+      await doc.ref.update({ 
+        status: "processing", 
+        lastAttemptAt: admin.firestore.FieldValue.serverTimestamp() 
+      });
+
       if (task.target === "greenblock") {
         logger.info(`[Outbox Worker] Traitement tâche IPC Green Block: ${doc.id}`);
         
         try {
-          // Tentative de synchronisation vers l'ERP Externe
           const result = await greenblock.syncRecord(task.model, task.payload, doc.id);
           
           if (result.success) {
-            batch.update(doc.ref, {
+            await doc.ref.update({
               status: "completed",
               completedAt: admin.firestore.FieldValue.serverTimestamp(),
               attempts: admin.firestore.FieldValue.increment(1)
             });
             logger.info(`[Outbox Worker] Succès pour ${doc.id}`);
           } else {
-            batch.update(doc.ref, {
+            await doc.ref.update({
               status: "failed",
               error: result.error || result.status || "Erreur Inconnue",
-              lastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
               attempts: admin.firestore.FieldValue.increment(1)
             });
             logger.warn(`[Outbox Worker] Échec pour ${doc.id}`);
           }
         } catch (err) {
-          batch.update(doc.ref, {
+          await doc.ref.update({
             status: "failed",
             error: err.message,
-            lastAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
             attempts: admin.firestore.FieldValue.increment(1)
           });
           logger.error(`[Outbox Worker] Erreur d'exécution pour ${doc.id}: ${err.message}`);
         }
       }
     }
-
-    // Valider les modifications des statuts
-    await batch.commit();
     logger.info("[Outbox Worker] Traitement terminé avec succès.");
     
   } catch (error) {

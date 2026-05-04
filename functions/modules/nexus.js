@@ -78,11 +78,13 @@ exports.nexusChat = onCall({
 
   const {
     activeModule = 'dashboard',
-    userRole = 'STAFF',
     userName = 'Utilisateur',
     kpis = {},
     recordCounts = {}
   } = erpContext;
+
+  // ── [SECURITY FIX AUD-004] Source de vérité : Custom Claims uniquement ──
+  const userRole = request.auth.token?.role || 'STAFF';
 
   const moduleNames = {
     dashboard: 'Tableau de Bord', crm: 'CRM', hr: 'RH',
