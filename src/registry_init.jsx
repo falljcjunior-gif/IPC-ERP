@@ -7,7 +7,7 @@ import {
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
   PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox, Shield,
-  Banknote, Wrench
+  Banknote, Wrench, Globe, Leaf, Smartphone
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -56,6 +56,10 @@ const Manufacturing = lazy(() => import('./modules/Manufacturing'));
 const AuditHub = lazy(() => import('./modules/AuditHub'));
 const MaintenanceHub = lazy(() => import('./modules/MaintenanceHub'));
 const PayrollHub = lazy(() => import('./modules/PayrollHub'));
+const ProcurementHub = lazy(() => import('./modules/ProcurementHub'));
+const ESGHub = lazy(() => import('./modules/ESGHub'));
+const MultiEntityHub = lazy(() => import('./modules/MultiEntityHub'));
+const MobileCompanion = lazy(() => import('./modules/MobileCompanion'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -83,6 +87,8 @@ import { officeAdminSchema } from './schemas/office_admin.schema';
 import { itSchema } from './schemas/it.schema';
 import { maintenanceSchema } from './schemas/maintenance.schema';
 import { payrollSchema } from './schemas/payroll.schema';
+import { procurementSchema } from './schemas/procurement.schema';
+import { esgSchema } from './schemas/esg.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -97,7 +103,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema, itSchema, maintenanceSchema, payrollSchema].forEach(s => registry.registerSchema(s));
+    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema, itSchema, maintenanceSchema, payrollSchema, procurementSchema, esgSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cockpit ---
   registry.register({
@@ -310,6 +316,25 @@ export const initRegistry = () => {
     component: PayrollHub, priority: 46, schema: payrollSchema
   });
 
+  // --- Stratégie & International ---
+  registry.register({
+    id: 'procurement', label: 'Appels d\'Offres', icon: <ShoppingBag size={18} />,
+    category: 'operations', roles: ['ADMIN', 'FINANCE', 'SUPER_ADMIN'],
+    component: ProcurementHub, priority: 27, schema: procurementSchema
+  });
+
+  registry.register({
+    id: 'esg', label: 'ESG & Environnement', icon: <Leaf size={18} />,
+    category: 'operations', roles: ['ADMIN', 'SUPER_ADMIN', 'PRODUCTION'],
+    component: ESGHub, priority: 28, schema: esgSchema
+  });
+
+  registry.register({
+    id: 'multi_entity', label: 'Multi-Société & Devises', icon: <Globe size={18} />,
+    category: 'finance', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
+    component: MultiEntityHub, priority: 38
+  });
+
   // --- Configuration & Admin ---
   registry.register({
     id: 'control_hub', label: 'Administration', icon: <Settings size={18} />,
@@ -321,5 +346,11 @@ export const initRegistry = () => {
     id: 'it', label: 'IT Operations', icon: <Shield size={18} />,
     category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
     component: ITModule, priority: 51
+  });
+
+  registry.register({
+    id: 'mobile', label: 'Application Mobile', icon: <Smartphone size={18} />,
+    category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN'],
+    component: MobileCompanion, priority: 52
   });
 };
