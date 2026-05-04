@@ -72,7 +72,7 @@ const MODULE_STRUCTURE = [
   }
 ];
 
-const PermissionMatrix = ({ permissions, onChange }) => {
+export const PermissionMatrix = ({ permissions, onChange }) => {
   const [expandedModule, setExpandedModule] = useState(null);
 
   const handleLevelChange = (level) => {
@@ -272,4 +272,3 @@ const PermissionMatrix = ({ permissions, onChange }) => {
   );
 };
 
-export default PermissionMatrix;
