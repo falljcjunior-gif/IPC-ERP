@@ -85,7 +85,7 @@ const ModuleSwitcher = ({ onSelectApp }) => {
     <div style={{ padding: '2rem' }}>
       <div style={{ marginBottom: '3rem', textAlign: 'center' }}>
         <h2 style={{ fontSize: '2rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
-          Applications Axelor
+          Modules IPC Green Block
         </h2>
         <p style={{ color: 'var(--text-muted)' }}>Sélectionnez une application pour commencer à travailler.</p>
       </div>

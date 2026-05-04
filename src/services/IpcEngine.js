@@ -74,7 +74,7 @@ export function computeStockLevels(productId, storeData) {
 
 /**
  * Vérifie si le stock virtuel est suffisant pour honorer une commande.
- * Bloque la confirmation si insuffisant (règle Axelor — jamais de stock négatif promis).
+ * Bloque la confirmation si insuffisant (règle IPC Green Block — jamais de stock négatif promis).
  *
  * @returns {{ ok: boolean, message?: string }}
  */
@@ -103,7 +103,7 @@ export function validateStockForOrder(order, storeData) {
 
 
 // ─────────────────────────────────────────────────────────────
-// 2. PROPAGATION EN CASCADE (Le "Engrenage" Axelor)
+// 2. PROPAGATION EN CASCADE (Le "Engrenage" IPC Green Block)
 // ─────────────────────────────────────────────────────────────
 
 /**
@@ -121,7 +121,7 @@ export function validateStockForOrder(order, storeData) {
  * @param {object} set    - Mutateur du store Zustand (set())
  */
 export async function cascadeDevisToSaleOrder(devis, get, set) {
-  logger.info('[AxelorEngine] CASCADE: Devis → BC', { devisId: devis.id });
+  logger.info('[IPC Green BlockEngine] CASCADE: Devis → BC', { devisId: devis.id });
 
   const orderNum = get().getNextSequence('sales_orders') || `BC-${Date.now().toString().slice(-6)}`;
 
@@ -145,10 +145,10 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
   };
 
   // 2. Décrémentation Stock Virtuel (réservation — pas physique)
-  //    Le stock physique ne bouge PAS encore. C'est la logique Axelor.
+  //    Le stock physique ne bouge PAS encore. C'est la logique IPC Green Block.
   (devis.items || []).forEach(item => {
     if (item.productId && item.qte) {
-      logger.info(`[AxelorEngine] Réservation stock virtuel: ${item.qte} × ${item.productId}`);
+      logger.info(`[IPC Green BlockEngine] Réservation stock virtuel: ${item.qte} × ${item.productId}`);
       // La réservation est implicite via l'existence du BC "Confirmé"
       // computeStockLevels() en tient compte automatiquement
     }
@@ -206,7 +206,7 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
       }
     }
   } catch (err) {
-    logger.error('[AxelorEngine] Firestore cascade failed', err);
+    logger.error('[IPC Green BlockEngine] Firestore cascade failed', err);
   }
 
   // Notifications UI
@@ -217,7 +217,7 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
     appId: 'sales',
   });
 
-  get().logAction('Cascade Axelor', `Devis ${devis.num} → BC ${orderNum}`, 'sales', bonDeCommande.id);
+  get().logAction('Cascade IPC Green Block', `Devis ${devis.num} → BC ${orderNum}`, 'sales', bonDeCommande.id);
 
   return { bonDeCommande, factureAcompte };
 }
@@ -228,7 +228,7 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
  * Le stock PHYSIQUE diminue ici (pas avant).
  */
 export async function cascadeBCToDelivery(bc, get, set) {
-  logger.info('[AxelorEngine] CASCADE: BC → Livraison + Facture Finale', { bcId: bc.id });
+  logger.info('[IPC Green BlockEngine] CASCADE: BC → Livraison + Facture Finale', { bcId: bc.id });
 
   const blNum = get().getNextSequence('logistics_shipments') || `BL-${Date.now().toString().slice(-6)}`;
   const facNum = get().getNextSequence('finance_invoices') || `FAC-${Date.now().toString().slice(-6)}`;
@@ -296,7 +296,7 @@ export async function cascadeBCToDelivery(bc, get, set) {
     type: 'success', appId: 'logistics',
   });
 
-  get().logAction('Cascade Axelor', `BC ${bc.num} → BL ${blNum} + Facture ${facNum}`, 'logistics', bc.id);
+  get().logAction('Cascade IPC Green Block', `BC ${bc.num} → BL ${blNum} + Facture ${facNum}`, 'logistics', bc.id);
 
   return { bonLivraison, factureFinale };
 }

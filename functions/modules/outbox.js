@@ -1,7 +1,7 @@
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const { logger } = require("firebase-functions");
-const axelor = require("./axelor");
+const greenblock = require("./greenblock");
 
 const db = admin.firestore();
 
@@ -10,7 +10,7 @@ const db = admin.firestore();
  * OUTBOX WORKER (CRON) — RÉSILENCE & RETRY
  * ══════════════════════════════════════════════════════════════
  * Scanne la file d'attente (sync_queue) toutes les 5 minutes 
- * pour relancer les synchronisations Axelor en échec ou en attente.
+ * pour relancer les synchronisations IPC Green Block en échec ou en attente.
  */
 exports.processOutboxQueue = onSchedule("every 5 minutes", async (event) => {
   logger.info("[Outbox Worker] Démarrage du traitement de la file de synchronisation...");
@@ -36,12 +36,12 @@ exports.processOutboxQueue = onSchedule("every 5 minutes", async (event) => {
     for (const doc of pendingTasks.docs) {
       const task = doc.data();
       
-      if (task.target === "axelor") {
-        logger.info(`[Outbox Worker] Traitement tâche Axelor: ${doc.id}`);
+      if (task.target === "greenblock") {
+        logger.info(`[Outbox Worker] Traitement tâche IPC Green Block: ${doc.id}`);
         
         try {
           // Tentative de synchronisation vers l'ERP Externe
-          const result = await axelor.syncRecord(task.model, task.payload, doc.id);
+          const result = await greenblock.syncRecord(task.model, task.payload, doc.id);
           
           if (result.success) {
             batch.update(doc.ref, {

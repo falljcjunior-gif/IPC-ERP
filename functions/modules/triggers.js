@@ -2,7 +2,7 @@ const { onDocumentWritten, onDocumentUpdated, onDocumentDeleted } = require('fir
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
-const axelor = require('./axelor');
+const greenblock = require('./greenblock');
 
 const db = admin.firestore();
 
@@ -154,10 +154,10 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoi
         t.set(accountingRef, entry);
 
         // 🛡️ Outbox pattern: write sync task within the same transaction
-        const syncTaskRef = db.collection('sync_queue').doc(`axelor_acc_${event.id}`);
+        const syncTaskRef = db.collection('sync_queue').doc(`greenblock_acc_${event.id}`);
         t.set(syncTaskRef, {
-          target: 'axelor',
-          model: 'com.axelor.apps.account.db.AccountMove',
+          target: 'greenblock',
+          model: 'com.greenblock.apps.account.db.AccountMove',
           payload: {
             name: `INV-${invoiceId}`,
             amount: amount,
@@ -170,20 +170,20 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance_invoices/{invoi
       
       // SSOT Synchronization (Best-effort inline)
       try {
-        await axelor.syncRecord('com.axelor.apps.account.db.AccountMove', {
+        await greenblock.syncRecord('com.greenblock.apps.account.db.AccountMove', {
           name: `INV-${invoiceId}`,
           amount: amount,
           ref: invoiceId
         }, invoiceId);
 
         // Mark as completed if successful
-        await db.collection('sync_queue').doc(`axelor_acc_${event.id}`).update({
+        await db.collection('sync_queue').doc(`greenblock_acc_${event.id}`).update({
           status: 'completed',
           completedAt: admin.firestore.FieldValue.serverTimestamp()
         });
         logger.info(`Accounting synced for invoice ${invoiceId}`);
       } catch (err) {
-        logger.error(`Axelor sync failed for invoice ${invoiceId}, task remains in sync_queue.`, err);
+        logger.error(`IPC Green Block sync failed for invoice ${invoiceId}, task remains in sync_queue.`, err);
       }
     } catch (err) {
       logger.error('Accounting Sync Error:', err);
@@ -237,8 +237,8 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{
         // 🛡️ Outbox pattern: write sync task within the same transaction
         const syncTaskRef = db.collection('sync_queue').doc(event.id);
         t.set(syncTaskRef, {
-          target: 'axelor',
-          model: 'com.axelor.apps.stock.db.StockMove',
+          target: 'greenblock',
+          model: 'com.greenblock.apps.stock.db.StockMove',
           payload: {
             productId,
             quantity,
@@ -252,7 +252,7 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{
 
       // SSOT Synchronization (Best-effort inline)
       try {
-        await axelor.syncRecord('com.axelor.apps.stock.db.StockMove', {
+        await greenblock.syncRecord('com.greenblock.apps.stock.db.StockMove', {
           productId,
           quantity,
           origin: ofId,
@@ -266,7 +266,7 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production_orders/{
         });
         logger.info(`Stock updated for product ${productId} (+${quantity}) from OF ${ofId}`);
       } catch (err) {
-        logger.error(`Axelor sync failed for event ${event.id}, task remains in sync_queue.`, err);
+        logger.error(`IPC Green Block sync failed for event ${event.id}, task remains in sync_queue.`, err);
       }
     } catch (err) {
       logger.error('Stock Update Error:', err);

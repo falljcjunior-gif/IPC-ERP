@@ -52,13 +52,13 @@ const KanbanBoard = ({
                   {column}
                 </h3>
                 <span style={{ 
-                  background: 'var(--bg-subtle)', 
+                  background: '#E2E8F0', 
                   padding: '2px 8px', 
                   borderRadius: '10px', 
                   fontSize: '0.75rem',
-                  fontWeight: 600,
-                  color: 'var(--text-muted)',
-                  border: '1px solid var(--border)'
+                  fontWeight: 800,
+                  color: 'var(--nexus-secondary)',
+                  border: '1px solid var(--nexus-border)'
                 }}>
                   {columnItems.length}
                 </span>
@@ -77,11 +77,11 @@ const KanbanBoard = ({
             {/* Column Content */}
             <div 
               style={{ 
-                background: 'var(--bg-subtle)', 
+                background: '#F1F5F9', 
                 borderRadius: '1.25rem', 
                 padding: '0.75rem',
                 minHeight: '100px',
-                border: '1px solid var(--border)',
+                border: '1px solid var(--nexus-border)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem'
@@ -94,15 +94,16 @@ const KanbanBoard = ({
                   whileHover={{ y: -2, scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onItemClick(item)}
-                  className="glass"
+                  className="kanban-card"
                   style={{ 
                     padding: '1.25rem', 
                     borderRadius: '1rem', 
                     cursor: 'pointer',
                     position: 'relative',
                     userSelect: 'none',
-                    border: item.priorite === '⭐⭐⭐' ? '1px solid #F59E0B' : (item.priorite === '⭐⭐' ? '1px solid #3B82F6' : '1px solid var(--border)'),
-                    background: item.priorite === '⭐⭐⭐' ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.05), transparent)' : 'var(--bg)'
+                    border: '1px solid var(--nexus-border)',
+                    background: '#FFFFFF',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                   }}
                 >
                   <div style={{ 
@@ -133,14 +134,15 @@ const KanbanBoard = ({
                       {item.tag && (
                         <div style={{ 
                           display: 'inline-flex', 
-                          padding: '2px 8px', 
+                          padding: '4px 8px', 
                           borderRadius: '6px', 
-                          background: 'var(--accent)15', 
-                          color: 'var(--accent)', 
+                          background: 'var(--nexus-primary-glow)', 
+                          color: 'var(--nexus-primary)', 
                           fontSize: '0.7rem', 
-                          fontWeight: 700,
+                          fontWeight: 800,
                           alignSelf: 'flex-start',
-                          marginTop: '4px'
+                          marginTop: '4px',
+                          textTransform: 'uppercase'
                         }}>
                           {item.tag}
                         </div>

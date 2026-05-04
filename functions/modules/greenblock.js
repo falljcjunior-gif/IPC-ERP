@@ -6,22 +6,22 @@ const db = admin.firestore();
 
 /**
  * ══════════════════════════════════════════════════════════════
- * AXELOR OPEN SUITE — BRIDGE SERVICE (SSOT)
+ * IPC GREEN BLOCK — BRIDGE SERVICE (SSOT)
  * ══════════════════════════════════════════════════════════════
  */
 
 /**
- * Synchronize a Firestore record to Axelor
- * @param {string} model - Axelor model name (e.g. 'com.axelor.apps.base.db.Partner')
+ * Synchronize a Firestore record to IPC Green Block
+ * @param {string} model - IPC Green Block model name (e.g. 'com.ipc.greenblock.base.db.Partner')
  * @param {Object} data - The record data to sync
  * @param {string} sourceId - The Firestore document ID
  */
 exports.syncRecord = async (model, data, sourceId) => {
-  // const AXELOR_URL = process.env.AXELOR_API_URL || 'https://axelor.example.com/rest';
-  const AXELOR_KEY = process.env.AXELOR_API_KEY;
+  // const GREENBLOCK_URL = process.env.GREENBLOCK_API_URL || 'https://greenblock.example.com/rest';
+  const GREENBLOCK_KEY = process.env.GREENBLOCK_API_KEY;
 
-  if (!AXELOR_KEY) {
-    logger.warn(`Axelor Sync Skipped: API Key missing for ${sourceId}`);
+  if (!GREENBLOCK_KEY) {
+    logger.warn(`IPC Green Block Sync Skipped: API Key missing for ${sourceId}`);
     return { success: false, status: 'SKIPPED_CONFIG_MISSING' };
   }
 
@@ -29,12 +29,12 @@ exports.syncRecord = async (model, data, sourceId) => {
   const startTime = Date.now();
 
   try {
-    // Placeholder for actual Axelor REST API call
-    // const response = await axios.post(`${AXELOR_URL}/${model}`, data, {
-    //   headers: { 'X-API-KEY': AXELOR_KEY }
+    // Placeholder for actual IPC Green Block REST API call
+    // const response = await axios.post(`${GREENBLOCK_URL}/${model}`, data, {
+    //   headers: { 'X-API-KEY': GREENBLOCK_KEY }
     // });
 
-    logger.info(`Axelor Sync [STUB]: ${model}/${sourceId}`);
+    logger.info(`IPC Green Block Sync [STUB]: ${model}/${sourceId}`);
 
     await syncLogRef.set({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -46,7 +46,7 @@ exports.syncRecord = async (model, data, sourceId) => {
 
     return { success: true };
   } catch (error) {
-    logger.error(`Axelor Sync Error [${model}/${sourceId}]:`, error.message);
+    logger.error(`IPC Green Block Sync Error [${model}/${sourceId}]:`, error.message);
     
     await syncLogRef.set({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),

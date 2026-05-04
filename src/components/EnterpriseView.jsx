@@ -144,8 +144,14 @@ const EnterpriseView = ({
           // Formatter based on schema type
           if (field.type === 'money') value = formatCurrency(value);
           if (field.type === 'selection') {
-            const color = field.options.indexOf(value) % 2 === 0 ? 'var(--accent)' : 'var(--text-muted)';
-            value = <span style={{ padding: '2px 8px', borderRadius: '4px', background: `${color}15`, color, fontSize: '0.75rem', fontWeight: 600 }}>{value}</span>;
+            let color = 'var(--text-muted)';
+            const lowerVal = String(value).toLowerCase();
+            if (['gagné', 'validé', 'approuvé', 'terminé', 'payé'].includes(lowerVal)) color = '#10B981';
+            else if (['annulé', 'refusé', 'échec', 'retard'].includes(lowerVal)) color = '#EF4444';
+            else if (['en cours', 'nouveau', 'brouillon', 'ouvert', 'signé'].includes(lowerVal)) color = '#3B82F6';
+            else if (['en attente', 'pause', 'négociation'].includes(lowerVal)) color = '#F59E0B';
+
+            value = <span style={{ padding: '4px 10px', borderRadius: '6px', background: `${color}15`, color, fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{value}</span>;
           }
 
           return (
@@ -161,10 +167,10 @@ const EnterpriseView = ({
     );
 
     return (
-      <div className="glass" style={{ borderRadius: '1rem', overflow: 'hidden' }}>
+      <div style={{ background: '#FFFFFF', borderRadius: '16px', border: '1px solid var(--nexus-border)', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.03)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
-            <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
+            <tr style={{ background: '#F8FAFC', borderBottom: '1px solid var(--nexus-border)' }}>
               {columns.map(col => (
                 <th key={col} style={{ padding: '1rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                   {t(modelSchema.fields?.[col]?.label || col)}

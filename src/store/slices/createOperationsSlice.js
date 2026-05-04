@@ -368,9 +368,9 @@ export const createOperationsSlice = (set, get) => ({
 
 
   updateRecord: (appId, subModule, id, newData) => {
-    // ── [AXELOR] Verrouillage de Document ──────────────────────────────
+    // ── [IPC GREEN BLOCK] Verrouillage de Document ──────────────────────────────
     // Un document verrouillé (_locked) ne peut pas être modifié directement.
-    // Seul un Avenant peut porter les modifications — logique Axelor pure.
+    // Seul un Avenant peut porter les modifications — logique IPC Green Block pure.
     const stateSnapshot = get();
     const existingRecord = (stateSnapshot.data?.[appId]?.[subModule] || stateSnapshot[appId]?.[subModule] || []).find(i => i.id === id);
     if (existingRecord?._locked) {
@@ -411,13 +411,13 @@ export const createOperationsSlice = (set, get) => ({
         get().addHint({ title: "Affaire Gagnée !", message: `L'opportunité "${record.titre}" est gagnée. Prêt à lancer la vente ?`, type: 'success', appId: 'sales', actionLabel: "Générer Commande", onAction: () => get().convertOppToSalesOrder(id) });
       }
 
-      // ── [AXELOR] Cascade Devis → BC ──────────────────────────────────────
+      // ── [IPC GREEN BLOCK] Cascade Devis → BC ──────────────────────────────────────
       // Quand un devis passe à "Accepté" ou "Signé" → engrenage complet
       if (appId === 'sales' && subModule === 'quotes' && ['Accepté', 'Signé'].includes(newData.statut) && !['Accepté', 'Signé'].includes(oldRecord.statut)) {
         setTimeout(() => cascadeDevisToSaleOrder(record, get, set), 0);
       }
 
-      // ── [AXELOR] Cascade BC → Livraison ──────────────────────────────────
+      // ── [IPC GREEN BLOCK] Cascade BC → Livraison ──────────────────────────────────
       // Quand un BC passe à "Expédié" → BL + Facture finale + stock physique
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Expédié' && oldRecord.statut !== 'Expédié') {
         setTimeout(() => cascadeBCToDelivery(record, get, set), 0);
@@ -492,7 +492,7 @@ export const createOperationsSlice = (set, get) => ({
         get().generateExpenseEntry(record);
       }
       if (appId === 'hr' && subModule === 'timesheets' && newData.statut === 'Validé' && oldRecord.statut !== 'Validé') {
-         // ── [AXELOR] Comptabilité Analytique — Imputation par Centre de Coût
+         // ── [IPC GREEN BLOCK] Comptabilité Analytique — Imputation par Centre de Coût
          imputerCoutAnalytique(record, get);
       }
       if (appId === 'purchase' && subModule === 'orders') {
@@ -512,7 +512,7 @@ export const createOperationsSlice = (set, get) => ({
         if (newData.statut === 'Facturé' && oldRecord.statut !== 'Facturé') {
            const billNum = get().getNextSequence('finance_vendor_bills') || `FF-${Date.now().toString().slice(-4)}`;
            
-           // ── [AXELOR] Three-Way Match Engine (Anti-Fraude) ─────────────
+           // ── [IPC GREEN BLOCK] Three-Way Match Engine (Anti-Fraude) ─────────────
            const receptionData = { qteRecue: record.qteRecue || record.qte };
            const invoiceData  = { qteFacturee: record.qteFacturee || record.qte, prixUnitaire: record.prixUnitaire };
            const matchResult  = runThreeWayMatch(record, receptionData, invoiceData);
@@ -533,7 +533,7 @@ export const createOperationsSlice = (set, get) => ({
            };
            nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
 
-           // Notifier le résultat du match (via AxelorEngine)
+           // Notifier le résultat du match (via GreenBlockEngine)
            setTimeout(() => applyThreeWayMatchResult(record.id, matchResult, get, set), 0);
         }
       }

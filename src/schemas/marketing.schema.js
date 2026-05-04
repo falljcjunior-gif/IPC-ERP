@@ -1,5 +1,5 @@
 /**
- * Marketing Module Schema — Inspiré Axelor ERP
+ * Marketing Module Schema — Inspiré IPC Green Block ERP
  * Campagnes, E-mailing, Événements, Leads entrants, Budget
  */
 export const marketingSchema = {

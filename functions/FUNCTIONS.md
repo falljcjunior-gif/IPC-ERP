@@ -67,5 +67,5 @@ Aggregates health metrics and synchronization logs.
 ## 5. Background Triggers (Internal)
 
 - **`globalAuditTrigger`**: Monitors all `finance_*`, `inventory_*`, `users`, `hr`, and `production_*` collections.
-- **`syncAccountingOnInvoicePaid`**: Triggers when an invoice status changes to `paid`. Syncs to Axelor.
-- **`updateStockOnProductionComplete`**: Triggers when a production order status changes to `completed`. Syncs to Axelor.
+- **`syncAccountingOnInvoicePaid`**: Triggers when an invoice status changes to `paid`. Syncs to IPC Green Block.
+- **`updateStockOnProductionComplete`**: Triggers when a production order status changes to `completed`. Syncs to IPC Green Block.
