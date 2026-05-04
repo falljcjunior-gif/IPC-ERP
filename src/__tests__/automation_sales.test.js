@@ -87,8 +87,8 @@ describe('Réassort Stock — Logique déclenchement', () => {
     expect(shouldTriggerReorder(15, 12, 10)).toBe(false);
   });
 
-  test('Stock = 0 (rupture totale) → déclenche réassort', () => {
-    expect(shouldTriggerReorder(5, 0, 10)).toBe(true);
+  test('Stock passe de 15 à 0 (rupture totale) → déclenche réassort', () => {
+    expect(shouldTriggerReorder(15, 0, 10)).toBe(true);
   });
 
   test('Quantité à commander = stockCible - stockActuel (arrondi sup)', () => {
