@@ -62,5 +62,28 @@ export default [
         ...globals.node,
       },
     },
-  }
+  },
+  // ── Test files — Vitest globals ──────────────────────────────────────────
+  {
+    files: ['src/__tests__/**/*.{js,jsx,ts,tsx}', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        // Vitest globals
+        describe: 'readonly',
+        test:     'readonly',
+        it:       'readonly',
+        expect:   'readonly',
+        beforeAll: 'readonly',
+        afterAll:  'readonly',
+        beforeEach: 'readonly',
+        afterEach:  'readonly',
+        vi:        'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off', // Les globals Vitest sont injectés dynamiquement
+    },
+  },
 ];

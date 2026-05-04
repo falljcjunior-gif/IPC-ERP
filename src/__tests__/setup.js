@@ -1,4 +1,3 @@
-/* global global */
 import { vi } from 'vitest';
 
 // ── Firebase App ──────────────────────────────────────────────────────────
