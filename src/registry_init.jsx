@@ -51,6 +51,7 @@ const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
 const ITModule = lazy(() => import('./modules/admin/ITModule'));
+const Manufacturing = lazy(() => import('./modules/Manufacturing'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -176,9 +177,15 @@ export const initRegistry = () => {
   });
 
   registry.register({
-    id: 'production', label: 'Production & Usine', icon: <Factory size={18} />,
-    category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'FINANCE'],
-    component: Production, priority: 23
+    id: 'production', label: 'Production Avancée', icon: <Factory size={18} />,
+    category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'FINANCE', 'SUPER_ADMIN'],
+    component: Manufacturing, priority: 23, schema: productionSchema
+  });
+
+  registry.register({
+    id: 'quality', label: 'Qualité & HSE', icon: <ShieldCheck size={18} />,
+    category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'SUPER_ADMIN'],
+    component: Quality, priority: 24
   });
 
   registry.register({
