@@ -1,0 +1,21 @@
+# .semgrepignore
+# ══════════════════════════════════════════════════════════════
+# Semgrep — Fichiers à ignorer (Faux positifs ou configurations)
+# ══════════════════════════════════════════════════════════════
+
+# Firestore Rules — Contient des bypass root intentionnels (UIDs en dur)
+# Semgrep ne supporte pas nativement les .rules mais peut tenter de les scanner en mode generic
+firestore.rules
+
+# Fichiers de configuration Firebase — Contiennent des clés publiques
+src/firebase/config.js
+public/firebase-messaging-sw.js
+
+# Scripts de bootstrap / scratch — Contiennent des emails admin en dur
+functions/bootstrap_admin.cjs
+scratch/
+
+# Artifacts de build
+dist/
+build/
+node_modules/

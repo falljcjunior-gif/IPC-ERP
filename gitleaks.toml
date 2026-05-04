@@ -1,0 +1,10 @@
+[allowlist]
+description = "Global allowlist for IPC-ERP"
+paths = [
+    '''src/firebase/config\.js''',
+    '''public/firebase-messaging-sw\.js''',
+    '''firestore\.rules''',
+    '''.env''',
+    '''scratch/.*''',
+    '''functions/bootstrap_admin\.cjs'''
+]
