@@ -112,8 +112,8 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
                </button>
             </div>
             <EnterpriseView 
-               moduleId="finance" 
-               modelId="budgets"
+               moduleId="budget" 
+               modelId="envelopes"
                schema={budgetSchema}
                onOpenDetail={onOpenDetail}
             />
