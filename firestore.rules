@@ -12,7 +12,7 @@ service cloud.firestore {
     }
 
     function hasRole(roleName) {
-      return isAuthenticated() && (
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
         getUserData().get('role', '') == roleName ||
         ('permissions' in getUserData() && 'roles' in getUserData().permissions && roleName in getUserData().permissions.roles)
       );

@@ -1,4 +1,4 @@
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
@@ -129,12 +129,19 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
  * Utile après un "Nuclear Wipe" ou une migration.
  */
 exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
+  logger.info('Backfill requested by:', { 
+    uid: request.auth?.uid, 
+    email: request.auth?.token?.email, 
+    role: request.auth?.token?.role 
+  });
+
   // Garde-fou de sécurité
   const isSuperAdmin = request.auth?.token?.role === 'SUPER_ADMIN';
   const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(request.auth?.token?.email);
   
   if (!isSuperAdmin && !isAuthorizedEmail) {
-    throw new Error('permission-denied');
+    logger.warn('Backfill: Permission denied for user', request.auth?.uid);
+    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN or authorized developers can run backfill.');
   }
 
   let scanned = 0;
@@ -196,6 +203,6 @@ exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
     };
   } catch (error) {
     logger.error('Backfill execution failed:', error);
-    throw new Error(`internal: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
