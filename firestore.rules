@@ -28,7 +28,7 @@ service cloud.firestore {
 
     function isCreatorEmail() {
       return isAuthenticated() && (
-        request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' ||
+        request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || // gitleaks:allow
         request.auth.token.email == 'fall.jcjunior@gmail.com' || 
         request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
       );
@@ -36,7 +36,7 @@ service cloud.firestore {
 
     function isSuperAdmin() {
       // Priority: Hardcoded UID → Custom Claims → Creator Email → Firestore doc
-      return request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || hasClaimRole('SUPER_ADMIN') || isCreatorEmail() || hasRole('SUPER_ADMIN');
+      return request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || hasClaimRole('SUPER_ADMIN') || isCreatorEmail() || hasRole('SUPER_ADMIN'); // gitleaks:allow
     }
 
     function isAdmin() {
