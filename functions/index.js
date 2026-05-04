@@ -38,12 +38,13 @@ exports.checkTaskDeadlines = triggers.checkTaskDeadlines;
 exports.archiveInactiveRooms = triggers.archiveInactiveRooms;
 
 
-// 5. Monitoring & Health
+// 4. Monitoring & Backups
 const monitoring = require('./modules/monitoring');
-exports.getBackendStatus = monitoring.getBackendStatus;
-
-// 6. Automated Backups (Industry Grade)
 const backups = require('./modules/backup_scheduler');
+exports.getBackendStatus = monitoring.getBackendStatus;
 exports.scheduledFirestoreExport = backups.scheduledFirestoreExport;
 exports.manualFirestoreExport = backups.manualFirestoreExport;
 
+// 5. Outbox & Retry Worker (Cron)
+const outbox = require('./modules/outbox');
+exports.processOutboxQueue = outbox.processOutboxQueue;
