@@ -12,6 +12,9 @@ import { useStore } from '../../store';
 import { useCanSeeSubTab } from '../../store/selectors';
 import KpiCard from '../../components/KpiCard';
 import RecordModal from '../../components/RecordModal';
+import SmartButton from '../../components/SmartButton';
+import { debugInteraction } from '../../utils/InteractionAuditor';
+import { useToastStore } from '../../store/useToastStore';
 
 /* ─── Helpers ─── */
 const fade = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -203,9 +206,15 @@ const RecrutementTab = () => {
             <Search size={15} color="var(--text-muted)" />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." style={{ border: 'none', background: 'none', outline: 'none', fontSize: '0.85rem', width: 160 }} />
           </div>
-          <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0.6rem 1.25rem', borderRadius: '0.9rem', border: 'none', background: '#8B5CF6', color: 'white', fontWeight: 700, cursor: 'pointer' }}>
-            <Plus size={15} /> Nouveau Candidat
-          </button>
+          <SmartButton 
+            onClick={async () => setShowModal(true)} 
+            variant="primary" 
+            icon={UserPlus}
+            style={{ background: '#8B5CF6' }}
+            successMessage="Ouverture du formulaire"
+          >
+            Nouveau Candidat
+          </SmartButton>
         </div>
       </div>
 
@@ -644,7 +653,18 @@ const PeopleAndCulture = () => {
                <AnimatePresence>
                  {showUat && (
                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button onClick={seedDemoData} className="glass" style={{ background: '#10B98120', border: '1px solid #10B981', color: '#10B981', padding: '0.6rem 1.2rem', borderRadius: '1rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Seed Data</button>
+                      <SmartButton 
+                        onClick={async () => {
+                          await debugInteraction('Seed Demo Data', async () => {
+                            await seedDemoData();
+                            useToastStore.getState().addToast('Données de démonstration générées avec succès', 'success');
+                          });
+                        }} 
+                        variant="success"
+                        style={{ background: '#10B98120', border: '1px solid #10B981', color: '#10B981' }}
+                      >
+                        Seed Data
+                      </SmartButton>
                       <div className="glass" style={{ padding: '0.6rem 1.2rem', borderRadius: '1rem', border: '1px solid #3B82F6', color: '#3B82F6', fontSize: '0.8rem', fontWeight: 700 }}>Firestore: OK</div>
                    </motion.div>
                  )}

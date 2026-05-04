@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 const DetailOverlay = lazy(() => import('./DetailOverlay'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
+import ToastContainer from './ToastContainer';
 import NotificationCenter from './NotificationCenter';
 import { useNotificationStore } from '../store/useNotificationStore';
 import TeamChat from './TeamChat';
@@ -554,6 +555,7 @@ const PlatformShell = ({ theme, setView }) => {
         .spinner { animation: spin 0.8s linear infinite; }
       `}</style>
       <NotificationCenter />
+      <ToastContainer />
     </div>
   );
 };

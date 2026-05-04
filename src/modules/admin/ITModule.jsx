@@ -12,6 +12,9 @@ import { useStore } from '../../store';
 import { useCanSeeSubTab } from '../../store/selectors';
 import InfrastructureHealth from './components/InfrastructureHealth';
 import SecurityThreatMap from './components/SecurityThreatMap';
+import SmartButton from '../../components/SmartButton';
+import { debugInteraction } from '../../utils/InteractionAuditor';
+import { useToastStore } from '../../store/useToastStore';
 
 /**
  * 🛠️ NEXUS OS: IT OPERATIONS MODULE (ELITE 2.0 COMMANDER HUD)
@@ -88,19 +91,18 @@ const ITModule = () => {
 
         {/* Commander HUD Tools */}
         <div style={{ display: 'flex', gap: '1rem' }}>
-          <button 
-            onClick={toggleCriticalMode}
+          <SmartButton 
+            onClick={async () => toggleCriticalMode()}
+            variant={criticalMode ? 'danger' : 'secondary'}
+            icon={criticalMode ? ShieldAlert : ShieldX}
             style={{ 
-              padding: '0.75rem 1.5rem', borderRadius: '1.25rem', cursor: 'pointer', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
-              background: criticalMode ? '#DC2626' : 'white',
-              color: criticalMode ? 'white' : '#DC2626',
-              boxShadow: 'var(--shadow-md)',
+              padding: '0.75rem 1.5rem', borderRadius: '1.25rem', boxShadow: 'var(--shadow-md)',
               border: criticalMode ? 'none' : '1px solid #DC2626'
             }}
+            successMessage={criticalMode ? 'War Room Deactivated' : 'War Room Active'}
           >
-            {criticalMode ? <ShieldAlert size={18} /> : <ShieldX size={18} />}
             {criticalMode ? 'WAR ROOM ACTIVE' : 'ENTER CRITICAL MODE'}
-          </button>
+          </SmartButton>
           
           <div style={{ 
             padding: '0.75rem 1.5rem', borderRadius: '999px', 
@@ -224,12 +226,14 @@ const ITModule = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
                    <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }}>Intervention History</h3>
                    <div style={{ display: 'flex', gap: '1rem' }}>
-                      <button 
-                        onClick={() => triggerSensitiveAction('Rotation des Clés API')}
-                        style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', background: '#DC2626', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                      <SmartButton 
+                        onClick={async () => triggerSensitiveAction('Rotation des Clés API')}
+                        variant="danger"
+                        icon={Key}
+                        style={{ borderRadius: '1rem' }}
                       >
-                        <Key size={16} /> Rotate API Keys
-                      </button>
+                        Rotate API Keys
+                      </SmartButton>
                       <button style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
                         Nouvelle Intervention
                       </button>
@@ -324,12 +328,18 @@ const ITModule = () => {
                 >
                   Annuler
                 </button>
-                <button 
-                  onClick={confirmSensitiveAction}
-                  style={{ flex: 1, padding: '1rem', borderRadius: '1rem', border: 'none', background: '#DC2626', color: 'white', fontWeight: 800, cursor: 'pointer', boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)' }}
+                <SmartButton 
+                  onClick={async () => {
+                    await debugInteraction('Sensitive IT Action', async () => {
+                      confirmSensitiveAction();
+                      useToastStore.getState().addToast(`Action "${pendingAction}" exécutée`, 'success');
+                    });
+                  }}
+                  variant="danger"
+                  style={{ flex: 1, borderRadius: '1rem', boxShadow: '0 10px 20px rgba(220, 38, 38, 0.2)' }}
                 >
                   Confirmer
-                </button>
+                </SmartButton>
               </div>
             </motion.div>
           </motion.div>
