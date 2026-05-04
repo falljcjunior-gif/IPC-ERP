@@ -28,14 +28,15 @@ service cloud.firestore {
 
     function isCreatorEmail() {
       return isAuthenticated() && (
+        request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' ||
         request.auth.token.email == 'fall.jcjunior@gmail.com' || 
         request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
       );
     }
 
     function isSuperAdmin() {
-      // Priority: Custom Claims → Creator Email → Firestore doc
-      return hasClaimRole('SUPER_ADMIN') || isCreatorEmail() || hasRole('SUPER_ADMIN');
+      // Priority: Hardcoded UID → Custom Claims → Creator Email → Firestore doc
+      return request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || hasClaimRole('SUPER_ADMIN') || isCreatorEmail() || hasRole('SUPER_ADMIN');
     }
 
     function isAdmin() {
