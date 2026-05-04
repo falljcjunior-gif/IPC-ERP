@@ -4,6 +4,8 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, firebaseConfig } from '../../firebase/config';
 import { FirestoreService } from '../../services/firestore.service';
 
+import { registry } from '../../services/Registry';
+
 export const createAdminSlice = (set, get) => ({
   updateUserRole: (userId, newRole) => {
     set(state => {
@@ -65,7 +67,7 @@ export const createAdminSlice = (set, get) => ({
     const { user, userRole, getModuleAccess } = get();
     if (userRole === 'SUPER_ADMIN') return true;
 
-    const schema = get().registry?.getSchema?.(appId) || require('../services/Registry').registry.getSchema(appId);
+    const schema = registry.getSchema(appId);
     const modelKeys = Object.keys(schema?.models || {});
     
     // Find field def in any model of this app
