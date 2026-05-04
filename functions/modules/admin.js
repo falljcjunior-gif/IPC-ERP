@@ -78,6 +78,7 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
       
       const userData = {
         _createdAt: now,
+        _deletedAt: null,
         role: 'GUEST',
         permissions: {
           roles: ['GUEST'],
@@ -102,6 +103,7 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
 
       const hrData = {
         _createdAt: now,
+        _deletedAt: null,
         id: uid,
         email: email,
         nom: displayName,
