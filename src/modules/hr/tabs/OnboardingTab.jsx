@@ -215,31 +215,7 @@ const OnboardingTab = ({ accessLevel }) => {
   const [mode, setMode] = useState('create'); // 'create' | 'edit'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [isFixing, setIsFixing] = useState(false);
 
-  const fixMissingCreatedAt = async () => {
-    setIsFixing(true);
-    try {
-      const snap = await getDocs(collection(db, 'hr'));
-      let count = 0;
-      for (const d of snap.docs) {
-        const docData = d.data();
-        if (!docData._createdAt) {
-          const dateStr = docData.createdAt || (docData.profile && docData.profile.createdAt);
-          let ts = serverTimestamp();
-          if (dateStr) {
-             try { ts = Timestamp.fromDate(new Date(dateStr)); } catch(e){ console.warn("Invalid date format", e); }
-          }
-          await updateDoc(doc(db, 'hr', d.id), { _createdAt: ts });
-          count++;
-        }
-      }
-      alert(`Correction effectuée ! ${count} employés invisibles ont été réparés. Veuillez rafraîchir la page.`);
-    } catch (err) {
-      alert("Erreur lors de la correction : " + err.message);
-    }
-    setIsFixing(false);
-  };
   const [formData, setFormData] = useState({
     nom: '', email: '', password: '', 
     poste: '', dept: 'Ventes', contratType: 'CDI', 
@@ -364,22 +340,13 @@ const OnboardingTab = ({ accessLevel }) => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
               {/* Colonne gauche : liste */}
               <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                  <div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <Users size={20} color="#8B5CF6" /> Sélectionner un Employé
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Choisissez un collaborateur existant pour modifier ses habilitations et accès modules.
-                    </p>
-                  </div>
-                  <button 
-                    onClick={fixMissingCreatedAt} 
-                    disabled={isFixing}
-                    style={{ padding: '0.5rem 1rem', background: '#EF4444', color: 'white', borderRadius: '0.5rem', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}
-                  >
-                    {isFixing ? 'Correction...' : 'Fix Profils Invisibles'}
-                  </button>
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <Users size={20} color="#8B5CF6" /> Sélectionner un Employé
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    Choisissez un collaborateur existant pour modifier ses habilitations et accès modules.
+                  </p>
                 </div>
 
                 {/* Search */}
