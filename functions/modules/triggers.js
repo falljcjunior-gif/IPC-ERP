@@ -283,6 +283,69 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production/{ofId}',
 });
 
 /**
+ * 🎖️ HR: SALES COMMISSIONS — Automated reconciliation
+ * WHY: Récompense automatiquement les commerciaux lors du paiement effectif d'une commande.
+ * Évite les saisies manuelles et les erreurs de calcul de bonus.
+ */
+exports.calculateCommissionOnSalesPaid = onDocumentUpdated('sales/{orderId}', async (event) => {
+  const newData = event.data.after.data();
+  const oldData = event.data.before.data();
+  const { orderId } = event.params;
+
+  // Guard: ensure this is a sales order
+  if (newData.subModule !== 'orders') return null;
+
+  // Trigger only on status change to 'Payé'
+  if (newData.statut === 'Payé' && oldData.statut !== 'Payé') {
+    const ownerId = newData.ownerId;
+    if (!ownerId) {
+      logger.warn(`Commission skip: No ownerId for order ${orderId}`);
+      return null;
+    }
+
+    try {
+      // 1. Fetch salesperson name from 'users'
+      const userDoc = await db.collection('users').doc(ownerId).get();
+      if (!userDoc.exists) {
+         logger.error(`User profile ${ownerId} not found for commission on order ${orderId}`);
+         return null;
+      }
+      const userData = userDoc.data();
+      const userName = userData.profile?.nom || userData.nom || 'Collaborateur Nexus';
+
+      // 2. Calculate commission (Default: 2% of total HT)
+      const montantHT = newData.montantHT || newData.montant || 0;
+      const taux = 2; 
+      const commissionAmount = Math.round(montantHT * (taux / 100));
+
+      if (commissionAmount <= 0) return null;
+
+      // 3. Record in HR module (commissions submodule)
+      const commissionId = `COMM_${orderId}`;
+      await db.collection('hr').doc(commissionId).set({
+        id: commissionId,
+        subModule: 'commissions',
+        date: new Date().toISOString().split('T')[0],
+        collaborateur: userName,
+        collaborateurId: ownerId,
+        montant: commissionAmount,
+        refDocument: newData.num || orderId,
+        taux: taux,
+        statut: 'À payer',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        _domain: 'hr',
+        _createdBy: 'nexus_commission_engine'
+      });
+
+      logger.info(`[HR] Commission of ${commissionAmount} FCFA generated for ${userName} (Order ${orderId})`);
+    } catch (err) {
+      logger.error('Commission Calculation Error:', err);
+    }
+  }
+  return null;
+});
+
+/**
  * 🤖 BUTLER: TASK ASSIGNMENT NOTIFICATIONS
  * WHY: Informe instantanément les collaborateurs quand une tâche leur est assignée.
  */

@@ -113,6 +113,26 @@ export const HRSchemas = {
           subtitleField: 'semestre'
         }
       }
+    },
+    commissions: {
+      label: 'Commissions & Bonus Ventes',
+      fields: {
+        date: { label: 'Date du Calcul', type: 'date', required: true },
+        collaborateur: { label: 'Commercial / Apporteur', type: 'text', required: true, search: true },
+        montant: { label: 'Montant de la Commission', type: 'money', currency: 'FCFA', required: true },
+        refDocument: { label: 'Document Source (Vente)', type: 'text', search: true },
+        taux: { label: 'Taux Appliqué (%)', type: 'number' },
+        statut: { label: 'Statut Paiement', type: 'selection', options: ['À payer', 'Payé'], default: 'À payer' }
+      },
+      views: {
+        list: ['date', 'collaborateur', 'montant', 'refDocument', 'statut'],
+        search: {
+          groups: [
+            { id: 'collaborateur', label: 'Par Commercial' },
+            { id: 'statut', label: 'Par État de Paiement' }
+          ]
+        }
+      }
     }
   }
 };
