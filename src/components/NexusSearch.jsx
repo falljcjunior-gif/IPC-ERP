@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command, X, ArrowRight, Zap, Database, User, Settings, FileText, Banknote, ShieldCheck, MailPlus } from 'lucide-react';
 import { useStore } from '../store';
-import './AntigravitySearch.css';
+import './NexusSearch.css';
 
 const AntigravitySearch = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
