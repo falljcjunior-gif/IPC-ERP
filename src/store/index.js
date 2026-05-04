@@ -184,7 +184,7 @@ export const useStore = create(
       formatCurrency: (val, compact = false) => {
         if (val === null || val === undefined) return '—';
         const num = parseFloat(val) || 0;
-        const currency = get().globalSettings?.currency || 'FCFA';
+        const currency = get().config?.currency || get().globalSettings?.currency || 'FCFA';
         if (compact && num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M ${currency}`;
         if (compact && num >= 1_000) return `${(num / 1_000).toFixed(0)}k ${currency}`;
         return num.toLocaleString('fr-FR').replace(/\u00a0/g, ' ') + ' ' + currency;

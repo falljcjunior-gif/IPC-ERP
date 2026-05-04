@@ -256,6 +256,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── Paramètres Globaux (Hub de Configuration) ──────────────────────────────
+    match /settings/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isSuperAdmin(); // Uniquement pour le Super Admin
+    }
+
     // ── Refus par défaut (sécurité) ────────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

@@ -143,6 +143,12 @@ export const BusinessProvider = ({ children }) => {
     // E. Call Listener (Decoupled Service)
     CallListener.init(userId);
 
+    // F. Global Settings (Hub de Configuration)
+    const unsubSettings = FirestoreService.subscribeToCollection('settings', {}, (settingsDocs) => {
+      const coreSettings = settingsDocs.find(d => d.id === 'core') || {};
+      useStore.getState().setConfig(prev => ({ ...prev, ...coreSettings }));
+    });
+
     // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
     const unsubAuth = auth.onAuthStateChanged(async fbUser => {
       if (fbUser) {
@@ -171,6 +177,7 @@ export const BusinessProvider = ({ children }) => {
       unsubWorkflows();
       unsubNotify();
       unsubUsers();
+      if (unsubSettings) unsubSettings();
       CallListener.stop();
     };
   }, [userId, scheduleUpdate]); // Minimum dependencies
