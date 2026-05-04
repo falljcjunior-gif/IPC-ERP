@@ -126,7 +126,10 @@ export const BusinessProvider = ({ children }) => {
         
         // --- IDENTITY BRIDGE (STABLE OVERRIDE) ---
         // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
-        let finalRole = currentUserProfile.role || 'STAFF';
+        const userPerms = currentUserProfile.permissions || {};
+        const primaryRole = (userPerms.roles && userPerms.roles.length > 0) ? userPerms.roles[0] : null;
+        let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
+        
         const currentEmail = useStore.getState().user?.email;
         const isCreator = currentEmail?.toLowerCase() === 'fall.jcjunior@gmail.com';
 
