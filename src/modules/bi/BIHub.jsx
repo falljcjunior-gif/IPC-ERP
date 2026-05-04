@@ -13,6 +13,8 @@ import ExecutiveTab from './tabs/ExecutiveTab';
 import IndustrialTab from './tabs/IndustrialTab';
 import FinancialTab from './tabs/FinancialTab';
 import GrowthTab from './tabs/GrowthTab';
+import IntelligenceTab from './tabs/IntelligenceTab';
+import { Brain } from 'lucide-react';
 
 const BIHub = () => {
   const { data, formatCurrency, shellView } = useStore();
@@ -23,6 +25,7 @@ const BIHub = () => {
     { id: 'industrial', label: 'Indus & Ops', icon: <Activity size={16} /> },
     { id: 'financial', label: 'Finance & Audit', icon: <TrendingUp size={16} /> },
     { id: 'growth', label: 'Growth Velocity', icon: <Zap size={16} /> },
+    { id: 'intelligence', label: 'Predictive Hub', icon: <Brain size={16} /> },
   ];
 
   return (
@@ -85,6 +88,7 @@ const BIHub = () => {
           {activeTab === 'industrial' && <IndustrialTab data={data} />}
           {activeTab === 'financial' && <FinancialTab data={data} formatCurrency={formatCurrency} />}
           {activeTab === 'growth' && <GrowthTab data={data} formatCurrency={formatCurrency} />}
+          {activeTab === 'intelligence' && <IntelligenceTab />}
         </motion.div>
       </AnimatePresence>
 

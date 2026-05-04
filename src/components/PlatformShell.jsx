@@ -20,6 +20,7 @@ const DetailOverlay = lazy(() => import('./DetailOverlay'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import NotificationCenter from './NotificationCenter';
+import { useNotificationStore } from '../store/useNotificationStore';
 import TeamChat from './TeamChat';
 import AIAssistant from './AIAssistant';
 import CallInterface from './CallInterface';
@@ -52,6 +53,7 @@ const PlatformShell = ({ theme, setView }) => {
   const setActiveBrand = useStore(s => s.setActiveBrand);
   const BRANDS = useStore(s => s.BRANDS);
   const currentUser = useStore(s => s.user);
+  const { unreadCount, toggleSidebar } = useNotificationStore();
   const notifications = useStore(s => s.notifications || []);
 
   // Locatized subscription for campaigns to avoid massive shell re-renders
@@ -412,8 +414,22 @@ const PlatformShell = ({ theme, setView }) => {
                    {i18n.language.substring(0, 2)}
                  </span>
               </button>
-              {/* NotificationCenter — Firestore temps-réel */}
-              <NotificationCenter />
+              {/* NotificationCenter Bell Trigger */}
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => toggleSidebar(true)}
+                  className="antigravity-card" 
+                  style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
+                >
+                  <Bell size={20} color="var(--antigravity-text)" />
+                  {unreadCount > 0 && (
+                    <span style={{ position: 'absolute', top: -5, right: -5, background: '#EF4444', color: 'white', fontSize: '0.65rem', fontWeight: 900, width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
               <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="antigravity-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--antigravity-secondary)', color: 'white', cursor: 'pointer' }}>
                  <Zap size={16} fill="var(--antigravity-primary)" stroke="none" /> Antigravity
               </button>
@@ -537,6 +553,7 @@ const PlatformShell = ({ theme, setView }) => {
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
         .spinner { animation: spin 0.8s linear infinite; }
       `}</style>
+      <NotificationCenter />
     </div>
   );
 };

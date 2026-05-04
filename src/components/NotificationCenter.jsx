@@ -1,223 +1,207 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, CheckCheck, Package, FileText, Users, AlertTriangle, RefreshCw, Calendar } from 'lucide-react';
-import { collection, query, orderBy, limit, onSnapshot, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { 
+  Bell, X, CheckCheck, Trash2, AlertCircle, 
+  Info, AlertTriangle, Shield, Clock, ChevronRight,
+  Package, FileText, Users, RefreshCw, Calendar
+} from 'lucide-react';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { useNotificationStore } from '../store/useNotificationStore';
 import { useStore } from '../store';
 
-// ── Type Icons par catégorie ──
-const NOTIF_ICONS = {
-  DEVIS_RELANCE:     { icon: FileText,     color: '#3B82F6', bg: '#EFF6FF' },
-  STOCK_REORDER:     { icon: Package,      color: '#F59E0B', bg: '#FFFBEB' },
-  CLIENT_ANNIVERSARY:{ icon: Calendar,     color: '#8B5CF6', bg: '#F5F3FF' },
-  CLIENT_INACTIF_VIP:{ icon: Users,        color: '#EF4444', bg: '#FEF2F2' },
-  SYSTEM:            { icon: RefreshCw,    color: '#10B981', bg: '#ECFDF5' },
-  DEFAULT:           { icon: AlertTriangle, color: '#6B7280', bg: '#F9FAFB' },
-};
-
-function timeAgo(timestamp) {
-  if (!timestamp) return '…';
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  const diff = (Date.now() - date.getTime()) / 1000;
-  if (diff < 60)    return `Il y a ${Math.round(diff)}s`;
-  if (diff < 3600)  return `Il y a ${Math.round(diff / 60)}min`;
-  if (diff < 86400) return `Il y a ${Math.round(diff / 3600)}h`;
-  return `Il y a ${Math.round(diff / 86400)}j`;
-}
-
-const NotificationItem = React.memo(({ notif, onMarkRead }) => {
-  const type = NOTIF_ICONS[notif.type] || NOTIF_ICONS.DEFAULT;
-  const IconCmp = type.icon;
-  const isUnread = notif.status === 'pending';
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      style={{
-        display: 'flex', gap: '0.75rem', padding: '1rem', borderRadius: '12px',
-        background: isUnread ? type.bg : '#FAFAFA',
-        border: `1px solid ${isUnread ? type.color + '30' : '#F1F5F9'}`,
-        cursor: 'pointer',
-      }}
-      onClick={() => isUnread && onMarkRead(notif.id)}
-    >
-      <div style={{
-        width: '36px', height: '36px', borderRadius: '10px', background: type.bg,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-        border: `1px solid ${type.color}20`,
-      }}>
-        <IconCmp size={18} color={type.color} />
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: '0.8rem', fontWeight: isUnread ? 700 : 500, color: '#1E293B', lineHeight: 1.4, marginBottom: '4px' }}>
-          {notif.message}
-        </div>
-        <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600 }}>
-          {timeAgo(notif.createdAt)}
-          {notif.priority === 'Critique' && (
-            <span style={{ marginLeft: '6px', color: '#EF4444', fontWeight: 800 }}>● CRITIQUE</span>
-          )}
-        </div>
-      </div>
-      {isUnread && (
-        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: type.color, flexShrink: 0, marginTop: '4px' }} />
-      )}
-    </motion.div>
-  );
-});
-NotificationItem.displayName = 'NotificationItem';
-
+/**
+ * 🔔 NEXUS OS: CENTRALIZED NOTIFICATION SIDEBAR (ELITE 2.0)
+ * Sophisticated sidebar with cross-module event capture and priority-based alerting.
+ */
 const NotificationCenter = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const panelRef = useRef(null);
+  const { 
+    notifications, unreadCount, isSidebarOpen, 
+    toggleSidebar, markAsRead, markAllAsRead, clearAll, addNotification 
+  } = useNotificationStore();
+  
   const currentUser = useStore(s => s.currentUser);
 
+  // Sync Firebase Notifications with Zustand Store
   useEffect(() => {
     if (!currentUser?.uid) return;
-    const q = query(collection(db, 'notifications_queue'), orderBy('createdAt', 'desc'), limit(50));
+    const q = query(collection(db, 'notifications_queue'), orderBy('createdAt', 'desc'), limit(20));
     const unsub = onSnapshot(q, (snap) => {
-      setNotifications(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    }, (err) => console.warn('[NotificationCenter]', err));
+      snap.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          const data = change.doc.data();
+          // Avoid adding existing ones if they are already in store (id check)
+          const exists = notifications.some(n => n.remoteId === change.doc.id);
+          if (!exists) {
+            addNotification({
+              remoteId: change.doc.id,
+              title: data.type || "Système",
+              message: data.message,
+              priority: data.priority?.toLowerCase() || 'info',
+              module: data.module || 'Cloud',
+              metadata: data.metadata
+            });
+          }
+        }
+      });
+    }, (err) => console.warn('[NotificationSync]', err));
     return () => unsub();
-  }, [currentUser?.uid]);
+  }, [currentUser?.uid, addNotification]);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setIsOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'critical': return '#DC2626';
+      case 'warning': return '#D97706';
+      default: return 'var(--primary)';
+    }
+  };
 
-  const unreadCount = notifications.filter(n => n.status === 'pending').length;
-  const displayed = filter === 'unread' ? notifications.filter(n => n.status === 'pending') : notifications;
-
-  const markRead = useCallback(async (id) => {
-    try { await updateDoc(doc(db, 'notifications_queue', id), { status: 'read' }); }
-    catch (e) { console.warn('[NotificationCenter] markRead error:', e); }
-  }, []);
-
-  const markAllRead = useCallback(async () => {
-    const unread = notifications.filter(n => n.status === 'pending');
-    if (!unread.length) return;
-    const batch = writeBatch(db);
-    unread.forEach(n => batch.update(doc(db, 'notifications_queue', n.id), { status: 'read' }));
-    await batch.commit();
-  }, [notifications]);
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case 'critical': return <AlertCircle size={18} />;
+      case 'warning': return <AlertTriangle size={18} />;
+      default: return <Info size={18} />;
+    }
+  };
 
   return (
-    <div ref={panelRef} style={{ position: 'relative' }}>
-      {/* Bell Button */}
-      <button
-        id="notification-center-btn"
-        onClick={() => setIsOpen(v => !v)}
-        aria-label={`Notifications — ${unreadCount} non lues`}
-        aria-expanded={isOpen}
-        style={{
-          position: 'relative', background: isOpen ? '#F1F5F9' : 'transparent',
-          border: `1px solid ${isOpen ? '#E2E8F0' : 'transparent'}`, borderRadius: '12px',
-          padding: '8px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center',
-          color: '#475569', transition: 'all 0.2s ease',
-        }}
-      >
-        <Bell size={20} />
-        {unreadCount > 0 && (
-          <motion.span key={unreadCount} initial={{ scale: 0 }} animate={{ scale: 1 }}
-            style={{
-              position: 'absolute', top: '4px', right: '4px',
-              minWidth: '18px', height: '18px', background: '#EF4444', color: 'white',
-              fontSize: '0.65rem', fontWeight: 900, borderRadius: '999px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '0 4px', border: '2px solid white',
-            }}
-          >
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </motion.span>
-        )}
-      </button>
-
-      {/* Panel */}
-      <AnimatePresence>
-        {isOpen && (
+    <AnimatePresence>
+      {isSidebarOpen && (
+        <>
+          {/* Backdrop */}
           <motion.div
-            id="notification-panel"
-            initial={{ opacity: 0, y: 10, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.97 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            role="dialog"
-            aria-label="Centre de notifications"
-            style={{
-              position: 'absolute', top: 'calc(100% + 10px)', right: 0, width: '380px',
-              maxHeight: '520px', background: '#FFFFFF', border: '1px solid #E2E8F0',
-              borderRadius: '20px', boxShadow: '0 20px 60px -10px rgba(0,0,0,0.12)',
-              zIndex: 9999, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => toggleSidebar(false)}
+            style={{ 
+              position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.4)', 
+              backdropFilter: 'blur(8px)', zIndex: 10000 
+            }}
+          />
+
+          {/* Sidebar */}
+          <motion.div
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            style={{ 
+              position: 'fixed', right: 0, top: 0, bottom: 0, width: '450px',
+              background: 'white', boxShadow: '-30px 0 60px rgba(0,0,0,0.15)',
+              zIndex: 10001, display: 'flex', flexDirection: 'column'
             }}
           >
             {/* Header */}
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #F1F5F9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '2.5rem 2rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '1rem', color: '#1E293B' }}>Notifications</div>
-                <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>
-                  {unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? 's' : ''}` : 'Tout est lu ✓'}
+                <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.75rem', color: 'var(--text)', letterSpacing: '-0.5px' }}>
+                  Commander Events
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
+                   <div style={{ padding: '0.25rem 0.75rem', borderRadius: '999px', background: 'var(--bg-subtle)', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 900 }}>
+                      {unreadCount} NEW
+                   </div>
+                   <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--border)' }} />
+                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>System Monitoring Active</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                {unreadCount > 0 && (
-                  <button onClick={markAllRead} style={{ background: '#F1F5F9', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', color: '#64748B', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CheckCheck size={14} /> Tout lire
-                  </button>
-                )}
-                <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: '4px' }}>
-                  <X size={18} />
+              <button 
+                onClick={() => toggleSidebar(false)}
+                style={{ width: 44, height: 44, borderRadius: '14px', border: 'none', background: 'var(--bg-subtle)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'var(--transition)' }}
+              >
+                <X size={20} color="var(--text)" />
+              </button>
+            </div>
+
+            {/* Actions Bar */}
+            <div style={{ padding: '1rem 2rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', background: 'var(--bg-subtle)' }}>
+              <div style={{ display: 'flex', gap: '1.5rem' }}>
+                <button 
+                  onClick={markAllAsRead}
+                  style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <CheckCheck size={14} /> Mark all read
+                </button>
+                <button 
+                  onClick={clearAll}
+                  style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                >
+                  <Trash2 size={14} /> Clear all
                 </button>
               </div>
             </div>
 
-            {/* Filters */}
-            <div style={{ padding: '0.75rem 1.5rem', display: 'flex', gap: '0.5rem', borderBottom: '1px solid #F8FAFC' }}>
-              {[['all', 'Toutes'], ['unread', 'Non lues']].map(([val, label]) => (
-                <button key={val} onClick={() => setFilter(val)} style={{
-                  padding: '4px 12px', borderRadius: '999px', border: 'none', cursor: 'pointer',
-                  fontSize: '0.75rem', fontWeight: 700,
-                  background: filter === val ? '#1E293B' : '#F1F5F9',
-                  color: filter === val ? '#FFFFFF' : '#64748B',
-                  transition: 'all 0.15s ease',
-                }}>
-                  {label}
-                  {val === 'unread' && unreadCount > 0 && (
-                    <span style={{ marginLeft: '4px', background: '#EF4444', color: 'white', borderRadius: '999px', padding: '1px 5px', fontSize: '0.65rem' }}>
-                      {unreadCount}
-                    </span>
-                  )}
-                </button>
-              ))}
+            {/* Notifications Feed */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+              {notifications.length === 0 ? (
+                <div style={{ padding: '6rem 3rem', textAlign: 'center' }}>
+                   <div style={{ width: 80, height: 80, borderRadius: '24px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem auto', border: '1px solid var(--border-light)' }}>
+                      <Bell size={32} color="var(--text-muted)" strokeWidth={1.5} />
+                   </div>
+                   <h4 style={{ fontWeight: 900, color: 'var(--text)', fontSize: '1.2rem', margin: 0 }}>No alerts to display</h4>
+                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.75rem', lineHeight: 1.5 }}>
+                      Your ecosystem is running smoothly. We'll notify you if anything requires your attention.
+                   </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {notifications.map((n) => (
+                    <motion.div
+                      layout
+                      key={n.id}
+                      onClick={() => !n.isRead && markAsRead(n.id)}
+                      style={{ 
+                        padding: '1.5rem', borderRadius: '2rem', 
+                        background: n.isRead ? 'white' : 'var(--bg-subtle)',
+                        border: '1px solid', 
+                        borderColor: n.isRead ? 'var(--border)' : `${getPriorityColor(n.priority)}40`,
+                        cursor: 'pointer', transition: 'var(--transition)',
+                        boxShadow: n.isRead ? 'none' : '0 10px 30px -10px rgba(0,0,0,0.05)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '1.25rem' }}>
+                        <div style={{ 
+                          width: 48, height: 48, borderRadius: '16px', background: 'white', 
+                          border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: getPriorityColor(n.priority), boxShadow: 'var(--shadow-sm)', flexShrink: 0
+                        }}>
+                          {getPriorityIcon(n.priority)}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.95rem', fontWeight: 900, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {n.title}
+                            </span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                              {new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, lineHeight: 1.5 }}>
+                            {n.message}
+                          </p>
+                          <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                             <div style={{ padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'white', border: '1px solid var(--border)', fontSize: '0.65rem', fontWeight: 900, color: 'var(--primary)', textTransform: 'uppercase' }}>
+                                {n.module}
+                             </div>
+                             {!n.isRead && (
+                               <div style={{ width: 8, height: 8, borderRadius: '50%', background: getPriorityColor(n.priority), boxShadow: `0 0 10px ${getPriorityColor(n.priority)}` }} />
+                             )}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* List */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <AnimatePresence mode="popLayout">
-                {displayed.length === 0 ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: '3rem', textAlign: 'center', color: '#94A3B8' }}>
-                    <Bell size={32} strokeWidth={1} style={{ margin: '0 auto 0.75rem', display: 'block', opacity: 0.3 }} />
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
-                      {filter === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
-                    </div>
-                  </motion.div>
-                ) : (
-                  displayed.map(n => <NotificationItem key={n.id} notif={n} onMarkRead={markRead} />)
-                )}
-              </AnimatePresence>
+            {/* Footer */}
+            <div style={{ padding: '2rem', borderTop: '1px solid var(--border)', background: 'var(--bg-subtle)', textAlign: 'center' }}>
+              <button style={{ width: '100%', padding: '1rem', borderRadius: '1rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: 'var(--shadow-accent)' }}>
+                View All System Logs
+              </button>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 
