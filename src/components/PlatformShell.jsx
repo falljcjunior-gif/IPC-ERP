@@ -27,7 +27,7 @@ import CallRingingOverlay from './CallRingingOverlay';
 import MobileNavbar from './MobileNavbar';
 import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';
-import NexusSearch from './NexusSearch';
+import AntigravitySearch from './NexusSearch';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -238,7 +238,7 @@ const PlatformShell = ({ theme, setView }) => {
           opacity: 1,
           width: shellView.sidebar ? '280px' : '90px'
         }}
-        className="nexus-floating-sidebar"
+        className="antigravity-floating-sidebar"
         style={{
           height: 'calc(100vh - 2rem)',
           margin: '1rem',
@@ -253,11 +253,11 @@ const PlatformShell = ({ theme, setView }) => {
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--nexus-border)' }}>
           <motion.div 
             whileHover={{ rotate: 180, scale: 1.1 }}
-            className="nexus-glow"
+            className="antigravity-glow"
             style={{ 
               minWidth: '40px', 
               height: '40px', 
-              background: 'var(--nexus-primary)', 
+              background: 'var(--antigravity-primary)', 
               borderRadius: '12px', 
               display: 'flex', 
               alignItems: 'center', 
@@ -267,9 +267,9 @@ const PlatformShell = ({ theme, setView }) => {
             <Cpu size={24} color="white" />
           </motion.div>
           {shellView.sidebar && (
-            <div style={{ color: 'var(--nexus-text)' }}>
+            <div style={{ color: 'var(--antigravity-text)' }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
-              <div className="nexus-gradient-text" style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', marginTop: '4px' }}>Nexus OS</div>
+              <div className="antigravity-gradient-text" style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', marginTop: '4px' }}>Antigravity OS</div>
             </div>
           )}
         </div>
@@ -290,7 +290,7 @@ const PlatformShell = ({ theme, setView }) => {
             return (
               <div key={cat.label} style={{ marginBottom: '1.5rem' }}>
                 {shellView.sidebar && (
-                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px', opacity: 0.5 }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--antigravity-text-muted)', textTransform: 'uppercase', padding: '0 0.75rem 0.5rem 0.75rem', letterSpacing: '1px', opacity: 0.5 }}>
                     {cat.label}
                   </div>
                 )}
@@ -308,16 +308,16 @@ const PlatformShell = ({ theme, setView }) => {
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
-                        color: isActive ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)',
+                        color: isActive ? 'var(--antigravity-primary)' : 'var(--antigravity-text-muted)',
                         background: isActive ? 'white' : 'transparent',
-                        boxShadow: isActive ? 'var(--shadow-nexus)' : 'none',
-                        border: isActive ? '1px solid var(--nexus-border)' : '1px solid transparent',
-                        transition: 'var(--transition-nexus)',
+                        boxShadow: isActive ? 'var(--shadow-antigravity)' : 'none',
+                        border: isActive ? '1px solid var(--antigravity-border)' : '1px solid transparent',
+                        transition: 'var(--transition-antigravity)',
                         position: 'relative'
                       }}
                     >
                       {isActive && (
-                        <motion.div layoutId="active-nav" style={{ position: 'absolute', left: 0, width: '4px', height: '60%', background: 'var(--nexus-primary)', borderRadius: '0 4px 4px 0' }} />
+                        <motion.div layoutId="active-nav" style={{ position: 'absolute', left: 0, width: '4px', height: '60%', background: 'var(--antigravity-primary)', borderRadius: '0 4px 4px 0' }} />
                       )}
                       <div style={{ marginRight: shellView.sidebar ? '1rem' : 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                          {React.cloneElement(item.icon, { size: 20 })}
@@ -334,16 +334,16 @@ const PlatformShell = ({ theme, setView }) => {
         {/* User Profile / Bottom */}
         <div style={{ padding: '1rem', borderTop: '1px solid var(--nexus-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.5rem' }}>
-             <div className="nexus-glow" style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--nexus-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>
+             <div className="antigravity-glow" style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'var(--antigravity-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem', fontWeight: 800, color: 'white' }}>
                 {currentUser?.nom?.charAt(0)}
              </div>
              {shellView.sidebar && (
-               <div style={{ color: 'var(--nexus-text)', flex: 1, overflow: 'hidden' }}>
+               <div style={{ color: 'var(--antigravity-text)', flex: 1, overflow: 'hidden' }}>
                  <div style={{ fontWeight: 700, fontSize: '0.85rem', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{currentUser?.nom}</div>
-                 <div style={{ fontSize: '0.7rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>{userRole}</div>
+                 <div style={{ fontSize: '0.7rem', color: 'var(--antigravity-text-muted)', fontWeight: 600 }}>{userRole}</div>
                </div>
              )}
-             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'var(--nexus-text-muted)', cursor: 'pointer', opacity: 0.5 }}>
+             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'var(--antigravity-text-muted)', cursor: 'pointer', opacity: 0.5 }}>
                 <LogOut size={18} />
              </button>
           </div>
@@ -366,20 +366,20 @@ const PlatformShell = ({ theme, setView }) => {
           alignItems: 'center', 
           marginBottom: '2.5rem',
           padding: '0.75rem 1.5rem',
-          background: 'var(--nexus-glass)',
+          background: 'var(--antigravity-glass)',
           backdropFilter: 'blur(8px)',
           borderRadius: '1.25rem',
-          border: '1px solid var(--nexus-border)',
-          boxShadow: 'var(--shadow-nexus)'
+          border: '1px solid var(--antigravity-border)',
+          boxShadow: 'var(--shadow-antigravity)'
         }}>
            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
-              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--nexus-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {shellView.sidebar ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
               </button>
               <div 
                 onClick={() => setSearch(p => ({ ...p, nexusOpen: true }))}
                 style={{ 
-                  display: 'flex', alignItems: 'center', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid rgba(56, 189, 248, 0.2)', transition: 'var(--transition-nexus)' 
+                  display: 'flex', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid rgba(16, 185, 129, 0.2)', transition: 'var(--transition-antigravity)' 
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.5)';
@@ -392,9 +392,9 @@ const PlatformShell = ({ theme, setView }) => {
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <Zap size={16} fill="#38bdf8" color="#38bdf8" />
-                <span style={{ fontSize: '0.9rem', color: '#38bdf8', flex: 1, fontWeight: 500, letterSpacing: '0.5px' }}>Nexus Command Center...</span>
-                <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Zap size={16} fill="var(--antigravity-primary)" color="var(--antigravity-primary)" />
+                <span style={{ fontSize: '0.9rem', color: 'var(--antigravity-primary)', flex: 1, fontWeight: 500, letterSpacing: '0.5px' }}>Antigravity Command Center...</span>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(16, 185, 129, 0.1)', color: 'var(--antigravity-primary)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Command size={10} /> K
                 </div>
               </div>
@@ -406,21 +406,21 @@ const PlatformShell = ({ theme, setView }) => {
                   const newLng = i18n.language === 'fr' ? 'en' : 'fr';
                   i18n.changeLanguage(newLng);
                 }}
-                className="nexus-card" style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                 <Globe size={18} color="var(--nexus-text)" />
-                 <span style={{ fontSize: '0.55rem', fontWeight: 900, position: 'absolute', bottom: -4, background: 'var(--nexus-primary)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
+                className="antigravity-card" style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                 <Globe size={18} color="var(--antigravity-text)" />
+                 <span style={{ fontSize: '0.55rem', fontWeight: 900, position: 'absolute', bottom: -4, background: 'var(--antigravity-primary)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
                    {i18n.language.substring(0, 2)}
                  </span>
               </button>
               {/* NotificationCenter — Firestore temps-réel */}
               <NotificationCenter />
-              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="nexus-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--nexus-secondary)', color: 'white', cursor: 'pointer' }}>
-                 <Zap size={16} fill="var(--nexus-primary)" stroke="none" /> Nexus
+              <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="antigravity-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--antigravity-secondary)', color: 'white', cursor: 'pointer' }}>
+                 <Zap size={16} fill="var(--antigravity-primary)" stroke="none" /> Antigravity
               </button>
            </div>
         </header>
 
-        <NexusSearch isOpen={search.nexusOpen} onClose={(val) => setSearch(p => ({ ...p, nexusOpen: val }))} />
+        <AntigravitySearch isOpen={search.nexusOpen} onClose={(val) => setSearch(p => ({ ...p, nexusOpen: val }))} />
 
         <AnimatePresence mode="wait">
           <motion.div

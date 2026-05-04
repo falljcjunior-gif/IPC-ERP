@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Command, X, ArrowRight, Zap, Database, User, Settings, FileText, Banknote, ShieldCheck, MailPlus } from 'lucide-react';
 import { useStore } from '../store';
-import './NexusSearch.css';
+import './AntigravitySearch.css';
 
-const NexusSearch = ({ isOpen, onClose }) => {
+const AntigravitySearch = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
@@ -77,38 +77,38 @@ const NexusSearch = ({ isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="nexus-overlay">
+        <div className="antigravity-overlay">
           <motion.div
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="nexus-container"
+            className="antigravity-container"
           >
-            <div className="nexus-header">
-              <Command size={22} color="#38bdf8" />
+            <div className="antigravity-header">
+              <Command size={22} color="#10b981" />
               <input
                 ref={inputRef}
-                className="nexus-input"
-                placeholder="Nexus Command Center... (Demandez ce que vous voulez)"
+                className="antigravity-input"
+                placeholder="Antigravity Command Center... (Demandez ce que vous voulez)"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
-              <div className="nexus-kbd">ESC</div>
+              <div className="antigravity-kbd">ESC</div>
             </div>
 
-            <div className="nexus-results">
+            <div className="antigravity-results">
               {/* Future Integration: Si l'utilisateur tape "CA", afficher un widget financier */}
               {query.toLowerCase() === 'ca' && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0 }} 
                   animate={{ opacity: 1, height: 'auto' }} 
-                  className="nexus-widget-container"
+                  className="antigravity-widget-container"
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Chiffre d'Affaires Mensuel</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#38bdf8' }}>45 250 000 FCFA</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981' }}>45 250 000 FCFA</div>
                     </div>
                     <div style={{ padding: '0.5rem 1rem', background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', borderRadius: '2rem', fontSize: '0.8rem', fontWeight: 600 }}>
                       +12.5% vs M-1
@@ -120,16 +120,16 @@ const NexusSearch = ({ isOpen, onClose }) => {
               {filtered.map((item, idx) => (
                 <div
                   key={item.id}
-                  className={`nexus-item ${idx === selectedIndex ? 'active' : ''}`}
+                  className={`antigravity-item ${idx === selectedIndex ? 'active' : ''}`}
                   onClick={() => { item.action(); onClose(false); }}
                   onMouseEnter={() => setSelectedIndex(idx)}
                 >
-                  <div className="nexus-item-icon">{item.icon}</div>
-                  <div className="nexus-item-content">
-                    <div className="nexus-item-title">{item.label}</div>
-                    <div className="nexus-item-subtitle">{item.category}</div>
+                  <div className="antigravity-item-icon">{item.icon}</div>
+                  <div className="antigravity-item-content">
+                    <div className="antigravity-item-title">{item.label}</div>
+                    <div className="antigravity-item-subtitle">{item.category}</div>
                   </div>
-                  <ArrowRight size={16} className="nexus-item-arrow" />
+                  <ArrowRight size={16} className="antigravity-item-arrow" />
                 </div>
               ))}
               
@@ -142,13 +142,13 @@ const NexusSearch = ({ isOpen, onClose }) => {
               )}
             </div>
 
-            <div className="nexus-footer">
+            <div className="antigravity-footer">
               <div style={{ display: 'flex', gap: '1rem', fontSize: '0.75rem', color: '#64748b' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="nexus-kbd" style={{ padding: '0.1rem 0.3rem' }}>↑↓</kbd> Naviguer</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="nexus-kbd" style={{ padding: '0.1rem 0.3rem' }}>↵</kbd> Ouvrir</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="antigravity-kbd" style={{ padding: '0.1rem 0.3rem' }}>↑↓</kbd> Naviguer</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><kbd className="antigravity-kbd" style={{ padding: '0.1rem 0.3rem' }}>↵</kbd> Ouvrir</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 700, color: '#38bdf8', letterSpacing: '1px' }}>
-                <Zap size={14} fill="#38bdf8" /> NEXUS OS
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', fontWeight: 700, color: '#10b981', letterSpacing: '1px' }}>
+                <Zap size={14} fill="#10b981" /> ANTIGRAVITY OS
               </div>
             </div>
           </motion.div>
@@ -158,4 +158,4 @@ const NexusSearch = ({ isOpen, onClose }) => {
   );
 };
 
-export default NexusSearch;
+export default AntigravitySearch;

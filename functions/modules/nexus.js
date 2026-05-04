@@ -91,11 +91,21 @@ exports.nexusChat = onCall({
     bi: 'Business Intelligence', connect: 'Connect+', admin: 'Admin'
   };
 
-  const systemPrompt = `Tu es Nexus, le copilote IA de l'ERP I.P.C (International Paving Company).
-Réponds en FRANÇAIS, de manière professionnelle et concise.
-CONTEXTE: Utilisateur ${userName} (${userRole}), Module ${moduleNames[activeModule] || activeModule}.
-DONNÉES: ${Object.entries(recordCounts).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucune'}.
-KPIS: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucun'}.`;
+  const systemPrompt = `Tu es ANTIGRAVITY OS, le noyau d'intelligence souveraine de l'ERP I.P.C (International Paving Company).
+Identité: Direct, analytique, capable de piloter l'ERP via des protocoles d'exécution.
+CONTEXTE: Utilisateur ${userName} (${userRole}), Module Actif: ${moduleNames[activeModule] || activeModule}.
+DONNÉES TEMPS RÉEL: ${Object.entries(recordCounts).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucune donnée collectée'}.
+KPIS STRATÉGIQUES: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Initialisation en cours'}.
+
+FONCTIONS D'EXÉCUTION (Utilise ces tags à la fin de ta réponse si nécessaire):
+- [NAV:appId] : Navigue vers un module (crm, hr, finance, sales, production, logistics, legal, bi, admin).
+- [CREATE:appId:subModule] : Ouvre le formulaire de création pour un module.
+- [AUDIT:query] : Analyse les données pour détecter des anomalies ou opportunités.
+
+CONSIGNES:
+- Si l'utilisateur veut créer quelque chose (devis, employé, lead), utilise [CREATE:...].
+- Si l'utilisateur demande où se trouve une section, utilise [NAV:...].
+- Réponds en FRANÇAIS, ton professionnel, expertise de haut niveau.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -106,7 +116,7 @@ KPIS: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucun'}
 
     const chatHistory = (history || [])
       .filter(m => m.role && m.content)
-      .slice(-8)
+      .slice(-10)
       .map(m => ({
         role: m.role === 'assistant' ? 'model' : 'user',
         parts: [{ text: m.content }]
@@ -116,31 +126,42 @@ KPIS: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucun'}
     const result = await chat.sendMessage(message);
     const responseText = result.response.text();
 
-    // Command Parsing
-    const navMatch = responseText.match(/\[NAV:([a-z_]+)\]/);
+    // Advanced Command Parsing (Antigravity Protocol)
     let action = null;
-    if (navMatch) action = { type: 'NAVIGATE', appId: navMatch[1] };
+    const navMatch = responseText.match(/\[NAV:([a-z_]+)\]/);
+    const createMatch = responseText.match(/\[CREATE:([a-z_]+):([a-z_]+)\]/);
+    const auditMatch = responseText.match(/\[AUDIT:([^\]]+)\]/);
 
-    const displayText = responseText.replace(/\[(NAV|CREATE|FILTER):[^\]]+\]/g, '').trim();
+    if (navMatch) {
+      action = { type: 'NAVIGATE', appId: navMatch[1] };
+    } else if (createMatch) {
+      action = { type: 'CREATE_RECORD', appId: createMatch[1], subModule: createMatch[2], label: `Nouveau ${createMatch[2]}` };
+    } else if (auditMatch) {
+      action = { type: 'AUDIT', query: auditMatch[1] };
+    }
 
-    // Log Activity
+    const displayText = responseText.replace(/\[(NAV|CREATE|AUDIT|FILTER):[^\]]+\]/g, '').trim();
+
+    // Log Activity with Antigravity Label
     await db.collection('ai_logs').add({
       uid: request.auth.uid,
       userName,
       userRole,
       hasAction: !!action,
-      timestamp: admin.firestore.FieldValue.serverTimestamp()
+      actionType: action?.type || 'CONVERSATION',
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      system: 'ANTIGRAVITY_OS'
     });
 
     return { 
       success: true, 
       response: displayText, 
       action, 
-      model: 'gemini-2.0-flash' 
+      model: 'gemini-2.0-flash-antigravity' 
     };
 
   } catch (error) {
-    logger.error('Nexus AI Error:', error);
+    logger.error('Antigravity AI Error:', error);
     throw new Error(`AI_ERROR: ${error.message}`);
   }
 });
