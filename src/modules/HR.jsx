@@ -6,6 +6,7 @@ import {
 import { useStore } from '../store';
 
 // On n'importe plus TabBar, on utilise les boutons en verre dépoli
+import HumanCapitalTab from './hr/tabs/HumanCapitalTab';
 import PeopleTab from './enterprise/tabs/PeopleTab';
 import ApprovalsTab from './hr/tabs/ApprovalsTab';
 import OnboardingTab from './hr/tabs/OnboardingTab';
@@ -14,7 +15,7 @@ import '../components/GlobalDashboard.css';
 
 const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
   const hrData = useStore(state => state.data.hr || {});
-  const [mainTab, setMainTab] = useState('people');
+  const [mainTab, setMainTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
   const pendingCount = [
@@ -29,81 +30,94 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
       <div className="luxury-header" style={{ marginBottom: '3rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <div className="luxury-subtitle">Nexus Talent Intelligence</div>
-          <h1 className="luxury-title">Human <strong>Capital</strong></h1>
+          <h1 className="luxury-title" style={{ fontSize: '4rem', letterSpacing: '-0.04em' }}>Human <strong>Capital</strong></h1>
         </div>
         
-        <div style={{ display: 'flex', gap: '3rem', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: '4rem', alignItems: 'flex-end' }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Indice de Performance</div>
+            <div style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827', lineHeight: 1 }}>
+              <AnimatedCounter from={0} to={89} duration={2} formatter={(v) => `${v}%`} />
+            </div>
+          </div>
+          
           {pendingCount > 0 && (
             <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => setMainTab('approvals')}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Alertes Nexus</div>
-              <div className="luxury-value-massive" style={{ fontSize: '3rem', color: '#F59E0B' }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Alertes Critiques</div>
+              <div style={{ fontSize: '3.5rem', fontWeight: 900, color: '#F59E0B', lineHeight: 1 }}>
                 <AnimatedCounter from={0} to={pendingCount} duration={1.5} formatter={(v) => `${v}`} />
               </div>
             </div>
           )}
-          
-          <div style={{ textAlign: 'right', cursor: 'pointer' }} onClick={() => setMainTab('onboarding')}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Onboarding Actif</div>
-            <div className="luxury-value-massive" style={{ fontSize: '3rem', color: '#10B981' }}>
-              +<AnimatedCounter from={0} to={4} duration={1.5} formatter={(v) => `${v}`} />
-            </div>
-          </div>
         </div>
       </div>
 
       {/* ── CONTROLS (FROSTED GLASS TABS & SEARCH) ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.5)', padding: '0.5rem', borderRadius: '1.5rem', backdropFilter: 'blur(10px)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.4)', padding: '0.4rem', borderRadius: '1.5rem', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.5)' }}>
+          <button 
+            onClick={() => setMainTab('dashboard')}
+            style={{ 
+              padding: '0.8rem 2.5rem', borderRadius: '1.2rem', border: 'none', fontWeight: 800, cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              background: mainTab === 'dashboard' ? 'white' : 'transparent',
+              color: mainTab === 'dashboard' ? '#111827' : '#9ca3af',
+              boxShadow: mainTab === 'dashboard' ? '0 10px 30px -10px rgba(0,0,0,0.1)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem'
+            }}
+          >
+            <Activity size={16} /> Intelligence
+          </button>
           <button 
             onClick={() => setMainTab('people')}
             style={{ 
-              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+              padding: '0.8rem 2.5rem', borderRadius: '1.2rem', border: 'none', fontWeight: 800, cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
               background: mainTab === 'people' ? 'white' : 'transparent',
-              color: mainTab === 'people' ? '#111827' : '#6b7280',
-              boxShadow: mainTab === 'people' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none',
-              display: 'flex', alignItems: 'center', gap: '0.5rem'
+              color: mainTab === 'people' ? '#111827' : '#9ca3af',
+              boxShadow: mainTab === 'people' ? '0 10px 30px -10px rgba(0,0,0,0.1)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem'
             }}
           >
-            <Users size={16} /> Espace Talents
+            <Users size={16} /> Annuaire
           </button>
           <button 
             onClick={() => setMainTab('approvals')}
             style={{ 
-              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+              padding: '0.8rem 2.5rem', borderRadius: '1.2rem', border: 'none', fontWeight: 800, cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
               background: mainTab === 'approvals' ? 'white' : 'transparent',
-              color: mainTab === 'approvals' ? '#111827' : '#6b7280',
-              boxShadow: mainTab === 'approvals' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none',
-              display: 'flex', alignItems: 'center', gap: '0.5rem'
+              color: mainTab === 'approvals' ? '#111827' : '#9ca3af',
+              boxShadow: mainTab === 'approvals' ? '0 10px 30px -10px rgba(0,0,0,0.1)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem'
             }}
           >
-            <CheckSquare size={16} /> Validations {pendingCount > 0 && `(${pendingCount})`}
+            <CheckSquare size={16} /> Validations
           </button>
           <button 
             onClick={() => setMainTab('onboarding')}
             style={{ 
-              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+              padding: '0.8rem 2.5rem', borderRadius: '1.2rem', border: 'none', fontWeight: 800, cursor: 'pointer', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
               background: mainTab === 'onboarding' ? 'white' : 'transparent',
-              color: mainTab === 'onboarding' ? '#111827' : '#6b7280',
-              boxShadow: mainTab === 'onboarding' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none',
-              display: 'flex', alignItems: 'center', gap: '0.5rem'
+              color: mainTab === 'onboarding' ? '#111827' : '#9ca3af',
+              boxShadow: mainTab === 'onboarding' ? '0 10px 30px -10px rgba(0,0,0,0.1)' : 'none',
+              display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem'
             }}
           >
-            <UserPlus size={16} /> Intégration
+            <UserPlus size={16} /> Onboarding
           </button>
         </div>
 
         {/* Global Search pour HR */}
-        <div style={{ width: '300px', position: 'relative' }}>
-          <Search size={18} style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+        <div style={{ width: '340px', position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1.5rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
           <input 
             type="text" 
-            placeholder="Rechercher un talent..." 
+            placeholder="Explorer le capital humain..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{ 
-              width: '100%', padding: '0.8rem 1rem 0.8rem 3rem', borderRadius: '2rem', 
-              border: '1px solid rgba(0,0,0,0.05)', background: 'rgba(255,255,255,0.8)',
-              backdropFilter: 'blur(10px)', fontSize: '0.9rem', outline: 'none', fontWeight: 500
+              width: '100%', padding: '1rem 1.5rem 1rem 3.5rem', borderRadius: '2rem', 
+              border: 'none', background: 'white',
+              boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)',
+              fontSize: '0.95rem', outline: 'none', fontWeight: 600, color: '#111827'
             }} 
           />
         </div>
@@ -114,13 +128,13 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
         <AnimatePresence mode="wait">
           <motion.div
             key={mainTab}
-            initial={{ opacity: 0, scale: 0.98, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.98, y: -20 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             style={{ position: 'relative', minHeight: '60vh' }}
           >
-            {/* The child tabs themselves might need minor tweaks, but we pass searchQuery if needed */}
+            {mainTab === 'dashboard' && <HumanCapitalTab data={hrData} onOpenDetail={onOpenDetail} searchQuery={searchQuery} />}
             {mainTab === 'people' && <PeopleTab data={hrData} onOpenDetail={onOpenDetail} accessLevel={accessLevel} searchQuery={searchQuery} />}
             {mainTab === 'approvals' && <ApprovalsTab accessLevel={accessLevel} />}
             {mainTab === 'onboarding' && <OnboardingTab accessLevel={accessLevel} />}

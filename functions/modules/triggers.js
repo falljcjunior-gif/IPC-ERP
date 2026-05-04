@@ -115,6 +115,48 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
 });
 
 /**
+ * 🔒 HR SECURITY: PERSONNEL SENSITIVE CHANGES — High Severity Audit
+ * WHY: Toute modification de salaire ou de rôle doit être tracée de manière indélébile.
+ */
+exports.onHRPersonnelChange = onDocumentUpdated('{collection}/{docId}', async (event) => {
+  const { collection, docId } = event.params;
+  if (!['hr', 'users'].includes(collection)) return null;
+
+  const before = event.data.before.data();
+  const after = event.data.after.data();
+
+  // Detection fields: salary (hr) or role (users/hr)
+  const sensitiveKeys = ['salaire', 'role', 'permissions', 'active'];
+  const changes = sensitiveKeys.filter(k => 
+    JSON.stringify(before[k]) !== JSON.stringify(after[k])
+  );
+
+  if (changes.length > 0) {
+    const auditRecord = {
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      severity: 'CRITICAL_SECURITY',
+      collection,
+      docId,
+      actor: after._updatedBy || 'system',
+      changes: changes.reduce((acc, k) => {
+        acc[k] = { from: before[k], to: after[k] };
+        return acc;
+      }, {}),
+      details: `Sensitive personnel data changed on ${collection}/${docId}`,
+      fingerprint: `SECURE_${event.id}`
+    };
+
+    try {
+      await db.collection('audit_logs').add(auditRecord);
+      logger.warn(`[SECURITY] Sensitive change detected on ${collection}/${docId}: ${changes.join(', ')}`);
+    } catch (err) {
+      logger.error('HR Audit Log Error:', err);
+    }
+  }
+  return null;
+});
+
+/**
  * 💹 FINANCE: AUTOMATED ACCOUNTING — Hardened with Idempotency and Outbox
  */
 exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance/{invoiceId}', async (event) => {

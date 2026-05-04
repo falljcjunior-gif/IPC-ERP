@@ -14,10 +14,14 @@ export const HRSchemas = {
         dept: { label: 'Pôle Opérationnel', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
         email: { label: 'Email Pro', type: 'email', search: true },
         salaire: { label: 'Rémunération de Base (Brut)', type: 'money', currency: 'FCFA', sensitive: true },
+        performance_score: { label: 'Performance 360° (%)', type: 'number', default: 85 },
+        burnout_risk: { label: 'Risque d\'Épuisement (%)', type: 'number', default: 10 },
+        retention_score: { label: 'Indice de Rétention (%)', type: 'number', default: 95 },
+        engagement_level: { label: 'Engagement', type: 'selection', options: ['High', 'Medium', 'Low'], default: 'High' },
         active: { label: 'Actif', type: 'boolean', default: true }
       },
       views: {
-        list: ['nom', 'poste', 'dept', 'email', 'active'],
+        list: ['nom', 'poste', 'dept', 'performance_score', 'active'],
         kanban: {
           groupField: 'dept',
           titleField: 'nom',

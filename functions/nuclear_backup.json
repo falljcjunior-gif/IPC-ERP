@@ -1,0 +1,432 @@
+{
+  "users": [
+    {
+      "id": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "_deletedAt": null,
+      "role": "SUPER_ADMIN",
+      "departement": "DIRECTION",
+      "permissions": {
+        "roles": [
+          "SUPER_ADMIN"
+        ],
+        "allowedModules": [
+          "*"
+        ]
+      },
+      "profile": {
+        "id": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+        "email": "fall.jcjunior@gmail.com",
+        "nom": "Fall JC Junior",
+        "createdAt": "2026-05-04T14:07:33.083Z"
+      },
+      "_createdAt": {
+        "_seconds": 1777903653,
+        "_nanoseconds": 257000000
+      }
+    },
+    {
+      "id": "ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "_deletedAt": null,
+      "role": "SUPER_ADMIN",
+      "permissions": {
+        "roles": [
+          "SUPER_ADMIN"
+        ],
+        "allowedModules": [
+          "home"
+        ]
+      },
+      "profile": {
+        "id": "ZPweMoIl5YVURp8KcOmm30H5N4E3",
+        "email": "ra.yoman@ipcgreenblocks.com",
+        "nom": "ra.yoman",
+        "createdAt": "2026-05-04T15:33:39.710Z"
+      },
+      "_createdAt": {
+        "_seconds": 1777908819,
+        "_nanoseconds": 745000000
+      }
+    }
+  ],
+  "hr": [
+    {
+      "id": "93mhF8PWythAeWofy3tWCQnkHsm2",
+      "_deletedAt": null,
+      "email": "ra.yoman@ipcgreenblocks.com",
+      "nom": "ra.yoman",
+      "subModule": "employees",
+      "_createdAt": {
+        "_seconds": 1777906833,
+        "_nanoseconds": 832000000
+      }
+    },
+    {
+      "id": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "_deletedAt": null,
+      "email": "fall.jcjunior@gmail.com",
+      "nom": "Fall JC Junior",
+      "subModule": "employees",
+      "poste": "Directeur Général",
+      "departement": "DIRECTION",
+      "status": "active",
+      "_createdAt": {
+        "_seconds": 1777903653,
+        "_nanoseconds": 733000000
+      }
+    },
+    {
+      "id": "Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "_deletedAt": null,
+      "email": "ra.yoman@ipcgreenblocks.com",
+      "nom": "ra.yoman",
+      "subModule": "employees",
+      "_createdAt": {
+        "_seconds": 1777905431,
+        "_nanoseconds": 138000000
+      }
+    },
+    {
+      "id": "U98QvATk97fPao30n7W0IilbdFl1",
+      "_deletedAt": null,
+      "email": "ra.yoman@ipcgreenblocks.com",
+      "nom": "ra.yoman",
+      "subModule": "employees",
+      "_createdAt": {
+        "_seconds": 1777904181,
+        "_nanoseconds": 77000000
+      }
+    },
+    {
+      "id": "ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "_deletedAt": null,
+      "email": "ra.yoman@ipcgreenblocks.com",
+      "nom": "ra.yoman",
+      "subModule": "employees",
+      "_createdAt": {
+        "_seconds": 1777908819,
+        "_nanoseconds": 814000000
+      }
+    }
+  ],
+  "crm": [],
+  "finance": [],
+  "inventory": [],
+  "sales": [],
+  "production": [],
+  "projects": [
+    {
+      "id": "1776740948661itchm",
+      "createdAt": "2026-04-21T03:09:08.661Z",
+      "dateDebut": "2026-07-26",
+      "chefProjet": "YOMAN",
+      "subModule": "projects",
+      "brandId": "IPC_CORE",
+      "client": "OMAN",
+      "ownerId": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "nom": "COM",
+      "colonnes": [
+        {
+          "id": "col_1776740948661_1",
+          "title": "À faire"
+        },
+        {
+          "id": "col_1776740948661_2",
+          "title": "En cours"
+        },
+        {
+          "id": "col_1776740948661_3",
+          "title": "Terminé"
+        }
+      ],
+      "echeance": "2026-08-26"
+    }
+  ],
+  "purchase": [],
+  "marketing": [],
+  "legal": [],
+  "signature": [],
+  "logistics": [],
+  "bi": [],
+  "commerce": [],
+  "activities": [],
+  "notifications": [],
+  "rooms": [],
+  "audit_logs": [
+    {
+      "id": "2NFOH9SSbZHJMVfqx2yE",
+      "appId": "hr",
+      "docId": "ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on hr/ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "metadata": {
+        "eventId": "bf5f329c-4a11-41d2-a96d-1583fb7fe024",
+        "traceId": "00-22a117096d0a1926b111c5ccb7f9d2be-f11318e011810694-01",
+        "originalCollection": "hr"
+      },
+      "timestamp": {
+        "_seconds": 1777908819,
+        "_nanoseconds": 974000000
+      }
+    },
+    {
+      "id": "AARWEV9SK1UMtzMb8KT2",
+      "appId": "users",
+      "docId": "Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "action": "DELETE",
+      "userName": "system_trigger",
+      "details": "DELETE on users/Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "metadata": {
+        "eventId": "0b9451ff-62c6-4d1b-9080-16a5149318ea",
+        "traceId": "00-5f5d22d97a3bde28b4606cb82b656225-f35f1ab23d44be6c-00",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777908804,
+        "_nanoseconds": 283000000
+      }
+    },
+    {
+      "id": "JRXDiNlK5w6yLSZ84H5y",
+      "appId": "users",
+      "docId": "93mhF8PWythAeWofy3tWCQnkHsm2",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on users/93mhF8PWythAeWofy3tWCQnkHsm2",
+      "metadata": {
+        "eventId": "0e362893-3485-4900-8b2a-39bef339781a",
+        "traceId": "00-e0cd354095416c0711f0322d8a6b57b4-8cc8df6846de1694-01",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777906836,
+        "_nanoseconds": 284000000
+      }
+    },
+    {
+      "id": "Lv3wspqM8fvTYh1SJUfF",
+      "appId": "users",
+      "docId": "ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on users/ZPweMoIl5YVURp8KcOmm30H5N4E3",
+      "metadata": {
+        "eventId": "e8d71ee1-dba7-4ae3-8734-bb3849c1be90",
+        "traceId": "00-a6e835522110b8d24b5f59f5bf8a1a1c-0706d78fd4f9bd84-00",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777908820,
+        "_nanoseconds": 546000000
+      }
+    },
+    {
+      "id": "M6ROHcns2fcrcIPUyCZ6",
+      "appId": "users",
+      "docId": "Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on users/Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "metadata": {
+        "eventId": "c84485a6-c78f-43c7-b7f7-1596412c0042",
+        "traceId": "00-b92e88c2d6ef16b5ce578ac5594412d2-21ddc6ab6179e1ee-01",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777905433,
+        "_nanoseconds": 701000000
+      }
+    },
+    {
+      "id": "NVlKZzqzTEpRw0ZPFplN",
+      "appId": "users",
+      "docId": "93mhF8PWythAeWofy3tWCQnkHsm2",
+      "action": "DELETE",
+      "userName": "system_trigger",
+      "details": "DELETE on users/93mhF8PWythAeWofy3tWCQnkHsm2",
+      "metadata": {
+        "eventId": "dbcd96e5-6767-46b2-a94b-be923c72af79",
+        "traceId": "00-f6d246bcd2d4f371b7d0345fada6adc3-665ee3d0d4d0451d-01",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777908801,
+        "_nanoseconds": 205000000
+      }
+    },
+    {
+      "id": "QMt2pFmROxlb5f4CSWgj",
+      "appId": "users",
+      "docId": "U98QvATk97fPao30n7W0IilbdFl1",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on users/U98QvATk97fPao30n7W0IilbdFl1",
+      "metadata": {
+        "eventId": "aca4d5bf-1ba6-4f33-803e-653183c5ac68",
+        "traceId": "00-e15346141ee48f2aad7470309ac0c256-52dc442d7f9eac45-01",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777904182,
+        "_nanoseconds": 674000000
+      }
+    },
+    {
+      "id": "WcXA5i8FqWRZhOhfiTX2",
+      "appId": "hr",
+      "docId": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on hr/Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "metadata": {
+        "eventId": "af7e621c-7eff-448f-b8c7-ed231c030317",
+        "traceId": "00-807e2d8706f9dab09c63cefcaa756501-f132728656a652bb-00",
+        "originalCollection": "hr"
+      },
+      "timestamp": {
+        "_seconds": 1777903653,
+        "_nanoseconds": 808000000
+      }
+    },
+    {
+      "id": "aKEOzMZZdV7ZA7RkN7aS",
+      "operation": "NUCLEAR_RESET",
+      "executedBy": "fall.jcjunior@gmail.com",
+      "summary": "Full ERP reset performed. All test data purged. SUPER_ADMIN profile recreated.",
+      "details": {
+        "collectionsWiped": [
+          "users",
+          "employees",
+          "permissions_audit",
+          "hr",
+          "crm",
+          "crm_leads",
+          "sales",
+          "invoices",
+          "transactions",
+          "finance",
+          "accounting",
+          "inventory",
+          "stock_movements",
+          "purchase",
+          "production",
+          "logistics",
+          "legal",
+          "marketing",
+          "messages",
+          "rooms",
+          "calls",
+          "notifications",
+          "documents",
+          "signature",
+          "sync_queue",
+          "activity_logs",
+          "activities",
+          "error_reports",
+          "audit_logs",
+          "mail_logs",
+          "office_supplies",
+          "visitors_log",
+          "facilities_tickets",
+          "workflows",
+          "base"
+        ],
+        "preservedCollections": [
+          "settings"
+        ]
+      },
+      "timestamp": {
+        "_seconds": 1777903654,
+        "_nanoseconds": 322000000
+      }
+    },
+    {
+      "id": "b1jAHCbEvGu3o8BRHmU7",
+      "appId": "hr",
+      "docId": "Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on hr/Jo8lLO7zPhTyrVnQcaSjjT41Ri52",
+      "metadata": {
+        "eventId": "4ac281a0-d61f-4611-b17c-4e316bba80ac",
+        "traceId": "00-a39d5ad7f26931f3e49adfe8eb912949-28542403e702f0a6-00",
+        "originalCollection": "hr"
+      },
+      "timestamp": {
+        "_seconds": 1777905433,
+        "_nanoseconds": 886000000
+      }
+    },
+    {
+      "id": "bXIWlPucxcgi3msSbgj0",
+      "appId": "hr",
+      "docId": "U98QvATk97fPao30n7W0IilbdFl1",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on hr/U98QvATk97fPao30n7W0IilbdFl1",
+      "metadata": {
+        "eventId": "31866c6b-a4bc-423a-a1ff-55d1defc9b97",
+        "traceId": "00-2f42fd56050bc7b658a7c679e461f2d5-b9c5ca8ebba1fb99-00",
+        "originalCollection": "hr"
+      },
+      "timestamp": {
+        "_seconds": 1777904182,
+        "_nanoseconds": 683000000
+      }
+    },
+    {
+      "id": "nvgbHmiGMN7QkK4UZsAr",
+      "appId": "users",
+      "docId": "Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on users/Ii8G2Ad6GyUxaS63ecrzeaE6l883",
+      "metadata": {
+        "eventId": "4c943de9-bf27-4786-b8bb-7b646f2b5d71",
+        "traceId": "00-6e0bf49c8a645ca40fb633c41b40e72e-cb5451af78da6799-00",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777903653,
+        "_nanoseconds": 392000000
+      }
+    },
+    {
+      "id": "v8YpB0n6EHsTmsOXWHhy",
+      "appId": "hr",
+      "docId": "93mhF8PWythAeWofy3tWCQnkHsm2",
+      "action": "CREATE",
+      "userName": "system_trigger",
+      "details": "CREATE on hr/93mhF8PWythAeWofy3tWCQnkHsm2",
+      "metadata": {
+        "eventId": "88509cb1-567f-48fc-94dd-59410c54dccb",
+        "traceId": "00-ab18c17a5160bdb5d9bf199a2250577c-7f43256067b6e7e3-00",
+        "originalCollection": "hr"
+      },
+      "timestamp": {
+        "_seconds": 1777906836,
+        "_nanoseconds": 497000000
+      }
+    },
+    {
+      "id": "wMPAoGvxmW5TWukkoeLP",
+      "appId": "users",
+      "docId": "U98QvATk97fPao30n7W0IilbdFl1",
+      "action": "DELETE",
+      "userName": "system_trigger",
+      "details": "DELETE on users/U98QvATk97fPao30n7W0IilbdFl1",
+      "metadata": {
+        "eventId": "e127a0ef-49a7-4cf7-9b49-b99d461df153",
+        "traceId": "00-b134f76d72cd8961d43b8834a6120132-6c119b0734859574-00",
+        "originalCollection": "users"
+      },
+      "timestamp": {
+        "_seconds": 1777908808,
+        "_nanoseconds": 164000000
+      }
+    }
+  ],
+  "sync_queue": [],
+  "error_reports": [],
+  "signatures": []
+}
