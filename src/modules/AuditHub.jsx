@@ -9,7 +9,6 @@ import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
-import { debugInteraction } from '../utils/InteractionAuditor';
 
 /**
  * 🛡️ NEXUS OS: AUDIT & COMPLIANCE HUB
@@ -68,10 +67,10 @@ const AuditHub = () => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Intégrité Système" value="99.9%" icon={<ShieldCheck size={20} />} color="#10B981" />
-        <KpiCard title="Alertes Sécurité" value="0" icon={<ShieldAlert size={20} />} color="#EF4444" />
-        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" />
-        <KpiCard title="Score Conformité" value="92%" icon={<Award size={20} />} color="#8B5CF6" />
+        <KpiCard title="Intégrité Système" value="99.9%" icon={<ShieldCheck size={20} />} color="#10B981" sparklineData={[{val: 99}, {val: 99.5}, {val: 99.9}]} />
+        <KpiCard title="Alertes Sécurité" value="0" icon={<ShieldCheck size={20} />} color="#EF4444" sparklineData={[{val: 0}, {val: 0}, {val: 0}]} />
+        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" sparklineData={[{val: 2}, {val: 4}, {val: 5}]} />
+        <KpiCard title="Score Conformité" value="92%" icon={<Award size={20} />} color="#8B5CF6" sparklineData={[{val: 85}, {val: 90}, {val: 92}]} />
       </div>
 
       {/* NAVIGATION TABS */}

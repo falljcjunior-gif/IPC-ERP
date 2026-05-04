@@ -9,7 +9,6 @@ import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
-import { debugInteraction } from '../utils/InteractionAuditor';
 
 /**
  * 💰 NEXUS OS: PAYROLL HUB

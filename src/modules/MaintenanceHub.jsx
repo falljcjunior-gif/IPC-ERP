@@ -3,13 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Wrench, Settings, AlertTriangle, ClipboardList, 
   Plus, Search, Filter, Activity, 
-  CheckCircle2, Clock, Tool, Zap, Monitor
+  CheckCircle2, Clock, Zap, Monitor
 } from 'lucide-react';
 import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
-import { debugInteraction } from '../utils/InteractionAuditor';
 
 /**
  * 🏭 NEXUS OS: GMAO (GESTION DE MAINTENANCE)
@@ -62,10 +61,10 @@ const MaintenanceHub = () => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Disponibilité Machines" value="94.2%" icon={<Activity size={20} />} color="#10B981" />
-        <KpiCard title="Machines en Panne" value={assets.filter(a => a.status === 'En Panne').length} icon={<AlertTriangle size={20} />} color="#EF4444" />
-        <KpiCard title="Interventions Ouvertes" value={orders.length} icon={<Clock size={20} />} color="#F59E0B" />
-        <KpiCard title="TRS Moyen" value="88.5%" icon={<Zap size={20} />} color="#8B5CF6" />
+        <KpiCard title="Disponibilité Machines" value="94.2%" icon={<Activity size={20} />} color="#10B981" sparklineData={[{val: 92}, {val: 95}, {val: 94.2}]} />
+        <KpiCard title="Machines en Panne" value={assets.filter(a => a.status === 'En Panne').length} icon={<AlertTriangle size={20} />} color="#EF4444" sparklineData={[{val: 1}, {val: 2}, {val: 1}]} />
+        <KpiCard title="Interventions Ouvertes" value={orders.length} icon={<Clock size={20} />} color="#F59E0B" sparklineData={[{val: 4}, {val: 6}, {val: 2}]} />
+        <KpiCard title="TRS Moyen" value="88.5%" icon={<Zap size={20} />} color="#8B5CF6" sparklineData={[{val: 80}, {val: 85}, {val: 88.5}]} />
       </div>
 
       {/* NAVIGATION TABS */}
