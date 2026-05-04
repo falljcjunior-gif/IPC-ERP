@@ -7,30 +7,43 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Custom Claims check (fastest — no Firestore read required)
+    function hasClaimRole(roleName) {
+      return isAuthenticated() && request.auth.token.get('role', '') == roleName;
+    }
+
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function hasRole(roleName) {
-      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+      // 1. Check Custom Claims first (no Firestore read, instant)
+      return hasClaimRole(roleName) ||
+      // 2. Fallback to Firestore doc check
+      (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
         getUserData().get('role', '') == roleName ||
         ('permissions' in getUserData() && 'roles' in getUserData().permissions && roleName in getUserData().permissions.roles)
+      ));
+    }
+
+    function isCreatorEmail() {
+      return isAuthenticated() && (
+        request.auth.token.email == 'fall.jcjunior@gmail.com' || 
+        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
       );
     }
 
     function isSuperAdmin() {
-      return (isAuthenticated() && (
-        request.auth.token.email == 'fall.jcjunior@gmail.com' || 
-        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
-      )) || hasRole('SUPER_ADMIN');
+      // Priority: Custom Claims → Creator Email → Firestore doc
+      return hasClaimRole('SUPER_ADMIN') || isCreatorEmail() || hasRole('SUPER_ADMIN');
     }
 
     function isAdmin() {
-      return isSuperAdmin() || hasRole('ADMIN');
+      return isSuperAdmin() || hasClaimRole('ADMIN') || hasRole('ADMIN');
     }
 
     function isManager() {
-      return isAdmin() || hasRole('MANAGER');
+      return isAdmin() || hasClaimRole('MANAGER') || hasRole('MANAGER');
     }
 
     function isOwner(uid) {
@@ -46,11 +59,18 @@ service cloud.firestore {
     // Seuls les admins peuvent modifier les rôles.
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAuthenticated() && (isAdmin() || request.auth.token.email == 'fall.jcjunior@gmail.com');
+      allow create: if isAuthenticated() && (isAdmin() || isCreatorEmail());
       allow update: if isAuthenticated() && (
-        isOwner(userId) ||
+        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
         isAdmin()
-      ) && !(request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) || isAdmin();
+      );
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Employees (HR sub-collection alias) ───────────────────────────────────
+    match /employees/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
+      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
       allow delete: if isSuperAdmin();
     }
 
@@ -135,11 +155,12 @@ service cloud.firestore {
 
     match /hr/{docId} {
       allow read: if isAuthenticated() && (
-        isManager() || hasRole('HR') || hasRole('SUPER_ADMIN') || 
+        isSuperAdmin() || isManager() || hasRole('HR') || 
         resource.data.userId == request.auth.uid
       );
-      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('SUPER_ADMIN'));
-      allow delete: if isManager() || hasRole('SUPER_ADMIN');
+      allow create: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow update: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow delete: if isSuperAdmin() || isManager();
     }
 
     match /finance/{docId} {

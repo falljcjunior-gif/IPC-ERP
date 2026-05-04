@@ -299,8 +299,10 @@ const OnboardingTab = ({ accessLevel }) => {
         setTimeout(() => setSuccess(false), 5000);
       }
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Impossible de provisionner le compte.");
+      console.error('[OnboardingTab] createFullUser failed:', err.code, err.message, err);
+      const code = err.code || err.name || 'UNKNOWN';
+      const detail = err.message || "Impossible de provisionner le compte.";
+      setError(`[${code}] ${detail}`);
     } finally {
       setLoading(false);
     }
