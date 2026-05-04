@@ -6,7 +6,7 @@ import {
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox
+  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox, Shield
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
