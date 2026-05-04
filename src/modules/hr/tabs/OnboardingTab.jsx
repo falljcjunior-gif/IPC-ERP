@@ -228,7 +228,7 @@ const OnboardingTab = ({ accessLevel }) => {
           const dateStr = docData.createdAt || (docData.profile && docData.profile.createdAt);
           let ts = serverTimestamp();
           if (dateStr) {
-             try { ts = Timestamp.fromDate(new Date(dateStr)); } catch(e){}
+             try { ts = Timestamp.fromDate(new Date(dateStr)); } catch(e){ console.warn("Invalid date format", e); }
           }
           await updateDoc(doc(db, 'hr', d.id), { _createdAt: ts });
           count++;
