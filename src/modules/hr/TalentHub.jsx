@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 
 import { useStore } from '../../store';
+import { useCanSeeSubTab } from '../../store/selectors';
 import KpiCard from '../../components/KpiCard';
 import RecordModal from '../../components/RecordModal';
 
@@ -594,7 +595,9 @@ const PeopleAndCulture = () => {
   const [tab, setTab] = useState('dashboard');
   const [showUat, setShowUat] = useState(false);
 
-  const tabs = [
+  const canSee = useCanSeeSubTab();
+
+  const allTabs = [
     { id: 'dashboard', label: 'Vue Culture', icon: <Sparkles size={15} /> },
     { id: 'recrutement', label: 'Recrutement', icon: <UserPlus size={15} /> },
     { id: 'evaluations', label: 'Évaluations', icon: <Target size={15} /> },
@@ -602,6 +605,10 @@ const PeopleAndCulture = () => {
     { id: 'bienetre', label: 'Bien-être', icon: <Heart size={15} /> },
     { id: 'orga', label: 'Organigramme', icon: <GitBranch size={15} /> },
   ];
+
+  const tabs = useMemo(() => {
+    return allTabs.filter(t => canSee('talent', t.id));
+  }, [canSee]);
 
   const handleSentiment = (mood) => {
     addRecord('talent', 'surveys', { type: 'Pulse', sentiment: mood, date: new Date().toISOString() });

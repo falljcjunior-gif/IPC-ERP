@@ -57,6 +57,9 @@ export const usePermissions = () => useStore(s => s.permissions ?? {});
 /** Vérifie l'accès à un module spécifique */
 export const useModuleAccess = () => useStore(s => s.getModuleAccess ?? (() => 'none'));
 
+/** NEW: Vérifie si un sous-onglet est visible */
+export const useCanSeeSubTab = () => useStore(s => s.canSeeSubTab ?? (() => true));
+
 // ── Données métier ───────────────────────────────────────────────────────────
 
 /** Toutes les données ERP (utiliser avec modération) */

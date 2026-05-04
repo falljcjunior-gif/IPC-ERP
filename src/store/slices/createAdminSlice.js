@@ -44,23 +44,55 @@ export const createAdminSlice = (set, get) => ({
 
   getModuleAccess: (userId, moduleId) => {
     const { user, permissions } = get();
+    // SUPER_ADMIN (creator) has absolute bypass
     if (user?.role === 'SUPER_ADMIN') return 'write';
 
     const userPerms = permissions[userId];
     if (!userPerms) return 'none';
     
+    // Legacy / Roles based bypass
     if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
     if (moduleId === 'home') return 'write';
 
+    // 1. Check New Nested Structure (modules[id].access)
+    if (userPerms.modules && userPerms.modules[moduleId]) {
+      return userPerms.modules[moduleId].access || 'none';
+    }
+
+    // 2. Fallback to Legacy Flat Structure (moduleAccess[id])
     if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
       return userPerms.moduleAccess[moduleId];
     }
     
+    // 3. Fallback to Legacy List (allowedModules)
     if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
       return 'write';
     }
     
     return 'none';
+  },
+
+  /** 
+   * NEW: Check if a specific sub-tab of a module is visible to the user.
+   * If the module access is 'write' and no specific subTab restriction exists, return true.
+   */
+  canSeeSubTab: (moduleId, tabId) => {
+    const { user, permissions, getModuleAccess } = get();
+    if (user?.role === 'SUPER_ADMIN') return true;
+
+    const access = getModuleAccess(user?.id, moduleId);
+    if (access === 'none') return false;
+
+    const userPerms = permissions[user?.id];
+    if (userPerms?.modules?.[moduleId]?.subTabs) {
+      const tabAccess = userPerms.modules[moduleId].subTabs[tabId];
+      // If explicitly set to false, deny. If true, allow.
+      if (tabAccess === false) return false;
+      if (tabAccess === true) return true;
+    }
+
+    // Default: if you can see the module, you see all tabs unless restricted
+    return true;
   },
 
   canSeeField: (appId, fieldName) => {
@@ -106,15 +138,20 @@ export const createAdminSlice = (set, get) => ({
         createdAt: new Date().toISOString() 
       };
 
-      const permissionsData = {
+      const permissionsData = userData.permissions || {
+        hierarchy_level: userData.hierarchy_level || 'Employee',
+        modules: userData.modules || { home: { access: 'write', subTabs: {} } },
         roles: userData.roles || [role],
-        moduleAccess: userData.moduleAccess || { home: 'write' },
-        allowedModules: userData.allowedModules || Object.keys(userData.moduleAccess || { home: 'write' })
+        // Backward compatibility
+        moduleAccess: { home: 'write' },
+        allowedModules: ['home']
       };
 
       await FirestoreService.setDocument('users', uid, { 
         profile: profileData, 
-        permissions: permissionsData, 
+        permissions: permissionsData,
+        role: permissionsData.roles[0],
+        hierarchy_level: permissionsData.hierarchy_level,
         data: {} 
       }, false);
 
