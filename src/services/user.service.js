@@ -72,7 +72,7 @@ export const UserService = {
       return {
         id: fbUser.uid,
         email: fbUser.email,
-        nom: profile.nom || fbUser.displayName || 'Utilisateur',
+        nom: profile.profile?.nom || profile.nom || fbUser.displayName || 'Utilisateur',
         role: finalRole,
         avatar: profile.avatar || null,
         departement: profile.departement || '',

