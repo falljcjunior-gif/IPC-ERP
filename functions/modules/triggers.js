@@ -72,7 +72,7 @@ exports.onRoomDeleted = onDocumentDeleted('rooms/{roomId}', async (event) => {
  * SECURITY: GLOBAL AUDIT TRAIL — Hardened
  * ══════════════════════════════════════════════════════════════
  */
-const SENSITIVE_COLLECTIONS = ['finance', 'inventory', 'users', 'hr', 'crm', 'production', 'sales', 'projects'];
+const SENSITIVE_COLLECTIONS = ['finance', 'inventory', 'users', 'hr', 'crm', 'production', 'sales', 'projects', 'maintenance', 'payroll', 'procurement', 'esg', 'budget'];
 
 exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (event) => {
   const { collection, docId } = event.params;

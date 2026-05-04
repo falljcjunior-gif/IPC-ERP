@@ -298,7 +298,49 @@ service cloud.firestore {
       allow write: if isSuperAdmin(); // Uniquement pour le Super Admin
     }
 
-    // ── Refus par défaut (sécurité) ────────────────────────────────────────────
+    // ── Maintenance (GMAO) ──────────────────────────────────────────────────
+    match /maintenance/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('PRODUCTION') || hasRole('MAINTENANCE'));
+      allow delete: if false;
+    }
+
+    // ── Paie & Social ──────────────────────────────────────────────────────
+    match /payroll/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('FINANCE'));
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('HR') || hasRole('FINANCE'));
+      allow delete: if false;
+    }
+
+    // ── Appels d'Offres (Procurement) ──────────────────────────────────────
+    match /procurement/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('PURCHASE') || hasRole('FINANCE'));
+      allow delete: if false;
+    }
+
+    // ── ESG & Environnement ────────────────────────────────────────────────
+    match /esg/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('PRODUCTION'));
+      allow delete: if false;
+    }
+
+    // ── Projets ────────────────────────────────────────────────────────────
+    match /projects/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('STAFF'));
+      allow delete: if false;
+    }
+
+    // ── Budget ─────────────────────────────────────────────────────────────
+    match /budget/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE'));
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('FINANCE'));
+      allow delete: if false;
+    }
+
+    // ── Refus par défaut (sécurité) ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
     }
