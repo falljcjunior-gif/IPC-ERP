@@ -50,6 +50,7 @@ const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
+const ITModule = lazy(() => import('./modules/admin/ITModule'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -74,6 +75,7 @@ import { shippingSchema } from './schemas/shipping.schema';
 import { commerceSchema } from './schemas/commerce.schema';
 import { dmsSchema } from './schemas/dms.schema';
 import { officeAdminSchema } from './schemas/office_admin.schema';
+import { itSchema } from './schemas/it.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -88,7 +90,7 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema].forEach(s => registry.registerSchema(s));
+    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema, itSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cockpit ---
   registry.register({
@@ -282,5 +284,11 @@ export const initRegistry = () => {
     id: 'control_hub', label: 'Administration', icon: <Settings size={18} />,
     category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN'],
     component: ControlHub, priority: 50
+  });
+
+  registry.register({
+    id: 'it', label: 'IT Operations', icon: <Shield size={18} />,
+    category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
+    component: ITModule, priority: 51
   });
 };
