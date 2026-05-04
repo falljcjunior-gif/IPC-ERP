@@ -63,6 +63,14 @@
   --font-heading: 'Outfit', sans-serif;
   
   --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ══ NEXUS LEGACY ALIASES (Backward Compatibility) ══ */
+  --nexus-primary: var(--primary);
+  --nexus-secondary: var(--text);
+  --nexus-bg: var(--bg-subtle);
+  --nexus-border: var(--border);
+  --nexus-text-muted: var(--text-muted);
+  --radius-nexus: var(--radius);
 }
 
 /* Dark Mode Removed as per User Request for Senior Refonte */
@@ -374,6 +382,19 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(-8px) scale(1.02);
   box-shadow: var(--shadow-antigravity-hover);
   border-color: var(--antigravity-primary);
+}
+
+.nexus-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.nexus-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
 }
 
 .antigravity-gradient-text {
