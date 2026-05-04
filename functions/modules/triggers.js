@@ -233,9 +233,9 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production/{ofId}',
           return;
         }
 
-        const currentStock = doc.data().stockActuel || 0;
+        const currentStock = doc.data().stock_reel || 0;
         t.update(productRef, { 
-          stockActuel: currentStock + quantity,
+          stock_reel: currentStock + quantity,
           lastRefillAt: admin.firestore.FieldValue.serverTimestamp(),
           lastOfProcessed: ofId,
           processedEvents: admin.firestore.FieldValue.arrayUnion(event.id)

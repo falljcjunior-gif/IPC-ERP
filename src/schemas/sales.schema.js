@@ -23,13 +23,13 @@ export const SalesSchemas = {
   /**
    * QUOTE / DEVIS
    */
-  quote: (data) => ({
+  quote: (data, tvaRate = 18) => ({
     num: data.num || `QT-${Date.now()}`,
     client: data.client || '',
     items: data.items || [],
     totalHT: data.totalHT || 0,
-    tva: data.tva || 18,
-    totalTTC: (data.totalHT || 0) * 1.18,
+    tva: tvaRate,
+    totalTTC: (data.totalHT || 0) * (1 + tvaRate / 100),
     valideJusquau: data.valideJusquau || '',
     statut: 'en_attente', // en_attente | accepté | refusé | expiré
     _domain: 'sales'
@@ -87,7 +87,7 @@ export const SalesSchemas = {
         nom: { label: 'Désignation Commerciale', type: 'text', required: true, search: true, placeholder: 'Ex: Brique G-Block 20x20' },
         ref: { label: 'Référence Catalogue', type: 'text', required: true, search: true, placeholder: 'Ex: GB-2020-01' },
         prix: { label: 'Tarif Unitaire HT', type: 'money', currency: 'FCFA' },
-        stock: { label: 'Disponibilité Réelle', type: 'number' },
+        stock_reel: { label: 'Disponibilité Réelle', type: 'number' },
         categorie: { label: 'Famille d\'Articles', type: 'selection', options: ['Briques', 'Pavets', 'Bordures', 'Autre'] }
       },
       views: {

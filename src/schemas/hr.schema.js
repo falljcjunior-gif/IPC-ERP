@@ -13,7 +13,7 @@ export const HRSchemas = {
         poste: { label: 'Intitulé du Poste / Fonction', type: 'text', required: true, search: true, placeholder: 'Ex: Responsable Production' },
         dept: { label: 'Pôle Opérationnel', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
         email: { label: 'Email Pro', type: 'email', search: true },
-        salaire: { label: 'Rémunération de Base (Brut)', type: 'money', currency: 'FCFA' },
+        salaire: { label: 'Rémunération de Base (Brut)', type: 'money', currency: 'FCFA', sensitive: true },
         active: { label: 'Actif', type: 'boolean', default: true }
       },
       views: {

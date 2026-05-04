@@ -33,6 +33,7 @@ import { useTranslation } from 'react-i18next';
 const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) => {
   const { t } = useTranslation();
   const hasPermission = useStore(s => s.hasPermission);
+  const canSeeField = useStore(s => s.canSeeField);
   const userRole = useStore(s => s.userRole);
   const config = useStore(s => s.config);
   const navigateTo = useStore(s => s.navigateTo);
@@ -144,6 +145,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
                     const fieldDef = model?.fields?.[key];
                     const label = fieldDef?.label || key;
                     if (['id', 'avatar', 'createdAt', 'checklists', 'skills', '_domain', '_hasHydrated'].includes(key)) return null;
+                    if (!canSeeField(appId, key)) return null;
                     
                     return (
                       <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>

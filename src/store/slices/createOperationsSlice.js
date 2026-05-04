@@ -212,8 +212,8 @@ export const createOperationsSlice = (set, get) => ({
         return prev;
       }
       const isOut = ['Expédition', 'Consommation', 'Ajustement Sortie'].includes(type);
-      const newStock = isOut ? (product.stock || 0) - qteNum : (product.stock || 0) + qteNum;
-      const updatedProducts = products.map(p => (p.id === productId || p.code === productId) ? { ...p, stock: newStock } : p);
+      const newStock = isOut ? (product.stock_reel || 0) - qteNum : (product.stock_reel || 0) + qteNum;
+      const updatedProducts = products.map(p => (p.id === productId || p.code === productId) ? { ...p, stock_reel: newStock } : p);
       const seqKey = 'inventory_movements';
       const mvtNum = get().getNextSequence(seqKey);
       const newMove = { id: Date.now().toString(), num: mvtNum, date: new Date().toISOString(), produit: product.nom, produitId: product.id, type, qte: qteNum, ref: ref || 'Interne', source: source || 'Entrepôt Principal', dest: dest || 'Client/Transit', createdAt: new Date().toISOString() };

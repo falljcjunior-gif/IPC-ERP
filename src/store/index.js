@@ -100,7 +100,13 @@ export const useStore = create(
       setNavigationIntent: (val) => set(typeof val === 'function' ? (state) => ({ navigationIntent: val(state.navigationIntent) }) : { navigationIntent: val }),
       schemaOverrides: {},
       setSchemaOverrides: (val) => set(typeof val === 'function' ? (state) => ({ schemaOverrides: val(state.schemaOverrides) }) : { schemaOverrides: val }),
-      config: { modules: [], workflows: [], theme: { primary: '#529990', accent: '#3d7870', mode: 'light' }, customFields: {} },
+      config: { 
+        modules: [], 
+        workflows: [], 
+        theme: { primary: '#529990', accent: '#3d7870', mode: 'light' }, 
+        finance: { tvaRate: 18, currency: 'FCFA' },
+        customFields: {} 
+      },
       setConfig: (val) => set(typeof val === 'function' ? (state) => ({ config: val(state.config) }) : { config: val }),
       permissions: {},
       setPermissions: (val) => set(typeof val === 'function' ? (state) => ({ permissions: val(state.permissions) }) : { permissions: val }),

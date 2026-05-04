@@ -21,6 +21,7 @@ const RecordModal = ({
   isLoading = false 
 }) => {
   const getModuleAccess = useStore(s => s.getModuleAccess);
+  const canSeeField = useStore(s => s.canSeeField);
   const currentUser = useStore(s => s.user);
   const _dmsFiles = useStore(s => s.data.dms?.files);
   const dmsFiles = _dmsFiles || [];
@@ -161,7 +162,7 @@ const RecordModal = ({
                     {smartButtons.length > 0 && <div style={{ marginBottom: '3rem' }}><SmartButtons buttons={smartButtons} /></div>}
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '3rem' }}>
-                      {fields.map(field => (
+                      {fields.filter(f => canSeeField(appId, f.name)).map(field => (
                         <div key={field.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                           <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '2px' }}>
                             {t(field.label)} {field.required && <span style={{ color: '#EF4444' }}>*</span>}

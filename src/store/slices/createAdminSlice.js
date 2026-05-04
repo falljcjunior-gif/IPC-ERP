@@ -61,6 +61,29 @@ export const createAdminSlice = (set, get) => ({
     return 'none';
   },
 
+  canSeeField: (appId, fieldName) => {
+    const { user, userRole, getModuleAccess } = get();
+    if (userRole === 'SUPER_ADMIN') return true;
+
+    const schema = get().registry?.getSchema?.(appId) || require('../services/Registry').registry.getSchema(appId);
+    const modelKeys = Object.keys(schema?.models || {});
+    
+    // Find field def in any model of this app
+    let fieldDef = null;
+    for (const mk of modelKeys) {
+      if (schema.models[mk].fields[fieldName]) {
+        fieldDef = schema.models[mk].fields[fieldName];
+        break;
+      }
+    }
+
+    if (!fieldDef?.sensitive) return true;
+
+    // Sensitive field: Must have 'write' (ADMIN level) access to the module
+    const access = getModuleAccess(user?.id, appId);
+    return access === 'write';
+  },
+
   createFullUser: async (userData, initialRole = 'ADMIN') => {
     let secondaryApp;
     try {

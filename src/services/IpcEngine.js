@@ -39,7 +39,7 @@ export function computeStockLevels(productId, storeData) {
   const product = products.find(p => p.id === productId || p.code === productId);
   if (!product) return { physique: 0, virtuel: 0, disponible: 0 };
 
-  const physique = parseFloat(product.stock || product.qteStock || 0);
+  const physique = parseFloat(product.stock_reel || 0);
 
   // Commandes clients confirmées mais pas encore livrées → réservé
   const reserveClients = (storeData.sales?.orders || [])
@@ -136,7 +136,7 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
     items: devis.items || [],
     montant: devis.montant || devis.totalTTC || 0,
     montantHT: devis.totalHT || 0,
-    tva: devis.tva || 18,
+    tva: devis.tva || get().config?.finance?.tvaRate || 18,
     conditionsPaiement: devis.conditionsPaiement || '30j',
     statut: 'Confirmé',
     _locked: false,               // Sera verrouillé à l'expédition

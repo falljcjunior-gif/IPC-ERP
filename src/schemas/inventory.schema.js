@@ -14,7 +14,7 @@ export const InventorySchemas = {
     label: data.label || '',
     type: data.type || 'finis', // matieres_premieres | finis | semi_finis
     category: data.category || 'standard',
-    stockActuel: Number(data.stockActuel) || 0,
+    stock_reel: Number(data.stock_reel || data.stockActuel || 0),
     stockAlerte: Number(data.stockAlerte) || 50,
     unite: data.unite || 'unité',
     prixUnitaire: Number(data.prixUnitaire) || 0,
@@ -44,6 +44,7 @@ export const InventorySchemas = {
         ref: { label: 'Référence Catalogue (SKU)', type: 'text', required: true, search: true, placeholder: 'Ex: SK-BR-2024' },
         stock_reel: { label: 'Quantité Disponible en Entrepôt', type: 'number', required: true },
         unite: { label: 'Unité de Mesure Industrielle', type: 'selection', options: ['Unités', 'Tonnes', 'm²', 'm³', 'Litres'], default: 'Unités' },
+        prix_revient: { label: 'Prix de Revient (Industriel)', type: 'money', currency: 'FCFA', sensitive: true },
         categorie: { label: 'Famille Logistique', type: 'selection', options: ['Matières Premières', 'Produits Finis', 'Consommables', 'Pièces de Rechange'] }
       },
       views: {
