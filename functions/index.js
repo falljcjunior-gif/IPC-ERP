@@ -17,6 +17,7 @@ exports.exchangeSocialToken = social.exchangeSocialToken;
 // 2. Admin & Security
 const adminModule = require('./modules/admin');
 exports.deleteUserAccount = adminModule.deleteUserAccount;
+exports.onUserCreated = adminModule.onUserCreated;
 
 // 2b. RBAC — Custom Claims (source de vérité des rôles)
 const rbac = require('./modules/rbac');

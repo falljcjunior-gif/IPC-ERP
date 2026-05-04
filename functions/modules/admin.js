@@ -57,3 +57,61 @@ exports.deleteUserAccount = onCall({
     throw new Error(`INTERNAL_ERROR: ${error.message}`);
   }
 });
+
+const functions = require('firebase-functions');
+
+/**
+ * Trigger onCreate: Automatically mirror Auth user to Firestore
+ */
+exports.onUserCreated = functions.auth.user().onCreate(async (user) => {
+  const uid = user.uid;
+  const email = user.email;
+  const displayName = user.displayName || email.split('@')[0];
+
+  try {
+    const userRef = db.collection('users').doc(uid);
+    const hrRef = db.collection('hr').doc(uid);
+
+    const docSnap = await userRef.get();
+    if (!docSnap.exists) {
+      const now = admin.firestore.FieldValue.serverTimestamp();
+      
+      const userData = {
+        _createdAt: now,
+        role: 'GUEST',
+        permissions: {
+          roles: ['GUEST'],
+          allowedModules: ['home']
+        },
+        profile: {
+          id: uid,
+          email: email,
+          nom: displayName,
+          createdAt: new Date().toISOString()
+        }
+      };
+
+      // Ensure fall.jcjunior gets SUPER_ADMIN automatically
+      if (email === 'fall.jcjunior@gmail.com') {
+        userData.role = 'SUPER_ADMIN';
+        userData.permissions.roles = ['SUPER_ADMIN'];
+      }
+
+      await userRef.set(userData);
+      logger.info(`Mirrored user ${uid} to users collection`);
+
+      const hrData = {
+        _createdAt: now,
+        id: uid,
+        email: email,
+        nom: displayName,
+        subModule: 'employees'
+      };
+
+      await hrRef.set(hrData);
+      logger.info(`Mirrored user ${uid} to hr collection`);
+    }
+  } catch (error) {
+    logger.error(`Error mirroring user ${uid}:`, error);
+  }
+});
