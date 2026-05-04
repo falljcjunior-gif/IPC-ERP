@@ -163,8 +163,13 @@ export const FirestoreService = {
         _updatedAt: serverTimestamp(),
         _updatedBy: user.uid,
       });
-      // Si c'est une création (pas merge), on s'assure que _deletedAt est là
-      if (!merge) safeData._deletedAt = null;
+      // Si c'est une création (pas merge), on s'assure que _createdAt et _deletedAt sont là
+      if (!merge) {
+        safeData._deletedAt = null;
+        if (!safeData._createdAt) safeData._createdAt = serverTimestamp();
+        if (!safeData._createdBy) safeData._createdBy = user.uid;
+      }
+
       
       await setDoc(doc(db, collectionName, documentId), safeData, { merge });
     } catch (err) {
