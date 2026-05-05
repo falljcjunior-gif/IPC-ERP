@@ -68,10 +68,10 @@ const PayrollHub = () => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Masse Salariale (Net)" value={formatCurrency(740000)} icon={<Wallet size={20} />} color="#059669" />
-        <KpiCard title="Charges Sociales" value={formatCurrency(215000)} icon={<Landmark size={20} />} color="#3B82F6" />
-        <KpiCard title="Bulletins Générés" value={slips.length} icon={<FileText size={20} />} color="#8B5CF6" />
-        <KpiCard title="Conformité Sociale" value="100%" icon={<ShieldCheck size={20} />} color="#10B981" />
+        <KpiCard title="Masse Salariale (Net)" value={formatCurrency(740000)} icon={<Wallet size={20} />} color="#059669" trend="1.2" trendType="up" />
+        <KpiCard title="Charges Sociales" value={formatCurrency(215000)} icon={<Landmark size={20} />} color="#3B82F6" trend="0.5" trendType="up" />
+        <KpiCard title="Bulletins Générés" value={slips.length} icon={<FileText size={20} />} color="#8B5CF6" trend="0" trendType="up" />
+        <KpiCard title="Conformité Sociale" value="100%" icon={<ShieldCheck size={20} />} color="#10B981" trend="0" trendType="up" />
       </div>
 
       {/* NAVIGATION TABS */}
@@ -141,7 +141,13 @@ const PayrollHub = () => {
               <TrendingUp size={64} style={{ color: '#059669', opacity: 0.2, marginBottom: '1.5rem' }} />
               <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Saisie des Variables de Paie</h3>
               <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 2rem auto' }}>Enregistrez les heures supplémentaires, les primes et les absences pour le calcul automatique.</p>
-              <SmartButton variant="primary" icon={Plus}>Ajouter un élément</SmartButton>
+              <SmartButton 
+                variant="primary" 
+                icon={Plus}
+                onClick={async () => useToastStore.getState().addToast('Ouverture du formulaire des variables...', 'info')}
+              >
+                Ajouter un élément
+              </SmartButton>
             </div>
           )}
         </motion.div>

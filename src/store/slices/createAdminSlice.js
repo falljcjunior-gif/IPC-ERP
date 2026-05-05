@@ -157,6 +157,7 @@ export const createAdminSlice = (set, get) => ({
 
       await FirestoreService.setDocument('hr', uid, { 
          ...profileData, 
+         userId: uid, // Nécessaire pour les règles Firestore
          subModule: 'employees',
          salaire: userData.salaire || 0,
          contratType: userData.contratType || 'CDI',
@@ -235,6 +236,30 @@ export const createAdminSlice = (set, get) => ({
       });
       throw err;
     }
+  },
+
+  syncAllAccounts: async () => {
+    try {
+      const functions = getFunctions();
+      const backfillFunc = httpsCallable(functions, 'backfillUsers');
+      const result = await backfillFunc();
+      
+      get().addHint({ 
+        title: "Synchronisation Terminée", 
+        message: `${result.data.message} (${result.data.createdUsers} créés, ${result.data.patched} mis à jour).`, 
+        type: 'success' 
+      });
+      return result.data;
+    } catch (err) {
+      console.error("Erreur Synchronisation:", err);
+      get().addHint({ 
+        title: "Échec de Synchronisation", 
+        message: err.message || "Une erreur est survenue lors de la synchronisation des comptes.", 
+        type: 'danger' 
+      });
+      throw err;
+    }
   }
 });
+
 

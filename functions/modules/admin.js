@@ -27,6 +27,7 @@ const buildUserPayload = (user, now) => {
       id: uid,
       email: email,
       nom: displayName,
+      active: true,
       createdAt: new Date().toISOString()
     }
   };
@@ -49,11 +50,14 @@ const buildHrPayload = (user, now) => {
     _createdAt: now,
     _deletedAt: null,
     id: uid,
+    userId: uid, // Nécessaire pour les règles Firestore
     email: email,
     nom: displayName,
+    active: true,
     subModule: 'employees'
   };
 };
+
 
 /**
  * Admin: Delete User account from Firebase Auth
@@ -104,25 +108,39 @@ exports.deleteUserAccount = onCall({
 const functionsV1 = require('firebase-functions/v1');
 
 /**
- * Trigger onCreate: Automatically mirror Auth user to Firestore
+ * Trigger onCreate: Automatically mirror Auth user to Firestore and set claims
  */
 exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
   const uid = user.uid;
+  const email = user.email;
   try {
     const userRef = db.collection('users').doc(uid);
     const hrRef = db.collection('hr').doc(uid);
 
     const docSnap = await userRef.get();
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
     if (!docSnap.exists) {
-      const now = admin.firestore.FieldValue.serverTimestamp();
-      await userRef.set(buildUserPayload(user, now));
+      const userData = buildUserPayload(user, now);
+      await userRef.set(userData);
       await hrRef.set(buildHrPayload(user, now));
-      logger.info(`Mirrored user ${uid} to users and hr collections`);
+      
+      // SET CUSTOM CLAIMS
+      await admin.auth().setCustomUserClaims(uid, { role: userData.role });
+      
+      logger.info(`Mirrored user ${uid} and set role ${userData.role}`);
+    } else {
+      // S'assurer que le rôle est aussi dans les claims s'il existe déjà dans Firestore
+      const data = docSnap.data();
+      if (data.role) {
+        await admin.auth().setCustomUserClaims(uid, { role: data.role });
+      }
     }
   } catch (error) {
     logger.error(`Error mirroring user ${uid}:`, error);
   }
 });
+
 
 /**
  * Backfill: S'assure que tous les utilisateurs Auth ont leur miroir Firestore
@@ -163,11 +181,18 @@ exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
 
       // Mirror Users
       if (!userDoc.exists) {
-        await userRef.set(buildUserPayload(user, now));
+        const userData = buildUserPayload(user, now);
+        await userRef.set(userData);
+        await admin.auth().setCustomUserClaims(uid, { role: userData.role });
         createdUsers++;
       } else {
-        // Patch documents existants (si _deletedAt est resté à true par erreur)
+        // Sync claims for existing users
         const data = userDoc.data();
+        if (data.role) {
+          await admin.auth().setCustomUserClaims(uid, { role: data.role });
+        }
+        
+        // Patch documents existants (si _deletedAt est resté à true par erreur)
         if (data._deletedAt !== null) {
           await userRef.update({ _deletedAt: null });
           patched++;
@@ -180,11 +205,17 @@ exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
         createdHr++;
       } else {
         const data = hrDoc.data();
-        if (data._deletedAt !== null || data.subModule !== 'employees') {
-          await hrRef.update({ _deletedAt: null, subModule: 'employees' });
+        const updates = {};
+        if (data._deletedAt !== null) updates._deletedAt = null;
+        if (data.subModule !== 'employees') updates.subModule = 'employees';
+        if (!data.userId) updates.userId = uid; // Ensure userId exists
+        
+        if (Object.keys(updates).length > 0) {
+          await hrRef.update(updates);
           patched++;
         }
       }
+
     }
 
     if (listUsersResult.pageToken) {

@@ -48,7 +48,14 @@ export const BusinessProvider = ({ children }) => {
           production: { orders: [], boms: [], machines: [], workOrders: [] },
           finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
           website: { config: {}, chats: [] },
-          signature: { requests: [] }
+          signature: { requests: [] },
+          audit: { logs: [], sessions: [], certifications: [] },
+          maintenance: { assets: [], workOrders: [], inventory: [] },
+          payroll: { slips: [], taxes: [] },
+          procurement: { requests: [], vendors: [] },
+          esg: { reports: [], metrics: [] },
+          projects: { items: [] },
+          budget: { allocations: [] }
         }[colName] || {};
 
         const currentModuleState = newState[colName] || initialModuleState;
@@ -94,7 +101,8 @@ export const BusinessProvider = ({ children }) => {
     // A. Business Modules Sync — [SOFT-DELETE ENABLED] via FirestoreService
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase',
-      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents'
+      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents',
+      'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget'
     ];
     
     const unsubscribes = collections_to_sync.map(colName => {
@@ -131,7 +139,7 @@ export const BusinessProvider = ({ children }) => {
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
         
         const currentEmail = useStore.getState().user?.email;
-        const isCreator = currentEmail?.toLowerCase() === 'fall.jcjunior@gmail.com';
+        const isCreator = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(currentEmail?.toLowerCase());
 
         if (isCreator) {
           finalRole = 'SUPER_ADMIN';

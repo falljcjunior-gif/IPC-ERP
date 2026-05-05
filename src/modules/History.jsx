@@ -4,6 +4,8 @@ import { Clock, Shield, Download, Activity } from 'lucide-react';
 import { useStore } from '../store';
 import EnterpriseView from '../components/EnterpriseView';
 import { auditSchema } from '../schemas/audit.schema.js';
+import SmartButton from '../components/SmartButton';
+import { useToastStore } from '../store/useToastStore';
 
 /* ════════════════════════════════════
    HISTORY MODULE — Audit Trail
@@ -38,9 +40,15 @@ const History = () => {
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-             <button className="nexus-card" style={{ background: 'white', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, color: 'var(--nexus-secondary)', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}>
-                <Download size={18} /> Exporter Logs
-             </button>
+             <SmartButton 
+                variant="secondary" 
+                icon={Download} 
+                onClick={async () => {
+                   useToastStore.getState().addToast('Préparation de l\'export des logs...', 'info');
+                }}
+             >
+                Exporter Logs
+             </SmartButton>
           </div>
         </div>
       )}

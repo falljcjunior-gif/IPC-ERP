@@ -8,6 +8,7 @@ import { useStore } from '../store';
 import BarcodeScanner from '../components/BarcodeScanner';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import '../components/GlobalDashboard.css';
+import { useToastStore } from '../store/useToastStore';
 
 const Manufacturing = ({ onOpenDetail }) => {
   const { data, formatCurrency, shellView, updateRecord, addRecord } = useStore();
@@ -69,7 +70,7 @@ const Manufacturing = ({ onOpenDetail }) => {
           </button>
 
           {/* Create OF */}
-          <button className="luxury-widget" style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
+          <button onClick={() => useToastStore.getState().addToast('Création d\'un nouvel Ordre de Fabrication', 'info')} className="luxury-widget" style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
             <Plus size={20} /> <span style={{ fontWeight: 600, letterSpacing: '0.05em' }}>Créer OF</span>
           </button>
         </div>

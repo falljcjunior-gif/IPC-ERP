@@ -8,6 +8,8 @@ import {
 import { useStore } from '../store';
 import { generatePDF } from '../utils/PDFExporter';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import SmartButton from '../components/SmartButton';
+import { useToastStore } from '../store/useToastStore';
 import '../components/GlobalDashboard.css';
 
 const DMS = () => {
@@ -52,12 +54,20 @@ const DMS = () => {
             <button onClick={() => setViewMode('list')} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', background: viewMode === 'list' ? 'white' : 'transparent', color: '#111827' }}><ListIcon size={18} /></button>
           </div>
 
-          <button onClick={() => alert('IPC Crypt Upload...')} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', border: 'none', fontWeight: 700, background: 'rgba(255,255,255,0.9)', borderRadius: '1.25rem' }}>
-            <Upload size={18} /> Téléverser
-          </button>
-          <button onClick={() => alert('Nouveau document sémantique...')} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
-            <Plus size={18} /> Nouveau
-          </button>
+          <SmartButton 
+            variant="secondary" 
+            icon={Upload} 
+            onClick={async () => useToastStore.getState().addToast('Ouverture du sélecteur de fichiers cryptés...', 'info')}
+          >
+            Téléverser
+          </SmartButton>
+          <SmartButton 
+            variant="primary" 
+            icon={Plus} 
+            onClick={async () => useToastStore.getState().addToast('Nouveau document sémantique...', 'info')}
+          >
+            Nouveau
+          </SmartButton>
         </div>
       </div>
 
@@ -94,7 +104,7 @@ const DMS = () => {
 
         <motion.div
           whileHover={{ y: -6 }}
-          onClick={() => alert('Création d\'un nouveau dossier partagé...')}
+          onClick={() => useToastStore.getState().addToast('Initialisation du nouveau dossier...', 'info')}
           className="luxury-widget"
           style={{ padding: '1.75rem', border: '2px dashed #e2e8f0', background: 'rgba(255,255,255,0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: '#94a3b8', borderRadius: '1.5rem', transition: 'all 0.3s' }}
         >

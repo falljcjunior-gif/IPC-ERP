@@ -7,6 +7,8 @@ import {
 import { useStore } from '../store';
 import { BarChartComp } from '../components/BusinessCharts';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
+import SmartButton from '../components/SmartButton';
+import { useToastStore } from '../store/useToastStore';
 import '../components/GlobalDashboard.css';
 
 const Contracts = () => {
@@ -30,12 +32,8 @@ const Contracts = () => {
           <h1 className="luxury-title">Contrats & <strong>Abonnements</strong></h1>
         </div>
         <div style={{ display: 'flex', gap: '1.5rem' }}>
-          <button className="luxury-widget" style={{ padding: '0.9rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.9)', color: '#475569' }}>
-            <RefreshCcw size={18} /> Renouvellements
-          </button>
-          <button className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
-            <Plus size={18} /> Nouveau Contrat
-          </button>
+          <SmartButton variant="secondary" icon={RefreshCcw} onClick={async () => useToastStore.getState().addToast('Analyse des renouvellements en cours...', 'info')}>Renouvellements</SmartButton>
+          <SmartButton variant="primary" icon={Plus} onClick={async () => useToastStore.getState().addToast('Création d\'un nouveau contrat', 'info')}>Nouveau Contrat</SmartButton>
         </div>
       </div>
 
@@ -66,7 +64,7 @@ const Contracts = () => {
         <div className="luxury-widget" style={{ padding: '2.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: '#1e293b', margin: 0 }}>Contrats Stratégiques</h3>
-            <button style={{ background: '#f1f5f9', border: 'none', padding: '6px 16px', borderRadius: '0.75rem', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', color: '#64748b' }}>Voir tout</button>
+            <SmartButton variant="ghost" onClick={async () => useToastStore.getState().addToast('Chargement de la liste complète...', 'info')}>Voir tout</SmartButton>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {contractsData.length === 0 ? (

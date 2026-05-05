@@ -67,10 +67,10 @@ const AuditHub = () => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Intégrité Système" value="99.9%" icon={<ShieldCheck size={20} />} color="#10B981" sparklineData={[{val: 99}, {val: 99.5}, {val: 99.9}]} />
-        <KpiCard title="Alertes Sécurité" value="0" icon={<ShieldCheck size={20} />} color="#EF4444" sparklineData={[{val: 0}, {val: 0}, {val: 0}]} />
-        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" sparklineData={[{val: 2}, {val: 4}, {val: 5}]} />
-        <KpiCard title="Score Conformité" value="92%" icon={<Award size={20} />} color="#8B5CF6" sparklineData={[{val: 85}, {val: 90}, {val: 92}]} />
+        <KpiCard title="Intégrité Système" value="99.9%" icon={<ShieldCheck size={20} />} color="#10B981" trend="0.2" trendType="up" sparklineData={[{val: 99}, {val: 99.5}, {val: 99.9}]} />
+        <KpiCard title="Alertes Sécurité" value="0" icon={<ShieldCheck size={20} />} color="#EF4444" trend="0" trendType="up" sparklineData={[{val: 0}, {val: 0}, {val: 0}]} />
+        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" trend="12" trendType="up" sparklineData={[{val: 2}, {val: 4}, {val: 5}]} />
+        <KpiCard title="Score Conformité" value="92%" icon={<Award size={20} />} color="#8B5CF6" trend="2.4" trendType="up" sparklineData={[{val: 85}, {val: 90}, {val: 92}]} />
       </div>
 
       {/* NAVIGATION TABS */}
@@ -190,7 +190,13 @@ const AuditHub = () => {
                 <Scale size={64} style={{ color: 'var(--primary)', opacity: 0.2, marginBottom: '1.5rem' }} />
                 <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Planificateur d'Audit Interne</h3>
                 <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto 2rem auto' }}>Menez des audits rigoureux par module pour préparer vos certifications ISO.</p>
-                <SmartButton variant="primary" icon={Plus}>Programmer un Audit</SmartButton>
+                <SmartButton 
+                  variant="primary" 
+                  icon={Plus}
+                  onClick={async () => useToastStore.getState().addToast('Planification d\'un nouvel audit interne...', 'info')}
+                >
+                  Programmer un Audit
+                </SmartButton>
              </div>
           )}
         </motion.div>

@@ -17,6 +17,7 @@ import { useToastStore } from '../store/useToastStore';
 const MaintenanceHub = () => {
   const { data } = useStore();
   const [activeTab, setActiveTab] = useState('assets');
+  const [orderFilter, setOrderFilter] = useState('all');
 
   const assets = data.maintenance?.assets || [
     { id: 'M-001', name: 'Presse Hydraulique #01', code: 'PR-H1', type: 'Presse', status: 'Opérationnel', healthScore: 92, lastMaint: '2024-04-15' },
@@ -61,10 +62,10 @@ const MaintenanceHub = () => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Disponibilité Machines" value="94.2%" icon={<Activity size={20} />} color="#10B981" sparklineData={[{val: 92}, {val: 95}, {val: 94.2}]} />
-        <KpiCard title="Machines en Panne" value={assets.filter(a => a.status === 'En Panne').length} icon={<AlertTriangle size={20} />} color="#EF4444" sparklineData={[{val: 1}, {val: 2}, {val: 1}]} />
-        <KpiCard title="Interventions Ouvertes" value={orders.length} icon={<Clock size={20} />} color="#F59E0B" sparklineData={[{val: 4}, {val: 6}, {val: 2}]} />
-        <KpiCard title="TRS Moyen" value="88.5%" icon={<Zap size={20} />} color="#8B5CF6" sparklineData={[{val: 80}, {val: 85}, {val: 88.5}]} />
+        <KpiCard title="Disponibilité Machines" value="94.2%" icon={<Activity size={20} />} color="#10B981" trend="1.2" trendType="up" sparklineData={[{val: 92}, {val: 95}, {val: 94.2}]} />
+        <KpiCard title="Machines en Panne" value={assets.filter(a => a.status === 'En Panne').length} icon={<AlertTriangle size={20} />} color="#EF4444" trend="50" trendType="down" sparklineData={[{val: 1}, {val: 2}, {val: 1}]} />
+        <KpiCard title="Interventions Ouvertes" value={orders.length} icon={<Clock size={20} />} color="#F59E0B" trend="65" trendType="up" sparklineData={[{val: 4}, {val: 6}, {val: 2}]} />
+        <KpiCard title="TRS Moyen" value="88.5%" icon={<Zap size={20} />} color="#8B5CF6" trend="4.1" trendType="up" sparklineData={[{val: 80}, {val: 85}, {val: 88.5}]} />
       </div>
 
       {/* NAVIGATION TABS */}
@@ -145,8 +146,8 @@ const MaintenanceHub = () => {
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                   <h3 style={{ margin: 0, fontWeight: 900 }}>Flux des Interventions</h3>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                     <button style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'white', fontSize: '0.8rem', fontWeight: 700 }}>Tout</button>
-                     <button style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', border: 'none', background: '#EF444415', color: '#EF4444', fontSize: '0.8rem', fontWeight: 700 }}>Critiques</button>
+                     <button onClick={() => setOrderFilter('all')} style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', border: orderFilter === 'all' ? '2px solid var(--primary)' : '1px solid var(--border)', background: 'white', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>Tout</button>
+                     <button onClick={() => setOrderFilter('critical')} style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', border: 'none', background: orderFilter === 'critical' ? '#EF4444' : '#EF444415', color: orderFilter === 'critical' ? 'white' : '#EF4444', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>Critiques</button>
                   </div>
                </div>
                <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>

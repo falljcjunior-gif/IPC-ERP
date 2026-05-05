@@ -125,7 +125,14 @@ export const useStore = create(
         website: { config: {}, chats: [] },
         signature: { requests: [] },
         activities: [],
-        marketing: { campaigns: [] }
+        marketing: { campaigns: [] },
+        audit: { logs: [], sessions: [], certifications: [] },
+        maintenance: { assets: [], workOrders: [], inventory: [] },
+        payroll: { slips: [], taxes: [] },
+        procurement: { requests: [], vendors: [] },
+        esg: { reports: [], metrics: [] },
+        projects: { items: [] },
+        budget: { allocations: [] }
       },
       
       setData: (next) => set((state) => {

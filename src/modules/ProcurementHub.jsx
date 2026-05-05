@@ -41,10 +41,10 @@ const ProcurementHub = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="AO Actifs" value={tenders.filter(t => t.status !== 'Clôturé').length} icon={<FileText size={20} />} color="#7C3AED" sparklineData={[{val:2},{val:3},{val:3}]} />
-        <KpiCard title="Fournisseurs" value={suppliers.length} icon={<Users size={20} />} color="#3B82F6" sparklineData={[{val:5},{val:8},{val:12}]} />
-        <KpiCard title="Économies Réalisées" value="12%" icon={<TrendingUp size={20} />} color="#10B981" sparklineData={[{val:5},{val:9},{val:12}]} />
-        <KpiCard title="Délai Moyen" value="14j" icon={<Clock size={20} />} color="#F59E0B" sparklineData={[{val:21},{val:18},{val:14}]} />
+        <KpiCard title="AO Actifs" value={tenders.filter(t => t.status !== 'Clôturé').length} icon={<FileText size={20} />} color="#7C3AED" trend="15" trendType="up" sparklineData={[{val:2},{val:3},{val:3}]} />
+        <KpiCard title="Fournisseurs" value={suppliers.length} icon={<Users size={20} />} color="#3B82F6" trend="8.4" trendType="up" sparklineData={[{val:5},{val:8},{val:12}]} />
+        <KpiCard title="Économies Réalisées" value="12%" icon={<TrendingUp size={20} />} color="#10B981" trend="2.1" trendType="up" sparklineData={[{val:5},{val:9},{val:12}]} />
+        <KpiCard title="Délai Moyen" value="14j" icon={<Clock size={20} />} color="#F59E0B" trend="30" trendType="down" sparklineData={[{val:21},{val:18},{val:14}]} />
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(15,23,42,0.03)', padding: '6px', borderRadius: '1.5rem', border: '1px solid var(--border-light)', width: 'fit-content', marginBottom: '2.5rem' }}>

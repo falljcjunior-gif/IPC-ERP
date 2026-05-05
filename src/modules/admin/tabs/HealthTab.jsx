@@ -1,15 +1,9 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Database, RefreshCcw, HardDrive, Info, 
-  Trash2, Download, Zap, ShieldCheck,
-  Server, Activity, Clock, CloudLightning
-} from 'lucide-react';
-import { useTriggerManualBackup } from '../../../store/selectors';
+import { useStore } from '../../../store';
 
 const HealthTab = () => {
-  const triggerBackup = useTriggerManualBackup();
+  const { syncAllAccounts } = useStore();
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const stats = [
     { label: 'État Base de Données', value: 'Optimal', icon: <Database size={20}/>, color: '#10B981' },
@@ -27,6 +21,18 @@ const HealthTab = () => {
       console.error(err);
     } finally {
       setIsBackingUp(false);
+    }
+  };
+  const handleSyncAccounts = async () => {
+    if (!window.confirm('Voulez-vous synchroniser tous les comptes Auth avec Firestore et les profils RH ?')) return;
+    
+    setIsSyncing(true);
+    try {
+      await syncAllAccounts();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -90,6 +96,29 @@ const HealthTab = () => {
                     }}
                    >
                      {isBackingUp ? 'Opération en cours...' : 'Forcer Backup Cloud'}
+                   </button>
+                </div>
+
+                <div style={{ padding: '2rem', borderRadius: '2rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <ShieldCheck size={20} color="#3B82F6" />
+                      <span style={{ fontWeight: 800, fontSize: '0.95rem' }}>Synchronisation Auth</span>
+                   </div>
+                   <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>Rapprochez les comptes Auth avec les profils Firestore et RH.</p>
+                   <button 
+                     disabled={isSyncing}
+                     onClick={handleSyncAccounts} 
+                     className="btn-secondary" 
+                     style={{ 
+                       padding: '0.8rem', 
+                       borderRadius: '1rem', 
+                       fontWeight: 800, 
+                       width: '100%',
+                       opacity: isSyncing ? 0.5 : 1,
+                       cursor: isSyncing ? 'not-allowed' : 'pointer'
+                     }}
+                   >
+                     {isSyncing ? 'Synchronisation...' : 'Synchroniser les Comptes'}
                    </button>
                 </div>
              </div>

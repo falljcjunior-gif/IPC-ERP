@@ -212,7 +212,7 @@ const Analytics = () => {
               </div>
             ))}
           </div>
-          <button style={{ width: '100%', padding: '0.875rem', borderRadius: '1rem', border: '2px dashed #e2e8f0', background: 'transparent', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => useStore.getState().navigateTo('history')} style={{ width: '100%', padding: '0.875rem', borderRadius: '1rem', border: '2px dashed #e2e8f0', background: 'transparent', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
             Voir tout l'historique
           </button>
         </div>
