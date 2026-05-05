@@ -1,5 +1,5 @@
 import { collection, doc, setDoc, getDoc, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
-import { db } from './firestore.service';
+import { db } from '../firebase/config';
 
 /**
  * 📧 IPC MAIL SERVICE

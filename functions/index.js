@@ -64,6 +64,10 @@ exports.stockReorderAlert = salesAuto.stockReorderAlert;
 exports.generateRecurringInvoices = salesAuto.generateRecurringInvoices;
 exports.clientEngagementAlerts = salesAuto.clientEngagementAlerts;
 
+// 10. Mail Engine — Outbox processing
+const mail = require('./modules/mail');
+exports.processMailOutbox = mail.processMailOutbox;
+
 // 8. Rate Limiter (middleware — importé par les autres modules)
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
 // const { RATE_PRESETS } = require('./modules/rate_limiter');

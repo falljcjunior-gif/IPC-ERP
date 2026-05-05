@@ -2,6 +2,7 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const { logger } = require("firebase-functions");
 const greenblock = require("./greenblock");
+const mail = require("./mail");
 
 const db = admin.firestore();
 
@@ -72,6 +73,10 @@ exports.processOutboxQueue = onSchedule("every 5 minutes", async (event) => {
         }
       }
     }
+    // 📧 2. Traitement de la file Mail Outbox
+    logger.info("[Outbox Worker] Démarrage du traitement de la file Mail...");
+    await mail.processMailOutbox();
+
     logger.info("[Outbox Worker] Traitement terminé avec succès.");
     
   } catch (error) {
