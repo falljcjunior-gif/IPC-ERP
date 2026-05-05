@@ -115,6 +115,7 @@ const OnboardingTab = ({ accessLevel }) => {
   });
 
   const allEmployees = useMemo(() => {
+    console.log('[DEBUG] HR Employees Data:', data?.hr?.employees);
     return data?.hr?.employees || [];
   }, [data?.hr?.employees]);
 

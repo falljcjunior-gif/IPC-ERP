@@ -6,12 +6,20 @@ service cloud.firestore {
     // [ROOT BYPASS] Only for verified SUPER_ADMIN via Custom Claims
     // This ensures administrative operations are secured at the protocol level.
     match /{document=**} {
-      allow read, write: if request.auth != null && request.auth.token.role == 'SUPER_ADMIN';
+      allow read, write: if isSuperAdmin();
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
+    }
+
+    function isCreatorEmail() {
+      return isAuthenticated() && request.auth.token.email != null && 
+             request.auth.token.email.matches('(?i)(fall.jcjunior@gmail|ra.yoman@ipcgreenblocks|ra.yoman@gmail)\\.com');
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     // Custom Claims check (fastest — no Firestore read required)
@@ -19,9 +27,6 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.get('role', '') == roleName;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
 
     function hasRole(roleName) {
       // 1. Check Custom Claims first (no Firestore read, instant)
@@ -33,14 +38,6 @@ service cloud.firestore {
       ));
     }
 
-    function isCreatorEmail() {
-      return isAuthenticated() && (
-        request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || // gitleaks:allow nosemgrep
-        request.auth.uid == 'li8G2Ad6GyUxaS63ecrzeaE6l883' || // gitleaks:allow nosemgrep
-        request.auth.token.email == 'fall.jcjunior@gmail.com' || 
-        request.auth.token.email == 'ra.yoman@ipcgreenblocks.com'
-      );
-    }
 
     function isSuperAdmin() {
       // Priority: Hardcoded UID → Custom Claims → Creator Email → Firestore doc

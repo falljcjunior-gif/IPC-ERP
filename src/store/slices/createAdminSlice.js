@@ -126,13 +126,14 @@ export const createAdminSlice = (set, get) => ({
       const uid = userCredential.user.uid;
       
       const role = userData.role || initialRole;
+      const safeNom = userData.nom || 'Utilisateur';
       const profileData = { 
-        nom: userData.nom, 
+        nom: safeNom, 
         email: userData.email, 
-        poste: userData.poste, 
+        poste: userData.poste || '', 
         id: uid, 
         dept: userData.dept || '',
-        avatar: userData.avatar || userData.nom[0],
+        avatar: userData.avatar || (safeNom ? safeNom[0] : 'U'),
         statut: 'Actif',
         active: true,
         createdAt: new Date().toISOString() 
