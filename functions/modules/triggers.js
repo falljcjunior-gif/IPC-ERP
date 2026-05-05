@@ -845,6 +845,9 @@ exports.validateDoubleEntry = onDocumentWritten('accounting/{entryId}', async (e
     _verifiedAt: admin.firestore.FieldValue.serverTimestamp()
   });
 
+  return null;
+});
+
 /**
  * 🚀 HR: ONBOARDING AUTOMATISÉ (Hire)
  * WHY: Création compte Auth, Claims, Notification IT

@@ -28,12 +28,13 @@ export const validateData = (schema, data) => {
           errors.push(`${config.label || fieldName} doit être un nombre.`);
         }
         break;
-      case 'email':
+      case 'email': {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) {
           errors.push(`${config.label || fieldName} n'est pas un email valide.`);
         }
         break;
+      }
       case 'selection':
       case 'select':
         if (config.options && !config.options.some(opt => (opt.value || opt) === value)) {
