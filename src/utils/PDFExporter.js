@@ -112,6 +112,8 @@ export const IPCReportGenerator = {
     });
     
     doc.save(`IPC_Stock_Report_${new Date().getTime()}.pdf`);
+  },
+
   /**
    * Generates a professional Employment Contract
    */
@@ -181,6 +183,7 @@ export const IPCReportGenerator = {
     doc.save(`Contrat_${employee.nom.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
     return doc.output('blob');
   }
+};
 
 /**
  * Legacy Proxy for generatePDF

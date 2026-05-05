@@ -10,3 +10,4 @@ yarn-error.log*
 .vscode
 *.local
 functions_logs.txt
+firebase-debug.log

@@ -17,7 +17,7 @@ const buildIceServers = () => {
   if (turnUrl && turnUser && turnCred) {
     iceServers.push({ urls: [turnUrl], username: turnUser, credential: turnCred });
   } else {
-    // eslint-disable-next-line no-console
+     
     console.warn('[WebRTC] TURN server non configuré — les appels peuvent échouer sur NAT strict. Voir .env.example');
   }
 
