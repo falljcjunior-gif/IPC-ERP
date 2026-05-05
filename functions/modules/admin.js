@@ -3,6 +3,7 @@ const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
 
+logger.info('Admin module loading...');
 const db = admin.firestore();
 
 const DeleteUserSchema = z.object({
@@ -259,6 +260,6 @@ exports.backfillUsers = onCall({
     };
   } catch (error) {
     logger.error('Backfill fatal error:', error);
-    throw new HttpsError('internal', error.message || 'Backfill failed');
+    throw new HttpsError('internal', `Backfill failed: ${error.message} \n ${error.stack}`);
   }
 });
