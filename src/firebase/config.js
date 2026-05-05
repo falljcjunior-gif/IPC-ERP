@@ -18,7 +18,7 @@ const firebaseConfig = {
 };
 
 // Initialisation de Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 // ── [SECURITY] Firebase App Check (reCAPTCHA v3) ─────────────────────
 // Bloque tous les appels non-autorisés même si les clés publiques sont connues.
