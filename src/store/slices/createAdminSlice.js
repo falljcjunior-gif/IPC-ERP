@@ -244,9 +244,10 @@ export const createAdminSlice = (set, get) => ({
       const backfillFunc = httpsCallable(functions, 'backfillUsers');
       const result = await backfillFunc();
       
+      const msg = result.data.message || "La synchronisation des comptes a été effectuée.";
       get().addHint({ 
         title: "Synchronisation Terminée", 
-        message: `${result.data.message} (${result.data.createdUsers} créés, ${result.data.patched} mis à jour).`, 
+        message: `${msg} (${result.data.createdUsers || 0} créés, ${result.data.patched || 0} mis à jour).`, 
         type: 'success' 
       });
       return result.data;

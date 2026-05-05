@@ -101,7 +101,7 @@ export const BusinessProvider = ({ children }) => {
     // A. Business Modules Sync — [SOFT-DELETE ENABLED] via FirestoreService
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase',
-      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents',
+      'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents', 'cockpit',
       'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget'
     ];
     

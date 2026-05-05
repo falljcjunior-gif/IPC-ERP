@@ -183,6 +183,14 @@
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sync_queue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "attempts", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

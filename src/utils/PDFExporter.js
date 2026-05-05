@@ -112,8 +112,75 @@ export const IPCReportGenerator = {
     });
     
     doc.save(`IPC_Stock_Report_${new Date().getTime()}.pdf`);
+  /**
+   * Generates a professional Employment Contract
+   */
+  generateEmploymentContract: (employee) => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    
+    IPCReportGenerator._drawHeader(doc, "Contrat de Travail");
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('ENTRE LES SOUSSIGNÉS :', 15, 70);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text([
+      '1. La Société I.P.C (IVORY COAST), société à responsabilité limitée, sise à Abidjan,',
+      'représentée par la Direction Générale, ci-après désignée "L\'Employeur".',
+      '',
+      `2. ${employee.nom.toUpperCase()}, résidant à [Adresse à compléter],`,
+      `ci-après désigné(e) "Le Collaborateur".`
+    ], 15, 80);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('ARTICLE 1 : ENGAGEMENT ET FONCTIONS', 15, 110);
+    doc.setFont('helvetica', 'normal');
+    doc.text([
+      `Le Collaborateur est engagé sous contrat à durée ${employee.contratType === 'CDD' ? 'déterminée (' + (employee.contratDuree || '12') + ' mois)' : 'indéterminée'}.`,
+      `Il exercera les fonctions de ${employee.poste} au sein du département ${employee.dept}.`,
+      'Il exercera ses fonctions sous l\'autorité et selon les directives de la Direction.'
+    ], 15, 117);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('ARTICLE 2 : RÉMUNÉRATION', 15, 140);
+    doc.setFont('helvetica', 'normal');
+    doc.text([
+      `En contrepartie de l'accomplissement de ses fonctions, le Collaborateur percevra une`,
+      `rémunération brute mensuelle de ${(Number(employee.salaire) || 0).toLocaleString()} FCFA.`
+    ], 15, 147);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('ARTICLE 3 : CONFIDENTIALITÉ ET EXCLUSIVITÉ', 15, 165);
+    doc.setFont('helvetica', 'normal');
+    doc.text([
+      'Le Collaborateur s\'engage à observer la plus grande discrétion sur toutes les informations',
+      'dont il pourrait avoir connaissance à l\'occasion de ses fonctions. Il s\'engage à consacrer',
+      'l\'exclusivité de son activité professionnelle à la Société.'
+    ], 15, 172);
+    
+    // Signatures
+    const sigY = 230;
+    doc.setFont('helvetica', 'bold');
+    doc.text('L\'EMPLOYEUR', 40, sigY, { align: 'center' });
+    doc.text('LE COLLABORATEUR', pageWidth - 40, sigY, { align: 'center' });
+    
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.text('(Signature précédée de la mention "Lu et approuvé")', 40, sigY + 5, { align: 'center' });
+    doc.text('(Signature précédée de la mention "Lu et approuvé")', pageWidth - 40, sigY + 5, { align: 'center' });
+    
+    // Add QR Code or Verification Marker
+    doc.setDrawColor(6, 78, 59);
+    doc.rect(15, 270, 180, 15, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.text('CERTIFIÉ PAR NEXUS OS - IVORY COAST ERP', 105, 279, { align: 'center' });
+    
+    doc.save(`Contrat_${employee.nom.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`);
+    return doc.output('blob');
   }
-};
 
 /**
  * Legacy Proxy for generatePDF

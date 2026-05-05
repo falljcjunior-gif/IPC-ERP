@@ -59,9 +59,7 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
-    function isNotDeleted() {
-      return !('_deletedAt' in resource.data) || resource.data._deletedAt == null;
-    }
+
 
     // ── Users ─────────────────────────────────────────────────────────────────
     // Chaque utilisateur peut lire son propre profil. Les admins lisent tous.

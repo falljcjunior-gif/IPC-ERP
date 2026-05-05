@@ -69,20 +69,20 @@ exports.deleteUserAccount = onCall({
   // 1. Input Validation
   const validation = DeleteUserSchema.safeParse(request.data);
   if (!validation.success) {
-    throw new Error(`invalid-argument: ${validation.error.message}`);
+    throw new HttpsError('invalid-argument', validation.error.message);
   }
 
   const { uid } = validation.data;
 
   // 2. Security Check
-  if (!request.auth) throw new Error('unauthenticated');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
 
   const callerUid = request.auth.uid;
   const isSuperAdmin = request.auth.token?.role === 'SUPER_ADMIN';
 
   if (!isSuperAdmin) {
     logger.warn(`Unauthorized delete attempt by ${callerUid}`);
-    throw new Error('permission-denied');
+    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN can delete users.');
   }
 
   try {
@@ -102,7 +102,7 @@ exports.deleteUserAccount = onCall({
     return { success: true };
   } catch (error) {
     logger.error(`Error deleting user ${uid}:`, error);
-    throw new Error(`INTERNAL_ERROR: ${error.message}`);
+    throw new HttpsError('internal', `Delete failed: ${error.message}`);
   }
 });
 
@@ -253,6 +253,7 @@ exports.backfillUsers = onCall({
 
     return { 
       success: true, 
+      message: 'La synchronisation des comptes a été effectuée avec succès.',
       scanned, 
       createdUsers, 
       createdHr, 
@@ -261,7 +262,8 @@ exports.backfillUsers = onCall({
     };
   } catch (error) {
     logger.error('Backfill fatal error:', error);
-    throw new HttpsError('internal', `Backfill failed: ${error.message} \n ${error.stack}`);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', `Backfill failed: ${error.message}`);
   }
 });
 

@@ -19,9 +19,10 @@ const SignatureModule = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const docsToSign = [
-    ...(data.crm?.contracts || []).map(c => ({ ...c, type: 'Contrat', label: `Contrat #${c.id.slice(0,6)}` })),
-    ...(data.finance?.invoices || []).map(i => ({ ...i, type: 'Facture', label: `Facture #${i.id.slice(0,6)}` })),
-    { id: 'gen_doc_1', type: 'PV', label: 'Procès Verbal de Chantier', content: 'Réception des travaux de pavage - Secteur A' }
+    ...(data.crm?.contracts || []).filter(c => c.statut === 'A_SIGNER').map(c => ({ ...c, type: 'Contrat CRM', label: c.label || `Contrat CRM #${c.id.slice(0,6)}` })),
+    ...(data.hr?.contracts || []).filter(c => c.statut === 'A_SIGNER').map(c => ({ ...c, type: 'Contrat RH', label: c.label || `Contrat RH #${c.id.slice(0,6)}` })),
+    ...(data.finance?.invoices || []).filter(i => i.status === 'A_SIGNER').map(i => ({ ...i, type: 'Facture', label: `Facture #${i.id.slice(0,6)}` })),
+    ...(data.dms?.files || []).filter(f => f.status === 'A_SIGNER').map(f => ({ ...f, type: 'Document', label: f.name }))
   ];
 
   const clear = () => sigPad.current.clear();
@@ -52,15 +53,25 @@ const SignatureModule = () => {
       });
 
       // 3. Update employee profile if it's an HR-related document
-      if (selectedDoc.type === 'Contrat' || selectedDoc.type === 'PV') {
-        const employeeId = selectedDoc.employeeId || currentUser.id;
-        await updateRecord('hr', 'employees', employeeId, {
-          [`documents.${selectedDoc.id}`]: {
-            label: selectedDoc.label,
-            url: uploadUrl,
-            signedAt: new Date().toISOString(),
-            status: 'SIGNED'
-          }
+      // 3. Update the source document status
+      let collectionName = 'hr';
+      if (selectedDoc.type === 'Contrat CRM') collectionName = 'crm';
+      if (selectedDoc.type === 'Facture') collectionName = 'finance';
+      if (selectedDoc.type === 'Document') collectionName = 'dms';
+
+      await updateRecord(collectionName, selectedDoc.subModule || 'contracts', selectedDoc.id, {
+        statut: 'SIGNÉ',
+        status: 'SIGNED',
+        signedAt: new Date().toISOString(),
+        signatureUrl: uploadUrl,
+        _signedBy: currentUser.nom
+      });
+
+      // Special case for HR employees profile link
+      if (selectedDoc.type === 'Contrat RH' && selectedDoc.employeeId) {
+        await updateRecord('hr', 'employees', selectedDoc.employeeId, {
+          contractStatus: 'SIGNED',
+          contractUrl: uploadUrl
         });
       }
 

@@ -1,5 +1,5 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -19,14 +19,14 @@ exports.scheduledFirestoreExport = onSchedule('0 3 * * *', async (event) => {
  */
 exports.manualFirestoreExport = onCall(async (request) => {
   // Vérification de sécurité Admin
-  if (!request.auth) throw new Error('unauthenticated');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   
   const userDoc = await admin.firestore().collection('users').doc(request.auth.uid).get();
   const userData = userDoc.data();
   const isAdmin = userData?.role === 'admin' || userData?.permissions?.roles?.includes('SUPER_ADMIN');
 
   if (!isAdmin) {
-    throw new Error('permission-denied: Seuls les administrateurs peuvent forcer un backup.');
+    throw new HttpsError('permission-denied', 'Seuls les administrateurs peuvent forcer un backup.');
   }
 
   return performExport();
@@ -76,6 +76,6 @@ async function performExport() {
       timestamp: admin.firestore.FieldValue.serverTimestamp()
     });
 
-    throw new Error(`Export failed: ${err.message}`);
+    throw new HttpsError('internal', `Export failed: ${err.message}`);
   }
 }

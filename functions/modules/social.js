@@ -1,4 +1,4 @@
-const { onCall, onRequest } = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const axios = require('axios');
@@ -19,24 +19,24 @@ const ExchangeTokenSchema = z.object({
 exports.exchangeSocialToken = onCall({
   maxInstances: 5
 }, async (request) => {
-  if (!request.auth) throw new Error('unauthenticated');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
 
   // Validate Input
   const result = ExchangeTokenSchema.safeParse(request.data);
   if (!result.success) {
-    throw new Error(`invalid-argument: ${result.error.message}`);
+    throw new HttpsError('invalid-argument', result.error.message);
   }
 
   const { provider, code, redirectUri } = result.data;
 
   try {
     const configSnap = await db.collection('system_config').doc('marketing_apis').get();
-    if (!configSnap.exists) throw new Error('not-found: Configuration API manquante');
+    if (!configSnap.exists) throw new HttpsError('not-found', 'Configuration API manquante');
     const apiConfig = configSnap.data();
 
     if (provider === 'facebook' || provider === 'instagram') {
       const config = apiConfig.facebook;
-      if (!config?.clientId) throw new Error('failed-precondition: Meta keys missing');
+      if (!config?.clientId) throw new HttpsError('failed-precondition', 'Meta keys missing');
 
       const shortRes = await axios.get('https://graph.facebook.com/v19.0/oauth/access_token', {
         params: { client_id: config.clientId, client_secret: config.clientSecret, redirect_uri: redirectUri, code }
@@ -65,7 +65,7 @@ exports.exchangeSocialToken = onCall({
 
     if (provider === 'linkedin') {
       const config = apiConfig.linkedin;
-      if (!config?.clientId) throw new Error('failed-precondition: LinkedIn keys missing');
+      if (!config?.clientId) throw new HttpsError('failed-precondition', 'LinkedIn keys missing');
 
       const tokenRes = await axios.post('https://www.linkedin.com/oauth/v2/accessToken',
         new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: redirectUri, client_id: config.clientId, client_secret: config.clientSecret }),
@@ -88,7 +88,8 @@ exports.exchangeSocialToken = onCall({
 
   } catch (error) {
     logger.error(`Error exchanging ${provider} token:`, error.response?.data || error.message);
-    throw new Error(`INTERNAL_ERROR: ${error.message}`);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', `Token exchange failed: ${error.message}`);
   }
 });
 

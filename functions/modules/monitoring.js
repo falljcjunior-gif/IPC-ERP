@@ -1,4 +1,4 @@
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -15,12 +15,12 @@ exports.getBackendStatus = onCall({
   region: 'us-central1'
 }, async (request) => {
   // 1. Security Check: Only ADMINs can view health
-  if (!request.auth) throw new Error('unauthenticated');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
   
   const callerSnap = await db.collection('users').doc(request.auth.uid).get();
   const roles = callerSnap.data()?.permissions?.roles || [];
   if (!roles.includes('ADMIN') && !roles.includes('SUPER_ADMIN')) {
-    throw new Error('permission-denied');
+    throw new HttpsError('permission-denied', 'Unauthorized access to monitoring.');
   }
 
   try {
@@ -63,6 +63,7 @@ exports.getBackendStatus = onCall({
     };
   } catch (error) {
     logger.error('Monitoring API Error:', error);
-    throw new Error(`MONITORING_ERROR: ${error.message}`);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', `Monitoring failed: ${error.message}`);
   }
 });

@@ -132,7 +132,8 @@ export const useStore = create(
         procurement: { requests: [], vendors: [] },
         esg: { reports: [], metrics: [] },
         projects: { items: [] },
-        budget: { allocations: [] }
+        budget: { allocations: [] },
+        cockpit: { global_metrics: {}, alerts: [] }
       },
       
       setData: (next) => set((state) => {

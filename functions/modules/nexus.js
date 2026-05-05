@@ -1,4 +1,4 @@
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
@@ -34,12 +34,12 @@ exports.nexusChat = onCall({
   // 1. Input Validation
   const validation = NexusRequestSchema.safeParse(request.data);
   if (!validation.success) {
-    throw new Error(`invalid-argument: ${validation.error.message}`);
+    throw new HttpsError('invalid-argument', validation.error.message);
   }
 
   // 2. Security Check
   if (!request.auth) {
-    throw new Error('unauthenticated');
+    throw new HttpsError('unauthenticated', 'User must be authenticated.');
   }
 
   const uid = request.auth.uid;
@@ -57,7 +57,7 @@ exports.nexusChat = onCall({
       const { count, windowStart } = doc.data();
       if (now - windowStart < windowMs) {
         if (count >= maxRequests) {
-          throw new Error('resource-exhausted: Limite de requêtes atteinte. Réessayez dans une heure.');
+          throw new HttpsError('resource-exhausted', 'Limite de requêtes atteinte. Réessayez dans une heure.');
         }
         t.update(rateLimitRef, { count: count + 1 });
       } else {
@@ -73,7 +73,7 @@ exports.nexusChat = onCall({
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     logger.error('GEMINI_API_KEY not configured in Secret Manager');
-    throw new Error('failed-precondition: Service IA non configuré.');
+    throw new HttpsError('failed-precondition', 'Service IA non configuré.');
   }
 
   const {
@@ -164,6 +164,7 @@ CONSIGNES:
 
   } catch (error) {
     logger.error('Antigravity AI Error:', error);
-    throw new Error(`AI_ERROR: ${error.message}`);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError('internal', `Antigravity AI failed: ${error.message}`);
   }
 });

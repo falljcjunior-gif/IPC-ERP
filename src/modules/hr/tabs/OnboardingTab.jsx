@@ -269,9 +269,31 @@ const OnboardingTab = ({ accessLevel }) => {
       {mode === 'create' && (
         <motion.div key="create" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           {success && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', background: '#10B98115', border: '1px solid #10B98150', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-               <div style={{ background: '#10B981', color: 'white', padding: '10px', borderRadius: '50%' }}><Check size={24} /></div>
-               <div><h3 style={{ margin: 0, color: '#10B981', fontWeight: 800 }}>Onboarding Réussi !</h3></div>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: '#10B98108', border: '2px solid #10B98120', marginBottom: '3rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
+               <div style={{ background: '#10B981', color: 'white', padding: '16px', borderRadius: '1.25rem', boxShadow: '0 10px 20px rgba(16,185,129,0.2)' }}><Check size={32} /></div>
+               <div style={{ flex: 1 }}>
+                 <h3 style={{ margin: '0 0 0.5rem 0', color: '#064E3B', fontWeight: 900, fontSize: '1.5rem' }}>Onboarding Réussi !</h3>
+                 <p style={{ margin: 0, color: '#064E3B', opacity: 0.7, fontWeight: 600 }}>Le compte a été provisionné et les accès IT sont en cours de création.</p>
+               </div>
+               <div style={{ display: 'flex', gap: '1rem' }}>
+                 <button 
+                   onClick={() => {
+                     const lastEmp = allEmployees[allEmployees.length - 1]; // Approximation for demo
+                     import('../../../utils/PDFExporter').then(({ IPCReportGenerator }) => {
+                       IPCReportGenerator.generateEmploymentContract(lastEmp || formData);
+                     });
+                   }}
+                   style={{ padding: '1rem 2rem', borderRadius: '1rem', background: '#10B981', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 10px 25px rgba(16,185,129,0.2)' }}
+                 >
+                   <FileSignature size={20} /> Générer le Contrat
+                 </button>
+                 <button 
+                   onClick={() => setSuccess(false)}
+                   style={{ padding: '1rem 1.5rem', borderRadius: '1rem', background: 'white', color: '#10B981', border: '1px solid #10B981', fontWeight: 800, cursor: 'pointer' }}
+                 >
+                   Terminer
+                 </button>
+               </div>
             </motion.div>
           )}
           <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1.8fr)', gap: '2rem' }}>

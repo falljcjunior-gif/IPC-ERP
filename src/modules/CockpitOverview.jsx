@@ -22,29 +22,33 @@ const CockpitOverview = () => {
   const data = useStore(state => state.data);
   const currentUser = useStore(state => state.currentUser);
   
-  // Aggregate data from the local store or direct from 'cockpit/global_metrics' if synced
-  const globalMetrics = data.cockpit?.global_metrics || {
+  // Aggregate data from the cockpit collection
+  const cockpitMetrics = data.cockpit?.global_metrics?.find(m => m.id === 'global_metrics') || {
     finance: { totalCA: 1250000000, cashFlow: 350000000 },
-    hr: { headcount: 145, pulseScore: 92 },
-    crm: { conversionRate: 68.5, totalLeads: 420 },
-    production: { trs: 87.2 }
+    hr: { headcount: 0, pulseScore: 92 },
+    crm: { conversionRate: 0, totalLeads: 0 },
+    production: { trs: 87.2 },
+    forecasts: { cashFlowTrend: [] }
   };
 
-  // ── MOCK DATA FOR CHARTS ──
-  const cashFlowTrend = [
-    { name: 'Jan', rev: 100, exp: 80 },
-    { name: 'Fév', rev: 120, exp: 90 },
-    { name: 'Mar', rev: 150, exp: 100 },
-    { name: 'Avr', rev: 140, exp: 110 },
-    { name: 'Mai', rev: 180, exp: 120 },
-    { name: 'Juin', rev: 210, exp: 130 },
-  ];
+  const smartAlerts = data.cockpit?.alerts || [];
+
+  const cashFlowTrend = cockpitMetrics.forecasts?.cashFlowTrend?.length > 0 
+    ? cockpitMetrics.forecasts.cashFlowTrend 
+    : [
+        { name: 'Jan', rev: 100, exp: 80 },
+        { name: 'Fév', rev: 120, exp: 90 },
+        { name: 'Mar', rev: 150, exp: 100 },
+        { name: 'Avr', rev: 140, exp: 110 },
+        { name: 'Mai', rev: 180, exp: 120 },
+        { name: 'Juin', rev: 210, exp: 130 },
+      ];
 
   const radarData = [
     { subject: 'Finance', A: 95, fullMark: 100 },
-    { subject: 'Production', A: 87, fullMark: 100 },
+    { subject: 'Production', A: cockpitMetrics.production?.trs || 87, fullMark: 100 },
     { subject: 'RH', A: 92, fullMark: 100 },
-    { subject: 'Commercial', A: 68, fullMark: 100 },
+    { subject: 'Commercial', A: cockpitMetrics.crm?.conversionRate || 68, fullMark: 100 },
     { subject: 'Logistique', A: 85, fullMark: 100 },
   ];
 
@@ -54,10 +58,7 @@ const CockpitOverview = () => {
     { id: 3, title: 'Transformation Digitale', progress: 90, status: 'Atteint', dept: 'IT' }
   ];
 
-  const smartAlerts = [
-    { id: 'a1', title: 'Alerte Trésorerie', message: 'Le Cash Flow projeté à 30 jours est inférieur au seuil de sécurité.', level: 'critical' },
-    { id: 'a2', title: 'Rupture Ciment Imminente', message: 'Stock de ciment de l\'usine d\'Abidjan estimé à 3 jours.', level: 'warning' }
-  ];
+  const hasCriticalAlert = smartAlerts.some(a => a.level === 'critical');
 
   return (
     <div 
@@ -91,8 +92,14 @@ const CockpitOverview = () => {
             Statut Global des Opérations
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'flex-end' }}>
-            <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#10B981', boxShadow: '0 0 15px #10B981' }} />
-            <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC' }}>NOMINAL</span>
+            <div style={{ 
+              width: '12px', height: '12px', borderRadius: '50%', 
+              backgroundColor: hasCriticalAlert ? '#EF4444' : '#10B981', 
+              boxShadow: `0 0 15px ${hasCriticalAlert ? '#EF4444' : '#10B981'}` 
+            }} />
+            <span style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F8FAFC' }}>
+              {hasCriticalAlert ? 'ACTION REQUISE' : 'NOMINAL'}
+            </span>
           </div>
         </div>
       </header>
@@ -128,10 +135,10 @@ const CockpitOverview = () => {
       {/* ── KEY METRICS (GOLD / DARK) ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', marginBottom: '4rem' }}>
         {[
-          { label: 'Chiffre d\'Affaires Global', val: `${(globalMetrics.finance.totalCA / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <Briefcase size={22} />, trend: '+12%' },
-          { label: 'Cash Flow (30 Jours)', val: `${(globalMetrics.finance.cashFlow / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <DollarSign size={22} />, trend: '-3%' },
-          { label: 'TRS Usine', val: `${globalMetrics.production.trs}%`, sub: 'Efficience', icon: <Activity size={22} />, trend: '+1.2%' },
-          { label: 'Effectif Global', val: globalMetrics.hr.headcount, sub: 'Collaborateurs', icon: <Users size={22} />, trend: '+4' }
+          { label: 'Chiffre d\'Affaires Global', val: `${(cockpitMetrics.finance?.totalCA / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <Briefcase size={22} />, trend: '+12%' },
+          { label: 'Cash Flow (30 Jours)', val: `${(cockpitMetrics.forecasts?.cashFlow30d / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <DollarSign size={22} />, trend: cockpitMetrics.forecasts?.cashFlow30d < 1000000 ? 'CRITIQUE' : 'STABLE' },
+          { label: 'TRS Usine', val: `${cockpitMetrics.production?.trs}%`, sub: 'Efficience', icon: <Activity size={22} />, trend: '+1.2%' },
+          { label: 'Effectif Global', val: cockpitMetrics.hr?.headcount, sub: 'Collaborateurs', icon: <Users size={22} />, trend: '+4' }
         ].map((kpi, idx) => (
           <motion.div 
             key={idx}
