@@ -5,20 +5,25 @@ import {
   Layers, Wrench, AlertTriangle, MoreVertical, Activity
 } from 'lucide-react';
 import { useStore } from '../store';
+import SmartButton from '../components/SmartButton';
 import BarcodeScanner from '../components/BarcodeScanner';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import '../components/GlobalDashboard.css';
 import { useToastStore } from '../store/useToastStore';
 
 const Manufacturing = ({ onOpenDetail }) => {
-  const { data, formatCurrency, shellView, updateRecord, addRecord } = useStore();
+  const data = useStore(state => state.data);
+  const formatCurrency = useStore(state => state.formatCurrency);
+  const shellView = useStore(state => state.shellView);
+  const updateRecord = useStore(state => state.updateRecord);
+  const addRecord = useStore(state => state.addRecord);
   const [view, setView] = useState('orders');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-  const toggleStatus = (of) => {
+  const toggleStatus = async (of) => {
     const nextStatus   = of.status === 'En cours' ? 'Terminé' : 'En cours';
     const nextProgress = nextStatus === 'Terminé' ? 100 : 50;
-    updateRecord('production', 'workOrders', of.id, { status: nextStatus, progress: nextProgress });
+    return updateRecord('production', 'workOrders', of.id, { status: nextStatus, progress: nextProgress });
   };
 
   const workOrders = data.production?.workOrders || [];
@@ -65,14 +70,22 @@ const Manufacturing = ({ onOpenDetail }) => {
           </div>
 
           {/* Scanner */}
-          <button onClick={() => setIsScannerOpen(true)} className="luxury-widget" style={{ width: '56px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none', background: 'rgba(255,255,255,0.8)' }}>
-            <Layers size={24} color="#111827" />
-          </button>
+          <SmartButton 
+            onClick={() => setIsScannerOpen(true)} 
+            variant="ghost"
+            icon={Layers}
+            style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(255,255,255,0.8)' }}
+          />
 
           {/* Create OF */}
-          <button onClick={() => useToastStore.getState().addToast('Création d\'un nouvel Ordre de Fabrication', 'info')} className="luxury-widget" style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
-            <Plus size={20} /> <span style={{ fontWeight: 600, letterSpacing: '0.05em' }}>Créer OF</span>
-          </button>
+          <SmartButton 
+            onClick={() => useToastStore.getState().addToast('Création d\'un nouvel Ordre de Fabrication', 'info')} 
+            variant="primary"
+            icon={Plus}
+            style={{ padding: '1rem 2rem', borderRadius: '1.5rem', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)' }}
+          >
+            Créer OF
+          </SmartButton>
         </div>
       </div>
 
@@ -207,13 +220,14 @@ const Manufacturing = ({ onOpenDetail }) => {
                     </div>
 
                     {of.status !== 'Terminé' && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); toggleStatus(of); }}
-                        className="luxury-widget"
-                        style={{ padding: '0.6rem 1.25rem', background: '#10B981', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, borderRadius: '0.75rem' }}
+                      <SmartButton 
+                        onClick={(e) => { e.stopPropagation(); return toggleStatus(of); }}
+                        variant="success"
+                        icon={CheckCircle2}
+                        style={{ padding: '0.6rem 1.25rem', borderRadius: '0.75rem' }}
                       >
-                        <CheckCircle2 size={18} /> Terminer
-                      </button>
+                        Terminer
+                      </SmartButton>
                     )}
 
                     <button className="luxury-widget" style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', cursor: 'pointer', background: '#f8fafc', borderRadius: '0.75rem' }}>

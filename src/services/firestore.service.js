@@ -18,6 +18,8 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
+import { validateData } from '../utils/validation';
+
 
 // ── Type Guards internes ──────────────────────────────────────────────────────
 
@@ -128,8 +130,15 @@ export const FirestoreService = {
    * Injecte automatiquement les métadonnées d'audit et de cycle de vie.
    * @returns {Promise<string>} ID du document créé
    */
-  async createDocument(collectionName, data) {
+  async createDocument(collectionName, data, schema = null) {
     const user = requireAuth();
+    
+    // Optional Schema Validation
+    if (schema) {
+      const { valid, errors } = validateData(schema, data);
+      if (!valid) throw new FirestoreServiceError('VALIDATION_ERROR', errors.join(' '));
+    }
+
     try {
       const safeData = sanitizeData({
         ...data,
@@ -141,6 +150,7 @@ export const FirestoreService = {
       const docRef = await addDoc(collection(db, collectionName), safeData);
       return { id: docRef.id };
     } catch (err) {
+      if (err instanceof FirestoreServiceError) throw err;
       throw wrapFirestoreError(err, `createDocument(${collectionName})`);
     }
   },
@@ -180,8 +190,17 @@ export const FirestoreService = {
   /**
    * Met à jour des champs spécifiques d'un document existant.
    */
-  async updateDocument(collectionName, documentId, updates) {
+  async updateDocument(collectionName, documentId, updates, schema = null) {
     const user = requireAuth();
+
+    // Optional Schema Validation (Partial validation for updates)
+    if (schema) {
+      // We only validate the fields being updated
+      const partialSchema = { ...schema, fields: Object.fromEntries(Object.entries(schema.fields || {}).filter(([k]) => k in updates)) };
+      const { valid, errors } = validateData(partialSchema, updates);
+      if (!valid) throw new FirestoreServiceError('VALIDATION_ERROR', errors.join(' '));
+    }
+
     try {
       const safeUpdates = sanitizeData({
         ...updates,
@@ -190,6 +209,7 @@ export const FirestoreService = {
       });
       await updateDoc(doc(db, collectionName, documentId), safeUpdates);
     } catch (err) {
+      if (err instanceof FirestoreServiceError) throw err;
       throw wrapFirestoreError(err, `updateDocument(${collectionName}/${documentId})`);
     }
   },

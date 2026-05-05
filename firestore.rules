@@ -170,6 +170,37 @@ service cloud.firestore {
       allow create: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
       allow update: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
       allow delete: if isSuperAdmin() || isManager();
+
+      // THE HR VAULT: Isolation of sensitive data (salary, SSN, IBAN)
+      match /private_data/{subDocId} {
+        allow read: if isAuthenticated() && (
+          hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin() ||
+          // Employee reading their own private data
+          get(/databases/$(database)/documents/hr/$(docId)).data.userId == request.auth.uid
+        );
+        allow write: if isAuthenticated() && (hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin());
+      }
+    }
+
+    match /helpdesk/{docId} {
+      allow read: if isAuthenticated() && (
+        (resource.data.categorie == 'Confidentiel RH' && (
+           resource.data.demandeurId == request.auth.uid || hasRole('HR_MANAGER') || hasRole('HR')
+        )) || 
+        (resource.data.categorie != 'Confidentiel RH' && (
+           resource.data.demandeurId == request.auth.uid || isSuperAdmin() || isManager() || hasRole('SUPPORT')
+        ))
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (
+        (resource.data.categorie == 'Confidentiel RH' && (
+           resource.data.demandeurId == request.auth.uid || hasRole('HR_MANAGER') || hasRole('HR')
+        )) || 
+        (resource.data.categorie != 'Confidentiel RH' && (
+           isSuperAdmin() || isManager() || hasRole('SUPPORT') || resource.data.demandeurId == request.auth.uid
+        ))
+      );
+      allow delete: if false;
     }
 
     match /finance/{docId} {
@@ -180,8 +211,12 @@ service cloud.firestore {
 
     match /accounting/{docId} {
       allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
-      allow create, update: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
-      allow delete: if false;
+      allow write: if false; // BANK-GRADE: Only Cloud Functions can write to accounting ledger
+    }
+
+    match /financial_periods/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow write: if false; // Only Cloud Functions / Super Admins manage periods
     }
 
     match /sales/{docId} {
@@ -328,7 +363,7 @@ service cloud.firestore {
 
     // ── Projets ────────────────────────────────────────────────────────────
     match /projects/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (isManager() || hasRole('STAFF') || hasRole('PRODUCTION'));
       allow create, update: if isAuthenticated() && (isManager() || hasRole('STAFF'));
       allow delete: if false;
     }
@@ -362,6 +397,22 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isSuperAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSuperAdmin();
+    }
+
+    // ── Audit Logs (Immuable) ────────────────────────────────────────────────
+    match /audit_logs/{logId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('SECURITY') || hasRole('AUDIT'));
+      allow write: if false; // Uniquement via Cloud Functions (Admin SDK)
+    }
+
+    match /financial_audit_logs/{logId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || hasRole('AUDIT') || hasRole('CFO'));
+      allow write: if false; // BANK-GRADE: Only Cloud Functions can write to financial audit logs
+    }
+
+    match /counters/{docId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || hasRole('FINANCE'));
+      allow write: if false; // Only Cloud Functions can update counters
     }
 
     // ── Refus par défaut (sécurité) ────────────────────────────────────────

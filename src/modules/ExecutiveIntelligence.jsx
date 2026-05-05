@@ -22,7 +22,9 @@ import '../components/GlobalDashboard.css';
 const COLORS = ['#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#3B82F6'];
 
 const ExecutiveIntelligence = () => {
-  const { data, userRole, currentUser } = useStore();
+  const data = useStore(state => state.data);
+  const userRole = useStore(state => state.userRole);
+  const currentUser = useStore(state => state.currentUser);
   const [butlerInsight, setButlerInsight] = React.useState(null);
   const [isLoadingInsight, setIsLoadingInsight] = React.useState(false);
 

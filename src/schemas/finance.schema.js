@@ -39,13 +39,15 @@ export const FinanceSchemas = {
    */
   invoice: (data) => {
     const amountHT = validatePositive(data.amountHT || data.amount, 'amountHT'); // Accepte amount par souplesse
+    const currency = data.currency || 'FCFA';
     return {
       num: data.num || `INV-${Date.now()}`,
       type: data.type || 'client',
       clientName: data.clientName || 'Inconnu',
       amountHT: amountHT,
-      tva: Number(data.tva) || 0,
-      amountTTC: amountHT * 1.18, 
+      taxes: data.taxes || [{ name: 'TVA Standard', rate: 18, amount: amountHT * 0.18 }], // Multi-taxes support
+      amountTTC: amountHT + (data.taxes ? data.taxes.reduce((acc, t) => acc + t.amount, 0) : amountHT * 0.18), 
+      currency: currency, // Multi-currency support
       status: data.status || 'draft',
       dueDate: data.dueDate || '',
       items: data.items || [],
@@ -76,8 +78,10 @@ export const FinanceSchemas = {
       fields: {
         num: { label: 'Référence Facture', type: 'text', required: true, search: true },
         clientName: { label: 'Désignation du Tiers', type: 'text', required: true, search: true },
-        amountHT: { label: 'Assiette HT (FCFA)', type: 'money', currency: 'FCFA', required: true },
+        currency: { label: 'Devise', type: 'selection', options: ['FCFA', 'EUR', 'USD'], default: 'FCFA' },
+        amountHT: { label: 'Assiette HT', type: 'money', currency: 'FCFA', required: true },
         amountTTC: { label: 'Total Net à Payer (TTC)', type: 'money', currency: 'FCFA', readonly: true },
+        taxes: { label: 'Taxes Appliquées', type: 'json' },
         status: { label: 'État du Recouvrement', type: 'selection', options: ['Brouillon', 'Envoyé', 'Payé', 'En Retard', 'Annulé'], default: 'Brouillon' },
         dueDate: { label: 'Date d\'Échéance de Paiement', type: 'date', required: true }
       },

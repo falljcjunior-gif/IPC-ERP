@@ -13,7 +13,7 @@ export const HRSchemas = {
         poste: { label: 'Intitulé du Poste / Fonction', type: 'text', required: true, search: true, placeholder: 'Ex: Responsable Production' },
         dept: { label: 'Pôle Opérationnel', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
         email: { label: 'Email Pro', type: 'email', search: true },
-        salaire: { label: 'Rémunération de Base (Brut)', type: 'money', currency: 'FCFA', sensitive: true },
+        // NOTE: salaire has been moved to private_data subcollection for Bank-Grade security
         performance_score: { label: 'Performance 360° (%)', type: 'number', default: 85 },
         burnout_risk: { label: 'Risque d\'Épuisement (%)', type: 'number', default: 10 },
         retention_score: { label: 'Indice de Rétention (%)', type: 'number', default: 95 },
@@ -63,9 +63,10 @@ export const HRSchemas = {
       fields: {
         date: { label: 'Date', type: 'date', required: true, search: true },
         collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
+        contractType: { label: 'Type de Contrat', type: 'selection', options: ['Forfait Cadre', 'Horaire (Shift)', 'Consultant'], default: 'Forfait Cadre' },
         projet: { label: 'Projet / Centre Coût', type: 'text', search: true },
-        tache: { label: 'Tâche', type: 'text', search: true },
-        heures: { label: 'Durée (heures)', type: 'number', required: true },
+        tache: { label: 'Tâche / Quart de travail', type: 'text', search: true },
+        heures: { label: 'Durée (heures / jours)', type: 'number', required: true },
         facturable: { label: 'Facturable', type: 'boolean', default: false },
         statut: { label: 'Statut', type: 'selection', options: ['En attente', 'Validé', 'Refusé'], default: 'En attente' }
       },
@@ -134,6 +135,59 @@ export const HRSchemas = {
           groups: [
             { id: 'collaborateur', label: 'Par Commercial' },
             { id: 'statut', label: 'Par État de Paiement' }
+          ]
+        }
+      }
+    },
+    private_data: {
+      label: 'Coffre-Fort HR (Données Sensibles)',
+      fields: {
+        salaire: { label: 'Salaire de Base (Brut)', type: 'money', currency: 'FCFA', required: true },
+        iban: { label: 'RIB / IBAN', type: 'text' },
+        ssn: { label: 'Numéro de Sécurité Sociale', type: 'text' },
+        notes: { label: 'Notes Médicales/Disciplinaires', type: 'textarea' },
+        _employeeId: { label: 'Employé ID', type: 'text', readonly: true }
+      },
+      views: {
+        list: ['salaire', 'iban']
+      }
+    },
+    skills: {
+      label: 'Matrice des Compétences',
+      fields: {
+        collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
+        competence: { label: 'Compétence / Habilitation', type: 'text', required: true, search: true },
+        niveau: { label: 'Niveau d\'Expertise', type: 'selection', options: ['Débutant', 'Intermédiaire', 'Avancé', 'Expert'], default: 'Intermédiaire' },
+        date_obtention: { label: 'Date d\'Obtention / Certification', type: 'date' },
+        expiration: { label: 'Date d\'Expiration (si applicable)', type: 'date' }
+      },
+      views: {
+        list: ['collaborateur', 'competence', 'niveau', 'expiration'],
+        search: {
+          groups: [
+            { id: 'competence', label: 'Par Compétence' },
+            { id: 'niveau', label: 'Par Niveau' }
+          ]
+        }
+      }
+    },
+    evaluations: {
+      label: 'Entretiens 360°',
+      fields: {
+        collaborateur: { label: 'Collaborateur Évalué', type: 'text', required: true, search: true },
+        evaluateur: { label: 'Évaluateur (Manager)', type: 'text', required: true, search: true },
+        periode: { label: 'Période (Q1, Annuel, etc.)', type: 'text', required: true },
+        objectifsAtteints: { label: 'Objectifs Atteints (%)', type: 'number' },
+        feedback: { label: 'Feedback Complet', type: 'textarea' },
+        potentielEvolution: { label: 'Potentiel d\'Évolution', type: 'selection', options: ['Prêt', 'Dans 1 an', 'Dans 2+ ans', 'N/A'], default: 'N/A' },
+        statut: { label: 'Statut Entretien', type: 'selection', options: ['Planifié', 'En cours', 'Clôturé'], default: 'Planifié' }
+      },
+      views: {
+        list: ['collaborateur', 'evaluateur', 'periode', 'objectifsAtteints', 'statut'],
+        search: {
+          groups: [
+            { id: 'statut', label: 'Par Statut' },
+            { id: 'periode', label: 'Par Période' }
           ]
         }
       }

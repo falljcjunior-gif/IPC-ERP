@@ -7,11 +7,13 @@ import {
   Briefcase, LifeBuoy, FileText, ChevronRight
 } from 'lucide-react';
 import { useStore } from '../store';
+import SmartButton from '../components/SmartButton';
 import KanbanBoard from '../components/KanbanBoard';
 import '../components/GlobalDashboard.css';
 
 const MissionsPortal = ({ onOpenDetail }) => {
-  const { data, updateRecord } = useStore();
+  const data = useStore(state => state.data);
+  const updateRecord = useStore(state => state.updateRecord);
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban', 'list', 'timeline', 'workload'
   const [filterType, setFilterType] = useState('all');
 
@@ -88,13 +90,16 @@ const MissionsPortal = ({ onOpenDetail }) => {
 
   const stages = ['À faire', 'En cours', 'Terminé'];
 
-  const handleMoveMission = (item, nextCol) => {
+  const handleMoveMission = async (item, nextCol) => {
     if (item.missionType === 'project') {
       const colId = nextCol === 'À faire' ? 'col1' : nextCol === 'En cours' ? 'col2' : 'col3';
-      updateRecord('projects', 'tasks', item.id, { colonneId: colId });
+      return updateRecord('projects', 'tasks', item.id, { colonneId: colId });
     } else if (item.missionType === 'support') {
       const statusMap = { 'À faire': 'Nouveau', 'En cours': 'En cours', 'Terminé': 'Résolu' };
-      updateRecord('helpdesk', 'tickets', item.id, { statut: statusMap[nextCol] });
+      return updateRecord('helpdesk', 'tickets', item.id, { statut: statusMap[nextCol] });
+    } else if (item.missionType === 'hr') {
+      const statusMap = { 'À faire': 'En attente', 'En cours': 'En cours', 'Terminé': 'Approuvé' };
+      return updateRecord('hr', 'leaves', item.id, { statut: statusMap[nextCol] });
     }
   };
 
@@ -125,19 +130,17 @@ const MissionsPortal = ({ onOpenDetail }) => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div className="glass" style={{ display: 'flex', padding: '0.4rem', borderRadius: '1rem' }}>
             {['all', 'project', 'support', 'hr'].map(t => (
-              <button 
+              <SmartButton 
                 key={t}
                 onClick={() => setFilterType(t)}
+                variant={filterType === t ? 'primary' : 'ghost'}
                 style={{ 
-                  padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer',
-                  background: filterType === t ? 'white' : 'transparent',
-                  color: filterType === t ? '#111827' : '#64748b',
-                  fontWeight: 800, fontSize: '0.8rem', transition: '0.3s',
-                  boxShadow: filterType === t ? '0 4px 12px rgba(0,0,0,0.05)' : 'none'
+                  padding: '0.6rem 1.25rem', borderRadius: '0.75rem',
+                  fontSize: '0.8rem', minWidth: '80px'
                 }}
               >
                 {t === 'all' ? 'Toutes' : t === 'project' ? 'Projets' : t === 'support' ? 'Tickets' : 'RH'}
-              </button>
+              </SmartButton>
             ))}
           </div>
 
@@ -229,9 +232,12 @@ const MissionsPortal = ({ onOpenDetail }) => {
                       <td style={{ padding: '1.25rem' }}>{m.assigne || m.collaborateur}</td>
                       <td style={{ padding: '1.25rem', color: '#EF4444', fontWeight: 700 }}>{m.date || '-'}</td>
                       <td style={{ padding: '1.25rem', textAlign: 'right' }}>
-                        <button className="btn-icon" onClick={() => onOpenDetail(m, m.missionType === 'project' ? 'projects' : m.missionType === 'support' ? 'helpdesk' : 'hr', m.missionType === 'project' ? 'tasks' : m.missionType === 'support' ? 'tickets' : 'leaves')}>
-                          <ChevronRight size={18} />
-                        </button>
+                        <SmartButton 
+                          onClick={() => onOpenDetail(m, m.missionType === 'project' ? 'projects' : m.missionType === 'support' ? 'helpdesk' : 'hr', m.missionType === 'project' ? 'tasks' : m.missionType === 'support' ? 'tickets' : 'leaves')}
+                          variant="ghost"
+                          icon={ChevronRight}
+                          style={{ padding: '0.5rem', borderRadius: '0.75rem' }}
+                        />
                       </td>
                     </tr>
                   ))}

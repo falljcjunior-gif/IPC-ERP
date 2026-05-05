@@ -10,11 +10,15 @@ import TrelloCalendar from '../components/workspace/TrelloCalendar';
 import TrelloButlerModal from '../components/workspace/TrelloButlerModal';
 import RecordModal from '../components/RecordModal';
 import { projectSchema } from '../schemas/project.schema';
+import SmartButton from '../components/SmartButton';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import '../components/GlobalDashboard.css';
 
 const ProjectHub = ({ onOpenDetail }) => {
-  const { data, addRecord, updateRecord, currentUser } = useStore();
+  const data = useStore(state => state.data);
+  const addRecord = useStore(state => state.addRecord);
+  const updateRecord = useStore(state => state.updateRecord);
+  const currentUser = useStore(state => state.currentUser);
   const [activeProject, setActiveProject] = useState(null);
   const [activeView, setActiveView] = useState('board'); // 'board', 'calendar', 'dashboard'
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +30,7 @@ const ProjectHub = ({ onOpenDetail }) => {
 
   const isBoardAdmin = currentUser?.role === 'admin' || currentUser?.role === 'manager' || currentUser?.nom === activeProject?.chefProjet;
 
-  const handleCloneProject = (p) => {
+  const handleCloneProject = async (p) => {
     const newTemplate = {
       nom: p.nom + ' (Copie Modèle)',
       client: p.client,
@@ -36,7 +40,7 @@ const ProjectHub = ({ onOpenDetail }) => {
       rules: p.rules || [],
       customFields: p.customFields || []
     };
-    addRecord('projects', 'projects', newTemplate);
+    return addRecord('projects', 'projects', newTemplate);
   };
 
   // Moteur d'automatisation I.P.C Butler
@@ -113,15 +117,25 @@ const ProjectHub = ({ onOpenDetail }) => {
                   <AnimatedCounter from={0} to={projects.length} duration={1.5} formatter={(v) => `${v}`} />
                 </div>
               </div>
-              <button className="luxury-widget" onClick={() => setIsModalOpen(true)} style={{ padding: '1rem 2rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
-                <Plus size={20} /> <span style={{ fontWeight: 600, letterSpacing: '0.05em' }}>Nouveau Chantier</span>
-              </button>
+              <SmartButton 
+                onClick={() => setIsModalOpen(true)} 
+                variant="primary"
+                icon={Plus}
+                style={{ padding: '1rem 2rem', borderRadius: '1.5rem', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)' }}
+              >
+                Nouveau Chantier
+              </SmartButton>
             </>
           ) : (
             isBoardAdmin && (
-              <button onClick={() => setIsButlerOpen(true)} className="luxury-widget" style={{ padding: '0.8rem 1.5rem', background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', borderRadius: '1rem' }}>
-                <Target size={18} /> <span style={{ fontWeight: 700 }}>Automatisation Butler</span>
-              </button>
+              <SmartButton 
+                onClick={() => setIsButlerOpen(true)} 
+                variant="secondary"
+                icon={Target}
+                style={{ borderRadius: '1rem', background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}
+              >
+                Automatisation Butler
+              </SmartButton>
             )
           )}
         </div>
@@ -209,13 +223,13 @@ const ProjectHub = ({ onOpenDetail }) => {
                        }}>
                          <LayoutGrid size={24} />
                        </div>
-                       <button 
-                         onClick={(e) => { e.stopPropagation(); handleCloneProject(p); }} 
-                         style={{ background: 'white', border: '1px solid #e2e8f0', padding: '0.5rem', borderRadius: '0.75rem', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }} 
-                         title="Copier le modèle"
-                       >
-                         <Copy size={16} />
-                       </button>
+                        <SmartButton 
+                          onClick={(e) => { e.stopPropagation(); return handleCloneProject(p); }} 
+                          variant="ghost"
+                          icon={Copy}
+                          style={{ padding: '0.5rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0', background: 'white' }} 
+                          title="Copier le modèle"
+                        />
                      </div>
                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{boardTasks.length} Tâches</span>
                    </div>

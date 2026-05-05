@@ -41,7 +41,9 @@ export const accountingSchema = {
         debit: { label: 'Débit', type: 'money', currency: 'FCFA' },
         credit: { label: 'Crédit', type: 'money', currency: 'FCFA' },
         analyticAccount: { label: 'Compte Analytique', type: 'text', search: true },
-        profitCenter: { label: 'Centre de Profit', type: 'selection', options: ['Usine', 'Logistique', 'Ventes', 'Administration'], search: true }
+        profitCenter: { label: 'Centre de Profit', type: 'selection', options: ['Usine', 'Logistique', 'Ventes', 'Administration'], search: true },
+        status: { label: 'Statut Rapprochement', type: 'selection', options: ['Non Lettré', 'Lettré', 'Rapproché'], default: 'Non Lettré', readonly: true },
+        bankReconciliationId: { label: 'Réf. Rapprochement Bancaire', type: 'text', readonly: true }
       },
       views: {
         list: ['date', 'piece', 'libelle', 'debit', 'credit', 'profitCenter'],
@@ -49,6 +51,25 @@ export const accountingSchema = {
           groups: [
             { id: 'date', label: 'Par Date' },
             { id: 'journalCode', label: 'Par Journal' }
+          ]
+        }
+      }
+    },
+    periods: {
+      label: 'Périodes Fiscales & Clôtures',
+      fields: {
+        year: { label: 'Année Fiscale', type: 'number', required: true, search: true },
+        month: { label: 'Mois', type: 'number', required: true, search: true },
+        status: { label: 'État de la Période', type: 'selection', options: ['Ouverte', 'Clôturée'], default: 'Ouverte' },
+        closedAt: { label: 'Date de Clôture', type: 'date', readonly: true },
+        closedBy: { label: 'Clôturé Par', type: 'text', readonly: true }
+      },
+      views: {
+        list: ['year', 'month', 'status', 'closedAt', 'closedBy'],
+        search: {
+          groups: [
+            { id: 'year', label: 'Par Année' },
+            { id: 'status', label: 'Par Statut' }
           ]
         }
       }

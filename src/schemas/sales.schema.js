@@ -54,8 +54,13 @@ export const SalesSchemas = {
         client: { label: 'Client', type: 'text', required: true, search: true, placeholder: 'Nom du prospect/client...' },
         date: { label: 'Date de Création', type: 'date', required: true },
         valideJusquau: { label: 'Valable jusqu\'au', type: 'date' },
-        montant: { label: 'Montant Total TTC', type: 'money', currency: 'FCFA', search: true },
-        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Envoyé', 'Accepté', 'Refusé', 'Expiré'], default: 'Brouillon' }
+        pricingModel: { label: 'Modèle de Tarification', type: 'selection', options: ['Standard', 'Volume Discount (Matériaux)', 'Fixed Premium (Luxe)'], default: 'Standard' },
+        montantHT: { label: 'Montant Total HT', type: 'money', currency: 'FCFA', search: true },
+        discountRate: { label: 'Remise Globale (%)', type: 'number', default: 0 },
+        discountApproval: { label: 'Validation Remise', type: 'selection', options: ['Non Requise', 'En Attente (Directeur)', 'Approuvée (Directeur)', 'Refusée'], default: 'Non Requise', readonly: true },
+        approvedBy: { label: 'Approuvé Par', type: 'text', readonly: true },
+        montantTTC: { label: 'Montant Total TTC', type: 'money', currency: 'FCFA', search: true },
+        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'En Révision', 'Envoyé', 'Accepté', 'Refusé', 'Expiré'], default: 'Brouillon' }
       }
     },
     orders: {
@@ -63,8 +68,9 @@ export const SalesSchemas = {
       fields: {
         client: { label: 'Tiers Partenaire', type: 'text', required: true, search: true, placeholder: 'Sélectionner le client...' },
         date: { label: 'Date de la Transaction', type: 'date', required: true },
+        quoteRef: { label: 'Référence Devis', type: 'text', readonly: true },
         montant: { label: 'Valeur Totale HT', type: 'money', currency: 'FCFA', search: true },
-        statut: { label: 'État de la Commande', type: 'selection', options: ['Brouillon', 'Confirmé', 'Expédié', 'Payé', 'Annulé'], default: 'Brouillon' },
+        statut: { label: 'État de la Commande', type: 'selection', options: ['Brouillon', 'Confirmé', 'En Préparation', 'Expédié', 'Facturé', 'Payé', 'Annulé'], default: 'Brouillon' },
         items: { label: 'Articles', type: 'json' }
       },
       views: {
@@ -72,7 +78,8 @@ export const SalesSchemas = {
         search: {
           filters: [
             { id: 'confirmed', label: 'Confirmées', domain: [['statut', '==', 'Confirmé']] },
-            { id: 'to_ship', label: 'À expédier', domain: [['statut', '==', 'Confirmé']] }
+            { id: 'to_ship', label: 'À expédier', domain: [['statut', '==', 'En Préparation']] },
+            { id: 'to_invoice', label: 'À facturer', domain: [['statut', '==', 'Expédié']] }
           ],
           groups: [
             { id: 'statut', label: 'Par Statut' },
