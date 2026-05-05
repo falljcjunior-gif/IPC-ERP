@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Paperclip, Reply, Forward, ShieldCheck, Zap, Lock, Globe, Mail as MailIcon, Cpu
+  Paperclip, Reply, Forward, ShieldCheck, Zap, Lock, Globe, Mail, Cpu,
+  Search, Filter, CheckCircle2, Trash2, MoreHorizontal, Send, Plus, X,
+  Inbox, Star, Archive
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { mailService } from '../../../services/mail.service';
@@ -96,7 +98,7 @@ const MailTab = () => {
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }} className="icon-ring">
               <Globe size={120} strokeWidth={0.5} opacity={0.1} />
             </motion.div>
-            <MailIcon size={64} className="main-icon" />
+            <Mail size={64} className="main-icon" />
           </div>
           <h1>Connectez votre <strong>Communication</strong></h1>
           <p>Choisissez votre fournisseur pour intégrer vos emails professionnels directement dans Nexus OS.</p>
