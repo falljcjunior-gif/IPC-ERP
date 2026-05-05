@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, Settings, Users, Database, 
   Sparkles, Zap, Lock, Bell, Search,
-  Power, Terminal, Cpu, Layout, Activity
+  Power, Terminal, Cpu, Layout, Activity, RefreshCw
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { functions } from '../../firebase/config';
+import { httpsCallable } from 'firebase/functions';
 
 // Components
 import TabBar from '../marketing/components/TabBar';
@@ -20,6 +22,22 @@ import History from '../History';
 const ControlHub = ({ onOpenDetail }) => {
   const { userRole, config, currentUser, resetAllData, shellView } = useStore();
   const [activeTab, setActiveTab] = useState('identity');
+  const [isBackfilling, setIsBackfilling] = useState(false);
+
+  const handleBackfill = async () => {
+    if (!window.confirm('🚀 LANCER LA SYNCHRONISATION MASSIVE ? Cette opération va pousser toutes les données vers PostgreSQL.')) return;
+    setIsBackfilling(true);
+    try {
+      const backfillFn = httpsCallable(functions, 'backfillGreenBlock');
+      const result = await backfillFn();
+      alert(`✅ Backfill Terminé : ${result.data.syncs} enregistrements synchronisés.`);
+    } catch (err) {
+      console.error(err);
+      alert('❌ Échec du Backfill. Vérifiez les logs Cloud Functions.');
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
 
   // Security Check : Tactical Firewall
   if (userRole !== 'SUPER_ADMIN') {
@@ -74,6 +92,27 @@ const ControlHub = ({ onOpenDetail }) => {
                 <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>Status : Optimal</span>
              </div>
              
+             <button 
+                onClick={handleBackfill}
+                disabled={isBackfilling}
+                className="nexus-card" 
+                style={{ 
+                  padding: '0.9rem 2rem', 
+                  background: 'var(--nexus-primary)', 
+                  color: 'white', 
+                  border: 'none', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.75rem', 
+                  fontWeight: 900, 
+                  cursor: isBackfilling ? 'not-allowed' : 'pointer',
+                  opacity: isBackfilling ? 0.7 : 1
+                }}
+              >
+                 <RefreshCw size={20} className={isBackfilling ? 'spin' : ''} /> 
+                 {isBackfilling ? 'Synchronisation...' : 'Lancer Backfill SSOT'}
+              </button>
+
              <button onClick={() => {
                if(window.confirm('⚠️ EFFACER TOUTES LES DONNÉES : Ceci va supprimer TOUS les enregistrements irréversiblement. Confirmer ?')) {
                   resetAllData();

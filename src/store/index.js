@@ -113,7 +113,7 @@ export const useStore = create(
 
       data: {
         base: {},
-        hr: { employees: [], payroll: [] },
+        hr: { employees: [] },
         crm: { leads: [], customers: [] },
         sales: { orders: [], invoices: [] },
         inventory: { products: [], movements: [] },

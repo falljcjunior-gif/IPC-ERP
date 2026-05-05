@@ -11,7 +11,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import AccountingTab from './tabs/AccountingTab';
 import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
-import BankReconTab from './tabs/BankReconTab';
+import TreasuryTab from './tabs/TreasuryTab';
 import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
 import { IPCReportGenerator } from '../../utils/PDFExporter';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
@@ -130,7 +130,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
             {mainTab === 'accounting' && <AccountingTab onOpenDetail={onOpenDetail} addAccountingEntry={addAccountingEntry} />}
             {mainTab === 'invoicing'  && <InvoicingTab onOpenDetail={onOpenDetail} formatCurrency={formatCurrency} />}
             {mainTab === 'budget'     && <BudgetTab data={data} formatCurrency={formatCurrency} onOpenDetail={onOpenDetail} />}
-            {mainTab === 'banque'     && <BankReconTab />}
+            {mainTab === 'banque'     && <TreasuryTab />}
           </motion.div>
         </AnimatePresence>
       </div>

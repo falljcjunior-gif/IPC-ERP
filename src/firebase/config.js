@@ -4,6 +4,7 @@ import { getFirestore, initializeFirestore, enableMultiTabIndexedDbPersistence }
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
+import { getFunctions } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 const firebaseConfig = {
@@ -44,6 +45,7 @@ export const db = initializeFirestore(app, {
 
 export const rtdb = getDatabase(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app, 'europe-west1'); // Region standard pour l'ERP
 export const messaging = (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? getMessaging(app) : null;
 
 // Activer le mode Offline-First (Uniquement hors mode TEST)

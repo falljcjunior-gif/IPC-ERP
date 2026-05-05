@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, LayoutGrid, Users, Calendar, 
-  Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight
+  Sparkles, Zap, Heart, Search, Bell, Settings, X, ToggleLeft, ToggleRight, Mail
 } from 'lucide-react';
 import { useStore } from '../../store';
 
@@ -12,6 +12,7 @@ import WallTab from './tabs/WallTab';
 import MessengerTab from './tabs/MessengerTab';
 import DirectoryTab from './tabs/DirectoryTab';
 import EventsTab from './tabs/EventsTab';
+import MailTab from './tabs/MailTab';
 
 const ConnectHub = ({ onOpenDetail }) => {
   const data = useStore(s => s.data);
@@ -41,6 +42,7 @@ const ConnectHub = ({ onOpenDetail }) => {
     { id: 'messenger', label: 'Messenger', icon: <MessageCircle size={16} /> },
     { id: 'directory', label: 'Annuaire Staff', icon: <Users size={16} /> },
     { id: 'events', label: 'IPC Life', icon: <Calendar size={16} /> },
+    { id: 'mail', label: 'Emails', icon: <Mail size={16} /> },
   ];
 
   return (
@@ -145,6 +147,7 @@ const ConnectHub = ({ onOpenDetail }) => {
           {activeTab === 'messenger' && <MessengerTab onOpenDetail={onOpenDetail} navigationIntent={navigationIntent} />}
           {activeTab === 'directory' && <DirectoryTab data={data} onOpenDetail={onOpenDetail} />}
           {activeTab === 'events' && <EventsTab data={data} />}
+          {activeTab === 'mail' && <MailTab />}
         </motion.div>
       </AnimatePresence>
     </div>

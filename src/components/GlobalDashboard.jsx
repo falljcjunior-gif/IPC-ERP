@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { 
   GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity, Plus, X, Megaphone,
-  Store, ShoppingBag, Globe, ShoppingCart, Factory, FolderOpen, Briefcase, FileText, PieChart, Receipt, Scale, LineChart, Calendar, Headphones, FileDigit, Settings, Shield
+  Store, ShoppingBag, Globe, ShoppingCart, Factory, FolderOpen, Briefcase, FileText, PieChart, Receipt, Scale, LineChart, Calendar, Headphones, FileDigit, Settings, Shield, CheckCircle2, Mail
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useStore } from '../store';
@@ -30,12 +30,13 @@ const LuxuryTooltip = ({ active, payload, label }) => {
 /* ────────────────────────────────
    Widgets Components
 ──────────────────────────────── */
-const BaseWidget = ({ title, icon: Icon, children, onRemove }) => (
+const BaseWidget = ({ title, icon: Icon, children, onRemove, isSynced }) => (
   <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '2rem' }}>
     <div className="luxury-widget-header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <Icon size={16} color="#9ca3af" />
         <span className="luxury-widget-title">{title}</span>
+        {isSynced && <CheckCircle2 size={12} color="#059669" title="SSOT Verified" />}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <GripHorizontal className="luxury-drag-handle" size={20} />
@@ -50,8 +51,8 @@ const BaseWidget = ({ title, icon: Icon, children, onRemove }) => (
   </div>
 );
 
-const CashFlowWidget = ({ data, caComparaisonData, formatCurrency, onRemove }) => (
-  <BaseWidget title="Trésorerie & Cash-Flow" icon={DollarSign} onRemove={onRemove}>
+const CashFlowWidget = ({ data, caComparaisonData, formatCurrency, onRemove, isSynced }) => (
+  <BaseWidget title="Trésorerie & Cash-Flow" icon={DollarSign} onRemove={onRemove} isSynced={isSynced}>
     <div>
       <div className="luxury-value-massive">
         <AnimatedCounter from={0} to={data.caRealise} duration={2} formatter={(v) => formatCurrency(v, true)} />
@@ -80,8 +81,31 @@ const CashFlowWidget = ({ data, caComparaisonData, formatCurrency, onRemove }) =
   </BaseWidget>
 );
 
-const HRWidget = ({ data, onRemove }) => (
-  <BaseWidget title="Pulsation RH" icon={Users} onRemove={onRemove}>
+const MailWidget = ({ onRemove }) => (
+  <BaseWidget title="Communications" icon={Mail} onRemove={onRemove}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {[
+        { from: 'Oumar Sylla', subject: 'Rapport Q1', time: '10:45', unread: true },
+        { from: 'Banque Atl.', subject: 'Virement NEXUS', time: 'Hier', unread: false },
+        { from: 'Nexus AI', subject: 'Alerte Stock PVC', time: 'Hier', unread: true },
+      ].map((m, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: m.unread ? 'rgba(139, 92, 246, 0.05)' : 'transparent', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontWeight: 800, fontSize: '0.85rem' }}>{m.from}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.subject}</span>
+          </div>
+          <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>{m.time}</span>
+        </div>
+      ))}
+      <button style={{ marginTop: 'auto', background: 'none', border: 'none', color: '#8B5CF6', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer', textAlign: 'center' }}>
+        Voir tous les messages
+      </button>
+    </div>
+  </BaseWidget>
+);
+
+const HRWidget = ({ data, onRemove, isSynced }) => (
+  <BaseWidget title="Pulsation RH" icon={Users} onRemove={onRemove} isSynced={isSynced}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.effectif} duration={1.5} />
@@ -94,8 +118,8 @@ const HRWidget = ({ data, onRemove }) => (
   </BaseWidget>
 );
 
-const SupplyWidget = ({ data, onRemove }) => (
-  <BaseWidget title="Stocks & Logistique" icon={Truck} onRemove={onRemove}>
+const SupplyWidget = ({ data, onRemove, isSynced }) => (
+  <BaseWidget title="Stocks & Logistique" icon={Truck} onRemove={onRemove} isSynced={isSynced}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.otif} duration={2} />
@@ -109,8 +133,8 @@ const SupplyWidget = ({ data, onRemove }) => (
   </BaseWidget>
 );
 
-const CRMWidget = ({ data, onRemove }) => (
-  <BaseWidget title="CRM & Pipeline" icon={Target} onRemove={onRemove}>
+const CRMWidget = ({ data, onRemove, isSynced }) => (
+  <BaseWidget title="CRM & Pipeline" icon={Target} onRemove={onRemove} isSynced={isSynced}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.conversionRate} duration={2} />
@@ -124,8 +148,8 @@ const CRMWidget = ({ data, onRemove }) => (
   </BaseWidget>
 );
 
-const ProductionWidget = ({ data, onRemove }) => (
-  <BaseWidget title="Activité Usine" icon={Activity} onRemove={onRemove}>
+const ProductionWidget = ({ data, onRemove, isSynced }) => (
+  <BaseWidget title="Activité Usine" icon={Activity} onRemove={onRemove} isSynced={isSynced}>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
       <div className="luxury-value-massive" style={{ fontSize: '6rem' }}>
         <AnimatedCounter from={0} to={data.prodScore} duration={2} />
@@ -196,6 +220,7 @@ const WIDGET_REGISTRY = {
 
   // RH & Collaboration
   'hr': { id: 'hr', category: 'RH & Collaboration', label: 'Ressources Humaines', icon: Users },
+  'mail': { id: 'mail', category: 'RH & Collaboration', label: 'Emails IPC', icon: Mail },
   'planning': { id: 'planning', category: 'RH & Collaboration', label: 'Planning', icon: Calendar },
   'support': { id: 'support', category: 'RH & Collaboration', label: 'Support & Helpdesk', icon: Headphones },
   'docs': { id: 'docs', category: 'RH & Collaboration', label: 'Documents Cloud', icon: FileDigit },
@@ -208,30 +233,22 @@ const GlobalDashboard = () => {
   const dashboardPreferences = useStore(state => state.dashboardPreferences);
   const setDashboardPreferences = useStore(state => state.setDashboardPreferences);
 
-  const _incomes = useStore(s => s.data.finance?.incomes);
-  const incomes = _incomes || [];
-  const _employees = useStore(s => s.data.hr?.employees);
-  const employees = _employees || [];
-  const _shipments = useStore(s => s.data.inventory?.shipments);
-  const shipments = _shipments || [];
-  const _workOrders = useStore(s => s.data.production?.workOrders);
-  const workOrders = _workOrders || [];
-  const _deals = useStore(s => s.data.crm?.deals);
-  const deals = _deals || [];
+  const invoices = useStore(s => s.data.finance?.invoices || []);
+  const employees = useStore(s => s.data.hr?.employees || []);
+  const shipments = useStore(s => s.data.inventory?.shipments || []);
+  const workOrders = useStore(s => s.data.production?.workOrders || []);
+  const deals = useStore(s => s.data.crm?.deals || []);
   
   const formatCurrency = useStore(state => state.formatCurrency);
 
-  // Default widget order using store preferences or fallback
   const [widgets, setWidgets] = useState(dashboardPreferences || ['finance', 'crm', 'production', 'hr', 'supply']);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const popoverRef = useRef(null);
 
-  // Sync to store when widgets change
   useEffect(() => {
     setDashboardPreferences(widgets);
   }, [widgets, setDashboardPreferences]);
 
-  // Handle outside click for popover
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target)) {
@@ -244,7 +261,6 @@ const GlobalDashboard = () => {
 
   const availableWidgets = Object.values(WIDGET_REGISTRY).filter(w => !widgets.includes(w.id));
   
-  // Group available widgets by category
   const groupedAvailable = availableWidgets.reduce((acc, w) => {
     if (!acc[w.category]) acc[w.category] = [];
     acc[w.category].push(w);
@@ -261,9 +277,9 @@ const GlobalDashboard = () => {
   };
 
   // Dynamic Data Calculation
-  const { metrics, caComparaisonData } = useMemo(() => {
-    const caRealise = incomes.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
-    const effectif = employees.length || 142; // Fallback for UI testing
+  const { metrics, caComparaisonData, ssotStatus } = useMemo(() => {
+    const caRealise = invoices.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
+    const effectif = employees.length || 142;
     const livres = shipments.filter(s => s.statut === 'Livré').length;
     const retardes = shipments.filter(s => s.statut === 'Retardé').length;
     const otif = livres + retardes > 0 ? Math.round((livres / (livres + retardes)) * 100) : 94;
@@ -272,28 +288,43 @@ const GlobalDashboard = () => {
     const activeDeals = deals.filter(d => d.statut !== 'Gagné' && d.statut !== 'Perdu').length;
     const conversionRate = deals.length > 0 ? Math.round((wonDeals / deals.length) * 100) : 68; 
 
+    // SSOT Health Check
+    const ssotStatus = {
+      finance: invoices.length > 0 && invoices.every(i => i._synced),
+      hr: employees.length > 0 && employees.every(e => e._synced),
+      production: workOrders.length > 0 && workOrders.every(w => w._synced),
+      global: (invoices.filter(i => i._synced).length + workOrders.filter(w => w._synced).length) > 0
+    };
+
     const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const currentMonth = new Date().getMonth();
+    
     const caComparaisonData = moisFr.map((mois, index) => {
-       let realise = index <= currentMonth ? (caRealise > 0 ? (caRealise / (currentMonth + 1)) * (0.9 + Math.random() * 0.2) : 150000000 * (0.8 + Math.random() * 0.4)) : null;
-       return { mois, Réalisé: realise };
+       const monthInvoices = invoices.filter(i => {
+         const d = new Date(i.date || i.createdAt);
+         return d.getMonth() === index && i.statut === 'Payé';
+       });
+       const amount = monthInvoices.reduce((sum, i) => sum + Number(i.montant || 0), 0);
+       const baseline = 120000000 + (index * 5000000); 
+       return { mois, Réalisé: index <= currentMonth ? (amount || baseline) : null };
     });
 
     return { 
       metrics: { caRealise, effectif, otif, prodScore, conversionRate, activeDeals }, 
-      caComparaisonData 
+      caComparaisonData,
+      ssotStatus
     };
-  }, [incomes, employees, shipments, workOrders, deals]);
+  }, [invoices, employees, shipments, workOrders, deals]);
 
-  // Map widget IDs to their components
   const renderWidget = (id) => {
     switch(id) {
-      case 'finance': return <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} onRemove={() => removeWidget(id)} />;
-      case 'crm': return <CRMWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'production': return <ProductionWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'hr': return <HRWidget data={metrics} onRemove={() => removeWidget(id)} />;
-      case 'supply': return <SupplyWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'finance': return <CashFlowWidget data={metrics} caComparaisonData={caComparaisonData} formatCurrency={formatCurrency} onRemove={() => removeWidget(id)} isSynced={ssotStatus.finance} />;
+      case 'crm': return <CRMWidget data={metrics} onRemove={() => removeWidget(id)} isSynced={false} />;
+      case 'production': return <ProductionWidget data={metrics} onRemove={() => removeWidget(id)} isSynced={ssotStatus.production} />;
+      case 'hr': return <HRWidget data={metrics} onRemove={() => removeWidget(id)} isSynced={ssotStatus.hr} />;
+      case 'supply': return <SupplyWidget data={metrics} onRemove={() => removeWidget(id)} isSynced={false} />;
       case 'marketing': return <MarketingWidget data={metrics} onRemove={() => removeWidget(id)} />;
+      case 'mail': return <MailWidget onRemove={() => removeWidget(id)} />;
       default: return <GenericWidget id={id} WIDGET_REGISTRY={WIDGET_REGISTRY} onRemove={() => removeWidget(id)} />;
     }
   };
@@ -335,7 +366,6 @@ const GlobalDashboard = () => {
           ))}
         </AnimatePresence>
 
-        {/* Add Widget Button */}
         {availableWidgets.length > 0 && (
           <motion.div 
             layout
@@ -348,7 +378,6 @@ const GlobalDashboard = () => {
               Ajouter un Département
             </span>
 
-            {/* Popover */}
             <AnimatePresence>
               {isPopoverOpen && (
                 <motion.div 

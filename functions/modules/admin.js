@@ -264,3 +264,45 @@ exports.backfillUsers = onCall({
     throw new HttpsError('internal', `Backfill failed: ${error.message} \n ${error.stack}`);
   }
 });
+
+/**
+ * 🔗 GREEN BLOCK: BACKFILL TO POSTGRESQL (CALLABLE)
+ */
+const greenblock = require('./greenblock');
+
+exports.backfillGreenBlock = onCall({
+  maxInstances: 1,
+  timeoutSeconds: 540,
+  memory: '1GiB'
+}, async (request) => {
+  const callerRole = request.auth?.token?.role;
+  if (callerRole !== 'SUPER_ADMIN') {
+    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN can trigger SSOT backfill.');
+  }
+
+  const COLLECTIONS = [
+    { name: 'users', model: 'com.ipc.greenblock.base.db.Partner' },
+    { name: 'crm_clients', model: 'com.ipc.greenblock.base.db.Partner' },
+    { name: 'finance_invoices', model: 'com.ipc.greenblock.finance.db.Invoice' },
+    { name: 'hr_expenses', model: 'com.ipc.greenblock.hr.db.Expense' },
+    { name: 'inventory_products', model: 'com.ipc.greenblock.product.db.ProductTemplate' }
+  ];
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const item of COLLECTIONS) {
+    const snap = await db.collection(item.name).get();
+    for (const doc of snap.docs) {
+      try {
+        await greenblock.syncRecord(item.model, doc.data(), doc.id);
+        successCount++;
+      } catch (err) {
+        errorCount++;
+        logger.error(`Backfill error for ${item.name}/${doc.id}:`, err);
+      }
+    }
+  }
+
+  return { success: true, syncs: successCount, errors: errorCount };
+});

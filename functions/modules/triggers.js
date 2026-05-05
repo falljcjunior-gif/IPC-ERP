@@ -201,7 +201,7 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance/{invoiceId}', a
         const syncTaskRef = db.collection('sync_queue').doc(`greenblock_acc_${event.id}`);
         t.set(syncTaskRef, {
           target: 'greenblock',
-          model: 'com.greenblock.apps.account.db.AccountMove',
+          model: 'com.ipc.greenblock.finance.db.AccountMove',
           payload: {
             name: `INV-${invoiceId}`,
             amount: amount,
@@ -214,7 +214,7 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance/{invoiceId}', a
       
       // SSOT Synchronization (Best-effort inline)
       try {
-        await greenblock.syncRecord('com.greenblock.apps.account.db.AccountMove', {
+        await greenblock.syncRecord('com.ipc.greenblock.finance.db.AccountMove', {
           name: `INV-${invoiceId}`,
           amount: amount,
           ref: invoiceId
@@ -232,6 +232,72 @@ exports.syncAccountingOnInvoicePaid = onDocumentUpdated('finance/{invoiceId}', a
     } catch (err) {
       logger.error('Accounting Sync Error:', err);
     }
+  }
+  return null;
+});
+
+/**
+ * 💰 PAYROLL: GREEN BLOCK SSOT SYNC — Hardened with Transactions
+ */
+exports.syncPayrollToGreenBlock = onDocumentWritten('payroll/{slipId}', async (event) => {
+  const newData = event.data.after.exists ? event.data.after.data() : null;
+  const { slipId } = event.params;
+  if (!newData || newData.subModule !== 'slips') return null;
+
+  try {
+    await db.runTransaction(async (t) => {
+      const slipRef = event.data.after.ref;
+      const doc = await t.get(slipRef);
+      
+      // 🛡️ Idempotency check
+      const processedEvents = doc.data().processedEvents || [];
+      if (processedEvents.includes(event.id)) {
+        logger.warn(`Event ${event.id} already processed for slip ${slipId}.`);
+        return;
+      }
+
+      // Add to outbox (Atomic)
+      const syncTaskRef = db.collection('sync_queue').doc(`payroll_${event.id}`);
+      t.set(syncTaskRef, {
+        target: 'greenblock',
+        model: 'com.ipc.greenblock.hr.db.SalarySlip',
+        payload: {
+          employeeId: newData.employeeId,
+          period: newData.period,
+          amount: newData.netPay,
+          status: newData.status,
+          ref: slipId
+        },
+        status: 'pending',
+        createdAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Update processed events
+      t.update(slipRef, { 
+        processedEvents: admin.firestore.FieldValue.arrayUnion(event.id) 
+      });
+    });
+
+    // Best-effort inline sync
+    try {
+      await greenblock.syncRecord('com.ipc.greenblock.hr.db.SalarySlip', {
+        employeeId: newData.employeeId,
+        period: newData.period,
+        amount: newData.netPay,
+        status: newData.status,
+        ref: slipId
+      }, slipId);
+      
+      await db.collection('sync_queue').doc(`payroll_${event.id}`).update({
+        status: 'completed',
+        completedAt: admin.firestore.FieldValue.serverTimestamp()
+      });
+      logger.info(`Payroll slip ${slipId} synced to Green Block.`);
+    } catch (err) {
+      logger.error(`Green Block sync failed for payroll slip ${slipId}, task remains in queue.`);
+    }
+  } catch (err) {
+    logger.error('Payroll Sync Transaction Error:', err);
   }
   return null;
 });
@@ -287,7 +353,7 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production/{ofId}',
         const syncTaskRef = db.collection('sync_queue').doc(event.id);
         t.set(syncTaskRef, {
           target: 'greenblock',
-          model: 'com.greenblock.apps.stock.db.StockMove',
+          model: 'com.ipc.greenblock.stock.db.StockMove',
           payload: {
             productId,
             quantity,
@@ -301,7 +367,7 @@ exports.updateStockOnProductionComplete = onDocumentUpdated('production/{ofId}',
 
       // SSOT Synchronization (Best-effort inline)
       try {
-        await greenblock.syncRecord('com.greenblock.apps.stock.db.StockMove', {
+        await greenblock.syncRecord('com.ipc.greenblock.stock.db.StockMove', {
           productId,
           quantity,
           origin: ofId,

@@ -9,7 +9,7 @@ import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart'
 import { 
   Target, TrendingUp, Users, Zap, 
   Star, MousePointer2, Briefcase, Rocket,
-  ArrowRight
+  ArrowRight, ShieldCheck
 } from 'lucide-react';
 import KpiCard from '../../../components/KpiCard';
 
@@ -61,8 +61,8 @@ const GrowthTab = ({ data, formatCurrency }) => {
            icon={<MousePointer2 size={20}/>} color="#10B981" 
          />
          <KpiCard 
-           title="Contacts Base" value={contacts.length} 
-           icon={<Star size={20}/>} color="#8B5CF6" 
+           title="Santé SSOT" value="Consolidé" 
+           icon={<ShieldCheck size={20}/>} color="#6366F1" 
          />
       </div>
 

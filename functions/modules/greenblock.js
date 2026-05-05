@@ -1,4 +1,4 @@
-// const axios = require('axios');
+const axios = require('axios');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -17,11 +17,11 @@ const db = admin.firestore();
  * @param {string} sourceId - The Firestore document ID
  */
 exports.syncRecord = async (model, data, sourceId) => {
-  // const GREENBLOCK_URL = process.env.GREENBLOCK_API_URL || 'https://greenblock.example.com/rest';
+  const GREENBLOCK_URL = process.env.GREENBLOCK_API_URL || 'https://greenblock.ipc-platform.com/rest';
   const GREENBLOCK_KEY = process.env.GREENBLOCK_API_KEY;
 
   if (!GREENBLOCK_KEY) {
-    logger.warn(`IPC Green Block Sync Skipped: API Key missing for ${sourceId}`);
+    logger.warn(`[Green Block] Sync SKIPPED: API Key missing for doc ${sourceId}. Ensure GREENBLOCK_API_KEY is set.`);
     return { success: false, status: 'SKIPPED_CONFIG_MISSING' };
   }
 
@@ -29,34 +29,48 @@ exports.syncRecord = async (model, data, sourceId) => {
   const startTime = Date.now();
 
   try {
-    // Placeholder for actual IPC Green Block REST API call
-    // const response = await axios.post(`${GREENBLOCK_URL}/${model}`, data, {
-    //   headers: { 'X-API-KEY': GREENBLOCK_KEY }
-    // });
+    // 🚀 ACTUAL IPC GREEN BLOCK REST API CALL
+    const response = await axios.post(`${GREENBLOCK_URL}/${model}`, data, {
+      headers: { 
+        'X-API-KEY': GREENBLOCK_KEY,
+        'Content-Type': 'application/json',
+        'X-Source-ID': sourceId
+      },
+      timeout: 10000 // 10s timeout
+    });
 
-    logger.info(`IPC Green Block Sync [STUB]: ${model}/${sourceId}`);
+    logger.info(`[Green Block] Sync SUCCESS: ${model}/${sourceId}`, { status: response.status });
 
     await syncLogRef.set({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       sourceId,
       model,
-      status: 'SUCCESS_STUB',
+      status: 'SUCCESS',
+      statusCode: response.status,
       duration: Date.now() - startTime
     });
 
-    return { success: true };
+    return { success: true, status: response.status };
   } catch (error) {
-    logger.error(`IPC Green Block Sync Error [${model}/${sourceId}]:`, error.message);
+    const errorMsg = error.response ? 
+      `API Error (${error.response.status}): ${JSON.stringify(error.response.data)}` : 
+      error.message;
+
+    logger.error(`[Green Block] Sync ERROR [${model}/${sourceId}]:`, errorMsg);
     
     await syncLogRef.set({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       sourceId,
       model,
       status: 'ERROR',
-      errorMessage: error.message,
+      errorMessage: errorMsg,
       duration: Date.now() - startTime
     });
 
-    return { success: false, error: error.message };
+    return { 
+      success: false, 
+      error: errorMsg,
+      isRetryable: !error.response || (error.response.status >= 500) 
+    };
   }
 };
