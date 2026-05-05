@@ -39,7 +39,12 @@ exports.onTaskAssigned = triggers.onTaskAssigned;
 exports.onProjectAutoTag = triggers.onProjectAutoTag;
 exports.checkTaskDeadlines = triggers.checkTaskDeadlines;
 exports.archiveInactiveRooms = triggers.archiveInactiveRooms;
-
+exports.validateAccountingEntry = triggers.validateAccountingEntry;
+exports.onEmployeeOnboarded = triggers.onEmployeeOnboarded;
+exports.onEmployeeOffboarded = triggers.onEmployeeOffboarded;
+exports.hrPrivacyAudit = triggers.hrPrivacyAudit;
+exports.generatePrePayroll = triggers.generatePrePayroll;
+exports.refreshCockpitMetrics = triggers.refreshCockpitMetrics;
 
 // 4. Monitoring & Backups
 const monitoring = require('./modules/monitoring');
