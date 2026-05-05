@@ -146,19 +146,27 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
  * Backfill: S'assure que tous les utilisateurs Auth ont leur miroir Firestore
  * Utile après un "Nuclear Wipe" ou une migration.
  */
-exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
-  logger.info('Backfill requested by:', { 
-    uid: request.auth?.uid, 
-    email: request.auth?.token?.email, 
-    role: request.auth?.token?.role 
+exports.backfillUsers = onCall({ 
+  maxInstances: 5,
+  timeoutSeconds: 540, // Max timeout for Gen 2
+  memory: '1GiB'
+}, async (request) => {
+  const callerUid = request.auth?.uid;
+  const callerEmail = request.auth?.token?.email;
+  const callerRole = request.auth?.token?.role;
+
+  logger.info('Backfill execution started', { 
+    callerUid, 
+    callerEmail, 
+    callerRole 
   });
 
-  // Garde-fou de sécurité
-  const isSuperAdmin = request.auth?.token?.role === 'SUPER_ADMIN';
-  const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(request.auth?.token?.email);
+  // Security Guard
+  const isSuperAdmin = callerRole === 'SUPER_ADMIN';
+  const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(callerEmail);
   
   if (!isSuperAdmin && !isAuthorizedEmail) {
-    logger.warn('Backfill: Permission denied for user', request.auth?.uid);
+    logger.warn('Backfill: Permission denied', { callerUid, callerEmail });
     throw new HttpsError('permission-denied', 'Only SUPER_ADMIN or authorized developers can run backfill.');
   }
 
@@ -166,74 +174,91 @@ exports.backfillUsers = onCall({ maxInstances: 2 }, async (request) => {
   let createdUsers = 0;
   let createdHr = 0;
   let patched = 0;
-
-  const processPage = async (pageToken) => {
-    const listUsersResult = await admin.auth().listUsers(1000, pageToken);
-    
-    for (const user of listUsersResult.users) {
-      scanned++;
-      const uid = user.uid;
-      const userRef = db.collection('users').doc(uid);
-      const hrRef = db.collection('hr').doc(uid);
-
-      const [userDoc, hrDoc] = await Promise.all([userRef.get(), hrRef.get()]);
-      const now = admin.firestore.FieldValue.serverTimestamp();
-
-      // Mirror Users
-      if (!userDoc.exists) {
-        const userData = buildUserPayload(user, now);
-        await userRef.set(userData);
-        await admin.auth().setCustomUserClaims(uid, { role: userData.role });
-        createdUsers++;
-      } else {
-        // Sync claims for existing users
-        const data = userDoc.data();
-        if (data.role) {
-          await admin.auth().setCustomUserClaims(uid, { role: data.role });
-        }
-        
-        // Patch documents existants (si _deletedAt est resté à true par erreur)
-        if (data._deletedAt !== null) {
-          await userRef.update({ _deletedAt: null });
-          patched++;
-        }
-      }
-
-      // Mirror HR
-      if (!hrDoc.exists) {
-        await hrRef.set(buildHrPayload(user, now));
-        createdHr++;
-      } else {
-        const data = hrDoc.data();
-        const updates = {};
-        if (data._deletedAt !== null) updates._deletedAt = null;
-        if (data.subModule !== 'employees') updates.subModule = 'employees';
-        if (!data.userId) updates.userId = uid; // Ensure userId exists
-        
-        if (Object.keys(updates).length > 0) {
-          await hrRef.update(updates);
-          patched++;
-        }
-      }
-
-    }
-
-    if (listUsersResult.pageToken) {
-      await processPage(listUsersResult.pageToken);
-    }
-  };
+  let errors = 0;
 
   try {
-    await processPage();
+    let pageToken;
+    do {
+      const listUsersResult = await admin.auth().listUsers(1000, pageToken);
+      
+      // Utilisation d'un traitement séquentiel pour éviter de surcharger Firestore et Auth
+      // et pour faciliter le débogage par logs
+      for (const user of listUsersResult.users) {
+        scanned++;
+        const uid = user.uid;
+        
+        try {
+          const userRef = db.collection('users').doc(uid);
+          const hrRef = db.collection('hr').doc(uid);
+
+          const [userDoc, hrDoc] = await Promise.all([userRef.get(), hrRef.get()]);
+          const now = admin.firestore.FieldValue.serverTimestamp();
+
+          // 1. Sync User Document
+          if (!userDoc.exists) {
+            const userData = buildUserPayload(user, now);
+            await userRef.set(userData);
+            await admin.auth().setCustomUserClaims(uid, { role: userData.role });
+            createdUsers++;
+            logger.info(`Backfill: Created user doc for ${uid} (${user.email})`);
+          } else {
+            const data = userDoc.data();
+            // Sync claims
+            if (data.role) {
+              await admin.auth().setCustomUserClaims(uid, { role: data.role });
+            }
+            
+            // Fix soft-delete and missing metadata
+            if (data._deletedAt !== null) {
+              await userRef.update({ _deletedAt: null });
+              patched++;
+            }
+          }
+
+          // 2. Sync HR Document
+          if (!hrDoc.exists) {
+            await hrRef.set(buildHrPayload(user, now));
+            createdHr++;
+            logger.info(`Backfill: Created HR doc for ${uid} (${user.email})`);
+          } else {
+            const data = hrDoc.data();
+            const updates = {};
+            if (data._deletedAt !== null) updates._deletedAt = null;
+            if (data.subModule !== 'employees') updates.subModule = 'employees';
+            if (!data.userId) updates.userId = uid;
+            
+            if (Object.keys(updates).length > 0) {
+              await hrRef.update(updates);
+              patched++;
+            }
+          }
+        } catch (userErr) {
+          errors++;
+          logger.error(`Backfill: Error processing user ${uid}:`, userErr);
+        }
+      }
+
+      pageToken = listUsersResult.pageToken;
+    } while (pageToken);
+
+    logger.info('Backfill completed successfully', { 
+      scanned, 
+      createdUsers, 
+      createdHr, 
+      patched, 
+      errors 
+    });
+
     return { 
       success: true, 
       scanned, 
       createdUsers, 
       createdHr, 
-      patched 
+      patched,
+      errors
     };
   } catch (error) {
-    logger.error('Backfill execution failed:', error);
-    throw new HttpsError('internal', error.message);
+    logger.error('Backfill fatal error:', error);
+    throw new HttpsError('internal', error.message || 'Backfill failed');
   }
 });
