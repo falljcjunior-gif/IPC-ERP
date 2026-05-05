@@ -1,4 +1,4 @@
-const { onCall } = require('firebase-functions/v2/https');
+const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
@@ -29,27 +29,27 @@ exports.setUserRole = onCall({
 }, async (request) => {
   // 1. Authentification requise
   if (!request.auth) {
-    throw new Error('unauthenticated');
+    throw new HttpsError('unauthenticated', 'Authentification requise');
   }
 
   // 2. Seul SUPER_ADMIN peut modifier les rôles
   const callerRole = request.auth.token?.role;
   if (callerRole !== 'SUPER_ADMIN') {
     logger.warn(`[setUserRole] Tentative non-autorisée par ${request.auth.uid} (rôle: ${callerRole})`);
-    throw new Error('permission-denied: Seul un SUPER_ADMIN peut modifier les rôles.');
+    throw new HttpsError('permission-denied', 'Seul un SUPER_ADMIN peut modifier les rôles.');
   }
 
   // 3. Validation de l'input
   const validation = SetRoleSchema.safeParse(request.data);
   if (!validation.success) {
-    throw new Error(`invalid-argument: ${validation.error.message}`);
+    throw new HttpsError('invalid-argument', validation.error.message);
   }
 
   const { uid, role } = validation.data;
 
   // 4. Empêcher l'auto-modification (un admin ne peut pas se rétrograder)
   if (uid === request.auth.uid && role !== 'SUPER_ADMIN') {
-    throw new Error('permission-denied: Vous ne pouvez pas modifier votre propre rôle SUPER_ADMIN.');
+    throw new HttpsError('permission-denied', 'Vous ne pouvez pas modifier votre propre rôle SUPER_ADMIN.');
   }
 
   try {
@@ -81,7 +81,7 @@ exports.setUserRole = onCall({
 
   } catch (error) {
     logger.error('[setUserRole] Erreur:', error);
-    throw new Error(`INTERNAL_ERROR: ${error.message}`);
+    throw new HttpsError('internal', error.message);
   }
 });
 
@@ -102,11 +102,11 @@ exports.bootstrapSuperAdmin = onCall({
     .get();
 
   if (!existingAdmins.empty) {
-    throw new Error('permission-denied: Un SUPER_ADMIN existe déjà. Bootstrap non autorisé.');
+    throw new HttpsError('permission-denied', 'Un SUPER_ADMIN existe déjà. Bootstrap non autorisé.');
   }
 
   const email = request.data?.email;
-  if (!email) throw new Error('invalid-argument: email requis');
+  if (!email) throw new HttpsError('invalid-argument', 'email requis');
 
   try {
     const user = await admin.auth().getUserByEmail(email);
@@ -123,6 +123,6 @@ exports.bootstrapSuperAdmin = onCall({
     return { success: true, uid: user.uid };
   } catch (err) {
     logger.error('[Bootstrap] Erreur:', err);
-    throw new Error(`INTERNAL_ERROR: ${err.message}`);
+    throw new HttpsError('internal', err.message);
   }
 });

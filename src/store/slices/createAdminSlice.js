@@ -1,7 +1,7 @@
 import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { auth, firebaseConfig } from '../../firebase/config';
+import { auth, firebaseConfig, db as firestoreDb, app } from '../../firebase/config';
 import { FirestoreService } from '../../services/firestore.service';
 
 import { registry } from '../../services/Registry';
@@ -186,7 +186,7 @@ export const createAdminSlice = (set, get) => ({
   permanentlyDeleteUserRecord: async (userId) => {
     const uid = String(userId);
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(app, 'us-central1');
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
       await deleteUserFunc({ uid });
     } catch (err) {
@@ -217,7 +217,7 @@ export const createAdminSlice = (set, get) => ({
 
   triggerManualBackup: async () => {
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(app, 'us-central1');
       const backupFunc = httpsCallable(functions, 'manualFirestoreExport');
       const result = await backupFunc();
       
@@ -240,7 +240,7 @@ export const createAdminSlice = (set, get) => ({
 
   syncAllAccounts: async () => {
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(app, 'us-central1');
       const backfillFunc = httpsCallable(functions, 'backfillUsers');
       const result = await backfillFunc();
       

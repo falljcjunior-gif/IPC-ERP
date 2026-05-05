@@ -148,9 +148,10 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
  * Utile après un "Nuclear Wipe" ou une migration.
  */
 exports.backfillUsers = onCall({ 
-  maxInstances: 5,
-  timeoutSeconds: 540, // Max timeout for Gen 2
-  memory: '1GiB'
+  maxInstances: 1, // Limiter à 1 pour éviter les conflits de backfill concurrents
+  timeoutSeconds: 540,
+  memory: '1GiB',
+  enforceAppCheck: false
 }, async (request) => {
   const callerUid = request.auth?.uid;
   const callerEmail = request.auth?.token?.email;

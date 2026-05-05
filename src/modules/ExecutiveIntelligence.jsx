@@ -14,6 +14,7 @@ import {
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getFunctions, httpsCallable } from 'firebase/functions';
+import { app } from '../firebase/config';
 import { useStore } from '../store';
 import '../components/GlobalDashboard.css';
 
@@ -110,7 +111,7 @@ const ExecutiveIntelligence = () => {
   const handleButlerDeepAnalysis = async () => {
     setIsLoadingInsight(true);
     try {
-      const functions = getFunctions();
+      const functions = getFunctions(app, 'us-central1');
       const nexusChat = httpsCallable(functions, 'nexusChat');
       
       const res = await nexusChat({

@@ -35,7 +35,7 @@ const AuthObserver = () => {
 
       const handleCallback = async () => {
         try {
-          const functions = getFunctions();
+          const functions = getFunctions(auth.app, 'us-central1');
           const exchangeFunc = httpsCallable(functions, 'exchangeSocialToken');
           const result = await exchangeFunc({ provider: 'facebook', code, redirectUri: window.location.origin + '/' });
           const { accessToken } = result.data;
