@@ -48,9 +48,6 @@ const IdentityTab = ({ onOpenDetail }) => {
                <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Gérez les comptes utilisateurs, les niveaux d'accès et le cycle de vie des identités.</p>
             </div>
              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => alert('Ouverture des filtres avancés d\'identités...')} className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, border: '1px solid var(--border)', cursor: 'pointer' }}>
-                   <Filter size={16} /> Filtrer
-                </button>
                 <button onClick={() => onOpenDetail?.(null, 'admin', 'users')} className="btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 900, background: '#0F172A', borderColor: '#0F172A', cursor: 'pointer' }}>
                    <UserPlus size={18} /> Nouvel Utilisateur
                 </button>

@@ -175,7 +175,7 @@ service cloud.firestore {
     match /finance/{docId} {
       allow read: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
       allow create, update: if isAuthenticated() && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
-      allow delete: if false; // Hard-delete disabled. Use soft-delete (update _deletedAt).
+      allow delete: if false; 
     }
 
     match /accounting/{docId} {
@@ -185,13 +185,13 @@ service cloud.firestore {
     }
 
     match /sales/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('STAFF') || hasRole('FINANCE'));
       allow create, update: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('STAFF'));
       allow delete: if false;
     }
 
     match /crm/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('CRM') || hasRole('STAFF'));
       allow create, update: if isAuthenticated() && (isManager() || hasRole('SALES') || hasRole('CRM'));
       allow delete: if false;
     }
@@ -261,7 +261,11 @@ service cloud.firestore {
 
     // ── DMS / Documents ───────────────────────────────────────────────────────
     match /documents/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        isManager() || hasRole('STAFF') || 
+        resource.data.userId == request.auth.uid ||
+        ('ownerId' in resource.data && resource.data.ownerId == request.auth.uid)
+      );
       allow create, update: if isAuthenticated();
       allow delete: if false;
     }

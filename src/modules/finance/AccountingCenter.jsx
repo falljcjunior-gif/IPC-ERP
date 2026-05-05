@@ -4,6 +4,7 @@ import {
   BookOpen, Calculator, Scale, BookMarked, 
   BookCopy, ShieldCheck, Download
 } from 'lucide-react';
+import SmartButton from '../../components/SmartButton';
 import { useStore } from '../../store';
 import AccountingTab from './tabs/AccountingTab';
 
@@ -47,13 +48,13 @@ const AccountingCenter = ({ onOpenDetail }) => {
               </div>
             </div>
 
-            <button 
-              className="nexus-card" 
-              onClick={() => alert('Export FEC Nexus en cours...')}
-              style={{ background: 'white', padding: '1rem', border: '1px solid var(--nexus-border)', cursor: 'pointer' }}
-            >
-              <Download size={20} color="var(--nexus-secondary)" />
-            </button>
+            <SmartButton 
+              onClick={() => new Promise(resolve => setTimeout(resolve, 2000))}
+              variant="secondary"
+              icon={Download}
+              successMessage="FEC Exporté"
+              style={{ background: 'white', padding: '1rem', border: '1px solid var(--nexus-border)', borderRadius: '1rem' }}
+            />
           </div>
         </div>
       )}

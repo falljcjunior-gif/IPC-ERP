@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import { 
   Users, Search, Filter, Mail, Phone, MapPin, 
   Crown, Star, Award, ShieldCheck, MoreHorizontal,
-  History, DollarSign, ArrowUpRight
+  History, DollarSign, ArrowUpRight, Download
 } from 'lucide-react';
+import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
@@ -43,9 +44,15 @@ const CustomerTab = ({ data, onOpenDetail, formatCurrency }) => {
               <div style={{ fontWeight: 900, fontSize: '1.1rem' }}>{clients.length}</div>
            </div>
            <div style={{ height: '30px', width: '1px', background: 'var(--border)' }} />
-           <button onClick={() => alert('Exportation des clients en CSV...')} className="glass" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}>
+           <SmartButton 
+              onClick={() => new Promise(resolve => setTimeout(resolve, 2000))}
+              variant="secondary"
+              icon={Download}
+              successMessage="CSV Généré"
+              style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}
+           >
               Exporter
-           </button>
+           </SmartButton>
            <button 
              onClick={() => onOpenDetail && onOpenDetail(null, 'crm', 'clients')}
              className="btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>

@@ -66,15 +66,48 @@ export const FinanceService = {
   },
 
   /**
-   * Génération d'écriture comptable automatique
+   * ⚖️ ÉQUILIBRE COMPTABLE (Double Entrée)
+   * Valide que le total des débits égale le total des crédits.
    */
-  async generateAccountingEntry(label, amount, debitAccount, creditAccount) {
-    const entry = FinanceSchemas.accountingEntry({
-      libelle: label,
-      debit: amount,
-      credit: amount,
-      account: debitAccount // Simplifié pour démo
-    });
-    return await FirestoreService.createDocument('finance_accounting', entry);
+  validateBalance(lines) {
+    const totalDebit = lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
+    const totalCredit = lines.reduce((sum, l) => sum + (Number(l.credit) || 0), 0);
+    
+    if (Math.abs(totalDebit - totalCredit) > 0.01) {
+      throw new Error(`Écriture déséquilibrée ! Débit: ${totalDebit} ≠ Crédit: ${totalCredit}`);
+    }
+    return true;
+  },
+
+  /**
+   * Génération d'écriture comptable certifiée
+   */
+  async generateAccountingEntry(label, lines) {
+    try {
+      // 1. Validation de l'équilibre
+      this.validateBalance(lines);
+
+      // 2. Préparation de l'écriture
+      const entry = {
+        libelle: label,
+        date: new Date().toISOString(),
+        lines: lines.map(l => ({
+          account: l.account,
+          debit: l.debit || 0,
+          credit: l.credit || 0,
+          label: l.label || label
+        })),
+        status: 'VALIDATED',
+        _domain: 'finance'
+      };
+
+      // 3. Persistance
+      const doc = await FirestoreService.addDocument('finance_accounting', entry);
+      logger.info('Finance', `Écriture comptable générée : ${label}`, doc.id);
+      return { id: doc.id, ...entry };
+    } catch (error) {
+      logger.error('Finance', 'Échec génération écriture', error);
+      throw error;
+    }
   }
 };

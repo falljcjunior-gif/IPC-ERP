@@ -346,6 +346,9 @@ const MailTab = () => {
               </div>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Attachment Preview Modal */}
       <AnimatePresence>
         {previewAttachment && (

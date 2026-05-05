@@ -122,6 +122,7 @@ const SecurityTab = () => {
                 </button>
              </div>
           </div>
+        </div>
        {/* 🚀 SSOT REAL-TIME MONITOR : The Heartbeat */}
        <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)', background: 'var(--bg)', marginTop: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>

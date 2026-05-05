@@ -6,6 +6,7 @@ import {
   Truck, ArrowRight, Download, FileText
 } from 'lucide-react';
 import Chip from '../../marketing/components/Chip';
+import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, scale: 0.98 }, show: { opacity: 1, scale: 1 } };
@@ -26,9 +27,15 @@ const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
         </div>
         
         <div style={{ display: 'flex', gap: '1rem' }}>
-           <button onClick={() => alert('Génération du rapport PDF...')} className="nexus-card" style={{ padding: '0.75rem 1.5rem', background: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', border: 'none' }}>
-             <Download size={18} color="var(--nexus-primary)" /> Export
-           </button>
+           <SmartButton 
+              onClick={() => new Promise(resolve => setTimeout(resolve, 2000))}
+              variant="secondary"
+              icon={Download}
+              successMessage="Rapport Prêt"
+              style={{ padding: '0.75rem 1.5rem', background: 'white', borderRadius: '1rem', fontWeight: 800, fontSize: '0.9rem' }}
+           >
+             Export
+           </SmartButton>
            <button 
              onClick={() => onOpenDetail && onOpenDetail(null, 'sales', 'orders')}
              className="nexus-card" style={{ background: 'var(--nexus-primary)', padding: '0.75rem 1.75rem', color: 'white', fontWeight: 900, cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>

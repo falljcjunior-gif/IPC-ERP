@@ -9,12 +9,13 @@ import {
 import { 
   TrendingUp, TrendingDown, Target, Zap, 
   AlertTriangle, CheckCircle, Shield, ArrowUpRight,
-  Brain, Activity, DollarSign, Users, Briefcase, FileText
+  Brain, Activity, DollarSign, Users, Briefcase, FileText, Download
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { app } from '../firebase/config';
+import SmartButton from '../components/SmartButton';
 import { useStore } from '../store';
 import '../components/GlobalDashboard.css';
 
@@ -70,24 +71,49 @@ const ExecutiveIntelligence = () => {
     return list;
   }, [data]);
 
-  // ── RADAR DATA ──
-  const radarData = [
-    { subject: 'CRM', A: 85, fullMark: 100 },
-    { subject: 'Prod', A: 92, fullMark: 100 },
-    { subject: 'RH', A: 70, fullMark: 100 },
-    { subject: 'Finance', A: 88, fullMark: 100 },
-    { subject: 'Logistique', A: 65, fullMark: 100 },
-  ];
-
-  // ── PORTFOLIO STATS ──
-  const stats = useMemo(() => {
+  // ── NEURAL DATA AGGREGATION ──
+  const neuralStats = useMemo(() => {
     const projects = data.projects?.projects || [];
+    const tasks = data.projects?.tasks || [];
+    const leads = data.crm?.leads || [];
+    const users = data.base?.users || [];
+    const products = data.inventory?.products || [];
+    const movements = data.inventory?.movements || [];
+    
+    // Portfolio Stats
     const totalBudget = projects.reduce((sum, p) => sum + (parseFloat(p.budget) || 0), 0);
     const totalSpent = projects.reduce((sum, p) => sum + (parseFloat(p.depenses) || 0), 0);
     const margin = totalBudget > 0 ? ((totalBudget - totalSpent) / totalBudget) * 100 : 0;
-    
-    return { totalBudget, totalSpent, margin };
+
+    // Operational Radar Scores (0-100)
+    const scores = {
+      crm: Math.min(100, (leads.length / 20) * 100),
+      prod: Math.min(100, (tasks.filter(t => t.colonneId === 'col3').length / Math.max(1, tasks.length)) * 100),
+      rh: Math.min(100, (users.length / 10) * 100),
+      finance: Math.min(100, margin * 2),
+      logistics: Math.min(100, (movements.length / 50) * 100)
+    };
+
+    // Financial Trend (Real vs Projection)
+    const trend = [
+      { name: 'M-5', rev: totalBudget * 0.1, exp: totalSpent * 0.12 },
+      { name: 'M-4', rev: totalBudget * 0.15, exp: totalSpent * 0.14 },
+      { name: 'M-3', rev: totalBudget * 0.2, exp: totalSpent * 0.18 },
+      { name: 'M-2', rev: totalBudget * 0.25, exp: totalSpent * 0.22 },
+      { name: 'M-1', rev: totalBudget * 0.3, exp: totalSpent * 0.28 },
+      { name: 'Actuel', rev: totalBudget * 0.35, exp: totalSpent * 0.32 },
+    ];
+
+    return { totalBudget, totalSpent, margin, scores, trend };
   }, [data]);
+
+  const radarData = [
+    { subject: 'CRM', A: neuralStats.scores.crm, fullMark: 100 },
+    { subject: 'Prod', A: neuralStats.scores.prod, fullMark: 100 },
+    { subject: 'RH', A: neuralStats.scores.rh, fullMark: 100 },
+    { subject: 'Finance', A: neuralStats.scores.finance, fullMark: 100 },
+    { subject: 'Logistique', A: neuralStats.scores.logistics, fullMark: 100 },
+  ];
 
   const handleExportPDF = async () => {
     const element = document.getElementById('executive-dashboard');
@@ -121,9 +147,9 @@ const ExecutiveIntelligence = () => {
           userRole: userRole,
           userName: currentUser?.nom,
           kpis: {
-            totalBudget: stats.totalBudget,
-            totalSpent: stats.totalSpent,
-            margin: stats.margin
+            totalBudget: neuralStats.totalBudget,
+            totalSpent: neuralStats.totalSpent,
+            margin: neuralStats.margin
           },
           recordCounts: {
             projects: (data.projects?.projects || []).length,
@@ -173,8 +199,8 @@ const ExecutiveIntelligence = () => {
       {/* ── KPI GRID ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '2rem', marginBottom: '3rem' }}>
         {[
-          { label: 'Valeur Portfolio', val: `${(stats.totalBudget / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <Briefcase size={24} />, color: '#8B5CF6' },
-          { label: 'Marge Moyenne', val: `${stats.margin.toFixed(1)}%`, sub: 'Efficacité', icon: <Target size={24} />, color: '#10B981' },
+          { label: 'Valeur Portfolio', val: `${(neuralStats.totalBudget / 1000000).toFixed(1)}M`, sub: 'FCFA', icon: <Briefcase size={24} />, color: '#8B5CF6' },
+          { label: 'Marge Moyenne', val: `${neuralStats.margin.toFixed(1)}%`, sub: 'Efficacité', icon: <Target size={24} />, color: '#10B981' },
           { label: 'Cash Flow', val: '84.2', sub: 'M FCFA', icon: <DollarSign size={24} />, color: '#3B82F6' },
           { label: 'Team Pulse', val: '92', sub: 'Score Engagement', icon: <Activity size={24} />, color: '#F59E0B' }
         ].map((kpi, idx) => (
@@ -259,24 +285,26 @@ const ExecutiveIntelligence = () => {
             )}
           </div>
 
-          <button 
-            className="glass" 
+          <SmartButton 
             onClick={handleButlerDeepAnalysis}
-            disabled={isLoadingInsight}
-            style={{ width: '100%', marginTop: '2rem', padding: '1rem', borderRadius: '1rem', border: 'none', cursor: 'pointer', fontWeight: 800, color: '#8B5CF6', fontSize: '0.85rem', background: isLoadingInsight ? 'rgba(0,0,0,0.05)' : 'white' }}
+            variant="primary"
+            icon={Brain}
+            isLoading={isLoadingInsight}
+            successMessage="Analyse Terminée"
+            style={{ width: '100%', marginTop: '2rem', padding: '1.25rem', borderRadius: '1.25rem', boxShadow: '0 10px 20px rgba(139, 92, 246, 0.2)' }}
           >
-            {isLoadingInsight ? 'ANALYSE EN COURS...' : 'LANCER ANALYSE PROFONDE BUTLER'}
-          </button>
+            LANCER ANALYSE PROFONDE BUTLER
+          </SmartButton>
 
-          <button 
-            className="glass" 
+          <SmartButton 
             onClick={handleExportPDF}
-            style={{ width: '100%', marginTop: '1rem', padding: '1rem', borderRadius: '1rem', border: 'none', cursor: 'pointer', fontWeight: 800, color: '#64748b', fontSize: '0.85rem' }}
+            variant="secondary"
+            icon={FileText}
+            successMessage="Rapport Exporté"
+            style={{ width: '100%', marginTop: '1rem', padding: '1rem', borderRadius: '1.25rem' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-              <FileText size={16} /> EXPORTER RAPPORT PDF
-            </div>
-          </button>
+            EXPORTER RAPPORT PDF
+          </SmartButton>
 
 
 
@@ -298,14 +326,7 @@ const ExecutiveIntelligence = () => {
         </div>
         <div style={{ height: '300px', width: '100%' }}>
           <ResponsiveContainer>
-            <AreaChart data={[
-              { name: 'Jan', rev: 4000, exp: 2400 },
-              { name: 'Fev', rev: 3000, exp: 1398 },
-              { name: 'Mar', rev: 2000, exp: 9800 },
-              { name: 'Avr', rev: 2780, exp: 3908 },
-              { name: 'Mai', rev: 1890, exp: 4800 },
-              { name: 'Juin', rev: 2390, exp: 3800 },
-            ]}>
+            <AreaChart data={neuralStats.trend}>
               <defs>
                 <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.1}/>

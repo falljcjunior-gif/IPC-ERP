@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Edit3, CheckCircle2, FileText, ChevronRight } from 'lucide-react';
 import Chatter from './Chatter';
 import SmartButtons from './SmartButtons';
+import SmartButton from './SmartButton';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
 import { useToast } from './ToastProvider';
@@ -40,22 +41,24 @@ const RecordModal = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (isLoading) return;
     
     const missingFields = fields.filter(f => f.required && !formData[f.name]);
     if (missingFields.length > 0) {
         addToast("Champs requis : " + missingFields.map(f => t(f.label)).join(', '), 'error');
-        return;
+        throw new Error("Missing required fields");
     }
 
-    setShowSuccessAnim(true);
-    setTimeout(() => {
-       setShowSuccessAnim(false);
-       onSave(formData);
-       if (recordId) setIsEditMode(false);
-    }, 1200);
+    try {
+      await onSave(formData);
+      setShowSuccessAnim(true);
+      if (recordId) setIsEditMode(false);
+      setTimeout(() => setShowSuccessAnim(false), 2000);
+    } catch (err) {
+      addToast("Erreur lors de l'enregistrement", 'error');
+      throw err;
+    }
   };
 
   return (
@@ -314,13 +317,15 @@ const RecordModal = ({
                 >
                   Annuler
                 </button>
-                <button 
+                <SmartButton 
                   onClick={handleSubmit} 
-                  className="btn btn-primary btn-xl"
+                  variant="primary"
                   style={{ paddingLeft: '4rem', paddingRight: '4rem', boxShadow: '0 20px 40px rgba(6, 78, 59, 0.2)' }}
+                  icon={Save}
+                  successMessage={recordId ? 'Modifications Appliquées' : 'Enregistrement Créé'}
                 >
-                  <Save size={20} /> {recordId ? 'Appliquer les Modifications' : 'Créer l\'Enregistrement'}
-                </button>
+                  {recordId ? 'Appliquer les Modifications' : 'Créer l\'Enregistrement'}
+                </SmartButton>
               </div>
             )}
           </motion.div>

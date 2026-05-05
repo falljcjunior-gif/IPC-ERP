@@ -7,10 +7,11 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store';
 import { FirestoreService, StorageService } from '../services/firestore.service';
+import SmartButton from '../components/SmartButton';
 import '../components/GlobalDashboard.css';
 
 const SignatureModule = () => {
-  const { currentUser, data } = useStore();
+  const { currentUser, data, updateRecord } = useStore();
   const sigPad = useRef({});
   const [isSigning, setIsSigning] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -26,7 +27,9 @@ const SignatureModule = () => {
   const clear = () => sigPad.current.clear();
 
   const handleSave = async () => {
-    if (sigPad.current.isEmpty()) return alert("Veuillez signer avant d'enregistrer.");
+    if (sigPad.current.isEmpty()) {
+      throw new Error("Veuillez signer avant d'enregistrer.");
+    }
     
     setIsSaving(true);
     try {
@@ -48,12 +51,24 @@ const SignatureModule = () => {
         verificationHash: btoa(`${selectedDoc.id}-${Date.now()}`) // Simple hash for demo
       });
 
+      // 3. Update employee profile if it's an HR-related document
+      if (selectedDoc.type === 'Contrat' || selectedDoc.type === 'PV') {
+        const employeeId = selectedDoc.employeeId || currentUser.id;
+        await updateRecord('hr', 'employees', employeeId, {
+          [`documents.${selectedDoc.id}`]: {
+            label: selectedDoc.label,
+            url: uploadUrl,
+            signedAt: new Date().toISOString(),
+            status: 'SIGNED'
+          }
+        });
+      }
+
       setSignatureUrl(uploadUrl);
       setIsSigning(false);
-      alert("Document signé et archivé avec succès !");
     } catch (err) {
       console.error("Signature Error:", err);
-      alert("Erreur lors de l'enregistrement de la signature.");
+      throw err;
     } finally {
       setIsSaving(false);
     }
@@ -127,21 +142,22 @@ const SignatureModule = () => {
               </div>
 
               <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
-                <button 
+                <SmartButton 
                   onClick={handleSave}
-                  disabled={isSaving}
-                  style={{ 
-                    flex: 1, padding: '1.25rem', borderRadius: '1.25rem', border: 'none', 
-                    background: 'var(--accent)', color: 'white', fontWeight: 900, 
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-                    boxShadow: '0 10px 20px rgba(139, 92, 246, 0.2)'
-                  }}
+                  variant="primary"
+                  icon={FileCheck}
+                  successMessage="Document Signé & Archivé"
+                  style={{ flex: 1, padding: '1.25rem', borderRadius: '1.25rem', boxShadow: '0 10px 20px rgba(139, 92, 246, 0.2)' }}
                 >
-                  {isSaving ? 'ENREGISTREMENT...' : <><FileCheck size={20} /> VALIDER LA SIGNATURE</>}
-                </button>
-                <button className="glass" style={{ padding: '1.25rem', borderRadius: '1.25rem', border: 'none', fontWeight: 800, color: '#64748b' }}>
+                  VALIDER LA SIGNATURE
+                </SmartButton>
+                <SmartButton 
+                  onClick={() => setSelectedDoc(null)} 
+                  variant="ghost" 
+                  style={{ padding: '1.25rem', borderRadius: '1.25rem' }}
+                >
                   ANNULER
-                </button>
+                </SmartButton>
               </div>
             </>
           ) : (

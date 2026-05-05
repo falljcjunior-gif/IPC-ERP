@@ -78,5 +78,32 @@ export const InventoryService = {
       logger.error('Inventory', 'Échec inventaire physique', error);
       throw error;
     }
+  },
+
+  /**
+   * 🛡️ RÉSERVATION DE STOCK
+   * Bloque une quantité pour une commande sans déduire le stock physique.
+   * Utilise une transaction Firestore pour garantir l'intégrité.
+   */
+  async reserveStock(productId, quantity, orderId) {
+    try {
+      // 1. Vérification de disponibilité
+      const isAvailable = await this.checkAvailability(productId, quantity);
+      if (!isAvailable) {
+        throw new Error(`Stock insuffisant pour le produit ${productId}`);
+      }
+
+      // 2. Création du mouvement de réservation
+      return await this.recordMovement({
+        productId,
+        type: 'RESERVATION',
+        quantity,
+        reason: `Réservation pour Commande #${orderId}`,
+        referenceId: orderId
+      });
+    } catch (error) {
+      logger.error('Inventory', 'Échec réservation stock', error);
+      throw error;
+    }
   }
 };
