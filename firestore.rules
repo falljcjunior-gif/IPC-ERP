@@ -3,14 +3,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
 
-    // [ROOT BYPASS] Absolute priority for the creator and core developers
-    // This ensures administrative operations never fail due to race conditions or claim delays.
+    // [ROOT BYPASS] Only for verified SUPER_ADMIN via Custom Claims
+    // This ensures administrative operations are secured at the protocol level.
     match /{document=**} {
-      allow read, write: if request.auth != null && (
-        request.auth.uid == 'Ii8G2Ad6GyUxaS63ecrzeaE6l883' || // gitleaks:allow nosemgrep
-        request.auth.uid == 'li8G2Ad6GyUxaS63ecrzeaE6l883' || // gitleaks:allow nosemgrep
-        request.auth.token.role == 'SUPER_ADMIN'
-      );
+      allow read, write: if request.auth != null && request.auth.token.role == 'SUPER_ADMIN';
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

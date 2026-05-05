@@ -101,7 +101,7 @@ export const createOperationsSlice = (set, get) => ({
     return nextNum;
   },
 
-  addAccountingEntry: (entry, lines) => {
+  addAccountingEntry: async (entry, lines) => {
     const totalDebit = lines.reduce((s, l) => s + parseFloat(l.debit || 0), 0);
     const totalCredit = lines.reduce((s, l) => s + parseFloat(l.credit || 0), 0);
     
@@ -114,25 +114,35 @@ export const createOperationsSlice = (set, get) => ({
     const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
     const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
 
-    set(prev => {
-      const finance = prev.finance || { entries: [], lines: [] };
-      return {
-        ...prev,
-        finance: {
-          ...finance,
-          entries: [newEntry, ...(finance.entries || [])],
-          lines: [...newLines, ...(finance.lines || [])]
-        }
-      };
-    });
+    try {
+      // 1. Update local state immediately (Optimistic UI)
+      set(prev => {
+        const finance = prev.finance || { entries: [], lines: [] };
+        return {
+          ...prev,
+          finance: {
+            ...finance,
+            entries: [newEntry, ...(finance.entries || [])],
+            lines: [...newLines, ...(finance.lines || [])]
+          }
+        };
+      });
 
-    if (get().user) {
-      FirestoreService.setDocument('finance', entryId, { ...newEntry, subModule: 'entries' });
-      newLines.forEach(l => FirestoreService.setDocument('finance', l.id, { ...l, subModule: 'lines' }));
+      // 2. Persist to Firestore (Source of Truth)
+      if (get().user) {
+        await Promise.all([
+          FirestoreService.setDocument('finance', entryId, { ...newEntry, subModule: 'entries' }),
+          ...newLines.map(l => FirestoreService.setDocument('finance', l.id, { ...l, subModule: 'lines' }))
+        ]);
+      }
+
+      get().logAction('Écriture Comptable', entry.libelle, 'finance');
+      return true;
+    } catch (error) {
+      console.error('[OperationsSlice] addAccountingEntry Error:', error);
+      get().addHint({ title: "Échec de sauvegarde", message: "Impossible d'enregistrer l'écriture en base.", type: 'error' });
+      return false;
     }
-
-    get().logAction('Écriture Comptable', entry.libelle, 'finance');
-    return true;
   },
 
   generateInvoiceEntry: (invoice) => {
@@ -398,9 +408,26 @@ export const createOperationsSlice = (set, get) => ({
       const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
       let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
       const record = updatedList.find(o => o.id === id);
-      setTimeout(() => {
+      setTimeout(async () => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
-         if (get().user) FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+         
+         // 🛡️ [SECURITY HARDENING] Role updates MUST go through Cloud Functions for Custom Claims
+         if (appId === 'admin' && subModule === 'users' && newData.role && newData.role !== oldRecord.role) {
+            try {
+               const { httpsCallable } = await import('firebase/functions');
+               const { functions } = await import('../../firebase/config');
+               const setUserRoleFn = httpsCallable(functions, 'setUserRole');
+               await setUserRoleFn({ uid: id, role: newData.role });
+               get().addHint({ title: "Accréditation Mise à Jour", message: `Le rôle de ${record.nom} a été scellé par Custom Claims.`, type: 'success' });
+            } catch (err) {
+               console.error('[Admin] setUserRole Error:', err);
+               get().addHint({ title: "Échec RBAC", message: "Impossible de mettre à jour les droits d'accès via Custom Claims.", type: 'error' });
+               // On ne rollback pas le state local ici car Firestore sera mis à jour par la fonction si elle réussit,
+               // mais ici elle a échoué. On laisse le state local en attendant la prochaine synchro.
+            }
+         } else if (get().user) {
+            FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+         }
       }, 0);
       
       if (appId === 'production' && subModule === 'workOrders' && newData.statut === 'Terminé' && oldRecord.statut !== 'Terminé') {

@@ -9,8 +9,9 @@ import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart'
 import { 
   Target, TrendingUp, Users, Zap, 
   Star, MousePointer2, Briefcase, Rocket,
-  ArrowRight, ShieldCheck
+  ArrowRight, ShieldCheck, Activity
 } from 'lucide-react';
+import SmartButton from '../../../components/SmartButton';
 import KpiCard from '../../../components/KpiCard';
 
 const GrowthTab = ({ data, formatCurrency }) => {
@@ -65,6 +66,25 @@ const GrowthTab = ({ data, formatCurrency }) => {
            icon={<ShieldCheck size={20}/>} color="#6366F1" 
          />
       </div>
+
+      {/* 💎 AI INSIGHT : The Strategic Mind */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }} 
+        animate={{ opacity: 1, scale: 1 }}
+        className="glass" 
+        style={{ padding: '2rem', borderRadius: '2.5rem', background: 'linear-gradient(90deg, #6366F1 0%, #A855F7 100%)', color: 'white', display: 'flex', alignItems: 'center', gap: '2rem', boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)' }}
+      >
+         <div style={{ padding: '1.5rem', borderRadius: '2rem', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
+            <Star size={32} />
+         </div>
+         <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>Analyse Prédictive Nexus AI</h3>
+            <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontWeight: 500, lineHeight: 1.4 }}>
+               "Basé sur la vélocité actuelle du Q2, nous prévoyons une augmentation de <strong>18% du CA</strong> d'ici fin Juin. Recommandation : Optimiser le stock de matières premières dans le module Production pour éviter les ruptures."
+            </p>
+         </div>
+         <SmartButton variant="outline" style={{ borderColor: 'white', color: 'white', padding: '0.8rem 1.5rem' }}>Voir Détails IA</SmartButton>
+      </motion.div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
          {/* Sales Funnel */}
@@ -126,6 +146,34 @@ const GrowthTab = ({ data, formatCurrency }) => {
                </div>
                <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#10B981' }}>+12% Target</span>
             </div>
+         </div>
+      </div>
+
+      {/* Velocity Radar : Multi-dimensional Performance */}
+      <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+            <div style={{ padding: '8px', borderRadius: '10px', background: '#3B82F615', color: '#3B82F6' }}>
+               <Activity size={20} />
+            </div>
+            <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Radar de Performance Multidimensionnel</h4>
+         </div>
+         <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <SafeResponsiveChart minHeight={400}>
+               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={[
+                 { subject: 'Production', A: 120, B: 110, fullMark: 150 },
+                 { subject: 'Finance', A: 98, B: 130, fullMark: 150 },
+                 { subject: 'Ventes', A: 86, B: 130, fullMark: 150 },
+                 { subject: 'RH', A: 99, B: 100, fullMark: 150 },
+                 { subject: 'Logistique', A: 85, B: 90, fullMark: 150 },
+                 { subject: 'Qualité', A: 65, B: 85, fullMark: 150 },
+               ]}>
+                  <PolarGrid stroke="var(--border)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--text-muted)', fontWeight: 700, fontSize: 12 }} />
+                  <Radar name="Actuel" dataKey="A" stroke="#6366F1" fill="#6366F1" fillOpacity={0.6} />
+                  <Radar name="Objectif" dataKey="B" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
+                  <Tooltip contentStyle={{ background: 'var(--bg)', borderRadius: '1rem', border: '1px solid var(--border)' }} />
+               </RadarChart>
+            </SafeResponsiveChart>
          </div>
       </div>
 

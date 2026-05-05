@@ -9,6 +9,7 @@ import {
 import KpiCard from '../../../components/KpiCard';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { inventorySchema } from '../../../schemas/inventory.schema';
+import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -70,11 +71,13 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Network Topology</h3>
             <p style={{ margin: '0.25rem 0 0 0', color: 'var(--nexus-text-muted)', fontSize: '0.9rem', fontWeight: 600 }}>Cartographie des zones de stockage Nexus.</p>
           </div>
-          <button 
+          <SmartButton 
             onClick={() => onOpenDetail && onOpenDetail(null, 'inventory', 'warehouses')}
-            className="nexus-card" style={{ padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: 'var(--nexus-secondary)', color: 'white', border: 'none', cursor: 'pointer' }}>
-            <Plus size={18} strokeWidth={3} /> Nouvel Entrepôt
-          </button>
+            variant="primary"
+            icon={Plus}
+          >
+            Nouvel Entrepôt
+          </SmartButton>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
@@ -165,11 +168,13 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem', color: 'var(--nexus-secondary)' }}>Inventory Ledger</h3>
             <div style={{ display: 'flex', gap: '1rem' }}>
-               <button 
+               <SmartButton 
                  onClick={() => onOpenDetail && onOpenDetail(null, 'inventory', 'movements')}
-                 className="nexus-card" style={{ padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: 'var(--nexus-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>
-                 <ArrowUpRight size={18} strokeWidth={3} /> Nouveau Mouvement
-               </button>
+                 variant="primary"
+                 icon={ArrowUpRight}
+               >
+                 Nouveau Mouvement
+               </SmartButton>
             </div>
          </div>
 

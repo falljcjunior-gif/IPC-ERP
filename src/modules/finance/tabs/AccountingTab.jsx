@@ -9,6 +9,7 @@ import EnterpriseView from '../../../components/EnterpriseView';
 import { accountingSchema } from '../../../schemas/accounting.schema';
 
 import { useStore } from '../../../store';
+import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 
@@ -25,10 +26,12 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
   ]);
   const [header, setHeader] = useState({ libelle: '', date: new Date().toISOString().split('T')[0], piece: '' });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (addAccountingEntry) {
-      addAccountingEntry(header, saisieLines.filter(l => l.accountId && (l.debit > 0 || l.credit > 0)));
-      setView('ledger');
+      const success = await addAccountingEntry(header, saisieLines.filter(l => l.accountId && (l.debit > 0 || l.credit > 0)));
+      if (success) {
+        setView('ledger');
+      }
     }
   };
 
@@ -226,14 +229,14 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                    <button className="btn-secondary" onClick={() => setView('ledger')} style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem' }}>Annuler</button>
-                   <button 
-                     disabled={!totals.balanced}
-                     className="btn-primary" 
-                     onClick={handleSave} 
-                     style={{ padding: '0.8rem 2.5rem', borderRadius: '1.25rem', background: '#6366F1', opacity: totals.balanced ? 1 : 0.5 }}
-                   >
-                     Valider l'Écriture
-                   </button>
+                    <SmartButton 
+                      disabled={!totals.balanced}
+                      variant="primary"
+                      onClick={handleSave} 
+                      style={{ padding: '0.8rem 2.5rem', borderRadius: '1.25rem', background: '#6366F1' }}
+                    >
+                      Valider l'Écriture
+                    </SmartButton>
                 </div>
              </div>
           </motion.div>

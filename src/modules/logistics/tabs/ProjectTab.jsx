@@ -11,6 +11,7 @@ import GanttChart from '../../../components/GanttChart';
 import KpiCard from '../../../components/KpiCard';
 import EnterpriseView from '../../../components/EnterpriseView';
 import { projectSchema } from '../../../schemas/project.schema';
+import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
@@ -91,16 +92,16 @@ const ProjectTab = ({ data, onOpenDetail, updateRecord }) => {
             </div>
          </div>
 
-         <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="nexus-card" style={{ background: 'white', padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer' }}>
-              <Activity size={18} /> Rapports
-            </button>
-            <button 
-               onClick={() => onOpenDetail && onOpenDetail(null, 'projects', 'tasks')}
-               className="nexus-card" style={{ padding: '0.8rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, background: 'var(--nexus-primary)', color: 'white', border: 'none', cursor: 'pointer' }}>
-               <Plus size={18} strokeWidth={3} /> Nouvelle Tâche
-            </button>
-         </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+             <SmartButton variant="outline" icon={Activity}>Rapports</SmartButton>
+             <SmartButton 
+                onClick={() => onOpenDetail && onOpenDetail(null, 'projects', 'tasks')}
+                variant="primary"
+                icon={Plus}
+             >
+                Nouvelle Tâche
+             </SmartButton>
+          </div>
       </div>
 
       {/* Execution Content Focus */}

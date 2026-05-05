@@ -21,6 +21,7 @@ const MailTab = () => {
   const [selectedMail, setSelectedMail] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isComposing, setIsComposing] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState(null);
 
   // Mock data for the demonstration
   const [mails, setMails] = useState([
@@ -283,7 +284,10 @@ const MailTab = () => {
               </div>
 
               <div className="mail-viewer-footer">
-                <div className="attachment-chip">
+                <div 
+                  className="attachment-chip clickable" 
+                  onClick={() => setPreviewAttachment({ name: 'rapport_mensuel.pdf', type: 'pdf', size: '1.2 MB' })}
+                >
                   <Paperclip size={14} />
                   <span>rapport_mensuel.pdf (1.2 MB)</span>
                 </div>
@@ -291,7 +295,9 @@ const MailTab = () => {
                 <div className="quick-reply-box">
                   <textarea placeholder="Cliquez ici pour répondre rapidement..." />
                   <div className="quick-reply-actions">
-                    <button className="btn-send"><Send size={16} /> Envoyer</button>
+                    <SmartButton variant="primary" onClick={() => alert('Réponse rapide envoyée.')} size="sm">
+                      <Send size={16} /> Envoyer
+                    </SmartButton>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button className="action-btn"><Plus size={16} /></button>
                       <button className="action-btn"><Zap size={16} /></button>
@@ -331,12 +337,57 @@ const MailTab = () => {
               <textarea placeholder="Écrivez votre message ici..." className="compose-textarea" />
             </div>
             <div className="compose-footer">
-              <button className="btn-send-full"><Send size={18} /> Envoyer le message</button>
+              <SmartButton variant="primary" onClick={() => { alert('Message envoyé avec succès via le Bridge IPC.'); setIsComposing(false); }} fullWidth>
+                <Send size={18} /> Envoyer le message (Scellé)
+              </SmartButton>
               <div className="compose-tools">
                 <button className="tool-btn"><Paperclip size={18} /></button>
                 <button className="tool-btn"><ShieldCheck size={18} /></button>
               </div>
             </div>
+          </motion.div>
+      {/* Attachment Preview Modal */}
+      <AnimatePresence>
+        {previewAttachment && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="setup-modal-overlay"
+            onClick={() => setPreviewAttachment(null)}
+            style={{ zIndex: 3000, background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(20px)' }}
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="glass"
+              onClick={e => e.stopPropagation()}
+              style={{ width: '80%', height: '85%', borderRadius: '2.5rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}
+            >
+              <div style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ padding: '10px', borderRadius: '12px', background: 'var(--nexus-primary)', color: 'white' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 900, color: 'white' }}>{previewAttachment.name}</h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Scanné par Nexus Sentinel • Intégrité 100%</p>
+                  </div>
+                </div>
+                <button onClick={() => setPreviewAttachment(null)} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+              <div style={{ flex: 1, background: 'white', margin: '1rem', borderRadius: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1.5rem' }}>
+                 <div className="nexus-glow" style={{ padding: '2rem', borderRadius: '50%', background: '#F1F5F9' }}>
+                    <Mail size={64} color="#64748B" strokeWidth={1} />
+                 </div>
+                 <div style={{ textAlign: 'center' }}>
+                    <h2 style={{ color: '#0F172A', fontWeight: 900 }}>Prévisualisation du Document</h2>
+                    <p style={{ color: '#64748B', fontWeight: 600 }}>Le moteur de rendu PDF est en cours de chargement...</p>
+                 </div>
+                 <SmartButton variant="primary" onClick={() => window.open('#', '_blank')}>Ouvrir dans un nouvel onglet</SmartButton>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
