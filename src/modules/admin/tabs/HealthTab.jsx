@@ -1,7 +1,14 @@
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { 
+  Database, RefreshCcw, HardDrive, Info, 
+  Trash2, Download, Zap, ShieldCheck,
+  Server, Activity, Clock, CloudLightning
+} from 'lucide-react';
 import { useStore } from '../../../store';
 
 const HealthTab = () => {
-  const { syncAllAccounts } = useStore();
+  const { syncAllAccounts, triggerManualBackup } = useStore();
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -16,7 +23,7 @@ const HealthTab = () => {
     
     setIsBackingUp(true);
     try {
-      await triggerBackup();
+      await triggerManualBackup();
     } catch (err) {
       console.error(err);
     } finally {
