@@ -16,12 +16,14 @@ const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
 
 const PeopleTab = ({ data, onOpenDetail }) => {
   const { generatePayrollEntry } = useStore();
-  const employees = data?.hr?.employees || [];
+  const employees = data?.employees || [];
   
   const stats = useMemo(() => {
     const active = employees.filter(e => e.active !== false).length;
-    const formations = 0; 
-    const satisfaction = 0;
+    const formations = employees.reduce((acc, e) => acc + (e.training_completed || 0), 0); 
+    const satisfaction = employees.length > 0 
+      ? Math.round(employees.reduce((acc, e) => acc + (e.satisfaction_score || 7), 0) / employees.length) 
+      : 0;
     return { active, formations, satisfaction };
   }, [employees]);
 

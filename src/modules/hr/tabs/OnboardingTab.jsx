@@ -115,9 +115,14 @@ const OnboardingTab = ({ accessLevel }) => {
   });
 
   const allEmployees = useMemo(() => {
-    console.log('[DEBUG] HR Employees Data:', data?.hr?.employees);
-    return data?.hr?.employees || [];
-  }, [data?.hr?.employees]);
+    // [STRATEGY] Use data.employees (synced from 'users' collection) as master list
+    // Fallback to data.hr.employees for HR-specific records if master list is unavailable
+    const masterList = data?.employees || [];
+    const hrList = data?.hr?.employees || [];
+    
+    // Merge or prioritize masterList
+    return masterList.length > 0 ? masterList : hrList;
+  }, [data?.employees, data?.hr?.employees]);
 
   const filteredEmployees = useMemo(() => {
     if (!searchQuery.trim()) return allEmployees;
@@ -226,10 +231,12 @@ const OnboardingTab = ({ accessLevel }) => {
                           <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{emp.nom || emp.email}</div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{emp.poste || emp.dept}</div>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                           <span style={{ fontSize: '0.65rem', background: '#8B5CF620', color: '#8B5CF6', padding: '2px 8px', borderRadius: '2rem', fontWeight: 800 }}>{mods} Apps</span>
-                           <ChevronRight size={14} color="var(--text-muted)" />
-                        </div>
+                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <span style={{ fontSize: '0.65rem', background: '#8B5CF620', color: '#8B5CF6', padding: '2px 8px', borderRadius: '2rem', fontWeight: 800 }}>
+                              {mods} Apps
+                            </span>
+                            <ChevronRight size={14} color="var(--text-muted)" />
+                         </div>
                       </div>
                     );
                   })}

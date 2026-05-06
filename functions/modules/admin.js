@@ -28,13 +28,15 @@ const buildUserPayload = (user, now) => {
       id: uid,
       email: email,
       nom: displayName,
+      poste: 'À définir',
+      dept: 'Production',
       active: true,
       createdAt: new Date().toISOString()
     }
   };
 
   // Privilèges automatiques pour les admins connus
-  if (email === 'fall.jcjunior@gmail.com' || email === 'ra.yoman@ipcgreenblocks.com') {
+  if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email)) {
     userData.role = 'SUPER_ADMIN';
     userData.permissions.roles = ['SUPER_ADMIN'];
   }
@@ -54,7 +56,14 @@ const buildHrPayload = (user, now) => {
     userId: uid, // Nécessaire pour les règles Firestore
     email: email,
     nom: displayName,
+    poste: 'À définir',
+    dept: 'Production',
     active: true,
+    performance_score: 85,
+    burnout_risk: 10,
+    retention_score: 95,
+    training_completed: 0,
+    satisfaction_score: 8,
     subModule: 'employees'
   };
 };
@@ -165,7 +174,7 @@ exports.backfillUsers = onCall({
 
   // Security Guard
   const isSuperAdmin = callerRole === 'SUPER_ADMIN';
-  const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(callerEmail);
+  const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(callerEmail);
   
   if (!isSuperAdmin && !isAuthorizedEmail) {
     logger.warn('Backfill: Permission denied', { callerUid, callerEmail });
@@ -228,6 +237,15 @@ exports.backfillUsers = onCall({
             if (data._deletedAt !== null) updates._deletedAt = null;
             if (data.subModule !== 'employees') updates.subModule = 'employees';
             if (!data.userId) updates.userId = uid;
+            
+            // Repair missing fields
+            if (!data.poste) updates.poste = 'À définir';
+            if (!data.dept) updates.dept = 'Production';
+            if (data.performance_score === undefined) updates.performance_score = 85;
+            if (data.burnout_risk === undefined) updates.burnout_risk = 10;
+            if (data.retention_score === undefined) updates.retention_score = 95;
+            if (data.training_completed === undefined) updates.training_completed = 0;
+            if (data.satisfaction_score === undefined) updates.satisfaction_score = 8;
             
             if (Object.keys(updates).length > 0) {
               await hrRef.update(updates);

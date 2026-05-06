@@ -19,25 +19,68 @@ const POST_TYPES = [
 
 const WallTab = ({ data, currentUser }) => {
   const logAction = useStore(s => s.logAction);
-  const employeesCount = useStore(s => s.data?.hr?.employees?.filter(e => e.active)?.length || 0);
+  const addRecord = useStore(s => s.addRecord);
+  const employeesCount = useStore(s => s.data?.employees?.others?.length || 0);
 
-  const [feed, setFeed] = useState([]);
+  const feed = data?.connect?.posts || [];
   const [showCompose, setShowCompose] = useState(false);
+
+  const fixInvisibleData = async () => {
+    if (!window.confirm("Voulez-vous lancer la réparation système ? Cette action va restaurer les accès et la visibilité des données legacy (Utilisateurs, Mur, Activités).")) return;
+    try {
+      let fixed = 0;
+      
+      // 1. Réparation des Utilisateurs (Crucial pour l'annuaire et les accès)
+      const users = await FirestoreService.listDocuments('users', { includeDeleted: true });
+      for (const u of users) {
+        if (u._deletedAt === undefined || u._deletedAt === null) {
+           await FirestoreService.updateDocument('users', u.id, { _deletedAt: null });
+           fixed++;
+        }
+      }
+
+      // 2. Réparation du Mur & Événements (Collection 'connect')
+      const connectDocs = await FirestoreService.listDocuments('connect', { includeDeleted: true });
+      for (const d of connectDocs) {
+        const updates = {};
+        if (d._deletedAt === undefined) updates._deletedAt = null;
+        if (!d._createdAt) updates._createdAt = d.createdAt || d.timestamp || new Date().toISOString();
+        
+        // Déduction du subModule si absent
+        if (!d.subModule) {
+           if (d.type === 'success' || d.type === 'announcement' || d.type === 'milestone') updates.subModule = 'posts';
+           else if (d.date && (d.category === 'Stratégie' || d.category === 'Détente')) updates.subModule = 'events';
+           else updates.subModule = 'posts'; // Fallback
+        }
+
+        if (Object.keys(updates).length > 0) {
+           await FirestoreService.updateDocument('connect', d.id, updates);
+           fixed++;
+        }
+      }
+
+      // 3. Réparation des Activités
+      const activities = await FirestoreService.listDocuments('activities', { includeDeleted: true });
+      for (const a of activities) {
+        if (a._deletedAt === undefined) {
+           await FirestoreService.updateDocument('activities', a.id, { _deletedAt: null });
+           fixed++;
+        }
+      }
+
+      alert(`${fixed} enregistrements synchronisés et réparés ! Rechargez la page.`);
+      window.location.reload();
+    } catch (err) {
+      alert("Erreur de réparation : " + err.message);
+      console.error(err);
+    }
+  };
   const [form, setForm] = useState({ type: 'success', title: '', content: '', category: '', image: null, uploading: false });
   const [commentInputs, setCommentInputs] = useState({});
   const [openComments, setOpenComments] = useState({});
   const [commentsData, setCommentsData] = useState({}); // { postId: [comments] }
 
-  // ── Firestore Subscription ──
-  useEffect(() => {
-    const unsub = FirestoreService.subscribeToCollection(
-      'posts', 
-      { orderByField: '_createdAt', descending: true }, 
-      (posts) => setFeed(posts),
-      (err) => console.error("Erreur Wall Feed:", err)
-    );
-    return () => unsub();
-  }, []);
+
 
   const handleLike = async (post) => {
     const userId = currentUser?.id;
@@ -45,7 +88,7 @@ const WallTab = ({ data, currentUser }) => {
 
     const isLiked = post.likedBy?.includes(userId);
     try {
-      await FirestoreService.updateDocument('posts', post.id, {
+      await FirestoreService.updateDocument('connect', post.id, {
         likedBy: isLiked ? FirestoreService.arrayRemove(userId) : FirestoreService.arrayUnion(userId),
         reactionsCount: FirestoreService.increment(isLiked ? -1 : 1)
       });
@@ -59,14 +102,14 @@ const WallTab = ({ data, currentUser }) => {
     if (!text || !currentUser) return;
 
     try {
-      await FirestoreService.addDocument(`posts/${postId}/comments`, {
+      await FirestoreService.addDocument(`connect/${postId}/comments`, {
         text,
         author: currentUser.nom,
         authorId: currentUser.id,
-        createdAt: new Date().toISOString()
+        _deletedAt: null
       });
       // Increment comment count on post
-      await FirestoreService.updateDocument('posts', postId, {
+      await FirestoreService.updateDocument('connect', postId, {
         commentsCount: FirestoreService.increment(1)
       });
       setCommentInputs(prev => ({ ...prev, [postId]: '' }));
@@ -81,8 +124,8 @@ const WallTab = ({ data, currentUser }) => {
     Object.keys(openComments).forEach(postId => {
       if (openComments[postId] && !commentsData[postId]) {
         const unsub = FirestoreService.subscribeToCollection(
-          `posts/${postId}/comments`,
-          { orderByField: 'createdAt', descending: false },
+          `connect/${postId}/comments`,
+          { orderByField: '_createdAt', descending: false },
           (comments) => setCommentsData(prev => ({ ...prev, [postId]: comments }))
         );
         unsubs.push(unsub);
@@ -108,7 +151,7 @@ const WallTab = ({ data, currentUser }) => {
       }
 
       const typeConf = POST_TYPES.find(t => t.id === form.type);
-      await FirestoreService.addDocument('posts', {
+      await addRecord('connect', 'posts', {
         type: form.type,
         category: form.category || typeConf?.label || 'Général',
         title: form.title,
@@ -141,10 +184,17 @@ const WallTab = ({ data, currentUser }) => {
             <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.4rem' }}>Mur de l'Entreprise</h3>
             <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Célébrez les succès et restez informé.</p>
           </div>
-          <button onClick={() => setShowCompose(true)} className="btn btn-primary"
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            {['yomanraphael26@gmail.com', 'fall.jcjunior@gmail.com'].includes(currentUser?.email) && (
+              <button onClick={fixInvisibleData} className="btn" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', background: '#333', color: 'white', border: 'none', fontSize: '0.75rem' }}>
+                Réparer les données
+              </button>
+            )}
+            <button onClick={() => setShowCompose(true)} className="btn btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1.5rem', borderRadius: '1rem', background: '#8B5CF6', border: 'none', fontWeight: 800 }}>
             <Plus size={18} /> Partager
           </button>
+          </div>
         </div>
 
         {/* Compose Modal */}
@@ -287,10 +337,12 @@ const WallTab = ({ data, currentUser }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.8, fontSize: '0.7rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '1rem' }}>
             <Sparkles size={14} /> Pulsation d'équipe
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.25rem' }}>0%</div>
+          <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.25rem' }}>
+            {employeesCount > 0 ? Math.round((feed.length / employeesCount) * 100) : 0}%
+          </div>
           <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>Engagement ce mois-ci</div>
           <div style={{ height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', marginTop: '1rem', overflow: 'hidden' }}>
-            <div style={{ width: '0%', height: '100%', background: 'white', borderRadius: '2px' }} />
+            <div style={{ width: `${employeesCount > 0 ? Math.min(100, (feed.length / employeesCount) * 100) : 0}%`, height: '100%', background: 'white', borderRadius: '2px' }} />
           </div>
         </motion.div>
 

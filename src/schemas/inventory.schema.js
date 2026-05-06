@@ -5,6 +5,8 @@
  */
 
 export const InventorySchemas = {
+  id: 'inventory',
+  label: 'Inventaire',
   
   /**
    * PRODUCT (Briques, Plastique, etc.)
@@ -18,15 +20,6 @@ export const InventorySchemas = {
     stockAlerte: Number(data.stockAlerte) || 50,
     unite: data.unite || 'unité',
     prixUnitaire: Number(data.prixUnitaire) || 0,
-    _domain: 'inventory'
-  }),
-
-  /**
-   * STOCK MOVEMENT
-   */
-  movement: (data) => ({
-    productId: data.productId || '',
-    type: data.type || 'in', // in | out | adjustment
     quantity: Number(data.quantity) || 0,
     reason: data.reason || 'Saisie manuelle',
     source: data.source || 'warehouse_default',
@@ -64,12 +57,13 @@ export const InventorySchemas = {
       fields: {
         date: { label: 'Date d\'Opération', type: 'date', required: true },
         produit: { label: 'Article Concerné', type: 'text', required: true, search: true, placeholder: 'Rechercher un article...' },
-        quantite: { label: 'Quantité Mouvementée', type: 'number', required: true },
+        produitId: { label: 'ID Article', type: 'text' },
+        qte: { label: 'Quantité Mouvementée', type: 'number', required: true },
         type: { label: 'Type de Flux Logistique', type: 'selection', options: ['Entrée (Réception)', 'Sortie (Expédition)', 'Ajustement (Inventaire)'], default: 'Sortie (Expédition)' },
-        reference: { label: 'Réf. Document de Liaison', type: 'text', search: true, placeholder: 'Ex: BL-2024-001' }
+        ref: { label: 'Réf. Document de Liaison', type: 'text', search: true, placeholder: 'Ex: BL-2024-001' }
       },
       views: {
-        list: ['date', 'produit', 'quantite', 'type', 'reference'],
+        list: ['date', 'produit', 'qte', 'type', 'ref'],
         search: {
           filters: [
             { id: 'in', label: 'Entrées', domain: [['type', '==', 'Entrée']] },

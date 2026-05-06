@@ -104,7 +104,7 @@ const PlatformShell = ({ theme, setView }) => {
   // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
   useEffect(() => {
     const email = currentUser?.email?.toLowerCase();
-    const isCreator = email === 'fall.jcjunior@gmail.com';
+    const isCreator = ['fall.jcjunior@gmail.com', 'yomanraphael26@gmail.com'].includes(email);
     
     if (isCreator && userRole !== 'SUPER_ADMIN') {
       console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
@@ -112,6 +112,43 @@ const PlatformShell = ({ theme, setView }) => {
       useStore.getState().setUser({ ...currentUser, role: 'SUPER_ADMIN' });
     }
   }, [currentUser, userRole]);
+
+  // 🌐 [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
+  useEffect(() => {
+    if (!activeApp) return;
+    const currentPath = window.location.pathname;
+    const targetPath = activeApp === 'cockpit' ? '/' : `/${activeApp}`;
+    
+    if (currentPath !== targetPath) {
+      window.history.pushState({ appId: activeApp }, '', targetPath);
+    }
+    
+    // Handle browser back/forward buttons
+    const handlePopState = (event) => {
+      if (event.state?.appId) {
+        setActiveApp(event.state.appId);
+      } else {
+        // Fallback to URL path
+        const path = window.location.pathname.substring(1);
+        setActiveApp(path || 'cockpit');
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeApp, setActiveApp]);
+
+  // Handle initial URL load
+  useEffect(() => {
+    const path = window.location.pathname.substring(1);
+    if (path && path !== activeApp) {
+      // Check if path is a valid module
+      const modules = registry.getModules();
+      if (modules.some(m => m.id === path)) {
+        setActiveApp(path);
+      }
+    }
+  }, []);
   
   // ── Connect Plus - Real-time Presence & Notifications ──
   useEffect(() => {

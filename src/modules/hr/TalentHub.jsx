@@ -62,7 +62,7 @@ const TabNav = ({ tabs, active, onChange }) => (
    TAB 1 — Dashboard Culturel
 ══════════════════════════════════════ */
 const DashboardTab = ({ data, onSentiment }) => {
-  const employees = data.hr?.employees || [];
+  const employees = data.employees || data.hr?.employees || [];
   const leaves = data.hr?.leaves || [];
   const candidates = data.talent?.candidates || [];
 
@@ -516,7 +516,7 @@ const BienEtreTab = ({ onSentiment }) => {
    TAB 6 — Organigramme
 ══════════════════════════════════════ */
 const OrgaTab = ({ data }) => {
-  const employees = data.hr?.employees || [];
+  const employees = data.employees || data.hr?.employees || [];
   const [filter, setFilter] = useState('Tous');
 
   const depts = ['Tous', ...new Set(employees.map(e => e.departement).filter(Boolean))];

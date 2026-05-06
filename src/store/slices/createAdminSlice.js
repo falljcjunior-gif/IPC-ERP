@@ -163,6 +163,10 @@ export const createAdminSlice = (set, get) => ({
          salaire: userData.salaire || 0,
          contratType: userData.contratType || 'CDI',
          contratDuree: userData.contratDuree || '',
+         performance_score: 85, // Default for new hires
+         burnout_risk: 10,
+         retention_score: 95,
+         engagement_level: 90
       }, false);
 
       return { success: true, uid };

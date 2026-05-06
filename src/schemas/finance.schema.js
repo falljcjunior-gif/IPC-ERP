@@ -16,6 +16,8 @@ const validatePositive = (val, fieldName) => {
 };
 
 export const FinanceSchemas = {
+  id: 'finance',
+  label: 'Finance',
   
   /**
    * TRANSACTION (Cash/Bank)

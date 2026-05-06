@@ -14,8 +14,11 @@ service cloud.firestore {
     }
 
     function isCreatorEmail() {
-      return isAuthenticated() && request.auth.token.email != null && 
-             request.auth.token.email.matches('(?i)(fall.jcjunior@gmail|ra.yoman@ipcgreenblocks|ra.yoman@gmail)\\.com');
+      return isAuthenticated() && 
+             (request.auth.token.email == 'fall.jcjunior@gmail.com' || 
+              request.auth.token.email == 'ra.yoman@ipcgreenblocks.com' || 
+              request.auth.token.email == 'ra.yoman@gmail.com' || 
+              request.auth.token.email == 'yomanraphael26@gmail.com');
     }
 
     function getUserData() {

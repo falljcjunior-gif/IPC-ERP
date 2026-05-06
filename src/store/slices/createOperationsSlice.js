@@ -48,7 +48,11 @@ export const createOperationsSlice = (set, get) => ({
       }));
 
       if (get().user) {
-        FirestoreService.setDocument('activities', activity.id, activity);
+        FirestoreService.setDocument('activities', activity.id, {
+          ...activity,
+          _createdAt: FirestoreService.serverTimestamp(),
+          _deletedAt: null
+        });
       }
     }, 0);
   },
@@ -67,7 +71,13 @@ export const createOperationsSlice = (set, get) => ({
       createdAt: new Date().toISOString()
     };
     try {
-      if (get().user) await FirestoreService.setDocument('notifications', notifyDoc.id, notifyDoc);
+      if (get().user) {
+        await FirestoreService.setDocument('notifications', notifyDoc.id, {
+          ...notifyDoc,
+          _createdAt: FirestoreService.serverTimestamp(),
+          _deletedAt: null
+        });
+      }
     } catch (e) {
       console.error("sendNotification Error:", e);
     }
@@ -216,7 +226,7 @@ export const createOperationsSlice = (set, get) => ({
     const qteNum = parseFloat(qte);
     set(prev => {
       const products = prev.inventory?.products || [];
-      const product = products.find(p => p.id === productId || p.code === productId);
+      const product = products.find(p => p.id === productId || p.code === productId || p.ref === productId);
       if (!product) {
         get().addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
         return prev;
@@ -338,7 +348,15 @@ export const createOperationsSlice = (set, get) => ({
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
          const { user } = get();
-         if (user) FirestoreService.setDocument(appId, newRecord.id, { ...newRecord, subModule, ownerId: user.id }, true);
+         if (user) {
+           FirestoreService.setDocument(appId, newRecord.id, { 
+             ...newRecord, 
+             subModule, 
+             ownerId: user.id, 
+             _deletedAt: null,
+             _createdAt: FirestoreService.serverTimestamp() 
+           }, true);
+         }
       }, 0);
 
       return nextState;
@@ -349,7 +367,17 @@ export const createOperationsSlice = (set, get) => ({
       get().generateLitigationEntry(newRecord, true);
     }
 
-    if (appId === 'inventory' && subModule === 'movements') get().applyStockMove({ productId: processedRecord.produitId || processedRecord.produit, qte: processedRecord.qte, type: processedRecord.type, ref: processedRecord.ref, source: processedRecord.source, dest: processedRecord.dest });
+    if (appId === 'inventory' && subModule === 'movements') {
+      const productId = processedRecord.produitId || processedRecord.produit;
+      get().applyStockMove({ 
+        productId, 
+        qte: processedRecord.qte, 
+        type: processedRecord.type, 
+        ref: processedRecord.ref || processedRecord.reference, 
+        source: processedRecord.source, 
+        dest: processedRecord.dest 
+      });
+    }
 
     // --- I.P.C. Automator (BPM Engine) onCreate ---
     const safeWorkflowsCreate = Array.isArray(get().data.workflows) ? get().data.workflows : (get().data.workflows?.[''] || get().data.workflows?.workflows || []);
@@ -988,7 +1016,7 @@ export const createOperationsSlice = (set, get) => ({
       const hrDocs = await FirestoreService.listDocuments('hr');
       const hrToDelete = hrDocs.filter(d => {
         const email = (d.email || d.profile?.email || "").toLowerCase();
-        return email !== 'fall.jcjunior@gmail.com';
+        return !['fall.jcjunior@gmail.com', 'yomanraphael26@gmail.com'].includes(email);
       });
       if (hrToDelete.length > 0) {
         const hrChunks = [];
@@ -1003,7 +1031,7 @@ export const createOperationsSlice = (set, get) => ({
       const allUsers = await FirestoreService.listDocuments('users');
       const usersToDelete = allUsers.filter(u => {
         const email = (u.email || u.profile?.email || "").toLowerCase();
-        return email !== 'fall.jcjunior@gmail.com';
+        return !['fall.jcjunior@gmail.com', 'yomanraphael26@gmail.com'].includes(email);
       });
 
       if (usersToDelete.length > 0) {

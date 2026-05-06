@@ -23,7 +23,7 @@ const item = {
 };
 
 const HumanCapitalTab = ({ data, onOpenDetail, searchQuery = '' }) => {
-  const employees = data?.hr?.employees || [];
+  const employees = data?.employees || [];
   
   const filteredEmployees = useMemo(() => {
     if (!searchQuery) return employees;

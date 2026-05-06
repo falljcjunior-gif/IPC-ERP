@@ -8,14 +8,14 @@ import { getFunctions } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBMQwaE0JnyJ-0zHQI2Ydc2kYD5MiVzoUw",
-  authDomain: "ipc-erp.firebaseapp.com",
-  projectId: "ipc-erp",
-  storageBucket: "ipc-erp.firebasestorage.app",
-  messagingSenderId: "487186181701",
-  appId: "1:487186181701:web:c309b560b3432323383d2c",
-  measurementId: "G-63XSZY9ZR",
-  databaseURL: "https://ipc-erp-default-rtdb.firebaseio.com"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyBMQwaE0JnyJ-0zHQI2Ydc2kYD5MiVzoUw",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ipc-erp.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ipc-erp",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ipc-erp.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "487186181701",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:487186181701:web:c309b560b3432323383d2c",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-63XYSZY9ZR",
+  databaseURL: `https://${import.meta.env.VITE_FIREBASE_PROJECT_ID || "ipc-erp"}-default-rtdb.firebaseio.com`
 };
 
 // Initialisation de Firebase

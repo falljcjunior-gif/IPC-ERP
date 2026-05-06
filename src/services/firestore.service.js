@@ -333,6 +333,7 @@ export const FirestoreService = {
   arrayUnion: (...values) => arrayUnion(...values),
   arrayRemove: (...values) => arrayRemove(...values),
   increment: (n) => increment(n),
+  serverTimestamp: () => serverTimestamp(),
 };
 
 // ── Storage Service (isolé — même principe) ──────────────────────────────────

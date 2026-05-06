@@ -102,7 +102,8 @@ export const BusinessProvider = ({ children }) => {
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase',
       'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents', 'cockpit',
-      'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget'
+      'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget',
+      'connect', 'marketing', 'commerce', 'website', 'dms'
     ];
     
     const unsubscribes = collections_to_sync.map(colName => {
@@ -126,12 +127,21 @@ export const BusinessProvider = ({ children }) => {
       (ns) => useStore.getState().setNotifications(ns)
     );
 
-    // D. User Permissions
+    // D. User Permissions & Global Employee List
     const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
+      // 1. Map all permissions for Admin/HR modules
+      const permissionsMap = {};
+      users.forEach(u => {
+        if (u.permissions) permissionsMap[u.id] = u.permissions;
+      });
+      useStore.getState().setPermissions(permissionsMap);
+
+      // 2. Sync to data.employees for unified access
+      scheduleUpdate('employees', users);
+
+      // 3. Current User Identity Bridge
       const currentUserProfile = users.find(u => u.id === userId);
       if (currentUserProfile) {
-        useStore.getState().setPermissions(currentUserProfile.permissions || {});
-        
         // --- IDENTITY BRIDGE (STABLE OVERRIDE) ---
         // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
         const userPerms = currentUserProfile.permissions || {};
@@ -139,7 +149,7 @@ export const BusinessProvider = ({ children }) => {
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
         
         const currentEmail = useStore.getState().user?.email;
-        const isCreator = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(currentEmail?.toLowerCase());
+        const isCreator = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(currentEmail?.toLowerCase());
 
         if (isCreator) {
           finalRole = 'SUPER_ADMIN';
