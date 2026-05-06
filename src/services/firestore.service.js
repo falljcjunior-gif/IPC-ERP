@@ -14,8 +14,10 @@
 import {
   doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
   collection, query, orderBy, limit, where, onSnapshot,
-  serverTimestamp, writeBatch, arrayUnion, arrayRemove, increment
+  serverTimestamp as firebaseServerTimestamp, writeBatch, arrayUnion, arrayRemove, increment
 } from 'firebase/firestore';
+
+export const serverTimestamp = firebaseServerTimestamp;
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
 import { validateData } from '../utils/validation';
