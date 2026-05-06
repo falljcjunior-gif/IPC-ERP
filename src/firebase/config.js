@@ -11,7 +11,7 @@ import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 const d = (s) => typeof atob !== 'undefined' ? atob(s) : s;
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || d("QUl6YVN5Qk1Rd2FFMEpueUotMHpIUUkzWWRjMmtZRDVNaVZ6b1V3"),
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || d("QUl6YVN5Qk1Rd2FFMEpueUotMHpIUUkyWWRjMmtZRDVNaVZ6b1V3"),
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "ipc-erp.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "ipc-erp",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "ipc-erp.firebasestorage.app",
