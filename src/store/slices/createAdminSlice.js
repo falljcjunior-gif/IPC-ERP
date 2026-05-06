@@ -2,7 +2,7 @@ import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, firebaseConfig, db as firestoreDb, app } from '../../firebase/config';
-import { FirestoreService } from '../../services/firestore.service';
+import { FirestoreService, serverTimestamp } from '../../services/firestore.service';
 
 import { registry } from '../../services/Registry';
 
@@ -127,6 +127,7 @@ export const createAdminSlice = (set, get) => ({
       
       const role = userData.role || initialRole;
       const safeNom = userData.nom || 'Utilisateur';
+      
       const profileData = { 
         nom: safeNom, 
         email: userData.email, 
@@ -136,23 +137,30 @@ export const createAdminSlice = (set, get) => ({
         avatar: userData.avatar || (safeNom ? safeNom[0] : 'U'),
         statut: 'Actif',
         active: true,
-        createdAt: new Date().toISOString() 
+        _createdAt: serverTimestamp(),
+        _deletedAt: null
       };
 
-      const permissionsData = userData.permissions || {
-        hierarchy_level: userData.hierarchy_level || 'Employee',
-        modules: userData.modules || { home: { access: 'write', subTabs: {} } },
-        roles: userData.roles || [role],
-        // Backward compatibility
-        moduleAccess: { home: 'write' },
-        allowedModules: ['home']
+      // Robust permissions initialization
+      const permissionsData = {
+        hierarchy_level: userData.permissions?.hierarchy_level || userData.hierarchy_level || 'Employee',
+        modules: userData.permissions?.modules || userData.modules || { home: { access: 'write', subTabs: {} } },
+        roles: userData.permissions?.roles || userData.roles || [role],
+        moduleAccess: userData.permissions?.moduleAccess || { home: 'write' },
+        allowedModules: userData.permissions?.allowedModules || ['home']
       };
+
+      // Ensure roles is an array and not empty
+      if (!Array.isArray(permissionsData.roles) || permissionsData.roles.length === 0) {
+        permissionsData.roles = [role];
+      }
 
       await FirestoreService.setDocument('users', uid, { 
         profile: profileData, 
         permissions: permissionsData,
         role: permissionsData.roles[0],
         hierarchy_level: permissionsData.hierarchy_level,
+        subModule: 'others',
         data: {} 
       }, false);
 
