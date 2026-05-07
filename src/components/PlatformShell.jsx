@@ -56,6 +56,7 @@ const PlatformShell = ({ theme, setView }) => {
   const currentUser = useStore(s => s.user);
   const { unreadCount, toggleSidebar } = useNotificationStore();
   const notifications = useStore(s => s.notifications || []);
+  const data = useStore(s => s.data);
 
   // Locatized subscription for campaigns to avoid massive shell re-renders
   const marketingCampaigns = useStore(state => state.data.marketing?.campaigns || []);
