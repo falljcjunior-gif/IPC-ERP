@@ -95,8 +95,16 @@ exports.deleteUserAccount = onCall({
   }
 
   try {
-    await admin.auth().deleteUser(uid);
-    logger.info(`User ${uid} successfully deleted from Auth by ${callerUid}`);
+    try {
+      await admin.auth().deleteUser(uid);
+      logger.info(`User ${uid} successfully deleted from Auth by ${callerUid}`);
+    } catch (authError) {
+      if (authError.code === 'auth/user-not-found') {
+        logger.info(`User ${uid} already missing from Auth, proceeding with database cleanup.`);
+      } else {
+        throw authError;
+      }
+    }
     
     // 3. Database Cleanup (Hard Delete)
     // Delete from users and hr collections
@@ -116,13 +124,13 @@ exports.deleteUserAccount = onCall({
       docId: uid,
       operation: 'HARD_DELETE_ACCOUNT',
       changedBy: callerUid,
-      summary: `User ${uid} deleted from Auth and Database`
+      summary: `User ${uid} deleted from Auth and Database (Resilient mode)`
     });
     
     return { success: true };
   } catch (error) {
-    logger.error(`Error deleting user ${uid}:`, error);
-    throw new HttpsError('internal', `Delete failed: ${error.message}`);
+    logger.error(`Error in deleteUserAccount for ${uid}:`, error);
+    throw new HttpsError('internal', `Erreur lors de la suppression complète : ${error.message}`);
   }
 });
 
