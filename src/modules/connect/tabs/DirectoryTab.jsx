@@ -22,7 +22,7 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter]  = useState('Tous');
   const [presenceData, setPresenceData] = useState({});
-  const employees = data?.hr?.employees || [];
+  const employees = (data?.employees && data.employees.length > 0) ? data.employees : (data?.hr?.employees || []);
 
   useEffect(() => {
     const unsub = FirestoreService.subscribeToCollection('users', {}, (users) => {
@@ -114,9 +114,9 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
                 </div>
 
                 {/* Info */}
-                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 900 }}>{emp.nom}</h4>
+                <h4 style={{ margin: '0 0 4px 0', fontSize: '1.05rem', fontWeight: 900 }}>{emp.nom || emp.profile?.nom || emp.email || '?'}</h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', fontWeight: 700, color, marginBottom: '1.25rem' }}>
-                  <Briefcase size={13} /> {emp.poste || '—'}
+                  <Briefcase size={13} /> {emp.poste || emp.profile?.poste || '—'}
                 </div>
 
                 {/* Detail items */}

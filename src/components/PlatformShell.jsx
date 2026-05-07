@@ -227,7 +227,8 @@ const PlatformShell = ({ theme, setView }) => {
       onOpenDetail: openDetail, 
       navigateTo, 
       appId: activeApp,
-      accessLevel
+      accessLevel,
+      data
     };
     
     const regModule = registry.getModule(activeApp);

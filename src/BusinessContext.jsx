@@ -136,12 +136,17 @@ export const BusinessProvider = ({ children }) => {
       });
       useStore.getState().setPermissions(permissionsMap);
 
-      // 2. Sync to data.employees for unified access
-      useStore.getState().setData(prev => ({ ...prev, employees: users }));
+      // 2. Sync to data.employees for unified access (Flattened for easier UI consumption)
+      const flattenedUsers = users.map(u => ({
+        ...u,
+        ...(u.profile || {})
+      }));
+      useStore.getState().setData(prev => ({ ...prev, employees: flattenedUsers }));
       
       // 3. Current User Identity Bridge
-      const currentUserProfile = users.find(u => u.id === userId);
-      if (currentUserProfile) {
+      const rawUser = users.find(u => u.id === userId);
+      if (rawUser) {
+        const currentUserProfile = { ...rawUser, ...(rawUser.profile || {}) };
         // --- IDENTITY BRIDGE (STABLE OVERRIDE) ---
         // WHY: Empêche Firestore de "rétrograder" le rôle du créateur après la synchro initiale.
         const userPerms = currentUserProfile.permissions || {};

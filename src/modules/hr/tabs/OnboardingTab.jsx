@@ -225,11 +225,11 @@ const OnboardingTab = ({ accessLevel }) => {
                     return (
                       <div key={emp.id} onClick={() => setSelectedEmployee(emp)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', cursor: 'pointer', border: '1px solid transparent', transition: '0.2s' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, flexShrink: 0 }}>
-                          {(emp.nom || emp.email || '?')[0].toUpperCase()}
+                          {(emp.nom || emp.profile?.nom || emp.email || emp.profile?.email || '?')[0].toUpperCase()}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{emp.nom || emp.email}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{emp.poste || emp.dept}</div>
+                          <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{emp.nom || emp.profile?.nom || emp.email || emp.profile?.email}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{emp.poste || emp.profile?.poste || emp.dept || emp.profile?.dept}</div>
                         </div>
                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                             <span style={{ fontSize: '0.65rem', background: '#8B5CF620', color: '#8B5CF6', padding: '2px 8px', borderRadius: '2rem', fontWeight: 800 }}>
