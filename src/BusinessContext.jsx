@@ -59,7 +59,7 @@ export const BusinessProvider = ({ children }) => {
         }[colName] || {};
 
         const currentModuleState = newState[colName] || initialModuleState;
-        const updatedModuleState = { ...initialModuleState, ...grouped };
+        const updatedModuleState = { ...currentModuleState, ...grouped };
 
         // Optimization: Shallow compare submodule keys to avoid unnecessary re-renders
         let moduleChanged = false;
@@ -103,7 +103,7 @@ export const BusinessProvider = ({ children }) => {
       'crm', 'sales', 'inventory', 'production', 'purchase', 'planning',
       'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents', 'cockpit',
       'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget',
-      'connect', 'marketing', 'commerce', 'website', 'dms'
+      'connect', 'marketing', 'commerce', 'website', 'dms', 'talent'
     ];
     
     const unsubscribes = collections_to_sync.map(colName => {

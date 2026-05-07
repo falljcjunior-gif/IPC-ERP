@@ -18,13 +18,7 @@ const WorkflowAssistant = () => {
   const { addToast } = useToastStore();
 
   // Local state for simulated BPM Approvals to make them "active"
-  const [bpmItems, setBpmItems] = useState([
-    { 
-      id: 'WF-001', type: 'BPM', title: 'Purchase Authorization', appId: 'Finance',
-      message: 'MacBook Pro M3 for Raphael (IT Dept). Amount: €2,400.',
-      priority: 'high', deadline: '2h'
-    }
-  ]);
+  const [bpmItems, setBpmItems] = useState([]);
 
   const handleBpmAction = async (id, action) => {
     await debugInteraction(`BPM ${action}: ${id}`, async () => {

@@ -74,6 +74,7 @@ exports.provisionUser = onCall({
 
   const { email, password, ...extraData } = request.data;
   if (!email || !password) throw new HttpsError('invalid-argument', 'Email et Mot de passe requis.');
+  if (password.length < 6) throw new HttpsError('invalid-argument', 'Le mot de passe doit contenir au moins 6 caractères.');
 
   try {
     // 1. Create Auth User
@@ -100,6 +101,12 @@ exports.provisionUser = onCall({
     logger.error('Provisioning error:', error);
     if (error.code === 'auth/email-already-exists') {
       throw new HttpsError('already-exists', 'Cet email est déjà utilisé.');
+    }
+    if (error.code === 'auth/invalid-password') {
+      throw new HttpsError('invalid-argument', 'Mot de passe invalide (min 6 caractères).');
+    }
+    if (error.code === 'auth/invalid-email') {
+      throw new HttpsError('invalid-argument', 'Format d\'email invalide.');
     }
     throw new HttpsError('internal', `Échec du provisionnement : ${error.message}`);
   }

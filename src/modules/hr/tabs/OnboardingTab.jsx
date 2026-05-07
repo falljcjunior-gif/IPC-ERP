@@ -39,10 +39,15 @@ const StepIdentity = ({ formData, handleInputChange }) => (
       </div>
       <div className="input-group">
         <label>Mot de passe provisoire</label>
-        <div className="input-wrapper">
+        <div className="input-wrapper" style={{ border: formData.password && formData.password.length < 6 ? '1px solid #EF4444' : '1px solid var(--border)' }}>
           <Lock size={18} />
           <input required type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" />
         </div>
+        {formData.password && formData.password.length < 6 && (
+          <p style={{ margin: '0.25rem 0 0 0.5rem', fontSize: '0.7rem', color: '#EF4444', fontWeight: 600 }}>
+            Minimum 6 caractères requis.
+          </p>
+        )}
       </div>
       <div className="input-group">
         <label>Département</label>
@@ -247,6 +252,12 @@ const OnboardingTab = ({ accessLevel }) => {
   const handleProvision = async () => {
     setLoading(true);
     setError('');
+    if (formData.password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères.');
+      setLoading(false);
+      return;
+    }
+
     const finalData = { 
       ...formData, 
       salaire: parseFloat(formData.salaire) || 0,
@@ -256,9 +267,17 @@ const OnboardingTab = ({ accessLevel }) => {
     try {
       await createFullUser(finalData);
       setSuccess(true);
-      setTimeout(() => { setSuccess(false); setStep(1); setMode('edit'); }, 4000);
+      debugInteraction('hr_provision_success', { email: formData.email, role: finalData.role });
+      // On laisse l'utilisateur profiter du message de succès avant de reset
+      setTimeout(() => { 
+        setSuccess(false); 
+        setStep(1); 
+        setMode('edit'); 
+        setFormData({ nom: '', prenom: '', email: '', password: '', dept: 'Production', poste: '', contratType: 'CDI', date_entree: '', salaire: '' });
+      }, 5000);
     } catch (err) {
-      setError(err.message || "Erreur lors du provisionnement.");
+      console.error('[Onboarding] Provisioning failed:', err);
+      setError(err.message || "Échec du provisionnement. Vérifiez la connexion.");
     } finally {
       setLoading(false);
     }

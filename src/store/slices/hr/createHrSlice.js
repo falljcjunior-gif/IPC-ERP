@@ -53,13 +53,16 @@ export const createHrSlice = (set, get) => ({
         };
       });
 
-      // Batch update to Firestore
+      // Batch update to Firestore (Unified Model)
       for (const emp of updatedEmployees) {
-        state.updateRecord('hr', 'employees', emp.id, {
-          performance_score: emp.performance_score,
-          burnout_risk: emp.burnout_risk,
-          engagement_level: emp.engagement_level,
-          retention_score: emp.retention_score
+        state.updateRecord('admin', 'users', emp.id, {
+          hr: {
+            ...emp.hr,
+            performance_score: emp.performance_score,
+            burnout_risk: emp.burnout_risk,
+            engagement_level: emp.engagement_level,
+            retention_score: emp.retention_score
+          }
         });
       }
 
