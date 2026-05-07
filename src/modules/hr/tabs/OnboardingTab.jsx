@@ -9,6 +9,7 @@ import {
   FileSignature, ChevronLeft, Building2, Wallet, Target
 } from 'lucide-react';
 import { PermissionMatrix } from '../components/PermissionMatrix';
+import { debugInteraction } from '../../../utils/InteractionAuditor';
 
 // ─────────────────────────────────────────────────────────────────
 // WIZARD STEPS
