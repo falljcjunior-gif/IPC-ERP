@@ -139,25 +139,62 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
             <div style={{ flex: 1, overflowY: 'auto', padding: '2rem', background: '#FFFFFF' }}>
               {activeTab === 'infos' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  {Object.entries(formData).map(([key, value]) => {
+                  {(() => {
                     const schema = registry.getSchema(appId);
                     const model = schema?.models?.[subModule];
-                    const fieldDef = model?.fields?.[key];
-                    const label = fieldDef?.label || key;
-                    if (['id', 'avatar', 'createdAt', 'checklists', 'skills', '_domain', '_hasHydrated'].includes(key)) return null;
-                    if (!canSeeField(appId, key)) return null;
+                    const fields = model?.fields || {};
                     
-                    return (
-                      <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                        <label style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>{t(label)}</label>
-                        {isLocked ? (
-                          <div style={{ padding: '0.8rem 1rem', background: '#F8FAFC', borderRadius: '10px', fontWeight: 700, color: 'var(--nexus-secondary)', border: '1px solid var(--nexus-border)' }}>{value?.toString() || '—'}</div>
-                        ) : (
-                          <input type="text" value={value || ''} onChange={(e) => handleChange(key, e.target.value)} style={{ width: '100%', padding: '0.8rem 1rem', background: '#FFFFFF', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontWeight: 700, outline: 'none', transition: 'var(--transition-nexus)' }} onFocus={(e) => e.target.style.borderColor = 'var(--nexus-primary)'} onBlur={(e) => e.target.style.borderColor = 'var(--nexus-border)'} />
-                        )}
-                      </div>
-                    );
-                  })}
+                    // Filter and map schema fields
+                    return Object.entries(fields).map(([key, fieldDef]) => {
+                      if (!canSeeField(appId, key)) return null;
+                      const value = formData[key];
+                      const label = fieldDef?.label || key;
+                      
+                      return (
+                        <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                          <label style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            {t(label)} {fieldDef?.required && <span style={{ color: '#EF4444' }}>*</span>}
+                          </label>
+                          
+                          {isLocked ? (
+                            <div style={{ padding: '0.8rem 1rem', background: '#F8FAFC', borderRadius: '10px', fontWeight: 700, color: 'var(--nexus-secondary)', border: '1px solid var(--nexus-border)' }}>
+                              {fieldDef.type === 'boolean' ? (value ? 'Oui' : 'Non') : (value?.toString() || '—')}
+                            </div>
+                          ) : (
+                            fieldDef.type === 'selection' ? (
+                              <select 
+                                value={value || ''} 
+                                onChange={(e) => handleChange(key, e.target.value)}
+                                style={{ width: '100%', padding: '0.8rem 1rem', background: '#FFFFFF', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontWeight: 700, outline: 'none' }}
+                              >
+                                <option value="">Sélectionner...</option>
+                                {fieldDef.options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                              </select>
+                            ) : fieldDef.type === 'boolean' ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <input 
+                                  type="checkbox" 
+                                  checked={!!value} 
+                                  onChange={(e) => handleChange(key, e.target.checked)}
+                                  style={{ width: '20px', height: '20px' }}
+                                />
+                                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{value ? 'Actif' : 'Inactif'}</span>
+                              </div>
+                            ) : (
+                              <input 
+                                type={fieldDef.type === 'number' ? 'number' : 'text'} 
+                                value={value || ''} 
+                                onChange={(e) => handleChange(key, e.target.value)} 
+                                style={{ width: '100%', padding: '0.8rem 1rem', background: '#FFFFFF', border: '1px solid var(--nexus-border)', borderRadius: '10px', fontWeight: 700, outline: 'none', transition: 'var(--transition-nexus)' }} 
+                                onFocus={(e) => e.target.style.borderColor = 'var(--nexus-primary)'} 
+                                onBlur={(e) => e.target.style.borderColor = 'var(--nexus-border)'} 
+                              />
+                            )
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
                 </div>
               )}
 
