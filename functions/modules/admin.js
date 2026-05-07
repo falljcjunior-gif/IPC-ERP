@@ -98,14 +98,25 @@ exports.deleteUserAccount = onCall({
     await admin.auth().deleteUser(uid);
     logger.info(`User ${uid} successfully deleted from Auth by ${callerUid}`);
     
+    // 3. Database Cleanup (Hard Delete)
+    // Delete from users and hr collections
+    const userRef = db.collection('users').doc(uid);
+    const hrRef = db.collection('hr').doc(uid);
+    
+    const batch = db.batch();
+    batch.delete(userRef);
+    batch.delete(hrRef);
+    await batch.commit();
+    logger.info(`Database records for user ${uid} purged from users and hr collections.`);
+
     // Audit log
     await db.collection('audit_logs').add({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       collection: 'users',
       docId: uid,
-      operation: 'DELETE_AUTH',
+      operation: 'HARD_DELETE_ACCOUNT',
       changedBy: callerUid,
-      summary: `User ${uid} deleted from Firebase Auth`
+      summary: `User ${uid} deleted from Auth and Database`
     });
     
     return { success: true };

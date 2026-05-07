@@ -200,31 +200,39 @@ export const createAdminSlice = (set, get) => ({
     try {
       const functions = getFunctions(app, 'us-central1');
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
+      
+      // The Cloud Function now performs a HARD delete on Auth + Firestore
       await deleteUserFunc({ uid });
-    } catch (err) {
-      console.error("Erreur suppression Auth:", err);
-      get().addHint({ 
-        title: "Suppression Auth Échouée", 
-        message: "Le compte n'a pas pu être supprimé de Firebase Authentication.", 
-        type: 'warning' 
-      });
-    }
 
-    if (auth.currentUser) {
-      await FirestoreService.deleteDocument('users', uid);
-      await FirestoreService.deleteDocument('hr', uid);
+      // Immediate UI update: remove from local store
+      set(state => ({ 
+        data: { 
+          ...state.data,
+          employees: (state.data.employees || []).filter(e => String(e.id) !== uid),
+          hr: { ...state.data.hr, employees: (state.data.hr?.employees || []).filter(e => String(e.id) !== uid) },
+          base: { ...state.data.base, users: (state.data.base?.users || []).filter(u => String(u.id) !== uid) }
+        },
+        permissions: (() => { const next = { ...state.permissions }; delete next[uid]; return next; })()
+      }));
+
+      get().addHint({ 
+        title: "Compte Supprimé", 
+        message: "L'utilisateur a été définitivement supprimé d'Auth et de la Base de données.", 
+        type: 'success' 
+      });
+
+      get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
+      return { success: true };
+
+    } catch (err) {
+      console.error("Erreur suppression complète:", err);
+      get().addHint({ 
+        title: "Suppression Échouée", 
+        message: err.message || "Une erreur est survenue lors de la suppression définitive.", 
+        type: 'danger' 
+      });
+      throw err;
     }
-    
-    set(state => ({ 
-      data: { 
-        ...state.data,
-        hr: { ...state.data.hr, employees: (state.data.hr?.employees || []).filter(e => String(e.id) !== uid) },
-        base: { ...state.data.base, users: (state.data.base?.users || []).filter(u => String(u.id) !== uid) }
-      },
-      permissions: (() => { const next = { ...state.permissions }; delete next[uid]; return next; })()
-    }));
-    
-    get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
   },
 
   triggerManualBackup: async () => {

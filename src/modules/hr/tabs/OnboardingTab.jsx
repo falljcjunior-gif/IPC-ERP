@@ -7,7 +7,8 @@ import {
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
   Eye, Pencil, ShieldOff,
   User, MessageCircle, Target, ShoppingCart, Megaphone, Package, ShoppingBag, PieChart, Scale, Kanban, Headphones, Activity, BarChart2,
-  Zap, Layout, Truck, Factory, CreditCard, Landmark as LandmarkIcon, Wallet, Users2, Heart, LifeBuoy, Folder, FileSignature
+  Zap, Layout, Truck, Factory, CreditCard, Landmark as LandmarkIcon, Wallet, Users2, Heart, LifeBuoy, Folder, FileSignature,
+  Trash2, AlertTriangle
 } from 'lucide-react';
 import { PermissionMatrix } from '../components/PermissionMatrix';
 import { FirestoreService } from '../../../services/firestore.service';
@@ -19,7 +20,7 @@ import { collection, getDocs, doc, updateDoc, serverTimestamp, Timestamp } from 
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const { permissions } = useStore();
+  const { permissions, permanentlyDeleteUserRecord } = useStore();
   const userPerms = permissions[employee?.id] || { hierarchy_level: 'Employee', modules: {} };
   
   const [localPerms, setLocalPerms] = useState(userPerms);
@@ -86,6 +87,30 @@ const EditAccessPanel = ({ employee, onClose }) => {
           {saving ? <Loader className="spin" size={20} /> : saved ? <Check size={20} /> : <Save size={20} />}
           {saving ? 'Sauvegarde des droits...' : saved ? 'Gouvernance appliquée !' : 'Mettre à jour la Gouvernance'}
         </button>
+      </div>
+
+      {/* Danger Zone */}
+      <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px dashed #EF444440' }}>
+        <h4 style={{ color: '#EF4444', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
+          <AlertTriangle size={18} /> ZONE DE DANGER
+        </h4>
+        <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid #EF444430', background: '#EF444405', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ flex: 1, marginRight: '1rem' }}>
+            <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)' }}>Suppression Définitive</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Supprime l'accès Auth et toutes les données Firestore associées.</div>
+          </div>
+          <button 
+            onClick={() => {
+              if (window.confirm(`Êtes-vous certain de vouloir supprimer DÉFINITIVEMENT ${employee.nom} ? Cette action est irréversible.`)) {
+                permanentlyDeleteUserRecord(employee.id);
+                onClose();
+              }
+            }}
+            style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', background: '#EF4444', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+          >
+            <Trash2 size={16} /> Supprimer le Compte
+          </button>
+        </div>
       </div>
     </motion.div>
   );
