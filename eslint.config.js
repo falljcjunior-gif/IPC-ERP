@@ -17,7 +17,9 @@ export default [
       'build/**',
       'lint_errors.json',
       'scratch/**',
-      '**/temp.js'
+      '**/temp.js',
+      'scripts/**',
+      'playwright.config.js'
     ]
   },
   {
