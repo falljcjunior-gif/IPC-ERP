@@ -141,7 +141,11 @@ export const BusinessProvider = ({ children }) => {
         ...u,
         ...(u.profile || {})
       }));
-      useStore.getState().setData(prev => ({ ...prev, employees: flattenedUsers }));
+      useStore.getState().setData(prev => ({ 
+        ...prev, 
+        employees: flattenedUsers,
+        hr: { ...prev.hr, employees: flattenedUsers }
+      }));
       
       // 3. Current User Identity Bridge
       const rawUser = users.find(u => u.id === userId);

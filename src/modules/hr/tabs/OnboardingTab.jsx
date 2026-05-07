@@ -247,8 +247,14 @@ const OnboardingTab = ({ accessLevel }) => {
   const handleProvision = async () => {
     setLoading(true);
     setError('');
+    const finalData = { 
+      ...formData, 
+      salaire: parseFloat(formData.salaire) || 0,
+      role: formData.hierarchy_level === 'Employee' ? 'STAFF' : (formData.hierarchy_level === 'Executive' ? 'ADMIN' : 'STAFF'),
+      permissions: localPermissions 
+    };
     try {
-      await createFullUser({ ...formData, permissions: localPermissions });
+      await createFullUser(finalData);
       setSuccess(true);
       setTimeout(() => { setSuccess(false); setStep(1); setMode('edit'); }, 4000);
     } catch (err) {

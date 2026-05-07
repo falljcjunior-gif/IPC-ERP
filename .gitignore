@@ -11,3 +11,6 @@ yarn-error.log*
 *.local
 functions_logs.txt
 firebase-debug.log
+artifacts/
+playwright-report/
+test-results/

@@ -15,3 +15,12 @@
 - [x] Afficher les enregistrements saisis dans chaque onglet
 - [x] Ajouter suppression basique des enregistrements
 - [x] Tester manuellement le flux de saisie de bout en bout
+
+## HR 2.0 & Qualité (En cours)
+- [x] Unifier le modèle de données (users + hr_private)
+- [x] Implémenter le Wizard d'onboarding (3 étapes)
+- [x] Migration des données héritées
+- [x] Résoudre les erreurs de Linting bloquant la CI/CD
+- [/] Mise en place de Playwright pour les tests UI
+- [ ] Couverture E2E du flux de création d'employé
+- [ ] Suppression définitive de la collection racine `hr`

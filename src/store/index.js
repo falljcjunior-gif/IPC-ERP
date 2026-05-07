@@ -243,3 +243,17 @@ useStore.subscribe(
     }
   }
 );
+// ── DEV DIAGNOSTIC TOOLS ──────────────────────────────────────────────────
+if (import.meta.env.DEV) {
+  window.__IPC_DEV_LOGIN__ = (role = 'SUPER_ADMIN') => {
+    const mockUser = {
+      id: 'dev-id',
+      email: 'dev@ipc.com',
+      nom: 'Dev Inspector',
+      role: role,
+      permissions: { roles: [role], allowedModules: ['hr'], moduleAccess: { hr: 'write' } }
+    };
+    useStore.getState().setCurrentUser(mockUser);
+    console.info('[DEV] Mock login active:', role);
+  };
+}
