@@ -272,58 +272,64 @@ exports.backfillUsers = onCall({
         
         try {
           const userRef = db.collection('users').doc(uid);
-          const hrRef = db.collection('hr').doc(uid);
-
-          const [userDoc, hrDoc] = await Promise.all([userRef.get(), hrRef.get()]);
           const now = admin.firestore.FieldValue.serverTimestamp();
 
-          // 1. Sync User Document
+          const userDoc = await userRef.get();
+
+          // 1. Sync User & HR Unified Document
           if (!userDoc.exists) {
-            const userData = buildUserPayload(user, now);
+            const userData = buildUnifiedUserPayload(user, now);
+            
+            // Auto-Admin logic (same as onUserCreated)
+            if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(user.email)) {
+              userData.role = 'SUPER_ADMIN';
+              userData.permissions.roles = ['SUPER_ADMIN'];
+            }
+
             await userRef.set(userData);
             await admin.auth().setCustomUserClaims(uid, { role: userData.role });
+            
+            // Initialize hr_private sub-collection
+            const privateFields = {
+              salaire: 0,
+              iban: '',
+              ssn: '',
+              rib: '',
+              lastModified: new Date().toISOString()
+            };
+            await userRef.collection('hr_private').doc('main').set(privateFields, { merge: true });
+
             createdUsers++;
-            logger.info(`Backfill: Created user doc for ${uid} (${user.email})`);
+            logger.info(`Backfill: Created unified user doc for ${uid} (${user.email})`);
           } else {
             const data = userDoc.data();
-            // Sync claims
+            // Sync claims if missing or inconsistent
             if (data.role) {
               await admin.auth().setCustomUserClaims(uid, { role: data.role });
             }
             
-            // Fix soft-delete and missing metadata
-            if (data._deletedAt !== null) {
-              await userRef.update({ _deletedAt: null });
+            // Repair metadata and hierarchy
+            const updates = {};
+            if (data._deletedAt !== null) updates._deletedAt = null;
+            if (!data.hierarchy_level) updates.hierarchy_level = 'Employee';
+            if (!data.profile) {
+              const freshPayload = buildUnifiedUserPayload(user, now);
+              updates.profile = freshPayload.profile;
+            }
+            
+            if (Object.keys(updates).length > 0) {
+              await userRef.update(updates);
               patched++;
             }
           }
 
-          // 2. Sync HR Document
-          if (!hrDoc.exists) {
-            await hrRef.set(buildHrPayload(user, now));
-            createdHr++;
-            logger.info(`Backfill: Created HR doc for ${uid} (${user.email})`);
-          } else {
-            const data = hrDoc.data();
-            const updates = {};
-            if (data._deletedAt !== null) updates._deletedAt = null;
-            if (data.subModule !== 'employees') updates.subModule = 'employees';
-            if (!data.userId) updates.userId = uid;
-            
-            // Repair missing fields
-            if (!data.poste) updates.poste = 'À définir';
-            if (!data.dept) updates.dept = 'Production';
-            if (data.performance_score === undefined) updates.performance_score = 85;
-            if (data.burnout_risk === undefined) updates.burnout_risk = 10;
-            if (data.retention_score === undefined) updates.retention_score = 95;
-            if (data.training_completed === undefined) updates.training_completed = 0;
-            if (data.satisfaction_score === undefined) updates.satisfaction_score = 8;
-            
-            if (Object.keys(updates).length > 0) {
-              await hrRef.update(updates);
-              patched++;
-            }
+          // [CLEANUP] Remove legacy doc from root 'hr' if exists
+          const legacyHrRef = db.collection('hr').doc(uid);
+          const legacySnap = await legacyHrRef.get();
+          if (legacySnap.exists) {
+            await legacyHrRef.delete();
           }
+
         } catch (userErr) {
           errors++;
           logger.error(`Backfill: Error processing user ${uid}:`, userErr);
