@@ -109,7 +109,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'home', label: 'Espace Personnel', icon: <UserCircle size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF', 'PRODUCTION'],
-    component: PersonalWorkspace, priority: 1, hidden: true
+    component: PersonalWorkspace, priority: 1
   });
 
   registry.register({

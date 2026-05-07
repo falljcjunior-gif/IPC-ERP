@@ -253,6 +253,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /planning/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
     match /legal/{docId} {
       allow read: if isAuthenticated() && (isManager() || hasRole('LEGAL'));
       allow create, update: if isAuthenticated() && (isManager() || hasRole('LEGAL'));
@@ -395,6 +401,36 @@ service cloud.firestore {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isSuperAdmin());
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isSuperAdmin();
+    }
+
+    match /talent/{docId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow create, update: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow delete: if isSuperAdmin();
+    }
+
+    match /commerce/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('SALES'));
+      allow delete: if false;
+    }
+
+    match /website/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (isManager() || hasRole('MARKETING') || hasRole('STAFF'));
+      allow delete: if isSuperAdmin();
+    }
+
+    match /connect/{docId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isSuperAdmin() || isOwner(resource.data.userId);
+    }
+
+    match /dms/{docId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('STAFF') || resource.data.ownerId == request.auth.uid);
+      allow create, update: if isAuthenticated();
+      allow delete: if isSuperAdmin();
     }
 
     // ── Audit Logs (Immuable) ────────────────────────────────────────────────

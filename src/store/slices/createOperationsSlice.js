@@ -95,16 +95,20 @@ export const createOperationsSlice = (set, get) => ({
     const nextNum = `${seq.prefix}${new Date().getFullYear()}-${numStr}`;
     
     set(prev => {
-      const s = prev.base?.sequences?.[key];
+      const data = prev.data || {};
+      const s = data.base?.sequences?.[key];
       if (!s) return prev;
       return { 
         ...prev, 
-        base: { 
-          ...prev.base, 
-          sequences: { 
-            ...(prev.base?.sequences || {}), 
-            [key]: { ...s, next: s.next + 1 } 
-          } 
+        data: {
+          ...data,
+          base: { 
+            ...data.base, 
+            sequences: { 
+              ...(data.base?.sequences || {}), 
+              [key]: { ...s, next: s.next + 1 } 
+            } 
+          }
         } 
       };
     });
@@ -127,13 +131,17 @@ export const createOperationsSlice = (set, get) => ({
     try {
       // 1. Update local state immediately (Optimistic UI)
       set(prev => {
-        const finance = prev.finance || { entries: [], lines: [] };
+        const data = prev.data || {};
+        const finance = data.finance || { entries: [], lines: [] };
         return {
           ...prev,
-          finance: {
-            ...finance,
-            entries: [newEntry, ...(finance.entries || [])],
-            lines: [...newLines, ...(finance.lines || [])]
+          data: {
+            ...data,
+            finance: {
+              ...finance,
+              entries: [newEntry, ...(finance.entries || [])],
+              lines: [...newLines, ...(finance.lines || [])]
+            }
           }
         };
       });
@@ -225,7 +233,8 @@ export const createOperationsSlice = (set, get) => ({
     const { productId, qte, type, ref, source, dest } = movementData;
     const qteNum = parseFloat(qte);
     set(prev => {
-      const products = prev.inventory?.products || [];
+      const data = prev.data || {};
+      const products = data.inventory?.products || [];
       const product = products.find(p => p.id === productId || p.code === productId || p.ref === productId);
       if (!product) {
         get().addHint({ title: "Produit non trouvé", message: `ID: ${productId}`, type: 'error' });
@@ -243,8 +252,8 @@ export const createOperationsSlice = (set, get) => ({
       let newPoDraft = null;
 
       if (pointDeCommande > 0) {
-         const pendingPurchases = (prev.purchase?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Réceptionné' && o.statut !== 'Annulé').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
-         const pendingSales = (prev.sales?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Livré' && o.statut !== 'Annulé' && o.statut !== 'Gagné').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
+         const pendingPurchases = (data.purchase?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Réceptionné' && o.statut !== 'Annulé').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
+         const pendingSales = (data.sales?.orders || []).filter(o => (o.produitId === product.id || o.produitId === product.code) && o.statut !== 'Livré' && o.statut !== 'Annulé' && o.statut !== 'Gagné').reduce((sum, o) => sum + parseFloat(o.qte || 0), 0);
          const stockProjete = newStock + pendingPurchases - pendingSales;
 
          if (stockProjete <= pointDeCommande) {
@@ -273,9 +282,15 @@ export const createOperationsSlice = (set, get) => ({
 
       get().logAction(`Mouvement Stock (${type})`, `${product.nom} : ${qteNum} u.`, 'inventory');
       
-      const nextState = { ...prev, inventory: { ...prev.inventory, products: updatedProducts, movements: [newMove, ...(prev.inventory?.movements || [])] } };
+      const nextState = { 
+        ...prev, 
+        data: {
+          ...data,
+          inventory: { ...data.inventory, products: updatedProducts, movements: [newMove, ...(data.inventory?.movements || [])] }
+        }
+      };
       if (newPoDraft) {
-         nextState.purchase = { ...prev.purchase, orders: [newPoDraft, ...(prev.purchase?.orders || [])] };
+         nextState.data.purchase = { ...data.purchase, orders: [newPoDraft, ...(data.purchase?.orders || [])] };
       }
       return nextState;
     });
@@ -283,9 +298,10 @@ export const createOperationsSlice = (set, get) => ({
 
   applyMOTransformation: (moId) => {
     set(prev => {
-      const mo = prev.production?.workOrders?.find(o => o.id === moId);
+      const data = prev.data || {};
+      const mo = data.production?.workOrders?.find(o => o.id === moId);
       if (!mo) return prev;
-      const bom = prev.production?.boms?.find(b => b.produit === mo.produit || b.product === mo.produit || b.productId === mo.produitId);
+      const bom = data.production?.boms?.find(b => b.produit === mo.produit || b.product === mo.produit || b.productId === mo.produitId);
       if (!bom) {
         get().addHint({ title: "BOM Manquante", message: `Aucune nomenclature trouvée pour ${mo.produit}`, type: 'warning' });
         return prev;
@@ -297,7 +313,7 @@ export const createOperationsSlice = (set, get) => ({
       componentsList.forEach(comp => get().applyStockMove({ productId: comp.productId, qte: comp.qte * (mo.qte || 0), type: 'Consommation', ref: `OF-${mo.num || mo.id}` }));
       
       // Appliquer l'incrémentation du nouveau produit fini
-      const finalProductId = bom.productId || mo.produitId || prev.inventory?.products?.find(p => p.nom === mo.produit)?.id;
+      const finalProductId = bom.productId || mo.produitId || data.inventory?.products?.find(p => p.nom === mo.produit)?.id;
       if (finalProductId) {
         get().applyStockMove({ productId: finalProductId, qte: mo.qte, type: 'Réception', ref: `OF-${mo.num || mo.id}` });
       }
@@ -310,20 +326,36 @@ export const createOperationsSlice = (set, get) => ({
   processOrderValidation: (order) => {
     const invoiceNum = get().getNextSequence('finance_invoices');
     const newInvoice = { id: Date.now().toString(), num: invoiceNum, client: order.client, montant: order.montant, statut: 'À Payer', orderId: order.id, createdAt: new Date().toISOString() };
-    set(prev => ({ ...prev, finance: { ...prev.finance, invoices: [newInvoice, ...(prev.finance?.invoices || [])] } }));
+    set(prev => {
+      const data = prev.data || {};
+      return { 
+        ...prev, 
+        data: {
+          ...data,
+          finance: { ...data.finance, invoices: [newInvoice, ...(data.finance?.invoices || [])] }
+        }
+      };
+    });
     get().addHint({ title: "Flux Cascade Activé", message: `Facture ${invoiceNum} générée + Expédition de stock initiée.`, type: 'info', appId: 'finance' });
     get().logAction('Validation Commande', `Généré Facture ${invoiceNum} & Livraison pour ${order.num}`, 'system');
   },
 
   convertOppToSalesOrder: (oppId) => {
     set(prev => {
-      const opp = prev.crm?.opportunities?.find(o => o.id === oppId);
+      const data = prev.data || {};
+      const opp = data.crm?.opportunities?.find(o => o.id === oppId);
       if (!opp) return prev;
       const orderNum = get().getNextSequence('sales_orders');
       const newOrder = { id: Date.now().toString(), num: orderNum, client: opp.client, clientContact: opp.nom || opp.titre, montant: opp.montant, statut: 'Brouillon', oppId: opp.id, createdAt: new Date().toISOString() };
       get().addHint({ title: "Commande Créée", message: `Le Bon de Commande ${orderNum} a été généré avec succès.`, type: 'success', appId: 'sales' });
       get().logAction('Conversion Opportunité', `Génération ${orderNum} depuis ${opp.id}`, 'sales');
-      return { ...prev, sales: { ...prev.sales, orders: [newOrder, ...(prev.sales?.orders || [])] } };
+      return { 
+        ...prev, 
+        data: {
+          ...data,
+          sales: { ...data.sales, orders: [newOrder, ...(data.sales?.orders || [])] }
+        }
+      };
     });
   },
 
@@ -341,9 +373,16 @@ export const createOperationsSlice = (set, get) => ({
       brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
     };
     set(prev => {
-      const moduleData = prev[appId] || {};
+      const data = prev.data || {};
+      const moduleData = data[appId] || {};
       const subModuleData = moduleData[subModule] || [];
-      const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] } };
+      const nextState = { 
+        ...prev, 
+        data: {
+          ...data,
+          [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] }
+        }
+      };
       
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
@@ -424,8 +463,9 @@ export const createOperationsSlice = (set, get) => ({
     }
 
     set(prev => {
-      if (!prev[appId] || !prev[appId][subModule]) return prev;
-      const oldRecord = prev[appId][subModule].find(i => i.id === id);
+      const data = prev.data || {};
+      if (!data[appId] || !data[appId][subModule]) return prev;
+      const oldRecord = data[appId][subModule].find(i => i.id === id);
       if (!oldRecord) return prev;
 
       // [SÉCURITÉ] Garde-fou contre les boucles infinies de dominos
@@ -433,8 +473,14 @@ export const createOperationsSlice = (set, get) => ({
       if (!hasActualChanges) return prev;
 
       const changes = Object.keys(newData).filter(key => newData[key] !== oldRecord[key]).map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`).join(', ');
-      const updatedList = prev[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
-      let nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: updatedList } };
+      const updatedList = data[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
+      let nextState = { 
+        ...prev, 
+        data: {
+          ...data,
+          [appId]: { ...data[appId], [subModule]: updatedList }
+        }
+      };
       const record = updatedList.find(o => o.id === id);
       setTimeout(async () => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
@@ -488,7 +534,13 @@ export const createOperationsSlice = (set, get) => ({
              appId: 'legal' 
            });
            const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Attente Visa Juridique' } : item);
-           nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
+           nextState = { 
+             ...prev, 
+             data: {
+               ...data,
+               [appId]: { ...data[appId], [subModule]: revertedList }
+             }
+           };
            get().sendNotification('Juridique', 'Visa requis pour commande', 'Une commande modifiée hors template nécessite un visa juridique.', 'warning', 'legal');
         } else {
            get().processOrderValidation(record);
@@ -504,7 +556,13 @@ export const createOperationsSlice = (set, get) => ({
       if (appId === 'hr' && subModule === 'employees' && newData.statut === 'Signé' && !record.visaJuridique) {
          get().addHint({ title: "Visa Juridique Requis", message: "Le contrat de travail nécessite le visa du pôle juridique avant signature finale.", type: 'warning', appId: 'legal' });
          const revertedList = updatedList.map(item => item.id === id ? { ...item, statut: 'Validation Juridique' } : item);
-         nextState = { ...prev, [appId]: { ...prev[appId], [subModule]: revertedList } };
+         nextState = { 
+           ...prev, 
+           data: {
+             ...data,
+             [appId]: { ...data[appId], [subModule]: revertedList }
+           }
+         };
       }
 
       // Workflow Signature (100% Souverain - Effet Domino)
@@ -521,18 +579,30 @@ export const createOperationsSlice = (set, get) => ({
            visaJuridique: true,
            hash: record.auditTrail?.hashDocument
          };
-         nextState = { ...nextState, legal: { ...nextState.legal, contracts: [legalContract, ...(nextState.legal?.contracts || [])] } };
+         nextState = { 
+           ...nextState, 
+           data: {
+             ...nextState.data,
+             legal: { ...nextState.data.legal, contracts: [legalContract, ...(nextState.data.legal?.contracts || [])] }
+           }
+         };
          get().addHint({ title: "Archivage Souverain", message: "Le document scellé a été archivé en sécurité dans le module juridique.", type: 'success', appId: 'legal' });
          
          // Domino 2: Validation du Devis (Sales)
          if (record.sourceId) {
-             const salesList = nextState.sales?.orders || [];
+             const salesList = nextState.data.sales?.orders || [];
              const saleIndex = salesList.findIndex(o => o.id === record.sourceId);
              if (saleIndex !== -1) {
                  const saleOld = salesList[saleIndex];
                  const updatedSalesList = [...salesList];
                  updatedSalesList[saleIndex] = { ...saleOld, statut: 'Confirmé' };
-                 nextState = { ...nextState, sales: { ...nextState.sales, orders: updatedSalesList } };
+                  nextState = { 
+                    ...nextState, 
+                    data: {
+                      ...nextState.data,
+                      sales: { ...nextState.data.sales, orders: updatedSalesList }
+                    }
+                  };
                  get().addHint({ title: "Contrat Confirmé", message: `Le devis ${saleOld.num} a été automatiquement confirmé suite à la signature P.K.I.`, type: 'success', appId: 'sales' });
                  get().logAction('Effet Domino', `Devis ${saleOld.num} validé par signature P.K.I.`, 'sales', saleOld.id);
                  get().processOrderValidation(saleOld);
@@ -586,7 +656,13 @@ export const createOperationsSlice = (set, get) => ({
              anomalies: matchResult.anomalies,
              createdAt: new Date().toISOString(),
            };
-           nextState = { ...nextState, finance: { ...nextState.finance, vendor_bills: [newBill, ...(nextState.finance?.vendor_bills || [])] } };
+           nextState = { 
+             ...nextState, 
+             data: {
+               ...nextState.data,
+               finance: { ...nextState.data.finance, vendor_bills: [newBill, ...(nextState.data.finance?.vendor_bills || [])] }
+             }
+           };
 
            // Notifier le résultat du match (via GreenBlockEngine)
            setTimeout(() => applyThreeWayMatchResult(record.id, matchResult, get, set), 0);
@@ -612,11 +688,17 @@ export const createOperationsSlice = (set, get) => ({
                  get().sendNotification(wf.actionTargetRole, `Auto: ${wf.name}`, msg, 'info', appId);
              } else if (wf.actionType === 'UPDATE_STATUS') {
                  // [AUDIT] Sécurité: Empêcher les boucles infinies si le statut est déjà identique
-                 const currentStatus = nextState[appId][subModule].find(item => item.id === id)?.statut;
-                 if (currentStatus !== wf.actionPayload) {
-                    const finalUpdatedList = nextState[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
-                    nextState = { ...nextState, [appId]: { ...nextState[appId], [subModule]: finalUpdatedList } };
-                 }
+                 const currentStatus = nextState.data[appId][subModule].find(item => item.id === id)?.statut;
+                  if (currentStatus !== wf.actionPayload) {
+                     const finalUpdatedList = nextState.data[appId][subModule].map(item => item.id === id ? { ...item, statut: wf.actionPayload } : item);
+                     nextState = { 
+                       ...nextState, 
+                       data: {
+                         ...nextState.data,
+                         [appId]: { ...nextState.data[appId], [subModule]: finalUpdatedList }
+                       }
+                     };
+                  }
              } else if (wf.actionType === 'LOG_ACTION') {
                  get().logAction('I.P.C. Automator', wf.actionPayload, appId, id);
              }
@@ -635,10 +717,17 @@ export const createOperationsSlice = (set, get) => ({
     }
 
     set(prev => {
-      const moduleData = prev[appId] || {};
+      const data = prev.data || {};
+      const moduleData = data[appId] || {};
       const subModuleData = moduleData[subModule] || [];
       const updatedList = subModuleData.filter(item => item.id !== id);
-      const nextState = { ...prev, [appId]: { ...moduleData, [subModule]: updatedList } };
+      const nextState = { 
+        ...prev, 
+        data: {
+          ...data,
+          [appId]: { ...moduleData, [subModule]: updatedList }
+        }
+      };
       setTimeout(() => {
          get().logAction(`Suppression ${subModule}`, `ID: ${id}`, appId);
          if (get().user) FirestoreService.deleteDocument(appId, id);
@@ -672,7 +761,8 @@ export const createOperationsSlice = (set, get) => ({
 
     // Decrement stock for each item in the cart
     set(prev => {
-      const invProducts = prev.inventory?.products || [];
+      const data = prev.data || {};
+      const invProducts = data.inventory?.products || [];
       const updatedProducts = invProducts.map(p => {
          const cartItem = order.cart.find(c => c.id === p.id);
          if (cartItem) {
@@ -680,7 +770,13 @@ export const createOperationsSlice = (set, get) => ({
          }
          return p;
       });
-      return { ...prev, inventory: { ...(prev.inventory || {}), products: updatedProducts } };
+      return { 
+        ...prev, 
+        data: {
+          ...data,
+          inventory: { ...(data.inventory || {}), products: updatedProducts }
+        }
+      };
     });
 
     get().addHint({
@@ -809,7 +905,8 @@ export const createOperationsSlice = (set, get) => ({
 
     // Deduct components from stock
     set(prev => {
-      const nextProducts = (prev.inventory?.products || []).map(p => {
+      const data = prev.data || {};
+      const nextProducts = (data.inventory?.products || []).map(p => {
         const comp = composants.find(c => c.articleId === p.id);
         if (!comp) return p;
         const consumed = comp.qte * order.qte;
@@ -819,7 +916,13 @@ export const createOperationsSlice = (set, get) => ({
         }
         return { ...p, qteStock: Math.max(0, newQty) };
       });
-      return { ...prev, inventory: { ...prev.inventory, products: nextProducts } };
+      return { 
+        ...prev, 
+        data: {
+          ...data,
+          inventory: { ...data.inventory, products: nextProducts }
+        }
+      };
     });
 
     // Update OF status to En cours

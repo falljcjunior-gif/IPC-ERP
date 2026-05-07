@@ -100,7 +100,7 @@ export const BusinessProvider = ({ children }) => {
 
     // A. Business Modules Sync — [SOFT-DELETE ENABLED] via FirestoreService
     const collections_to_sync = [
-      'crm', 'sales', 'inventory', 'production', 'purchase',
+      'crm', 'sales', 'inventory', 'production', 'purchase', 'planning',
       'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents', 'cockpit',
       'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget',
       'connect', 'marketing', 'commerce', 'website', 'dms'
@@ -137,8 +137,8 @@ export const BusinessProvider = ({ children }) => {
       useStore.getState().setPermissions(permissionsMap);
 
       // 2. Sync to data.employees for unified access
-      scheduleUpdate('employees', users);
-
+      useStore.getState().setData(prev => ({ ...prev, employees: users }));
+      
       // 3. Current User Identity Bridge
       const currentUserProfile = users.find(u => u.id === userId);
       if (currentUserProfile) {
@@ -149,7 +149,12 @@ export const BusinessProvider = ({ children }) => {
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
         
         const currentEmail = useStore.getState().user?.email;
-        const isCreator = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(currentEmail?.toLowerCase());
+        const isCreator = [
+          'fall.jcjunior@gmail.com', 
+          'ra.yoman@ipcgreenblocks.com', 
+          'ra.yoman@gmail.com',
+          'yomanraphael26@gmail.com'
+        ].includes(currentEmail?.toLowerCase());
 
         if (isCreator) {
           finalRole = 'SUPER_ADMIN';

@@ -43,16 +43,15 @@ export const createAdminSlice = (set, get) => ({
   },
 
   getModuleAccess: (userId, moduleId) => {
-    const { user, permissions } = get();
+    const { user, userRole, permissions } = get();
     // SUPER_ADMIN (creator) has absolute bypass
-    if (user?.role === 'SUPER_ADMIN') return 'write';
+    if (userRole === 'SUPER_ADMIN') return 'write';
+    
+    // Always allow access to Personal Space
+    if (moduleId === 'home') return 'write';
 
     const userPerms = permissions[userId];
     if (!userPerms) return 'none';
-    
-    // Legacy / Roles based bypass
-    if (userPerms.roles?.includes('SUPER_ADMIN')) return 'write';
-    if (moduleId === 'home') return 'write';
 
     // 1. Check New Nested Structure (modules[id].access)
     if (userPerms.modules && userPerms.modules[moduleId]) {

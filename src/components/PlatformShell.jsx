@@ -117,7 +117,7 @@ const PlatformShell = ({ theme, setView }) => {
   useEffect(() => {
     if (!activeApp) return;
     const currentPath = window.location.pathname;
-    const targetPath = activeApp === 'cockpit' ? '/' : `/${activeApp}`;
+    const targetPath = activeApp === 'home' ? '/' : `/${activeApp}`;
     
     if (currentPath !== targetPath) {
       window.history.pushState({ appId: activeApp }, '', targetPath);
@@ -130,7 +130,7 @@ const PlatformShell = ({ theme, setView }) => {
       } else {
         // Fallback to URL path
         const path = window.location.pathname.substring(1);
-        setActiveApp(path || 'cockpit');
+        setActiveApp(path || 'home');
       }
     };
     
@@ -321,8 +321,20 @@ const PlatformShell = ({ theme, setView }) => {
               if (item.hidden) return false;
               if (userRole === 'SUPER_ADMIN') return true;
               if (!currentUser || currentUser.id === 'guest') return item.id === 'home';
+              
+              // 1. Always show home
+              if (item.id === 'home') return true;
+
+              // 2. Check explicit permissions
               const access = getModuleAccess(currentUser?.id, item.id);
-              if (!permissions || Object.keys(permissions).length === 0) return true;
+              
+              // 3. FALLBACK: If no explicit permissions are defined for this user in the store, 
+              // use the registry's default roles as a safe baseline.
+              const userHasDefinedPerms = permissions && permissions[currentUser?.id];
+              if (!userHasDefinedPerms) {
+                return (item.roles || []).includes(userRole);
+              }
+
               return access !== 'none';
             });
             if (visibleItems.length === 0) return null;

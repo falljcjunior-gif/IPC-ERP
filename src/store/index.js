@@ -133,6 +133,7 @@ export const useStore = create(
         esg: { reports: [], metrics: [] },
         projects: { items: [] },
         budget: { allocations: [] },
+        planning: { events: [] },
         cockpit: { global_metrics: {}, alerts: [] }
       },
       
