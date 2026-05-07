@@ -10,63 +10,101 @@ const DeleteUserSchema = z.object({
   uid: z.string().min(20).max(128) // Standard Firebase UID length
 });
 
-// Helpers pour construire les payloads (partagés entre trigger et backfill)
-const buildUserPayload = (user, now) => {
+// ── Unified Payload Builder (HR 2.0) ──────────────────────────────────────
+const buildUnifiedUserPayload = (user, now, extraData = {}) => {
   const uid = user.uid;
   const email = user.email;
-  const displayName = user.displayName || email?.split('@')[0] || 'Unknown';
+  const displayName = user.displayName || extraData.nom || email?.split('@')[0] || 'Utilisateur';
   
-  const userData = {
+  const role = extraData.role || 'GUEST';
+  
+  return {
     _createdAt: now,
+    _updatedAt: now,
     _deletedAt: null,
-    role: 'GUEST',
-    permissions: {
-      roles: ['GUEST'],
-      allowedModules: ['home']
-    },
+    uid: uid,
+    email: email,
+    role: role,
+    hierarchy_level: extraData.hierarchy_level || 'Employee',
+    
+    // Public profile (visible to all for Directory)
     profile: {
       id: uid,
       email: email,
       nom: displayName,
-      poste: 'À définir',
-      dept: 'Production',
+      poste: extraData.poste || 'À définir',
+      dept: extraData.dept || 'Production',
+      avatar: (displayName ? displayName[0] : 'U').toUpperCase(),
       active: true,
       createdAt: new Date().toISOString()
+    },
+
+    // HR Data (Basic - visible to HR/Admin)
+    hr: {
+      salaire_base: extraData.salaire || 0,
+      contratType: extraData.contratType || 'CDI',
+      date_entree: extraData.date_entree || new Date().toISOString().split('T')[0],
+      performance_score: 85,
+      burnout_risk: 10,
+      retention_score: 95,
+      subModule: 'employees'
+    },
+
+    // Detailed Permissions
+    permissions: extraData.permissions || {
+      roles: [role],
+      allowedModules: ['home'],
+      moduleAccess: { home: 'write' }
     }
   };
+};
 
-  // Privilèges automatiques pour les admins connus
-  if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email)) {
-    userData.role = 'SUPER_ADMIN';
-    userData.permissions.roles = ['SUPER_ADMIN'];
-  }
+/**
+ * Admin: Atomic Provisioning (Auth + Firestore + Claims)
+ */
+exports.provisionUser = onCall({
+  maxInstances: 5
+}, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
   
-  return userData;
-};
+  const callerRole = request.auth.token?.role;
+  if (callerRole !== 'SUPER_ADMIN' && callerRole !== 'ADMIN') {
+    throw new HttpsError('permission-denied', 'Seuls les administrateurs peuvent provisionner des comptes.');
+  }
 
-const buildHrPayload = (user, now) => {
-  const uid = user.uid;
-  const email = user.email;
-  const displayName = user.displayName || email?.split('@')[0] || 'Unknown';
+  const { email, password, ...extraData } = request.data;
+  if (!email || !password) throw new HttpsError('invalid-argument', 'Email et Mot de passe requis.');
 
-  return {
-    _createdAt: now,
-    _deletedAt: null,
-    id: uid,
-    userId: uid, // Nécessaire pour les règles Firestore
-    email: email,
-    nom: displayName,
-    poste: 'À définir',
-    dept: 'Production',
-    active: true,
-    performance_score: 85,
-    burnout_risk: 10,
-    retention_score: 95,
-    training_completed: 0,
-    satisfaction_score: 8,
-    subModule: 'employees'
-  };
-};
+  try {
+    // 1. Create Auth User
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: extraData.nom
+    });
+    const uid = userRecord.uid;
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const payload = buildUnifiedUserPayload(userRecord, now, extraData);
+
+    // 2. Atomic Firestore Write
+    await db.collection('users').doc(uid).set(payload);
+
+    // 3. Set Custom Claims
+    await admin.auth().setCustomUserClaims(uid, { role: payload.role });
+
+    logger.info(`Successfully provisioned user ${uid} (${email}) with role ${payload.role}`);
+    
+    return { success: true, uid };
+  } catch (error) {
+    logger.error('Provisioning error:', error);
+    if (error.code === 'auth/email-already-exists') {
+      throw new HttpsError('already-exists', 'Cet email est déjà utilisé.');
+    }
+    throw new HttpsError('internal', `Échec du provisionnement : ${error.message}`);
+  }
+});
+
 
 
 /**
@@ -107,15 +145,24 @@ exports.deleteUserAccount = onCall({
     }
     
     // 3. Database Cleanup (Hard Delete)
-    // Delete from users and hr collections
+    // Unified model: Clean up the user document and its private sub-collection
     const userRef = db.collection('users').doc(uid);
-    const hrRef = db.collection('hr').doc(uid);
+    const hrPrivateRef = userRef.collection('hr_private');
     
+    // Delete sub-collection documents first (manual loop required in Firestore)
+    const subDocs = await hrPrivateRef.get();
     const batch = db.batch();
+    subDocs.forEach(doc => batch.delete(doc.ref));
+    
+    // Delete main user doc
     batch.delete(userRef);
-    batch.delete(hrRef);
+    
+    // [CLEANUP] Also delete from deprecated 'hr' collection if exists
+    const legacyHrRef = db.collection('hr').doc(uid);
+    batch.delete(legacyHrRef);
+
     await batch.commit();
-    logger.info(`Database records for user ${uid} purged from users and hr collections.`);
+    logger.info(`Database records for user ${uid} purged from all unified and legacy collections.`);
 
     // Audit log
     await db.collection('audit_logs').add({
@@ -124,7 +171,7 @@ exports.deleteUserAccount = onCall({
       docId: uid,
       operation: 'HARD_DELETE_ACCOUNT',
       changedBy: callerUid,
-      summary: `User ${uid} deleted from Auth and Database (Resilient mode)`
+      summary: `User ${uid} deleted from Auth and Database (Unified Reboot)`
     });
     
     return { success: true };
@@ -138,28 +185,33 @@ const functionsV1 = require('firebase-functions/v1');
 
 /**
  * Trigger onCreate: Automatically mirror Auth user to Firestore and set claims
+ * Updated for HR 2.0 Unified Model
  */
 exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
   const uid = user.uid;
   const email = user.email;
   try {
     const userRef = db.collection('users').doc(uid);
-    const hrRef = db.collection('hr').doc(uid);
-
     const docSnap = await userRef.get();
     const now = admin.firestore.FieldValue.serverTimestamp();
 
     if (!docSnap.exists) {
-      const userData = buildUserPayload(user, now);
+      const userData = buildUnifiedUserPayload(user, now);
+      
+      // Auto-Admin logic
+      if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email)) {
+        userData.role = 'SUPER_ADMIN';
+        userData.permissions.roles = ['SUPER_ADMIN'];
+      }
+
       await userRef.set(userData);
-      await hrRef.set(buildHrPayload(user, now));
       
       // SET CUSTOM CLAIMS
       await admin.auth().setCustomUserClaims(uid, { role: userData.role });
       
-      logger.info(`Mirrored user ${uid} and set role ${userData.role}`);
+      logger.info(`Mirrored user ${uid} (Unified) and set role ${userData.role}`);
     } else {
-      // S'assurer que le rôle est aussi dans les claims s'il existe déjà dans Firestore
+      // Ensure claims are synced
       const data = docSnap.data();
       if (data.role) {
         await admin.auth().setCustomUserClaims(uid, { role: data.role });
@@ -169,6 +221,7 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
     logger.error(`Error mirroring user ${uid}:`, error);
   }
 });
+
 
 
 /**

@@ -61,24 +61,37 @@ service cloud.firestore {
 
 
 
-    // ── Users ─────────────────────────────────────────────────────────────────
-    // Chaque utilisateur peut lire son propre profil. Les admins lisent tous.
-    // Seuls les admins peuvent modifier les rôles.
+    // ── Users & HR (Unified Model 2.0) ──────────────────────────────────────
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      // Profile is public for authenticated users (Directory/Annuaire)
+      // Sensitive HR/Permissions data is handled by app logic or further restricted if needed
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (isAdmin() || isCreatorEmail());
       allow update: if isAuthenticated() && (
-        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) ||
+        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'hr'])) ||
         isAdmin()
       );
       allow delete: if isSuperAdmin();
+
+      // THE HR VAULT: Isolation of sensitive data (salary, SSN, IBAN)
+      // Located as a sub-collection of the user for better grouping
+      match /hr_private/{subDocId} {
+        allow read: if isAuthenticated() && (
+          isOwner(userId) || hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin()
+        );
+        allow write: if isAuthenticated() && (hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin());
+      }
     }
 
-    // ── Employees (HR sub-collection alias) ───────────────────────────────────
+    // [DEPRECATED] Root HR collection — will be removed after migration
+    match /hr/{docId} {
+      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR') || resource.data.userId == request.auth.uid);
+      allow write: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+    }
+
+    // [DEPRECATED] Alias for HR
     match /employees/{docId} {
-      allow read: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
-      allow write: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
-      allow delete: if isSuperAdmin();
+      allow read, write: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
     }
 
     // ── Messages ─────────────────────────────────────────────────────────────
@@ -160,25 +173,8 @@ service cloud.firestore {
     // Règle par défaut : authentifié peut lire/écrire dans son périmètre
     // Les suppressions sont réservées aux managers/admins (soft-delete préféré)
 
-    match /hr/{docId} {
-      allow read: if isAuthenticated() && (
-        isSuperAdmin() || isManager() || hasRole('HR') || 
-        resource.data.userId == request.auth.uid
-      );
-      allow create: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
-      allow update: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
-      allow delete: if isSuperAdmin() || isManager();
+    // ── HR Logic consolidated in /users/{userId} ─────────────────────────────
 
-      // THE HR VAULT: Isolation of sensitive data (salary, SSN, IBAN)
-      match /private_data/{subDocId} {
-        allow read: if isAuthenticated() && (
-          hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin() ||
-          // Employee reading their own private data
-          get(/databases/$(database)/documents/hr/$(docId)).data.userId == request.auth.uid
-        );
-        allow write: if isAuthenticated() && (hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin());
-      }
-    }
 
     match /helpdesk/{docId} {
       allow read: if isAuthenticated() && (

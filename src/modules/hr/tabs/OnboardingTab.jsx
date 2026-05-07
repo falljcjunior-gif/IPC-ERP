@@ -5,16 +5,132 @@ import {
   UserPlus, Mail, Lock, Briefcase, DollarSign, 
   Shield, Check, Calendar, Settings, AlertCircle, Loader,
   Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
-  Eye, Pencil, ShieldOff,
-  User, MessageCircle, Target, ShoppingCart, Megaphone, Package, ShoppingBag, PieChart, Scale, Kanban, Headphones, Activity, BarChart2,
-  Zap, Layout, Truck, Factory, CreditCard, Landmark as LandmarkIcon, Wallet, Users2, Heart, LifeBuoy, Folder, FileSignature,
-  Trash2, AlertTriangle
+  Eye, Pencil, ShieldOff, Trash2, AlertTriangle, User,
+  FileSignature, ChevronLeft, Building2, Wallet, Target
 } from 'lucide-react';
 import { PermissionMatrix } from '../components/PermissionMatrix';
-import { FirestoreService } from '../../../services/firestore.service';
-import { logger } from '../../../utils/logger';
-import { db } from '../../../firebase/config';
-import { collection, getDocs, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+
+// ─────────────────────────────────────────────────────────────────
+// WIZARD STEPS
+// ─────────────────────────────────────────────────────────────────
+
+const StepIdentity = ({ formData, handleInputChange }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card">
+    <div style={{ marginBottom: '2rem' }}>
+      <h3 style={{ margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <User size={24} color="var(--accent)" /> Identité du Collaborateur
+      </h3>
+      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Informations de base pour la création du compte.</p>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="input-group">
+        <label>Nom Complet</label>
+        <div className="input-wrapper">
+          <User size={18} />
+          <input required type="text" name="nom" value={formData.nom} onChange={handleInputChange} placeholder="Ex: Jean Dupont" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Adresse Email Pro</label>
+        <div className="input-wrapper">
+          <Mail size={18} />
+          <input required type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="jean.dupont@ipc.com" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Mot de passe provisoire</label>
+        <div className="input-wrapper">
+          <Lock size={18} />
+          <input required type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="••••••••" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Département</label>
+        <div className="input-wrapper">
+          <Building2 size={18} />
+          <select name="dept" value={formData.dept} onChange={handleInputChange}>
+            <option value="Production">Production</option>
+            <option value="Ventes">Ventes</option>
+            <option value="RH">Ressources Humaines</option>
+            <option value="Finance">Finance</option>
+            <option value="Logistique">Logistique</option>
+            <option value="Direction">Direction</option>
+          </select>
+        </div>
+      </div>
+      <div className="input-group" style={{ gridColumn: 'span 2' }}>
+        <label>Poste / Intitulé de mission</label>
+        <div className="input-wrapper">
+          <Briefcase size={18} />
+          <input type="text" name="poste" value={formData.poste} onChange={handleInputChange} placeholder="Ex: Directeur de Production" />
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const StepContract = ({ formData, handleInputChange }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card">
+    <div style={{ marginBottom: '2rem' }}>
+      <h3 style={{ margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <FileSignature size={24} color="#10B981" /> Conditions Contractuelles
+      </h3>
+      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Détails administratifs et financiers.</p>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="input-group">
+        <label>Type de Contrat</label>
+        <div className="input-wrapper">
+          <FileSignature size={18} />
+          <select name="contratType" value={formData.contratType} onChange={handleInputChange}>
+            <option value="CDI">CDI</option>
+            <option value="CDD">CDD</option>
+            <option value="Stage">Stage</option>
+            <option value="Freelance">Freelance</option>
+          </select>
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Date d'entrée</label>
+        <div className="input-wrapper">
+          <Calendar size={18} />
+          <input type="date" name="date_entree" value={formData.date_entree} onChange={handleInputChange} />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Salaire de base (Mensuel Brut)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="salaire" value={formData.salaire} onChange={handleInputChange} placeholder="0.00" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Niveau Hiérarchique</label>
+        <div className="input-wrapper">
+          <Target size={18} />
+          <select name="hierarchy_level" value={formData.hierarchy_level} onChange={handleInputChange}>
+            <option value="Employee">Employé</option>
+            <option value="Manager">Manager</option>
+            <option value="Director">Directeur</option>
+            <option value="Executive">Exécutif</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+const StepPermissions = ({ localPermissions, setLocalPermissions }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card">
+     <div style={{ marginBottom: '2rem' }}>
+      <h3 style={{ margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <Shield size={24} color="#8B5CF6" /> Gouvernance & Accès Modules
+      </h3>
+      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Définissez le périmètre d'action du collaborateur dans l'ERP.</p>
+    </div>
+    <PermissionMatrix permissions={localPermissions} onChange={setLocalPermissions} />
+  </motion.div>
+);
 
 // ─────────────────────────────────────────────────────────────────
 // SUB-PANEL : Modifier les accès d'un employé existant
@@ -31,25 +147,9 @@ const EditAccessPanel = ({ employee, onClose }) => {
   const handleSave = async () => {
     setSaveError('');
     if (!employee?.id) return;
-
     setSaving(true);
     try {
-      const auditLog = {
-        action: 'PERMISSIONS_UPDATE',
-        targetId: employee.id,
-        targetName: employee.nom,
-        before: userPerms,
-        after: localPerms,
-        timestamp: serverTimestamp()
-      };
-
-      await FirestoreService.setDocument('users', employee.id, { 
-        permissions: localPerms,
-        hierarchy_level: localPerms.hierarchy_level 
-      });
-      
-      await FirestoreService.addDocument('permissions_audit', auditLog);
-
+      await useStore.getState().updateUserPermissions(employee.id, localPerms);
       setSaved(true);
       setTimeout(() => { setSaved(false); onClose(); }, 2000);
     } catch (err) {
@@ -76,39 +176,27 @@ const EditAccessPanel = ({ employee, onClose }) => {
         </button>
       </div>
 
-      <PermissionMatrix 
-        permissions={localPerms} 
-        onChange={setLocalPerms} 
-      />
+      <PermissionMatrix permissions={localPerms} onChange={setLocalPerms} />
 
       <div style={{ marginTop: '2.5rem' }}>
         {saveError && <div style={{ color: '#EF4444', fontSize: '0.8rem', marginBottom: '1rem', fontWeight: 700 }}>{saveError}</div>}
         <button onClick={handleSave} disabled={saving || saved} className="btn-primary" style={{ width: '100%', padding: '1rem', borderRadius: '1rem', fontWeight: 900, background: saved ? '#10B981' : 'var(--accent)', borderColor: saved ? '#10B981' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
           {saving ? <Loader className="spin" size={20} /> : saved ? <Check size={20} /> : <Save size={20} />}
-          {saving ? 'Sauvegarde des droits...' : saved ? 'Gouvernance appliquée !' : 'Mettre à jour la Gouvernance'}
+          {saving ? 'Sauvegarde...' : saved ? 'Appliqué !' : 'Mettre à jour'}
         </button>
       </div>
 
-      {/* Danger Zone */}
       <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px dashed #EF444440' }}>
         <h4 style={{ color: '#EF4444', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1rem', fontSize: '0.9rem' }}>
           <AlertTriangle size={18} /> ZONE DE DANGER
         </h4>
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid #EF444430', background: '#EF444405', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ flex: 1, marginRight: '1rem' }}>
-            <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)' }}>Suppression Définitive</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Supprime l'accès Auth et toutes les données Firestore associées.</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>Suppression Définitive</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Purge Auth + Firestore (Unified 2.0).</div>
           </div>
-          <button 
-            onClick={() => {
-              if (window.confirm(`Êtes-vous certain de vouloir supprimer DÉFINITIVEMENT ${employee.nom} ? Cette action est irréversible.`)) {
-                permanentlyDeleteUserRecord(employee.id);
-                onClose();
-              }
-            }}
-            style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', background: '#EF4444', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
-          >
-            <Trash2 size={16} /> Supprimer le Compte
+          <button onClick={() => { if (window.confirm('Action irréversible. Confirmer ?')) { permanentlyDeleteUserRecord(employee.id); onClose(); } }} style={{ padding: '0.75rem 1.25rem', borderRadius: '0.8rem', background: '#EF4444', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+            Supprimer le Compte
           </button>
         </div>
       </div>
@@ -117,10 +205,11 @@ const EditAccessPanel = ({ employee, onClose }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
+// MAIN COMPONENT (HR 2.0 ONBOARDING)
 // ─────────────────────────────────────────────────────────────────
 const OnboardingTab = ({ accessLevel }) => {
   const { createFullUser, data, permissions } = useStore();
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -130,8 +219,9 @@ const OnboardingTab = ({ accessLevel }) => {
 
   const [formData, setFormData] = useState({
     nom: '', email: '', password: '', 
-    poste: '', dept: 'Ventes', contratType: 'CDI', 
-    contratDuree: '', salaire: ''
+    poste: '', dept: 'Production', contratType: 'CDI', 
+    date_entree: new Date().toISOString().split('T')[0], 
+    salaire: '', hierarchy_level: 'Employee'
   });
 
   const [localPermissions, setLocalPermissions] = useState({
@@ -139,23 +229,13 @@ const OnboardingTab = ({ accessLevel }) => {
     modules: { home: { access: 'write', subTabs: {} } }
   });
 
-  const allEmployees = useMemo(() => {
-    // [STRATEGY] Use data.employees (synced from 'users' collection) as master list
-    // Fallback to data.hr.employees for HR-specific records if master list is unavailable
-    const masterList = data?.employees || [];
-    const hrList = data?.hr?.employees || [];
-    
-    // Merge or prioritize masterList
-    return masterList.length > 0 ? masterList : hrList;
-  }, [data?.employees, data?.hr?.employees]);
-
+  const allEmployees = useMemo(() => data?.employees || [], [data?.employees]);
+  
   const filteredEmployees = useMemo(() => {
     if (!searchQuery.trim()) return allEmployees;
     const q = searchQuery.toLowerCase();
     return allEmployees.filter(e =>
-      (e.nom || '').toLowerCase().includes(q) ||
-      (e.email || '').toLowerCase().includes(q) ||
-      (e.poste || '').toLowerCase().includes(q)
+      (e.nom || '').toLowerCase().includes(q) || (e.email || '').toLowerCase().includes(q)
     );
   }, [allEmployees, searchQuery]);
 
@@ -164,196 +244,149 @@ const OnboardingTab = ({ accessLevel }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleProvision = async () => {
     setLoading(true);
     setError('');
-    
-    const finalUserData = { 
-      ...formData, 
-      permissions: localPermissions,
-      hierarchy_level: localPermissions.hierarchy_level 
-    };
-
     try {
-      const res = await createFullUser(finalUserData, 'hr');
-      if (res && res.success) {
-        setSuccess(true);
-        setFormData({ nom: '', email: '', password: '', poste: '', dept: 'Ventes', contratType: 'CDI', contratDuree: '', salaire: '' });
-        setLocalPermissions({ hierarchy_level: 'Employee', modules: { home: { access: 'write', subTabs: {} } } });
-        setTimeout(() => setSuccess(false), 5000);
-      }
+      await createFullUser({ ...formData, permissions: localPermissions });
+      setSuccess(true);
+      setTimeout(() => { setSuccess(false); setStep(1); setMode('edit'); }, 4000);
     } catch (err) {
-      console.error('[OnboardingTab] createFullUser failed:', err.code, err.message, err);
-      const code = err.code || err.name || 'UNKNOWN';
-      const detail = err.message || "Impossible de provisionner le compte.";
-      setError(`[${code}] ${detail}`);
+      setError(err.message || "Erreur lors du provisionnement.");
     } finally {
       setLoading(false);
     }
   };
 
-  const onboardingTabs = useMemo(() => {
-    const tabs = [];
-    if (accessLevel === 'write') tabs.push({ key: 'create', label: '+ Nouvel Employé', icon: <UserPlus size={16} /> });
-    tabs.push({ key: 'edit', label: '✏️ Modifier les Accès', icon: <Edit3 size={16} /> });
-    return tabs;
-  }, [accessLevel]);
-
-  useEffect(() => {
-    if (accessLevel !== 'write' && mode === 'create') setMode('edit');
-  }, [accessLevel, mode]);
-
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ maxWidth: '1100px', margin: '0 auto' }}>
       
+      {/* Navigation Mode */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', background: 'var(--bg-subtle)', padding: '0.4rem', borderRadius: '1rem', width: 'fit-content' }}>
-        {onboardingTabs.map(tab => (
-          <button key={tab.key} onClick={() => { setMode(tab.key); setSelectedEmployee(null); }}
-            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', transition: '0.2s',
-              background: mode === tab.key ? '#8B5CF6' : 'transparent',
-              color: mode === tab.key ? 'white' : 'var(--text-muted)' }}>
-            {tab.icon} {tab.label}
-          </button>
-        ))}
+        <button onClick={() => setMode('create')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', background: mode === 'create' ? 'var(--accent)' : 'transparent', color: mode === 'create' ? 'white' : 'var(--text-muted)' }}>
+          <UserPlus size={16} /> Nouvel Employé
+        </button>
+        <button onClick={() => setMode('edit')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', borderRadius: '0.75rem', border: 'none', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', background: mode === 'edit' ? 'var(--accent)' : 'transparent', color: mode === 'edit' ? 'white' : 'var(--text-muted)' }}>
+          <Edit3 size={16} /> Gérer les Accès
+        </button>
       </div>
 
       <AnimatePresence mode="wait">
-      {mode === 'edit' && (
-        <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          {!selectedEmployee ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-              <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-                <div style={{ marginBottom: '1.25rem' }}>
-                  <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                    <Users size={20} color="#8B5CF6" /> Sélectionner un Employé
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Choisissez un collaborateur existant pour modifier ses habilitations et accès modules.
-                  </p>
-                </div>
+        {mode === 'create' ? (
+          <motion.div key="wizard">
+             {/* Wizard Progress Bar */}
+             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ flex: 1, height: '6px', borderRadius: '3px', background: step >= i ? 'var(--accent)' : 'var(--border)', transition: '0.3s' }} />
+                ))}
+             </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', background: 'var(--bg-subtle)', padding: '0.6rem 1rem', borderRadius: '0.9rem', border: '1px solid var(--border)', marginBottom: '1.25rem' }}>
-                  <Search size={16} color="var(--text-muted)" />
-                  <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Rechercher par nom, email, poste…" style={{ background: 'none', border: 'none', outline: 'none', fontSize: '0.88rem', width: '100%', color: 'var(--text)' }} />
-                </div>
+             {success ? (
+               <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass" style={{ textAlign: 'center', padding: '4rem', borderRadius: '2rem', border: '2px solid #10B98120', background: '#10B98105' }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#10B981', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 2rem auto', boxShadow: '0 20px 40px #10B98130' }}>
+                    <Check size={40} />
+                  </div>
+                  <h2 style={{ fontWeight: 900, color: '#064E3B', fontSize: '2rem' }}>Provisionnement Terminé !</h2>
+                  <p style={{ color: '#064E3B', opacity: 0.7, fontWeight: 600 }}>Le compte est actif et les accès sont configurés.</p>
+               </motion.div>
+             ) : (
+               <>
+                 {step === 1 && <StepIdentity formData={formData} handleInputChange={handleInputChange} />}
+                 {step === 2 && <StepContract formData={formData} handleInputChange={handleInputChange} />}
+                 {step === 3 && <StepPermissions localPermissions={localPermissions} setLocalPermissions={setLocalPermissions} />}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '500px', overflowY: 'auto' }}>
-                  {filteredEmployees.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-                      <Users size={40} style={{ opacity: 0.2, margin: '0 auto 1rem auto' }} />
-                      <p>Aucun employé trouvé.</p>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+                    <button disabled={step === 1 || loading} onClick={() => setStep(s => s - 1)} className="glass" style={{ padding: '0.8rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <ChevronLeft size={18} /> Retour
+                    </button>
+                    {step < 3 ? (
+                      <button onClick={() => setStep(s => s + 1)} className="btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '1rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        Suivant <ChevronRight size={18} />
+                      </button>
+                    ) : (
+                      <button disabled={loading} onClick={handleProvision} className="btn-primary" style={{ padding: '0.8rem 2.5rem', borderRadius: '1rem', fontWeight: 900, background: '#10B981', borderColor: '#10B981', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {loading ? <Loader className="spin" size={20} /> : <Check size={20} />}
+                        {loading ? 'Création...' : 'Finaliser le Recrutement'}
+                      </button>
+                    )}
+                 </div>
+                 {error && <div style={{ color: '#EF4444', fontWeight: 700, fontSize: '0.85rem', marginTop: '1rem', textAlign: 'center' }}>{error}</div>}
+               </>
+             )}
+          </motion.div>
+        ) : (
+          <motion.div key="edit" style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }}>
+             <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
+                <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+                  <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
+                  <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Rechercher..." style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 3rem', borderRadius: '1rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '600px', overflowY: 'auto' }}>
+                  {filteredEmployees.map(emp => (
+                    <div key={emp.id} onClick={() => setSelectedEmployee(emp)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', borderRadius: '1rem', cursor: 'pointer', background: selectedEmployee?.id === emp.id ? 'var(--accent-subtle)' : 'transparent', border: `1px solid ${selectedEmployee?.id === emp.id ? 'var(--accent)' : 'transparent'}` }}>
+                       <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: 'var(--accent)' }}>
+                        {(emp.nom || '?')[0].toUpperCase()}
+                       </div>
+                       <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>{emp.nom}</div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{emp.poste || emp.role}</div>
+                       </div>
                     </div>
-                  ) : filteredEmployees.map(emp => {
-                    const perms = permissions[emp.id] || {};
-                    const mods = perms.modules ? Object.keys(perms.modules).length : 0;
-                    return (
-                      <div key={emp.id} onClick={() => setSelectedEmployee(emp)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', cursor: 'pointer', border: '1px solid transparent', transition: '0.2s' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, flexShrink: 0 }}>
-                          {(emp.nom || emp.profile?.nom || emp.email || emp.profile?.email || '?')[0].toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{emp.nom || emp.profile?.nom || emp.email || emp.profile?.email}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{emp.poste || emp.profile?.poste || emp.dept || emp.profile?.dept}</div>
-                        </div>
-                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                            <span style={{ fontSize: '0.65rem', background: '#8B5CF620', color: '#8B5CF6', padding: '2px 8px', borderRadius: '2rem', fontWeight: 800 }}>
-                              {mods} Apps
-                            </span>
-                            <ChevronRight size={14} color="var(--text-muted)" />
-                         </div>
-                      </div>
-                    );
-                  })}
+                  ))}
                 </div>
-              </div>
-              <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', minHeight: '400px', color: 'var(--text-muted)' }}>
-                <Shield size={48} style={{ opacity: 0.15 }} />
-                <p style={{ textAlign: 'center', fontSize: '0.9rem', maxWidth: '260px' }}>Sélectionnez un collaborateur pour modifier ses droits.</p>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-              <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-                <h3 style={{ margin: '0 0 1rem 0', fontWeight: 900 }}>Collaborateurs</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', maxHeight: '500px', overflowY: 'auto' }}>
-                  {filteredEmployees.map(emp => {
-                    const isSelected = selectedEmployee?.id === emp.id;
-                    return (
-                      <div key={emp.id} onClick={() => setSelectedEmployee(emp)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.9rem 1rem', borderRadius: '1rem', background: isSelected ? '#8B5CF615' : 'var(--bg-subtle)', cursor: 'pointer', border: isSelected ? '2px solid #8B5CF6' : '2px solid transparent', transition: '0.2s' }}>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#8B5CF615', color: '#8B5CF6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, flexShrink: 0 }}>
-                          {(emp.nom || emp.email || '?')[0].toUpperCase()}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 800, fontSize: '0.88rem' }}>{emp.nom || emp.email}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{emp.poste}</div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              <EditAccessPanel employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {mode === 'create' && (
-        <motion.div key="create" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          {success && (
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', background: '#10B98108', border: '2px solid #10B98120', marginBottom: '3rem', display: 'flex', gap: '2rem', alignItems: 'center' }}>
-               <div style={{ background: '#10B981', color: 'white', padding: '16px', borderRadius: '1.25rem', boxShadow: '0 10px 20px rgba(16,185,129,0.2)' }}><Check size={32} /></div>
-               <div style={{ flex: 1 }}>
-                 <h3 style={{ margin: '0 0 0.5rem 0', color: '#064E3B', fontWeight: 900, fontSize: '1.5rem' }}>Onboarding Réussi !</h3>
-                 <p style={{ margin: 0, color: '#064E3B', opacity: 0.7, fontWeight: 600 }}>Le compte a été provisionné et les accès IT sont en cours de création.</p>
+             </div>
+             {selectedEmployee ? (
+               <EditAccessPanel employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />
+             ) : (
+               <div className="glass" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', opacity: 0.3, minHeight: '400px' }}>
+                  <Shield size={64} />
+                  <p style={{ fontWeight: 700 }}>Sélectionnez un profil</p>
                </div>
-               <div style={{ display: 'flex', gap: '1rem' }}>
-                 <button 
-                   onClick={() => {
-                     const lastEmp = allEmployees[allEmployees.length - 1]; // Approximation for demo
-                     import('../../../utils/PDFExporter').then(({ IPCReportGenerator }) => {
-                       IPCReportGenerator.generateEmploymentContract(lastEmp || formData);
-                     });
-                   }}
-                   style={{ padding: '1rem 2rem', borderRadius: '1rem', background: '#10B981', color: 'white', border: 'none', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 10px 25px rgba(16,185,129,0.2)' }}
-                 >
-                   <FileSignature size={20} /> Générer le Contrat
-                 </button>
-                 <button 
-                   onClick={() => setSuccess(false)}
-                   style={{ padding: '1rem 1.5rem', borderRadius: '1rem', background: 'white', color: '#10B981', border: '1px solid #10B981', fontWeight: 800, cursor: 'pointer' }}
-                 >
-                   Terminer
-                 </button>
-               </div>
-            </motion.div>
-          )}
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1.8fr)', gap: '2rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-                <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 800 }}><UserPlus size={20} color="var(--accent)" /> Identité</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                   <input required type="text" name="nom" value={formData.nom} onChange={handleInputChange} placeholder="Nom Complet" className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} />
-                   <input required type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} />
-                   <input required type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Mot de passe" className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} />
-                   <input type="text" name="poste" value={formData.poste} onChange={handleInputChange} placeholder="Poste" className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} />
-                   <input type="number" name="salaire" value={formData.salaire} onChange={handleInputChange} placeholder="Salaire Brut" className="glass" style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }} />
-                </div>
-              </div>
-            </div>
-            <div className="glass" style={{ padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)' }}>
-               <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 800 }}><Shield size={20} color="#10B981" /> Gouvernance Matrix</h3>
-               <PermissionMatrix permissions={localPermissions} onChange={setLocalPermissions} />
-               <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '1.25rem', borderRadius: '1rem', fontWeight: 900, background: '#10B981', borderColor: '#10B981', marginTop: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                 {loading ? <Loader className="spin" size={20} /> : <Check size={20} />}
-                 {loading ? 'Provisionnement...' : 'Générer le Profil Stratégique'}
-               </button>
-            </div>
-          </form>
-        </motion.div>
-      )}
+             )}
+          </motion.div>
+        )}
       </AnimatePresence>
+
+      <style>{`
+        .glass-card {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          padding: 2.5rem;
+          border-radius: 2rem;
+          box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+        }
+        .input-group label {
+          display: block;
+          font-weight: 800;
+          font-size: 0.8rem;
+          margin-bottom: 0.5rem;
+          color: var(--text-muted);
+        }
+        .input-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          background: var(--bg-subtle);
+          border: 1px solid var(--border);
+          padding: 0.75rem 1rem;
+          border-radius: 1rem;
+          transition: 0.3s;
+        }
+        .input-wrapper:focus-within {
+          border-color: var(--accent);
+          background: var(--bg);
+          box-shadow: 0 0 0 4px var(--accent-subtle);
+        }
+        .input-wrapper input, .input-wrapper select {
+          background: none;
+          border: none;
+          outline: none;
+          width: 100%;
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: var(--text);
+        }
+      `}</style>
     </motion.div>
   );
 };

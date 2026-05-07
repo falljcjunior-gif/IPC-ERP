@@ -7,6 +7,34 @@ import { FirestoreService, serverTimestamp } from '../../services/firestore.serv
 import { registry } from '../../services/Registry';
 
 export const createAdminSlice = (set, get) => ({
+  updateUserPermissions: async (userId, permissions) => {
+    try {
+      const { FirestoreService } = await import('../../services/firestore.service');
+      await FirestoreService.setDocument('users', userId, { 
+        permissions: permissions,
+        hierarchy_level: permissions.hierarchy_level 
+      }, true);
+      
+      set(state => ({
+        permissions: { ...state.permissions, [userId]: permissions }
+      }));
+      
+      get().addHint({ 
+        title: "Permissions Mises à Jour", 
+        message: "Les nouveaux droits ont été appliqués avec succès.", 
+        type: 'success' 
+      });
+    } catch (err) {
+      console.error("Erreur updatePermissions:", err);
+      get().addHint({ 
+        title: "Erreur Gouvernance", 
+        message: "Impossible de mettre à jour les droits.", 
+        type: 'danger' 
+      });
+      throw err;
+    }
+  },
+
   updateUserRole: (userId, newRole) => {
     set(state => {
       const userPerms = state.permissions[userId] || { roles: [], moduleAccess: {} };
@@ -117,68 +145,50 @@ export const createAdminSlice = (set, get) => ({
     return access === 'write';
   },
 
-  createFullUser: async (userData, initialRole = 'ADMIN') => {
-    let secondaryApp;
+  /**
+   * HR 2.0: Atomic Provisioning via Cloud Function
+   * Replaces legacy secondaryApp + manual document creation
+   */
+  createFullUser: async (userData) => {
     try {
-      secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
-      const userCredential = await createUserWithEmailAndPassword(getAuth(secondaryApp), userData.email, userData.password);
-      const uid = userCredential.user.uid;
+      const functions = getFunctions(app, 'us-central1');
+      const provisionFunc = httpsCallable(functions, 'provisionUser');
       
-      const role = userData.role || initialRole;
-      const safeNom = userData.nom || 'Utilisateur';
-      
-      const profileData = { 
-        nom: safeNom, 
-        email: userData.email, 
-        poste: userData.poste || '', 
-        id: uid, 
-        dept: userData.dept || '',
-        avatar: userData.avatar || (safeNom ? safeNom[0] : 'U'),
-        statut: 'Actif',
-        active: true,
-        _createdAt: serverTimestamp(),
-        _deletedAt: null
-      };
+      const result = await provisionFunc({
+        email: userData.email,
+        password: userData.password,
+        nom: userData.nom,
+        role: userData.role || 'GUEST',
+        poste: userData.poste,
+        dept: userData.dept,
+        salaire: userData.salaire,
+        contratType: userData.contratType,
+        date_entree: userData.date_entree,
+        permissions: userData.permissions || {
+          roles: [userData.role || 'GUEST'],
+          allowedModules: ['home'],
+          moduleAccess: { home: 'write' }
+        }
+      });
 
-      // Robust permissions initialization
-      const permissionsData = {
-        hierarchy_level: userData.permissions?.hierarchy_level || userData.hierarchy_level || 'Employee',
-        modules: userData.permissions?.modules || userData.modules || { home: { access: 'write', subTabs: {} } },
-        roles: userData.permissions?.roles || userData.roles || [role],
-        moduleAccess: userData.permissions?.moduleAccess || { home: 'write' },
-        allowedModules: userData.permissions?.allowedModules || ['home']
-      };
+      get().addHint({ 
+        title: "Compte Créé", 
+        message: `L'utilisateur ${userData.email} a été provisionné avec succès.`, 
+        type: 'success' 
+      });
 
-      // Ensure roles is an array and not empty
-      if (!Array.isArray(permissionsData.roles) || permissionsData.roles.length === 0) {
-        permissionsData.roles = [role];
-      }
-
-      await FirestoreService.setDocument('users', uid, { 
-        profile: profileData, 
-        permissions: permissionsData,
-        role: permissionsData.roles[0],
-        hierarchy_level: permissionsData.hierarchy_level,
-        subModule: 'others',
-        data: {} 
-      }, false);
-
-      await FirestoreService.setDocument('hr', uid, { 
-         ...profileData, 
-         userId: uid, // Nécessaire pour les règles Firestore
-         subModule: 'employees',
-         salaire: userData.salaire || 0,
-         contratType: userData.contratType || 'CDI',
-         contratDuree: userData.contratDuree || '',
-         performance_score: 85, // Default for new hires
-         burnout_risk: 10,
-         retention_score: 95,
-         engagement_level: 90
-      }, false);
-
-      return { success: true, uid };
-    } finally { if (secondaryApp) deleteApp(secondaryApp); }
+      return result.data;
+    } catch (err) {
+      console.error("Erreur provisioning:", err);
+      get().addHint({ 
+        title: "Échec Création", 
+        message: err.message || "Une erreur est survenue lors du provisionnement.", 
+        type: 'danger' 
+      });
+      throw err;
+    }
   },
+
 
   toggleUserStatus: async (userId, activeStatus) => {
     const uid = String(userId);
