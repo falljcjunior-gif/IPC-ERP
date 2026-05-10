@@ -388,13 +388,40 @@ export const createOperationsSlice = (set, get) => ({
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
          const { user } = get();
          if (user) {
-           FirestoreService.setDocument(appId, newRecord.id, { 
-             ...newRecord, 
-             subModule, 
-             ownerId: user.id, 
+           FirestoreService.setDocument(appId, newRecord.id, {
+             ...newRecord,
+             subModule,
+             ownerId: user.id,
+             userId: user.id,
              _deletedAt: null,
-             _createdAt: FirestoreService.serverTimestamp() 
-           }, true);
+             _createdAt: FirestoreService.serverTimestamp()
+           }, true)
+             .catch(err => {
+               // Avant: l'écriture échouait silencieusement (permission-denied).
+               // L'enregistrement apparaissait localement puis disparaissait au refresh.
+               console.error(`[addRecord] Firestore write failed for ${appId}/${newRecord.id}:`, err);
+               // Rollback du state local pour éviter le ghost record
+               try {
+                 set(prev => {
+                   const data = prev.data || {};
+                   const moduleData = data[appId] || {};
+                   const subModuleData = moduleData[subModule] || [];
+                   return {
+                     ...prev,
+                     data: {
+                       ...data,
+                       [appId]: { ...moduleData, [subModule]: subModuleData.filter(r => r.id !== newRecord.id) }
+                     }
+                   };
+                 });
+               } catch (_) { /* noop */ }
+               try {
+                 const message = err?.code === 'permission-denied'
+                   ? "Vos droits ne permettent pas cette action. Contactez un administrateur."
+                   : (err?.message || "Échec de l'enregistrement Firestore.");
+                 get().addHint({ title: "Création échouée", message, type: 'danger', appId });
+               } catch (_) { /* noop */ }
+             });
          }
       }, 0);
 
@@ -1005,11 +1032,19 @@ export const createOperationsSlice = (set, get) => ({
 
   togglePinnedModule: (moduleId) => {
     if ((get().currentUser?.role) !== 'SUPER_ADMIN') return;
+    let nextPinned;
     get().setGlobalSettings(prev => {
       const currentPinned = prev.pinnedModules || [];
-      const newPinned = currentPinned.includes(moduleId) ? currentPinned.filter(m => m !== moduleId) : [...currentPinned, moduleId];
-      return { ...prev, pinnedModules: newPinned };
+      nextPinned = currentPinned.includes(moduleId)
+        ? currentPinned.filter(m => m !== moduleId)
+        : [...currentPinned, moduleId];
+      return { ...prev, pinnedModules: nextPinned };
     });
+    // Persist to Firestore so the change survives a page refresh.
+    if (get().user) {
+      FirestoreService.setDocument('settings', 'global', { pinnedModules: nextPinned }, true)
+        .catch(err => console.error('[togglePinnedModule] persist failed', err));
+    }
   },
 
   uploadLogo: async (file) => {
@@ -1060,37 +1095,43 @@ export const createOperationsSlice = (set, get) => ({
 
 
   // --- IPC CONNECT SOCIAL HELPERS ---
+  // Tous les helpers Connect délèguent à addRecord/updateRecord pour garantir
+  // que les posts/likes/commentaires/participations soient écrits dans Firestore
+  // et survivent au refresh.
   addConnectPost: (post) => {
-    const newPost = { ...post, id: `f${Date.now()}`, date: 'À l\'instant', reactions: 0, liked: false, comments: [], createdAt: new Date().toISOString() };
-    set(prev => ({
-      ...prev,
-      connect: { ...prev?.connect, posts: [newPost, ...(prev?.connect?.posts || [])] }
-    }));
+    get().addRecord('connect', 'posts', {
+      ...post,
+      reactions: 0,
+      liked: false,
+      comments: [],
+      date: 'À l\'instant'
+    });
     get().logAction('Publication Sociale', post.title, 'connect');
   },
 
   likeConnectPost: (postId) => {
-    set(prev => {
-      const posts = prev?.connect?.posts || [];
-      const updated = posts.map(p => p.id === postId ? { ...p, reactions: p.liked ? p.reactions - 1 : p.reactions + 1, liked: !p.liked } : p);
-      return { ...prev, connect: { ...prev.connect, posts: updated } };
-    });
+    const post = (get().data?.connect?.posts || []).find(p => p.id === postId);
+    if (!post) return;
+    const liked = !post.liked;
+    const reactions = (post.reactions || 0) + (liked ? 1 : -1);
+    get().updateRecord('connect', 'posts', postId, { liked, reactions });
   },
 
   addConnectComment: (postId, comment) => {
-    set(prev => {
-      const posts = prev?.connect?.posts || [];
-      const updated = posts.map(p => p.id === postId ? { ...p, comments: [...(p.comments || []), { ...comment, id: Date.now() }] } : p);
-      return { ...prev, connect: { ...prev.connect, posts: updated } };
-    });
+    const post = (get().data?.connect?.posts || []).find(p => p.id === postId);
+    if (!post) return;
+    const newComments = [...(post.comments || []), { ...comment, id: Date.now() }];
+    get().updateRecord('connect', 'posts', postId, { comments: newComments });
   },
 
   participateInEvent: (eventId) => {
-    set(prev => {
-      const events = prev?.connect?.events || [];
-      const updated = events.map(e => e.id === eventId ? { ...e, attendees: (e.attendees || 0) + 1, participated: true } : e);
-      return { ...prev, connect: { ...prev.connect, events: updated } };
-    });
+    const event = (get().data?.connect?.events || []).find(e => e.id === eventId);
+    if (!event) {
+      get().addHint({ title: "Événement introuvable", type: 'danger' });
+      return;
+    }
+    const attendees = (event.attendees || 0) + 1;
+    get().updateRecord('connect', 'events', eventId, { attendees, participated: true });
     get().addHint({ title: "Participation confirmée", message: "Vous êtes inscrit à cet événement !", type: 'success' });
   },
 
