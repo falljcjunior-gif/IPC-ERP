@@ -128,6 +128,7 @@ export const BusinessProvider = ({ children }) => {
     );
 
     // D. User Permissions & Global Employee List
+    let _lastSelfPermsHash = null;
     const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
       // 1. Map all permissions for Admin/HR modules
       const permissionsMap = {};
@@ -135,6 +136,17 @@ export const BusinessProvider = ({ children }) => {
         if (u.permissions) permissionsMap[u.id] = u.permissions;
       });
       useStore.getState().setPermissions(permissionsMap);
+
+      // 1b. [SYNC FIX] Si les permissions/rôle du user courant viennent de changer,
+      // forcer un refresh du token pour que les Custom Claims côté client soient à jour
+      // et que les règles Firestore voient le nouveau rôle.
+      const selfPerms = permissionsMap[userId];
+      const selfRole = users.find(u => u.id === userId)?.role || null;
+      const hash = JSON.stringify({ p: selfPerms, r: selfRole });
+      if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
+        UserService.forceClaimRefresh(auth.currentUser).catch(() => {});
+      }
+      _lastSelfPermsHash = hash;
 
       // 2. Sync to data.employees for unified access (Flattened for easier UI consumption)
       const flattenedUsers = users.map(u => ({

@@ -18,6 +18,7 @@ exports.exchangeSocialToken = social.exchangeSocialToken;
 const adminModule = require('./modules/admin');
 exports.deleteUserAccount = adminModule.deleteUserAccount;
 exports.provisionUser = adminModule.provisionUser;
+exports.updateUserPermissions = adminModule.updateUserPermissions;
 exports.onUserCreated = adminModule.onUserCreated;
 exports.backfillUsers = adminModule.backfillUsers;
 exports.backfillGreenBlock = adminModule.backfillGreenBlock;

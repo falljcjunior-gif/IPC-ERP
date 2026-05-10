@@ -9,9 +9,12 @@ const BankReconTab = () => {
   const [reconciledIds, setReconciledIds] = useState([]);
   const [selectedBankLine, setSelectedBankLine] = useState(null);
 
-  // Get unreconciled ERP financial elements (Payé expenses + Paid invoices)
-  const allExpenses = (data.hr?.expenses || []).filter(e => e.statut === 'Payé' || e.status === 'Payé');
-  const allInvoices = (data.finance?.invoices || []).filter(i => i.statut === 'Payée' || i.status === 'Payée');
+  // Get unreconciled ERP financial elements (Payé expenses + Paid invoices).
+  // Why: les triggers backend écrivent `statut: 'Payé'` (masculin) — accepter les deux
+  // genres + l'anglais évite que l'auto-lettrage rate 100% des factures.
+  const isPaidStatus = (v) => v === 'Payé' || v === 'Payée' || v === 'Paid';
+  const allExpenses = (data.hr?.expenses || []).filter(e => isPaidStatus(e.statut) || isPaidStatus(e.status));
+  const allInvoices = (data.finance?.invoices || []).filter(i => isPaidStatus(i.statut) || isPaidStatus(i.status));
   
   const systemElements = [
     ...allExpenses.map(e => ({ id: e.id, date: e.date, type: 'Expense', label: e.objet || e.title, amount: -Math.abs(e.montant || e.amount || 0) })),
@@ -55,40 +58,55 @@ const BankReconTab = () => {
     setBankLines(mock);
   };
 
-  const autoReconcile = () => {
+  const autoReconcile = async () => {
     let matchCount = 0;
     let reconciledAmount = 0;
+    let writeFailures = 0;
     const newReconciledIds = [...reconciledIds];
     const newBankLines = [...bankLines];
 
-    newBankLines.forEach((line, index) => {
-        if (line.reconciledWith !== null) return;
-        
+    for (let index = 0; index < newBankLines.length; index++) {
+        const line = newBankLines[index];
+        if (line.reconciledWith !== null) continue;
+
         // Match exact amounts (< 1 FCFA tolerance)
-        const match = systemElements.find(el => 
-            !newReconciledIds.includes(el.id) && 
+        const match = systemElements.find(el =>
+            !newReconciledIds.includes(el.id) &&
             Math.abs(el.amount - line.amount) <= 1
         );
 
-        if (match) {
-            newBankLines[index] = { ...line, reconciledWith: match };
-            newReconciledIds.push(match.id);
-            matchCount++;
-            reconciledAmount += Math.abs(match.amount);
-            
-            const isRevenue = match.type === 'Revenue';
-            const appId = isRevenue ? 'finance' : 'hr';
-            const subModule = isRevenue ? 'invoices' : 'expenses';
-            updateRecord(appId, subModule, match.id, { statut: 'Payé' });
+        if (!match) continue;
+
+        const isRevenue = match.type === 'Revenue';
+        const appId = isRevenue ? 'finance' : 'hr';
+        const subModule = isRevenue ? 'invoices' : 'expenses';
+
+        try {
+          await updateRecord(appId, subModule, match.id, { statut: 'Payé' });
+          newBankLines[index] = { ...line, reconciledWith: match };
+          newReconciledIds.push(match.id);
+          matchCount++;
+          reconciledAmount += Math.abs(match.amount);
+        } catch (err) {
+          writeFailures++;
+          console.error('[BankRecon] Échec écriture Firestore', { match, err });
         }
-    });
+    }
 
     setBankLines(newBankLines);
     setReconciledIds(newReconciledIds);
-    if(matchCount > 0) {
-        addHint({ title: "Auto-Lettrage (IA)", message: `${matchCount} écritures lettrées automatiquement pour ${formatCurrency(reconciledAmount)}.`, type: 'success', appId: 'finance' });
+
+    if (writeFailures > 0) {
+      addHint({
+        title: "Auto-Lettrage partiel",
+        message: `${matchCount} écriture(s) lettrée(s) — ${writeFailures} échec(s) Firestore (voir console).`,
+        type: 'danger',
+        appId: 'finance'
+      });
+    } else if (matchCount > 0) {
+      addHint({ title: "Auto-Lettrage (IA)", message: `${matchCount} écritures lettrées automatiquement pour ${formatCurrency(reconciledAmount)}.`, type: 'success', appId: 'finance' });
     } else {
-        addHint({ title: "Auto-Lettrage", message: "Aucune correspondance mathématique exacte trouvée. Lettrage manuel requis.", type: 'warning' });
+      addHint({ title: "Auto-Lettrage", message: "Aucune correspondance mathématique exacte trouvée. Lettrage manuel requis.", type: 'warning' });
     }
   };
 

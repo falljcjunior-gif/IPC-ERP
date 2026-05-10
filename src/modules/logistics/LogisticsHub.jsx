@@ -5,6 +5,7 @@ import {
   Truck, Activity
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { useCanSeeSubTab } from '../../store/selectors';
 import { registry } from '../../services/Registry';
 
 import RecordModal from '../../components/RecordModal';
@@ -15,7 +16,7 @@ import ProjectTab from './tabs/ProjectTab';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
 import '../../components/GlobalDashboard.css';
 
-const TABS = [
+const ALL_TABS = [
   { id: 'inventory', label: 'Entrepôts',  icon: <Package size={16} /> },
   { id: 'purchase',  label: 'Achats',     icon: <ShoppingBag size={16} /> },
   { id: 'project',   label: 'Projets',    icon: <Briefcase size={16} /> },
@@ -23,7 +24,13 @@ const TABS = [
 
 const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const { data, addRecord, updateRecord, formatCurrency, shellView } = useStore();
-  const [mainTab, setMainTab] = useState(appId === 'purchase' ? 'purchase' : 'inventory');
+  const canSee = useCanSeeSubTab();
+  const moduleId = appId === 'purchase' ? 'purchase' : 'inventory';
+  const TABS = ALL_TABS.filter(t => canSee(moduleId, t.id));
+  const [mainTab, setMainTab] = useState(() => {
+    const initial = appId === 'purchase' ? 'purchase' : 'inventory';
+    return TABS.some(t => t.id === initial) ? initial : (TABS[0]?.id || initial);
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [modalMode, setModalMode] = useState(appId === 'purchase' ? 'purchase' : 'movement'); 
