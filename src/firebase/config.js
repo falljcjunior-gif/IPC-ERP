@@ -5,7 +5,7 @@ import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
@@ -25,9 +25,14 @@ const firebaseConfig = {
 // Initialisation de Firebase
 export const app = initializeApp(firebaseConfig);
 
-// ── [SECURITY] Firebase App Check (reCAPTCHA v3) ─────────────────────
-// Temporairement désactivé pour déboguer les problèmes de persistance en local.
-// initializeAppCheck(app, { ... });
+// ── [SECURITY] Firebase App Check (reCAPTCHA Enterprise) ─────────────
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
+if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 export const auth = getAuth(app);
 
