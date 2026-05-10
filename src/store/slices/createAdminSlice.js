@@ -9,7 +9,7 @@ import { registry } from '../../services/Registry';
 export const createAdminSlice = (set, get) => ({
   updateUserPermissions: async (userId, permissions, role) => {
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const updateFn = httpsCallable(functions, 'updateUserPermissions');
       await updateFn({
         uid: userId,
@@ -48,7 +48,7 @@ export const createAdminSlice = (set, get) => ({
     const userPerms = get().permissions[userId] || { roles: [], moduleAccess: {} };
     const newPerms = { ...userPerms, roles: [newRole] };
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const updateFn = httpsCallable(functions, 'updateUserPermissions');
       await updateFn({ uid: userId, role: newRole, permissions: newPerms });
       set(state => ({ permissions: { ...state.permissions, [userId]: newPerms } }));
@@ -76,7 +76,7 @@ export const createAdminSlice = (set, get) => ({
     if (newPerms.allowedModules) delete newPerms.allowedModules;
 
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const updateFn = httpsCallable(functions, 'updateUserPermissions');
       await updateFn({ uid: userId, permissions: newPerms });
       set(state => ({ permissions: { ...state.permissions, [userId]: newPerms } }));
