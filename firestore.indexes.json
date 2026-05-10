@@ -53,6 +53,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "hr",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -141,6 +150,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "legal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -165,6 +183,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "targetUserId", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -229,6 +256,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payroll",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -237,6 +273,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "esg",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -301,6 +346,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "dms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
@@ -310,6 +364,22 @@
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "attempts", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "planning",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "talent",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     }
   ],

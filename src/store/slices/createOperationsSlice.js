@@ -45,12 +45,48 @@ export const createOperationsSlice = (set, get) => ({
     setTimeout(() => {
       set(prev => ({
         ...prev,
-        activities: [activity, ...(prev.activities || [])]
+        data: {
+          ...prev.data,
+          activities: [activity, ...(prev.data?.activities || [])]
+        }
       }));
 
       if (get().user) {
         FirestoreService.setDocument('activities', activity.id, {
           ...activity,
+          _createdAt: FirestoreService.serverTimestamp(),
+          _deletedAt: null
+        });
+      }
+    }, 0);
+  },
+
+  addNote: (targetId, appId, text) => {
+    const currentUser = get().user || {};
+    const note = {
+      id: Math.random().toString(36).substr(2, 9),
+      action: 'Note',
+      detail: text,
+      appId,
+      targetId,
+      user: currentUser.nom || 'Système',
+      timestamp: new Date().toISOString(),
+      type: 'note',
+      brandId: get().globalSettings?.brand !== 'ALL' ? (get().globalSettings?.brand || 'IPC_CORE') : 'IPC_CORE'
+    };
+
+    setTimeout(() => {
+      set(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          activities: [note, ...(prev.data?.activities || [])]
+        }
+      }));
+
+      if (get().user) {
+        FirestoreService.setDocument('activities', note.id, {
+          ...note,
           _createdAt: FirestoreService.serverTimestamp(),
           _deletedAt: null
         });
@@ -367,10 +403,18 @@ export const createOperationsSlice = (set, get) => ({
       const seqKey = `${appId}__${subModule}`;
       if (get().data.base?.sequences?.[seqKey]) processedRecord.num = get().getNextSequence(seqKey);
     }
+    const { user } = get();
+    // 🛡️ [SECURITY] Fallback to Firebase Auth UID if store user is guest/stale
+    const currentUid = (user?.id && user.id !== 'guest') ? user.id : (AuthService.getCurrentUser()?.uid);
+    
     const newRecord = { 
       ...processedRecord, 
       id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
       createdAt: processedRecord.createdAt || new Date().toISOString(),
+      subModule,
+      _subModule: subModule,
+      ownerId: currentUid,
+      userId: currentUid,
       brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
     };
     set(prev => {
@@ -835,7 +879,7 @@ export const createOperationsSlice = (set, get) => ({
          (l.employe === emp.nom || l.collaborateur === emp.nom) && 
          (l.type === 'Sans Solde' || l.type === 'Congé Sans Solde') &&
          l.statut === 'Validé' &&
-         l.du && l.du.startsWith(currentMonthPrefix)
+         (l.du || l.date_debut) && (l.du || l.date_debut).startsWith(currentMonthPrefix)
       );
       
       let deductionSansSolde = 0;
@@ -844,8 +888,8 @@ export const createOperationsSlice = (set, get) => ({
         const dailyRate = emp.salaire / 30;
         let unpaidDays = 0;
         unpaidLeaves.forEach(lv => {
-           let d1 = new Date(lv.du);
-           let d2 = new Date(lv.au);
+           let d1 = new Date(lv.du || lv.date_debut);
+           let d2 = new Date(lv.au || lv.date_fin);
            let diffTime = Math.abs(d2 - d1);
            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
            unpaidDays += diffDays;

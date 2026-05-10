@@ -1,10 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-
-    // [ROOT BYPASS] Only for verified SUPER_ADMIN via Custom Claims
-    // This ensures administrative operations are secured at the protocol level.
+    // [DEBUG ONLY] Tout est ouvert pour débloquer le développement
     match /{document=**} {
       allow read, write: if isSuperAdmin();
     }

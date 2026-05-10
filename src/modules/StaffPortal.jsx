@@ -25,10 +25,10 @@ const StaffPortal = ({ embedded }) => {
   
   // Filter data for the current user
   const myEmployeeRecord = data.hr?.employees?.find(e => e.id === currentUser?.id || e.email === currentUser?.email);
-  const myLeaves = (data.hr?.leaves || []).filter(l => l.employe === currentUser?.nom);
-  const myExpenses = (data.hr?.expenses || []).filter(e => e.employe === currentUser?.nom);
+  const myLeaves = (data.hr?.leaves || []).filter(l => l.ownerId === currentUser?.id || l.employe === currentUser?.nom || l.collaborateur === currentUser?.nom);
+  const myExpenses = (data.hr?.expenses || []).filter(e => e.ownerId === currentUser?.id || e.employe === currentUser?.nom);
   const myProjects = (data.projects?.projects || []).filter(p => 
-    p.team?.some(t => t.nom === currentUser?.nom) || p.chefProjet === currentUser?.nom
+    p.team?.some(t => t.nom === currentUser?.nom || t.id === currentUser?.id) || p.chefProjet === currentUser?.nom
   );
   const myPayslips = (data.dms?.files || []).filter(f => f.owner === currentUser?.nom && f.metadata?._subModule === 'payslip');
 
@@ -36,15 +36,23 @@ const StaffPortal = ({ embedded }) => {
 
   const handleSave = (formData) => {
     const subModule = activeTab === 'leaves' ? 'leaves' : 'expenses';
-    // Force the employee name to current user
-    addRecord('hr', subModule, { ...formData, employe: currentUser?.nom, statut: 'En attente' });
+    // [FIX] Map both employe and collaborateur for cross-module compatibility
+    // 'collaborateur' is used by HR Approvals, 'employe' is legacy/fallback
+    const record = { 
+      ...formData, 
+      employe: currentUser?.nom, 
+      collaborateur: currentUser?.nom, 
+      email: currentUser?.email,
+      statut: 'En attente' 
+    };
+    addRecord('hr', subModule, record);
     setIsModalOpen(false);
   };
 
   const modalFields = activeTab === 'leaves' ? [
-    { name: 'type', label: 'Type de Congé', type: 'select', options: ['Congés Payés', 'Maladie', 'RTT', 'Formation'], required: true },
-    { name: 'du', label: 'Date de début', type: 'date', required: true },
-    { name: 'au', label: 'Date de fin', type: 'date', required: true },
+    { name: 'type', label: 'Type de Congé', type: 'select', options: ['Congé Payé', 'Maladie', 'Maternité', 'Sans Solde'], required: true },
+    { name: 'date_debut', label: 'Date de début', type: 'date', required: true },
+    { name: 'date_fin', label: 'Date de fin', type: 'date', required: true },
     { name: 'commentaire', label: 'Commentaire / Justification', placeholder: 'Ex: Vacances annuelles' },
   ] : [
     { name: 'objet', label: 'Objet de la dépense', required: true, placeholder: 'Ex: Taxi RDV Client' },
@@ -102,7 +110,7 @@ const StaffPortal = ({ embedded }) => {
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderRadius: '1rem', background: '#f8fafc', border: '1px solid #f1f5f9' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1e293b' }}>{req.type || req.objet}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>{req.du || req.date}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.25rem' }}>{req.date_debut || req.du || req.date}</div>
                 </div>
                 <span style={{ 
                   fontSize: '0.75rem', 
@@ -289,7 +297,7 @@ const StaffPortal = ({ embedded }) => {
                   {(activeTab === 'leaves' ? myLeaves : myExpenses).map((req, i) => (
                     <tr key={i} style={{ borderTop: '1px solid #f1f5f9' }}>
                       <td style={{ padding: '1.5rem', fontWeight: 600, color: '#1e293b' }}>
-                        {activeTab === 'leaves' ? `${req.du} au ${req.au}` : req.objet}
+                        {activeTab === 'leaves' ? `${req.date_debut || req.du || '—'} au ${req.date_fin || req.au || '—'}` : req.objet}
                       </td>
                       <td style={{ padding: '1.5rem', color: '#475569', fontWeight: 500 }}>
                         {activeTab === 'leaves' ? req.type : formatCurrency(req.montant)}

@@ -38,7 +38,17 @@ const requireAuth = () => {
 /**
  * WHY: Sanitisation défensive de toutes les données écrites.
  * Supprime les valeurs `undefined` qui font crasher Firestore.
+ * CRITICAL: Préserve les sentinelles Firebase (serverTimestamp, increment, etc.)
  */
+const isFirebaseSentinel = (v) => {
+  // Firebase FieldValue sentinels have _methodName (v9) or type property
+  // They must NOT be recursively processed by sanitizeData
+  if (!v || typeof v !== 'object') return false;
+  const proto = Object.getPrototypeOf(v);
+  // Plain objects have Object.prototype or null — anything else is a class instance (like FieldValue)
+  return proto !== null && proto !== Object.prototype;
+};
+
 const sanitizeData = (data) => {
   if (!data || typeof data !== 'object') return {};
   return Object.fromEntries(
@@ -46,7 +56,7 @@ const sanitizeData = (data) => {
       .filter(([, v]) => v !== undefined)
       .map(([k, v]) => [
         k,
-        v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
+        v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date) && !isFirebaseSentinel(v)
           ? sanitizeData(v)
           : v
       ])
@@ -277,8 +287,18 @@ export const FirestoreService = {
       
       return onSnapshot(
         query(q, ...constraints),
-        (snap) => onData(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
-        (err) => onError?.(wrapFirestoreError(err, `subscribe(${collectionName})`))
+        (snap) => {
+          if (typeof onData === 'function') {
+            onData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          }
+        },
+        (err) => {
+          if (typeof onError === 'function') {
+            onError(wrapFirestoreError(err, `subscribe(${collectionName})`));
+          } else {
+            console.error(`[FirestoreService] Subscription error for ${collectionName}:`, err);
+          }
+        }
       );
     } catch (err) {
       onError?.(wrapFirestoreError(err, `subscribeSetup(${collectionName})`));

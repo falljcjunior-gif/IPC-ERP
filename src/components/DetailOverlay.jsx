@@ -38,7 +38,7 @@ const DetailOverlay = ({ isOpen, onClose, record, appId, subModule, onUpdate }) 
   const config = useStore(s => s.config);
   const navigateTo = useStore(s => s.navigateTo);
   const deleteRecord = useStore(s => s.deleteRecord);
-  const activities = useStore(s => s.activities);
+  const activities = useStore(s => s.data?.activities);
   const products = useStore(s => s.data?.inventory?.products);
   const contracts = useStore(s => s.data?.legal?.contracts);
   const logAction = useStore(s => s.logAction);

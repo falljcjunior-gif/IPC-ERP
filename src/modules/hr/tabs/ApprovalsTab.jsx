@@ -110,10 +110,10 @@ const ApprovalsTab = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: '#6366F110', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#6366F1' }}>
-                        {leave.collaborateur?.[0] || 'A'}
+                        {(leave.collaborateur || leave.employe || 'A')[0]}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 800, color: '#111827' }}>{leave.collaborateur}</div>
+                        <div style={{ fontWeight: 800, color: '#111827' }}>{leave.collaborateur || leave.employe || 'Collaborateur Inconnu'}</div>
                         <div style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 600 }}>{leave.type}</div>
                       </div>
                     </div>
@@ -127,7 +127,7 @@ const ApprovalsTab = () => {
                   <div style={{ background: 'rgba(0,0,0,0.02)', padding: '1rem', borderRadius: '1rem', fontSize: '0.85rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4b5563', marginBottom: '0.5rem' }}>
                       <span>Période</span>
-                      <span style={{ fontWeight: 800 }}>{leave.date_debut} → {leave.date_fin}</span>
+                      <span style={{ fontWeight: 800 }}>{leave.date_debut || leave.du} → {leave.date_fin || leave.au}</span>
                     </div>
                     {leave.commentaire && (
                       <div style={{ color: '#6b7280', fontStyle: 'italic', marginTop: '0.5rem', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '0.5rem' }}>

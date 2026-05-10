@@ -34,9 +34,18 @@ export const BusinessProvider = ({ children }) => {
       Object.entries(dataStagingRef.current).forEach(([colName, docs]) => {
         if (['workflows', 'notifications', 'users'].includes(colName)) return;
         
+        // [FIX] Handling flat collections (like activities)
+        if (colName === 'activities') {
+           if (JSON.stringify(newState[colName]) !== JSON.stringify(docs)) {
+             newState[colName] = docs;
+             changed = true;
+           }
+           return;
+        }
+
         const grouped = {};
         docs.forEach(d => {
-          const sub = d.subModule || 'others';
+          const sub = d._subModule || d.subModule || 'others';
           if (!grouped[sub]) grouped[sub] = [];
           grouped[sub].push(d);
         });
@@ -47,6 +56,8 @@ export const BusinessProvider = ({ children }) => {
           inventory: { products: [], movements: [] },
           production: { orders: [], boms: [], machines: [], workOrders: [] },
           finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
+          hr: { employees: [], candidates: [], leaves: [], timesheets: [] },
+          talent: { candidates: [] },
           website: { config: {}, chats: [] },
           signature: { requests: [] },
           audit: { logs: [], sessions: [], certifications: [] },
@@ -106,12 +117,38 @@ export const BusinessProvider = ({ children }) => {
       'connect', 'marketing', 'commerce', 'website', 'dms', 'talent'
     ];
     
+    const isManager = ['ADMIN', 'SUPER_ADMIN', 'HR', 'MANAGER', 'FINANCE'].includes(user?.role);
+
     const unsubscribes = collections_to_sync.map(colName => {
+      const options = { orderByField: '_createdAt', descending: true, limitTo: 300 };
+      
+      // [SECURITY] For sensitive collections, non-managers only subscribe to their own records.
+      const isSensitive = ['hr', 'dms', 'payroll', 'esg', 'legal', 'documents'].includes(colName);
+      
+      if (isSensitive && !isManager && user?.id) {
+        options.filters = [['ownerId', '==', user.id]];
+      }
+
       return FirestoreService.subscribeToCollection(
         colName, 
-        { orderByField: '_createdAt', descending: true, limitTo: 300 },
-        (docs) => scheduleUpdate(colName, docs),
-        (err) => logger.error(`[BusinessContext] Sync failed for ${colName}`, err)
+        options,
+        (docs) => {
+          logger.info(`[Sync] ${colName}: ${docs.length} docs received`);
+          scheduleUpdate(colName, docs);
+        },
+        (err) => {
+          console.error(`[BusinessContext] ❌ Sync FAILED for ${colName}:`, err);
+          // [FALLBACK] If the filtered query fails (missing index, permissions),
+          // retry without filters — SUPER_ADMIN bypass will allow it
+          if (isManager && options.filters?.length) {
+            logger.warn(`[Sync] Retrying ${colName} without filters...`);
+            FirestoreService.subscribeToCollection(
+              colName, 
+              { orderByField: '_createdAt', descending: true, limitTo: 300 },
+              (docs) => scheduleUpdate(colName, docs)
+            );
+          }
+        }
       );
     });
 
@@ -123,7 +160,12 @@ export const BusinessProvider = ({ children }) => {
     // C. Global Notifications
     const unsubNotify = FirestoreService.subscribeToCollection(
       'notifications', 
-      { orderByField: '_createdAt', descending: true, limitTo: 100 },
+      { 
+        orderByField: '_createdAt', 
+        descending: true, 
+        limitTo: 100,
+        filters: isManager ? [] : [['targetUserId', '==', user.id]]
+      },
       (ns) => useStore.getState().setNotifications(ns)
     );
 
@@ -198,13 +240,17 @@ export const BusinessProvider = ({ children }) => {
 
     // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
     const unsubAuth = auth.onAuthStateChanged(async fbUser => {
+      console.log('🔐 [Auth] State Changed:', fbUser ? `Logged in as ${fbUser.uid}` : 'Logged out');
+      console.log('📍 [Firebase] Project ID:', auth.app.options.projectId);
+      
       if (fbUser) {
         try {
+          console.log('🔄 [BusinessContext] Syncing profile for:', fbUser.email);
           const userProfile = await UserService.syncProfile(fbUser);
           setUser(userProfile);
-          logger.info('[BusinessContext] Profil synchronisé', { uid: fbUser.uid, role: userProfile.role });
+          console.log('✅ [BusinessContext] Profile Loaded:', userProfile);
         } catch (err) {
-          logger.error('[BusinessContext] Erreur sync profil', err);
+          console.error('❌ [BusinessContext] Profile Sync FAILED:', err);
           // Fallback minimal si Firestore indisponible
           setUser({
             id: fbUser.uid,
@@ -227,7 +273,7 @@ export const BusinessProvider = ({ children }) => {
       if (unsubSettings) unsubSettings();
       CallListener.stop();
     };
-  }, [userId, scheduleUpdate]); // Minimum dependencies
+  }, [userId, user?.role, scheduleUpdate]); // 🛡️ [REACTIVE] Re-subscribe if user role changes
 
   return <>{children}</>;
 };

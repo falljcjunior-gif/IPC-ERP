@@ -204,7 +204,7 @@ export const createAdminSlice = (set, get) => ({
    */
   createFullUser: async (userData) => {
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const provisionFunc = httpsCallable(functions, 'provisionUser');
       
       const result = await provisionFunc({
@@ -261,7 +261,7 @@ export const createAdminSlice = (set, get) => ({
   permanentlyDeleteUserRecord: async (userId) => {
     const uid = String(userId);
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
       
       // The Cloud Function now performs a HARD delete on Auth + Firestore
@@ -300,7 +300,7 @@ export const createAdminSlice = (set, get) => ({
 
   triggerManualBackup: async () => {
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const backupFunc = httpsCallable(functions, 'manualFirestoreExport');
       const result = await backupFunc();
       
@@ -323,7 +323,7 @@ export const createAdminSlice = (set, get) => ({
 
   syncAllAccounts: async () => {
     try {
-      const functions = getFunctions(app, 'us-central1');
+      const functions = getFunctions(app, 'europe-west1');
       const backfillFunc = httpsCallable(functions, 'backfillUsers');
       const result = await backfillFunc();
       

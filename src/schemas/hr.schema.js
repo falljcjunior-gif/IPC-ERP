@@ -90,7 +90,7 @@ export const HRSchemas = {
         type: { label: 'Type d\'Absence', type: 'selection', options: ['Congé Payé', 'Maladie', 'Maternité', 'Sans Solde'], required: true, search: true },
         date_debut: { label: 'Date Début', type: 'date', required: true },
         date_fin: { label: 'Date Fin', type: 'date', required: true },
-        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'Soumis', 'Approuvé', 'Refusé'], default: 'Brouillon' }
+        statut: { label: 'Statut', type: 'selection', options: ['Brouillon', 'En attente', 'Validé', 'Refusé'], default: 'Brouillon' }
       },
       views: {
         list: ['collaborateur', 'type', 'date_debut', 'date_fin', 'statut'],

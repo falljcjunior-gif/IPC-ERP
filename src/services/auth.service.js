@@ -17,8 +17,16 @@ import { FirestoreService } from './firestore.service';
 import { messaging } from '../firebase/config';
 import { getToken } from 'firebase/messaging';
 import logger from '../utils/logger';
+import { getRecaptchaToken, RECAPTCHA_ACTIONS } from '../utils/recaptcha';
 
 export const AuthService = {
+
+  /**
+   * Récupère l'utilisateur Firebase actuel
+   */
+  getCurrentUser() {
+    return auth.currentUser;
+  },
 
   /**
    * Récupère le token FCM pour les notifications
@@ -43,6 +51,12 @@ export const AuthService = {
    */
   async login(email, password) {
     try {
+      // ── [SECURITY] Obtention du token reCAPTCHA Enterprise ──────────
+      const recaptchaToken = await getRecaptchaToken(RECAPTCHA_ACTIONS.LOGIN);
+      if (!recaptchaToken) {
+        logger.warn('AuthService:login:recaptcha_unavailable — mode dégradé');
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -53,11 +67,17 @@ export const AuthService = {
         throw new Error('Profil utilisateur introuvable dans le système.');
       }
 
-      // userData is already data object from getDocument
-
       // Vérification du statut du compte
       if (userData.profile?.active === false) {
         throw new Error('Votre compte a été désactivé par l\'administrateur.');
+      }
+
+      // Stocke le token reCAPTCHA pour vérification backend (ex: Cloud Function verifyRecaptcha)
+      if (recaptchaToken) {
+        await FirestoreService.updateDocument('users', user.uid, {
+          '_security.lastRecaptchaToken': recaptchaToken,
+          '_security.lastLoginAt': new Date().toISOString(),
+        });
       }
 
       logger.info('AuthService:login:success', { uid: user.uid, email: user.email });
@@ -75,10 +95,24 @@ export const AuthService = {
     if (!auth.currentUser) throw new Error('Aucun utilisateur connecté.');
 
     try {
+      // ── [SECURITY] Obtention du token reCAPTCHA Enterprise ──────────
+      const recaptchaToken = await getRecaptchaToken(RECAPTCHA_ACTIONS.CHANGE_PASSWORD);
+      if (!recaptchaToken) {
+        logger.warn('AuthService:mandatoryPasswordUpdate:recaptcha_unavailable — mode dégradé');
+      }
+
       await fbUpdatePassword(auth.currentUser, newPassword);
-      await FirestoreService.updateDocument('users', auth.currentUser.uid, {
+      
+      const updateData = {
         'profile.mustChangePassword': false
-      });
+      };
+
+      if (recaptchaToken) {
+        updateData['_security.lastRecaptchaToken'] = recaptchaToken;
+        updateData['_security.lastPasswordChangeAt'] = new Date().toISOString();
+      }
+
+      await FirestoreService.updateDocument('users', auth.currentUser.uid, updateData);
       logger.info('AuthService:passwordUpdate:success', { uid: auth.currentUser.uid });
     } catch (err) {
       logger.error('AuthService:passwordUpdate:failed', err);

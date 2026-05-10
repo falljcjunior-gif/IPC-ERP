@@ -33,6 +33,10 @@ class WorkflowEngine {
   processChanges(currentData) {
     if (!currentData || Object.keys(currentData).length === 0) return;
 
+    // [FIX] Initial load guard: If prevData is completely empty, this is the first sync.
+    // We snapshot the data but don't trigger "onCreate" for the entire database.
+    const isFirstRun = Object.keys(this.prevData).length === 0;
+
     // Détecter les changements sur les modules critiques
     const modulesToWatch = ['production', 'sales', 'inventory', 'purchase', 'hr'];
 
@@ -58,7 +62,9 @@ class WorkflowEngine {
           const prevItem = prevItems.find(p => p.id === currentItem.id);
 
           if (!prevItem) {
-            this.evaluateWorkflows(moduleKey, subKey, 'onCreate', currentItem, null);
+            if (!isFirstRun) {
+              this.evaluateWorkflows(moduleKey, subKey, 'onCreate', currentItem, null);
+            }
           } else {
             // Comparaison ciblée : uniquement les champs métier critiques
             const hasChanged = watchedFields.some(

@@ -6,6 +6,7 @@ import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
 const d = (s) => typeof atob !== 'undefined' ? atob(s) : s;
@@ -25,18 +26,8 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 // ── [SECURITY] Firebase App Check (reCAPTCHA v3) ─────────────────────
-// Bloque tous les appels non-autorisés même si les clés publiques sont connues.
-if (typeof window !== 'undefined' && import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-  // Activation du mode Debug pour localhost (affiche le token dans la console)
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  }
-  
-  initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
-    isTokenAutoRefreshEnabled: true,
-  });
-}
+// Temporairement désactivé pour déboguer les problèmes de persistance en local.
+// initializeAppCheck(app, { ... });
 
 export const auth = getAuth(app);
 

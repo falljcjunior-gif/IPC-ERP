@@ -13,6 +13,7 @@
     "node": "22"
   },
   "dependencies": {
+    "@google-cloud/recaptcha-enterprise": "^5.14.0",
     "@google/generative-ai": "^0.24.1",
     "axios": "^1.7.0",
     "firebase-admin": "^13.0.0",

@@ -111,7 +111,7 @@ export const useGlobalSearch = () => useStore(s => s.globalSearch);
 export const useNotifications = () => useStore(s => s.notifications ?? []);
 
 /** Activités récentes */
-export const useActivities = () => useStore(s => s.activities ?? []);
+export const useActivities = () => useStore(s => s.data?.activities ?? []);
 
 // ── Multi-Brand ──────────────────────────────────────────────────────────────
 

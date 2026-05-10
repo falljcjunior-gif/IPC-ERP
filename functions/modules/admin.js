@@ -88,11 +88,25 @@ exports.provisionUser = onCall({
     const now = admin.firestore.FieldValue.serverTimestamp();
     const payload = buildUnifiedUserPayload(userRecord, now, extraData);
 
+    logger.debug('Provisioning payload:', { uid, payload });
+
     // 2. Atomic Firestore Write
-    await db.collection('users').doc(uid).set(payload);
+    try {
+      await db.collection('users').doc(uid).set(payload);
+      logger.info(`Firestore document created for ${uid}`);
+    } catch (fsError) {
+      logger.error(`Firestore write failed for ${uid}:`, fsError);
+      throw fsError;
+    }
 
     // 3. Set Custom Claims
-    await admin.auth().setCustomUserClaims(uid, { role: payload.role });
+    try {
+      await admin.auth().setCustomUserClaims(uid, { role: payload.role });
+      logger.info(`Custom claims set for ${uid}: ${payload.role}`);
+    } catch (claimError) {
+      logger.error(`Custom claims failed for ${uid}:`, claimError);
+      throw claimError;
+    }
 
     logger.info(`Successfully provisioned user ${uid} (${email}) with role ${payload.role}`);
     

@@ -28,6 +28,10 @@ const rbac = require('./modules/rbac');
 exports.setUserRole = rbac.setUserRole;
 exports.bootstrapSuperAdmin = rbac.bootstrapSuperAdmin;
 
+// 2c. reCAPTCHA Enterprise — Vérification anti-bot
+const recaptcha = require('./modules/recaptcha');
+exports.verifyRecaptcha = recaptcha.verifyRecaptcha;
+
 // 3. AI Copilot (Nexus)
 const nexus = require('./modules/nexus');
 exports.nexusChat = nexus.nexusChat;
