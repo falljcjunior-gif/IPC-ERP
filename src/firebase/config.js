@@ -5,7 +5,8 @@ import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+// App Check import — activé uniquement quand la clé est liée dans la console Firebase
+// import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
@@ -25,14 +26,16 @@ const firebaseConfig = {
 // Initialisation de Firebase
 export const app = initializeApp(firebaseConfig);
 
-// ── [SECURITY] Firebase App Check (reCAPTCHA Enterprise) ─────────────
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
-if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-    isTokenAutoRefreshEnabled: true,
-  });
-}
+// ── [SECURITY] Firebase App Check ────────────────────────────────────
+// PENDING: Lier la clé reCAPTCHA Enterprise dans Firebase Console → App Check
+// avant d'activer. Sans cette étape, le SDK retourne 400 et bloque Firestore.
+// const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
+// if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
+//   initializeAppCheck(app, {
+//     provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+//     isTokenAutoRefreshEnabled: true,
+//   });
+// }
 
 export const auth = getAuth(app);
 

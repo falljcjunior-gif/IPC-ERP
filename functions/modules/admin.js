@@ -63,7 +63,8 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
  * Admin: Atomic Provisioning (Auth + Firestore + Claims)
  */
 exports.provisionUser = onCall({
-  maxInstances: 5
+  maxInstances: 5,
+  region: 'europe-west1'
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
   
@@ -149,7 +150,8 @@ const UpdatePermissionsSchema = z.object({
 });
 
 exports.updateUserPermissions = onCall({
-  maxInstances: 5
+  maxInstances: 5,
+  region: 'europe-west1'
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
 
@@ -206,7 +208,8 @@ exports.updateUserPermissions = onCall({
  * Admin: Delete User account from Firebase Auth
  */
 exports.deleteUserAccount = onCall({
-  maxInstances: 5
+  maxInstances: 5,
+  region: 'europe-west1'
 }, async (request) => {
   // 1. Input Validation
   const validation = DeleteUserSchema.safeParse(request.data);
