@@ -84,9 +84,33 @@ service cloud.firestore {
     }
 
     // [DEPRECATED] Root HR collection — will be removed after migration
+    // Self-service autorisé pour les sous-modules personnels (leaves, expenses, requests)
+    // tant que l'enregistrement appartient au demandeur (ownerId / userId).
     match /hr/{docId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR') || resource.data.userId == request.auth.uid);
-      allow write: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow read: if isAuthenticated() && (
+        isSuperAdmin() || isManager() || hasRole('HR') ||
+        resource.data.userId == request.auth.uid ||
+        resource.data.ownerId == request.auth.uid
+      );
+      allow create: if isAuthenticated() && (
+        isSuperAdmin() || isManager() || hasRole('HR') ||
+        // STAFF self-service : ne peut créer QUE des records lui appartenant
+        // dans des sous-modules personnels.
+        (
+          request.resource.data.ownerId == request.auth.uid &&
+          request.resource.data.subModule in ['leaves', 'expenses', 'requests', 'notes_frais']
+        )
+      );
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() || isManager() || hasRole('HR') ||
+        // L'auteur peut modifier son propre record tant qu'il n'est pas validé
+        (
+          resource.data.ownerId == request.auth.uid &&
+          resource.data.subModule in ['leaves', 'expenses', 'requests', 'notes_frais'] &&
+          !(resource.data.statut in ['Approuvé', 'Validé', 'Rejeté'])
+        )
+      );
+      allow delete: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
     }
 
     // [DEPRECATED] Alias for HR

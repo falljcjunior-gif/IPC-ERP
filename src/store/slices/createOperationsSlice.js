@@ -388,13 +388,40 @@ export const createOperationsSlice = (set, get) => ({
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
          const { user } = get();
          if (user) {
-           FirestoreService.setDocument(appId, newRecord.id, { 
-             ...newRecord, 
-             subModule, 
-             ownerId: user.id, 
+           FirestoreService.setDocument(appId, newRecord.id, {
+             ...newRecord,
+             subModule,
+             ownerId: user.id,
+             userId: user.id,
              _deletedAt: null,
-             _createdAt: FirestoreService.serverTimestamp() 
-           }, true);
+             _createdAt: FirestoreService.serverTimestamp()
+           }, true)
+             .catch(err => {
+               // Avant: l'écriture échouait silencieusement (permission-denied).
+               // L'enregistrement apparaissait localement puis disparaissait au refresh.
+               console.error(`[addRecord] Firestore write failed for ${appId}/${newRecord.id}:`, err);
+               // Rollback du state local pour éviter le ghost record
+               try {
+                 set(prev => {
+                   const data = prev.data || {};
+                   const moduleData = data[appId] || {};
+                   const subModuleData = moduleData[subModule] || [];
+                   return {
+                     ...prev,
+                     data: {
+                       ...data,
+                       [appId]: { ...moduleData, [subModule]: subModuleData.filter(r => r.id !== newRecord.id) }
+                     }
+                   };
+                 });
+               } catch (_) { /* noop */ }
+               try {
+                 const message = err?.code === 'permission-denied'
+                   ? "Vos droits ne permettent pas cette action. Contactez un administrateur."
+                   : (err?.message || "Échec de l'enregistrement Firestore.");
+                 get().addHint({ title: "Création échouée", message, type: 'danger', appId });
+               } catch (_) { /* noop */ }
+             });
          }
       }, 0);
 
