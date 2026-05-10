@@ -49,6 +49,17 @@ jobs:
             --project=ipc-erp \
             --quiet || echo "IAM already set or skipped"
 
+      - name: Fix IAM — admin callables invoker (europe-west1)
+        run: |
+          for svc in provisionuser updateuserpermissions deleteuseraccount; do
+            gcloud run services add-iam-policy-binding $svc \
+              --region=europe-west1 \
+              --member=allUsers \
+              --role=roles/run.invoker \
+              --project=ipc-erp \
+              --quiet || echo "IAM already set or skipped for $svc"
+          done
+
       - name: Fail if deploy failed (non-IAM error)
         if: steps.firebase_deploy.outcome == 'failure'
         run: |
