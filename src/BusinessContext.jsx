@@ -10,6 +10,7 @@ import { CallListener } from './services/CallListener';
 import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
 import { logger } from './utils/logger';
+import { isCreatorEmail } from './utils/creators';
 
 /**
  * BusinessProvider (Passive Orchestrator)
@@ -211,15 +212,7 @@ export const BusinessProvider = ({ children }) => {
         const primaryRole = (userPerms.roles && userPerms.roles.length > 0) ? userPerms.roles[0] : null;
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
         
-        const currentEmail = useStore.getState().user?.email;
-        const isCreator = [
-          'fall.jcjunior@gmail.com', 
-          'ra.yoman@ipcgreenblocks.com', 
-          'ra.yoman@gmail.com',
-          'yomanraphael26@gmail.com'
-        ].includes(currentEmail?.toLowerCase());
-
-        if (isCreator) {
+        if (isCreatorEmail(useStore.getState().user?.email)) {
           finalRole = 'SUPER_ADMIN';
         }
 

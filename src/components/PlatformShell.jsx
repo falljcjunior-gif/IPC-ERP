@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
+import { isCreatorEmail } from '../utils/creators';
 import { useTranslation } from 'react-i18next';
 
 // Lazy loaded components
@@ -104,10 +105,7 @@ const PlatformShell = ({ theme, setView }) => {
 
   // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
   useEffect(() => {
-    const email = currentUser?.email?.toLowerCase();
-    const isCreator = ['fall.jcjunior@gmail.com', 'yomanraphael26@gmail.com'].includes(email);
-    
-    if (isCreator && userRole !== 'SUPER_ADMIN') {
+    if (isCreatorEmail(currentUser?.email) && userRole !== 'SUPER_ADMIN') {
       console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
       useStore.getState().setUserRole('SUPER_ADMIN');
       useStore.getState().setUser({ ...currentUser, role: 'SUPER_ADMIN' });
