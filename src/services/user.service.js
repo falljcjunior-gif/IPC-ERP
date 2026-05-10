@@ -98,6 +98,26 @@ export const UserService = {
   },
 
   /**
+   * Force un rafraîchissement du token Firebase pour récupérer les Custom Claims
+   * récemment modifiés côté serveur (sans déconnecter l'utilisateur).
+   *
+   * WHY: Firebase ne propage pas automatiquement les nouveaux claims aux clients
+   * connectés. Sans ce refresh, les règles Firestore continuent de voir l'ancien
+   * `request.auth.token.role` jusqu'à la prochaine reconnexion (~1h).
+   */
+  async forceClaimRefresh(fbUser) {
+    if (!fbUser?.getIdTokenResult) return null;
+    try {
+      const tokenResult = await fbUser.getIdTokenResult(true);
+      logger.info('[UserService] Claims rafraîchis', { role: tokenResult.claims?.role });
+      return tokenResult.claims?.role || null;
+    } catch (err) {
+      logger.warn('[UserService] forceClaimRefresh failed', err);
+      return null;
+    }
+  },
+
+  /**
    * Liste tous les utilisateurs (admins seulement côté UI — Firestore Rules protègent).
    */
   async listUsers() {

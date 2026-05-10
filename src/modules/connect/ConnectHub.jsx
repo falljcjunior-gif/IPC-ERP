@@ -71,7 +71,7 @@ const ConnectHub = ({ onOpenDetail }) => {
              <button onClick={() => setShowSettings(true)} className="glass" style={{ padding: '0.9rem', borderRadius: '1.25rem', color: 'var(--text-muted)', border: 'none', cursor: 'pointer', background: 'white' }}>
                 <Settings size={22} />
              </button>
-             <button onClick={() => alert('Analyse IA Social Pulse en cours : Climat social excellent (8.4/10).')} className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}>
+             <button disabled title="Fonctionnalité à venir" className="btn-primary" style={{ padding: '0.9rem 2rem', borderRadius: '1.5rem', background: '#0F172A', borderColor: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'not-allowed', opacity: 0.55 }}>
                 <Sparkles size={20} /> <span style={{ fontWeight: 800 }}>IA Social Pulse</span>
              </button>
           </div>

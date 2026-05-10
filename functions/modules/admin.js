@@ -115,6 +115,80 @@ exports.provisionUser = onCall({
 
 
 /**
+ * Admin: Update Permissions & Role atomically (Firestore + Custom Claims).
+ *
+ * WHY: la modification de `permissions` côté client n'invalidait pas les Custom Claims,
+ * provoquant la désync UI ↔ règles Firestore. Cette callable garantit l'écriture
+ * atomique des deux sources de vérité.
+ */
+const UpdatePermissionsSchema = z.object({
+  uid: z.string().min(20).max(128),
+  role: z.string().optional(),
+  permissions: z.object({
+    roles: z.array(z.string()).optional(),
+    allowedModules: z.array(z.string()).optional(),
+    moduleAccess: z.record(z.string()).optional(),
+    modules: z.record(z.any()).optional(),
+    hierarchy_level: z.string().optional()
+  }).optional(),
+  hierarchy_level: z.string().optional()
+});
+
+exports.updateUserPermissions = onCall({
+  maxInstances: 5
+}, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
+
+  const callerRole = request.auth.token?.role;
+  if (callerRole !== 'SUPER_ADMIN' && callerRole !== 'ADMIN') {
+    throw new HttpsError('permission-denied', 'Seuls les administrateurs peuvent modifier les permissions.');
+  }
+
+  const validation = UpdatePermissionsSchema.safeParse(request.data);
+  if (!validation.success) {
+    throw new HttpsError('invalid-argument', validation.error.message);
+  }
+
+  const { uid, role, permissions, hierarchy_level } = validation.data;
+
+  try {
+    const userRef = db.collection('users').doc(uid);
+    const snap = await userRef.get();
+    if (!snap.exists) throw new HttpsError('not-found', `Utilisateur ${uid} introuvable.`);
+
+    const updates = { _updatedAt: admin.firestore.FieldValue.serverTimestamp() };
+    if (permissions) updates.permissions = permissions;
+    if (hierarchy_level) updates.hierarchy_level = hierarchy_level;
+
+    let finalRole = role || snap.data().role;
+    if (role) updates.role = role;
+    updates._permissionsUpdatedBy = request.auth.uid;
+
+    await userRef.update(updates);
+
+    if (finalRole) {
+      await admin.auth().setCustomUserClaims(uid, { role: finalRole });
+    }
+
+    await db.collection('audit_logs').add({
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      collection: 'users',
+      docId: uid,
+      operation: 'UPDATE_PERMISSIONS',
+      changedBy: request.auth.uid,
+      summary: `Permissions mises à jour pour ${uid} (rôle: ${finalRole || 'inchangé'})`
+    });
+
+    logger.info(`[updateUserPermissions] ${uid} updated by ${request.auth.uid}`);
+    return { success: true, uid, role: finalRole };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    logger.error('[updateUserPermissions] error:', error);
+    throw new HttpsError('internal', `Échec de la mise à jour : ${error.message}`);
+  }
+});
+
+/**
  * Admin: Delete User account from Firebase Auth
  */
 exports.deleteUserAccount = onCall({

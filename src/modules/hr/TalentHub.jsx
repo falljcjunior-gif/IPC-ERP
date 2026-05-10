@@ -466,9 +466,10 @@ const BienEtreTab = ({ onSentiment }) => {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Users size={12} />{init.participants} participants
                 </div>
-                <button 
-                  onClick={() => alert(`Inscription enregistrée pour l'initiative : ${init.title}`)}
-                  style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 999, border: 'none', background: `${init.color}15`, color: init.color, fontWeight: 700, cursor: 'pointer' }}
+                <button
+                  disabled
+                  title="Inscription aux initiatives — bientôt disponible"
+                  style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 999, border: 'none', background: `${init.color}15`, color: init.color, fontWeight: 700, cursor: 'not-allowed', opacity: 0.6 }}
                 >
                   Rejoindre
                 </button>

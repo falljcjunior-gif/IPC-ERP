@@ -295,7 +295,7 @@ const MailTab = () => {
                 <div className="quick-reply-box">
                   <textarea placeholder="Cliquez ici pour répondre rapidement..." />
                   <div className="quick-reply-actions">
-                    <SmartButton variant="primary" onClick={() => alert('Réponse rapide envoyée.')} size="sm">
+                    <SmartButton variant="primary" disabled title="Envoi e-mail — bientôt disponible" size="sm">
                       <Send size={16} /> Envoyer
                     </SmartButton>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -337,7 +337,7 @@ const MailTab = () => {
               <textarea placeholder="Écrivez votre message ici..." className="compose-textarea" />
             </div>
             <div className="compose-footer">
-              <SmartButton variant="primary" onClick={() => { alert('Message envoyé avec succès via le Bridge IPC.'); setIsComposing(false); }} fullWidth>
+              <SmartButton variant="primary" disabled title="Envoi e-mail — bientôt disponible" fullWidth>
                 <Send size={18} /> Envoyer le message (Scellé)
               </SmartButton>
               <div className="compose-tools">

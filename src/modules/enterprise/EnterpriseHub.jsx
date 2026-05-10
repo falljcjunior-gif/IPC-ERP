@@ -65,7 +65,7 @@ const EnterpriseHub = ({ onOpenDetail, appId }) => {
               <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0D9488' }}>Statut Opérationnel : Optimal</span>
            </div>
 
-           <button onClick={() => alert('Historique des opérations enterprise...')} className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'pointer' }}>
+           <button disabled title="Historique — bientôt disponible" className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.5 }}>
              <History size={20} />
            </button>
           <button onClick={() => onOpenDetail && onOpenDetail(null, 'hr', 'employees')} className="btn-primary" style={{ padding: '0.8rem 1.8rem', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#0F172A', borderColor: '#0F172A', cursor: 'pointer' }}>

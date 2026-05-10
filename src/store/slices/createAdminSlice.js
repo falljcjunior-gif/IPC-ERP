@@ -7,95 +7,148 @@ import { FirestoreService, serverTimestamp } from '../../services/firestore.serv
 import { registry } from '../../services/Registry';
 
 export const createAdminSlice = (set, get) => ({
-  updateUserPermissions: async (userId, permissions) => {
+  updateUserPermissions: async (userId, permissions, role) => {
     try {
-      const { FirestoreService } = await import('../../services/firestore.service');
-      await FirestoreService.setDocument('users', userId, { 
-        permissions: permissions,
-        hierarchy_level: permissions.hierarchy_level 
-      }, true);
-      
+      const functions = getFunctions(app, 'us-central1');
+      const updateFn = httpsCallable(functions, 'updateUserPermissions');
+      await updateFn({
+        uid: userId,
+        permissions,
+        role: role || (Array.isArray(permissions?.roles) ? permissions.roles[0] : undefined),
+        hierarchy_level: permissions?.hierarchy_level
+      });
+
       set(state => ({
         permissions: { ...state.permissions, [userId]: permissions }
       }));
-      
-      get().addHint({ 
-        title: "Permissions Mises à Jour", 
-        message: "Les nouveaux droits ont été appliqués avec succès.", 
-        type: 'success' 
+
+      // Si l'utilisateur modifie ses propres permissions, force le refresh des claims
+      if (auth.currentUser?.uid === userId) {
+        const { UserService } = await import('../../services/user.service');
+        await UserService.forceClaimRefresh(auth.currentUser);
+      }
+
+      get().addHint({
+        title: "Permissions Mises à Jour",
+        message: "Les nouveaux droits ont été appliqués avec succès.",
+        type: 'success'
       });
     } catch (err) {
       console.error("Erreur updatePermissions:", err);
-      get().addHint({ 
-        title: "Erreur Gouvernance", 
-        message: "Impossible de mettre à jour les droits.", 
-        type: 'danger' 
+      get().addHint({
+        title: "Erreur Gouvernance",
+        message: err.message || "Impossible de mettre à jour les droits.",
+        type: 'danger'
       });
       throw err;
     }
   },
 
-  updateUserRole: (userId, newRole) => {
-    set(state => {
-      const userPerms = state.permissions[userId] || { roles: [], moduleAccess: {} };
-      const newPerms = { ...userPerms, roles: [newRole] };
-      
-      if (auth.currentUser) {
-        FirestoreService.setDocument('users', userId, { permissions: newPerms }, true)
-          .catch(e => console.error("Erreur save role:", e));
+  updateUserRole: async (userId, newRole) => {
+    const userPerms = get().permissions[userId] || { roles: [], moduleAccess: {} };
+    const newPerms = { ...userPerms, roles: [newRole] };
+    try {
+      const functions = getFunctions(app, 'us-central1');
+      const updateFn = httpsCallable(functions, 'updateUserPermissions');
+      await updateFn({ uid: userId, role: newRole, permissions: newPerms });
+      set(state => ({ permissions: { ...state.permissions, [userId]: newPerms } }));
+      if (auth.currentUser?.uid === userId) {
+        const { UserService } = await import('../../services/user.service');
+        await UserService.forceClaimRefresh(auth.currentUser);
       }
-      return { permissions: { ...state.permissions, [userId]: newPerms } };
-    });
+    } catch (err) {
+      console.error("Erreur save role:", err);
+      get().addHint({
+        title: "Échec mise à jour rôle",
+        message: err.message || "Impossible de modifier le rôle.",
+        type: 'danger'
+      });
+      throw err;
+    }
   },
 
-  setModuleAccessLevel: (userId, moduleId, level) => {
-    set(state => {
-      const userPerms = state.permissions[userId] || { roles: [], moduleAccess: {} };
-      const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
-      
-      if (level === 'none') {
-        delete newModuleAccess[moduleId];
-      } else {
-        newModuleAccess[moduleId] = level;
-      }
-      
-      const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
-      if (newPerms.allowedModules) delete newPerms.allowedModules;
+  setModuleAccessLevel: async (userId, moduleId, level) => {
+    const userPerms = get().permissions[userId] || { roles: [], moduleAccess: {} };
+    const newModuleAccess = { ...(userPerms.moduleAccess || {}) };
+    if (level === 'none') delete newModuleAccess[moduleId];
+    else newModuleAccess[moduleId] = level;
+    const newPerms = { ...userPerms, moduleAccess: newModuleAccess };
+    if (newPerms.allowedModules) delete newPerms.allowedModules;
 
-      if (auth.currentUser) {
-        FirestoreService.setDocument('users', userId, { permissions: newPerms }, true)
-          .catch(e => console.error("Erreur save permissions:", e));
+    try {
+      const functions = getFunctions(app, 'us-central1');
+      const updateFn = httpsCallable(functions, 'updateUserPermissions');
+      await updateFn({ uid: userId, permissions: newPerms });
+      set(state => ({ permissions: { ...state.permissions, [userId]: newPerms } }));
+      if (auth.currentUser?.uid === userId) {
+        const { UserService } = await import('../../services/user.service');
+        await UserService.forceClaimRefresh(auth.currentUser);
       }
-      return { permissions: { ...state.permissions, [userId]: newPerms } };
-    });
+    } catch (err) {
+      console.error("Erreur save permissions:", err);
+      get().addHint({
+        title: "Échec mise à jour accès",
+        message: err.message || "Impossible de modifier l'accès au module.",
+        type: 'danger'
+      });
+      throw err;
+    }
   },
 
   getModuleAccess: (userId, moduleId) => {
     const { user, userRole, permissions } = get();
     // SUPER_ADMIN (creator) has absolute bypass
     if (userRole === 'SUPER_ADMIN') return 'write';
-    
+
     // Always allow access to Personal Space
     if (moduleId === 'home') return 'write';
 
     const userPerms = permissions[userId];
-    if (!userPerms) return 'none';
 
     // 1. Check New Nested Structure (modules[id].access)
-    if (userPerms.modules && userPerms.modules[moduleId]) {
+    if (userPerms?.modules && userPerms.modules[moduleId]) {
       return userPerms.modules[moduleId].access || 'none';
     }
 
     // 2. Fallback to Legacy Flat Structure (moduleAccess[id])
-    if (userPerms.moduleAccess && userPerms.moduleAccess[moduleId]) {
+    if (userPerms?.moduleAccess && userPerms.moduleAccess[moduleId]) {
       return userPerms.moduleAccess[moduleId];
     }
-    
+
     // 3. Fallback to Legacy List (allowedModules)
-    if (Array.isArray(userPerms.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
+    if (Array.isArray(userPerms?.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
       return 'write';
     }
-    
+
+    // 4. Role-based default fallback (when permissions doc is empty/sparse but role is set).
+    // Évite que les nouveaux comptes "Directeur"/"HR_MANAGER" ne voient que Home parce que
+    // le wizard n'a pas câblé `allowedModules`.
+    const roleFromState = userRole || user?.role;
+    const rolesArr = Array.isArray(userPerms?.roles) ? userPerms.roles : [];
+    const effectiveRoles = new Set([roleFromState, ...rolesArr].filter(Boolean));
+
+    const ROLE_MODULE_DEFAULTS = {
+      ADMIN:        { all: 'write' },
+      MANAGER:      { all: 'write' },
+      DIRECTOR:     { all: 'write' },
+      HR_MANAGER:   { hr: 'write', talent: 'write', payroll: 'write', signature: 'write', dms: 'write' },
+      HR:           { hr: 'write', talent: 'read', payroll: 'read' },
+      FINANCE:      { finance: 'write', accounting: 'write', budget: 'write', sales: 'read' },
+      SALES:        { crm: 'write', sales: 'write', commerce: 'write', marketing: 'read' },
+      CRM:          { crm: 'write', sales: 'read' },
+      PRODUCTION:   { production: 'write', inventory: 'write', planning: 'read' },
+      LOGISTICS:    { inventory: 'write', logistics: 'write', purchase: 'write', projects: 'read' },
+      LEGAL:        { legal: 'write', signature: 'write', dms: 'write' },
+      STAFF:        { connect: 'read', dms: 'read' },
+      GUEST:        {}
+    };
+    for (const role of effectiveRoles) {
+      const map = ROLE_MODULE_DEFAULTS[role];
+      if (!map) continue;
+      if (map.all) return map.all;
+      if (map[moduleId]) return map[moduleId];
+    }
+
     return 'none';
   },
 

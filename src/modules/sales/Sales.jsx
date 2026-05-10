@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileText, Plus, Search, MoreVertical, CreditCard, Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useStore } from '../../store';
+import { useCanSeeSubTab } from '../../store/selectors';
 import { salesSchema } from '../../schemas/sales.schema';
 import RecordModal from '../../components/RecordModal';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
@@ -102,7 +103,10 @@ const SalesItem = ({ item, type, formatCurrency, onOpenDetail }) => {
 
 const Sales = ({ onOpenDetail, accessLevel }) => {
   const { data, addRecord, formatCurrency } = useStore();
-  const [activeTab, setActiveTab] = useState('invoices'); // 'invoices' | 'quotes'
+  const canSee = useCanSeeSubTab();
+  const showInvoices = canSee('sales', 'invoices');
+  const showQuotes = canSee('sales', 'quotes');
+  const [activeTab, setActiveTab] = useState(() => (showInvoices ? 'invoices' : (showQuotes ? 'quotes' : 'invoices'))); // 'invoices' | 'quotes'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -168,28 +172,32 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         {/* Segmented Control */}
         <div style={{ display: 'flex', background: 'rgba(255,255,255,0.5)', padding: '0.5rem', borderRadius: '1.5rem', backdropFilter: 'blur(10px)' }}>
-          <button 
-            onClick={() => setActiveTab('invoices')}
-            style={{ 
-              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
-              background: activeTab === 'invoices' ? 'white' : 'transparent',
-              color: activeTab === 'invoices' ? '#111827' : '#6b7280',
-              boxShadow: activeTab === 'invoices' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none'
-            }}
-          >
-            Factures
-          </button>
-          <button 
-            onClick={() => setActiveTab('quotes')}
-            style={{ 
-              padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
-              background: activeTab === 'quotes' ? 'white' : 'transparent',
-              color: activeTab === 'quotes' ? '#111827' : '#6b7280',
-              boxShadow: activeTab === 'quotes' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none'
-            }}
-          >
-            Devis & Propositions
-          </button>
+          {showInvoices && (
+            <button
+              onClick={() => setActiveTab('invoices')}
+              style={{
+                padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+                background: activeTab === 'invoices' ? 'white' : 'transparent',
+                color: activeTab === 'invoices' ? '#111827' : '#6b7280',
+                boxShadow: activeTab === 'invoices' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Factures
+            </button>
+          )}
+          {showQuotes && (
+            <button
+              onClick={() => setActiveTab('quotes')}
+              style={{
+                padding: '0.8rem 2rem', borderRadius: '1rem', border: 'none', fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s',
+                background: activeTab === 'quotes' ? 'white' : 'transparent',
+                color: activeTab === 'quotes' ? '#111827' : '#6b7280',
+                boxShadow: activeTab === 'quotes' ? '0 10px 20px -10px rgba(0,0,0,0.1)' : 'none'
+              }}
+            >
+              Devis & Propositions
+            </button>
+          )}
         </div>
 
         {/* Search */}

@@ -106,7 +106,7 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
          <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Journal de Maintenance</h4>
-               <button onClick={() => alert('Affichage de l\'historique complet...')} className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer' }}>
+               <button disabled title="Bientôt disponible" className="glass" style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', fontSize: '0.75rem', fontWeight: 800, cursor: 'not-allowed', opacity: 0.5 }}>
                   Voir Tout l'Historique
                </button>
             </div>
