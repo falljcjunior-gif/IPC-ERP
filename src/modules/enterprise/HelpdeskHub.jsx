@@ -260,7 +260,8 @@ const HelpdeskHub = ({ onOpenDetail, accessLevel }) => {
         {showModal && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', zIndex: 1000 }} />
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 1001, padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', width: '560px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="glass" style={{ pointerEvents: 'auto', padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', width: '560px', maxWidth: '95vw', maxHeight: '90vh', overflowY: 'auto' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: 800 }}>Nouveau Ticket Support</h2>
                 <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><X size={20} /></button>
@@ -302,6 +303,7 @@ const HelpdeskHub = ({ onOpenDetail, accessLevel }) => {
                 <button onClick={handleCreate} disabled={!newTicket.titre} className="btn-primary" style={{ padding: '0.75rem 1.5rem', borderRadius: '0.75rem', fontWeight: 700, opacity: newTicket.titre ? 1 : 0.5 }}>Créer le Ticket</button>
               </div>
             </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
