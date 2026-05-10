@@ -9,7 +9,6 @@ import SmartButton from '../components/SmartButton';
 import BarcodeScanner from '../components/BarcodeScanner';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import '../components/GlobalDashboard.css';
-import { useToastStore } from '../store/useToastStore';
 
 const Manufacturing = ({ onOpenDetail }) => {
   const data = useStore(state => state.data);
@@ -78,8 +77,8 @@ const Manufacturing = ({ onOpenDetail }) => {
           />
 
           {/* Create OF */}
-          <SmartButton 
-            onClick={() => useToastStore.getState().addToast('Création d\'un nouvel Ordre de Fabrication', 'info')} 
+          <SmartButton
+            onClick={() => onOpenDetail && onOpenDetail(null, 'production', 'workOrders')}
             variant="primary"
             icon={Plus}
             style={{ padding: '1rem 2rem', borderRadius: '1.5rem', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)' }}

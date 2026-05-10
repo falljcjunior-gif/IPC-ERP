@@ -65,7 +65,9 @@ const OrdersTab = ({ data, formatCurrency, onOpenDetail }) => {
               </div>
               <div>
                 <div style={{ fontWeight: 900, fontSize: '1rem', color: 'var(--nexus-secondary)' }}>{order.id}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--nexus-text-muted)', fontWeight: 800 }}>{order.date}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--nexus-text-muted)', fontWeight: 800 }}>
+                  {order.date ? new Date(order.date).toLocaleDateString('fr-FR') : '—'}
+                </div>
               </div>
             </div>
 
