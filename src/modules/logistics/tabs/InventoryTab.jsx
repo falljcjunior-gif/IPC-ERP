@@ -179,10 +179,9 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
          </div>
 
          <EnterpriseView
-           appId="inventory"
-           subModule="products"
-           data={products}
-           schema={inventorySchema.models.products}
+           moduleId="inventory"
+           modelId="products"
+           schema={inventorySchema}
            onOpenDetail={onOpenDetail}
          />
       </div>
