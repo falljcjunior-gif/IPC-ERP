@@ -40,6 +40,15 @@ jobs:
             --project=ipc-erp \
             --quiet || echo "IAM already set or skipped"
 
+      - name: Fix IAM — verifyrecaptcha invoker (Cloud Run Gen 2)
+        run: |
+          gcloud run services add-iam-policy-binding verifyrecaptcha \
+            --region=europe-west1 \
+            --member=allUsers \
+            --role=roles/run.invoker \
+            --project=ipc-erp \
+            --quiet || echo "IAM already set or skipped"
+
       - name: Fail if deploy failed (non-IAM error)
         if: steps.firebase_deploy.outcome == 'failure'
         run: |
