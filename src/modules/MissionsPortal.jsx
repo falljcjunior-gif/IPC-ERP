@@ -168,9 +168,10 @@ const MissionsPortal = ({ onOpenDetail }) => {
           transition={{ duration: 0.4 }}
         >
           {viewMode === 'kanban' && (
-            <KanbanBoard 
+            <KanbanBoard
               columns={stages}
               items={missions}
+              onAddClick={() => onOpenDetail && onOpenDetail(null, 'projects', 'tasks')}
               columnMapping={(m) => {
                 if (m.missionType === 'project') return m.colonneId === 'col3' ? 'Terminé' : m.colonneId === 'col2' ? 'En cours' : 'À faire';
                 if (m.missionType === 'support') return m.statut === 'Résolu' ? 'Terminé' : m.statut === 'En cours' ? 'En cours' : 'À faire';

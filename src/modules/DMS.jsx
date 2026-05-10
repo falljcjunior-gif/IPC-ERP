@@ -9,10 +9,9 @@ import { useStore } from '../store';
 import { generatePDF } from '../utils/PDFExporter';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import SmartButton from '../components/SmartButton';
-import { useToastStore } from '../store/useToastStore';
 import '../components/GlobalDashboard.css';
 
-const DMS = () => {
+const DMS = ({ onOpenDetail }) => {
   const { data } = useStore();
   const [viewMode, setViewMode]     = useState('grid');
   const [currentFolder, setCurrentFolder] = useState('Racine');
@@ -54,17 +53,17 @@ const DMS = () => {
             <button onClick={() => setViewMode('list')} style={{ padding: '0.6rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer', background: viewMode === 'list' ? 'white' : 'transparent', color: '#111827' }}><ListIcon size={18} /></button>
           </div>
 
-          <SmartButton 
-            variant="secondary" 
-            icon={Upload} 
-            onClick={async () => useToastStore.getState().addToast('Ouverture du sélecteur de fichiers cryptés...', 'info')}
+          <SmartButton
+            variant="secondary"
+            icon={Upload}
+            onClick={() => onOpenDetail && onOpenDetail(null, 'dms', 'files')}
           >
             Téléverser
           </SmartButton>
-          <SmartButton 
-            variant="primary" 
-            icon={Plus} 
-            onClick={async () => useToastStore.getState().addToast('Nouveau document sémantique...', 'info')}
+          <SmartButton
+            variant="primary"
+            icon={Plus}
+            onClick={() => onOpenDetail && onOpenDetail(null, 'dms', 'files')}
           >
             Nouveau
           </SmartButton>
@@ -104,7 +103,7 @@ const DMS = () => {
 
         <motion.div
           whileHover={{ y: -6 }}
-          onClick={() => useToastStore.getState().addToast('Initialisation du nouveau dossier...', 'info')}
+          onClick={() => onOpenDetail && onOpenDetail(null, 'dms', 'folders')}
           className="luxury-widget"
           style={{ padding: '1.75rem', border: '2px dashed #e2e8f0', background: 'rgba(255,255,255,0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', color: '#94a3b8', borderRadius: '1.5rem', transition: 'all 0.3s' }}
         >

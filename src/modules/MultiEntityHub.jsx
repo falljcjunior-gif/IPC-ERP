@@ -4,9 +4,8 @@ import { Globe, Building2, ArrowLeftRight, Plus, CheckCircle2, DollarSign } from
 import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 import SmartButton from '../components/SmartButton';
-import { useToastStore } from '../store/useToastStore';
 
-const MultiEntityHub = () => {
+const MultiEntityHub = ({ onOpenDetail }) => {
   const { data, formatCurrency } = useStore();
 
   const entities = [
@@ -34,7 +33,7 @@ const MultiEntityHub = () => {
           <h1 style={{ fontSize: '2.75rem', fontWeight: 900, margin: 0 }}>Multi-Société & Devises</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Consolidation financière et gestion des filiales internationales.</p>
         </div>
-        <SmartButton variant="primary" icon={Plus} onClick={async () => useToastStore.getState().addToast('Nouvelle entité créée', 'info')}>Ajouter Entité</SmartButton>
+        <SmartButton variant="primary" icon={Plus} onClick={() => onOpenDetail && onOpenDetail(null, 'base', 'entities')}>Ajouter Entité</SmartButton>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>

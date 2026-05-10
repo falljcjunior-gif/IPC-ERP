@@ -14,7 +14,7 @@ import { useToastStore } from '../store/useToastStore';
  * 🛡️ NEXUS OS: AUDIT & COMPLIANCE HUB
  * High-fidelity interface for system traceability, ISO certifications, and internal audits.
  */
-const AuditHub = () => {
+const AuditHub = ({ onOpenDetail }) => {
   const { data } = useStore();
   const [activeTab, setActiveTab] = useState('logs');
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,7 +59,7 @@ const AuditHub = () => {
         <SmartButton 
           variant="primary" 
           icon={Plus} 
-          onClick={async () => useToastStore.getState().addToast('Nouvelle session d\'audit initialisée', 'info')}
+          onClick={() => onOpenDetail && onOpenDetail(null, 'audit', 'sessions')}
         >
           Nouvel Audit
         </SmartButton>
@@ -193,7 +193,7 @@ const AuditHub = () => {
                 <SmartButton 
                   variant="primary" 
                   icon={Plus}
-                  onClick={async () => useToastStore.getState().addToast('Planification d\'un nouvel audit interne...', 'info')}
+                  onClick={() => onOpenDetail && onOpenDetail(null, 'audit', 'sessions')}
                 >
                   Programmer un Audit
                 </SmartButton>
