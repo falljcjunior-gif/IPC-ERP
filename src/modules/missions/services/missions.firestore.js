@@ -1,0 +1,471 @@
+/**
+ * Missions Firestore Service
+ * Toutes les interactions DB du module Missions passent ici.
+ * Isole le module du FirestoreService générique de l'ERP.
+ */
+import {
+  collection, doc, getDoc, getDocs, addDoc, setDoc,
+  updateDoc, deleteDoc, query, where, orderBy, limit,
+  onSnapshot, serverTimestamp, increment, writeBatch,
+  runTransaction,
+} from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../../../firebase/config';
+import { nanoid } from 'nanoid';
+import { rankAfter, rankBetween, rebalance, needsRebalancing, sortByRank } from './lexorank';
+
+// ── Noms des collections top-level ──────────────────────────────
+const COL = {
+  workspaces: 'missions_workspaces',
+  boards:     'missions_boards',
+  lists:      'missions_lists',
+  cards:      'missions_cards',
+};
+
+// ── Sous-collections (chemin relatif à une card) ─────────────────
+const SUB = {
+  comments:    'comments',
+  checklists:  'checklists',
+  attachments: 'attachments',
+  activity:    'activity',
+};
+
+// ─────────────────────────────────────────────────────────────────
+// WORKSPACES
+// ─────────────────────────────────────────────────────────────────
+
+export const MissionsFS = {
+
+  // ── Workspaces ────────────────────────────────────────────────
+
+  subscribeWorkspaces(uid, callback) {
+    const q = query(
+      collection(db, COL.workspaces),
+      where('isArchived', '==', false),
+      orderBy('updatedAt', 'desc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async createWorkspace(data, uid) {
+    const id = nanoid();
+    await setDoc(doc(db, COL.workspaces, id), {
+      ...data,
+      id,
+      members: [{ uid, role: 'ADMIN' }],
+      boardCount: 0,
+      createdBy: uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      isArchived: false,
+    });
+    return id;
+  },
+
+  // ── Boards ────────────────────────────────────────────────────
+
+  subscribeBoards(workspaceId, callback) {
+    const q = query(
+      collection(db, COL.boards),
+      where('workspaceId', '==', workspaceId),
+      where('isArchived', '==', false),
+      orderBy('updatedAt', 'desc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async createBoard(workspaceId, data, uid) {
+    const batch = writeBatch(db);
+    const boardId = nanoid();
+
+    batch.set(doc(db, COL.boards, boardId), {
+      ...data,
+      id: boardId,
+      workspaceId,
+      members: [{ uid, role: 'ADMIN' }],
+      customFields: [],
+      labels: [
+        { id: nanoid(), name: 'Urgent',    color: '#EF4444' },
+        { id: nanoid(), name: 'Important', color: '#F59E0B' },
+        { id: nanoid(), name: 'En attente',color: '#3B82F6' },
+        { id: nanoid(), name: 'Validé',    color: '#10B981' },
+      ],
+      rules: [],
+      listCount: 0,
+      cardCount: 0,
+      createdBy: uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      isArchived: false,
+      isClosed: false,
+    });
+
+    // Incrémente boardCount du workspace
+    batch.update(doc(db, COL.workspaces, workspaceId), {
+      boardCount: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+
+    await batch.commit();
+    return boardId;
+  },
+
+  async updateBoard(boardId, data) {
+    await updateDoc(doc(db, COL.boards, boardId), {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+  },
+
+  // ── Lists ─────────────────────────────────────────────────────
+
+  subscribeLists(boardId, callback) {
+    const q = query(
+      collection(db, COL.lists),
+      where('boardId', '==', boardId),
+      where('isArchived', '==', false),
+      orderBy('rank', 'asc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async createList(boardId, workspaceId, name, lastRank) {
+    const id = nanoid();
+    await setDoc(doc(db, COL.lists, id), {
+      id,
+      boardId,
+      workspaceId,
+      name,
+      rank: rankAfter(lastRank),
+      wipLimit: null,
+      cardCount: 0,
+      isArchived: false,
+      createdAt: serverTimestamp(),
+    });
+
+    await updateDoc(doc(db, COL.boards, boardId), {
+      listCount: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+
+    return id;
+  },
+
+  async updateList(listId, data) {
+    await updateDoc(doc(db, COL.lists, listId), data);
+  },
+
+  // ── Cards ─────────────────────────────────────────────────────
+
+  subscribeCards(boardId, callback) {
+    const q = query(
+      collection(db, COL.cards),
+      where('boardId', '==', boardId),
+      where('isArchived', '==', false),
+      orderBy('rank', 'asc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async createCard(listId, boardId, workspaceId, title, uid, lastRankInList) {
+    const id = nanoid();
+    const rank = rankAfter(lastRankInList);
+
+    const batch = writeBatch(db);
+
+    batch.set(doc(db, COL.cards, id), {
+      id,
+      listId,
+      boardId,
+      workspaceId,
+      title,
+      description: '',
+      rank,
+      members: [uid],
+      labelIds: [],
+      startDate: null,
+      dueDate: null,
+      dueDateComplete: false,
+      cover: null,
+      customFieldValues: {},
+      linkedEntities: [],
+      commentCount: 0,
+      attachmentCount: 0,
+      checklistProgress: { total: 0, complete: 0 },
+      createdBy: uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      isArchived: false,
+    });
+
+    // Compteur list
+    batch.update(doc(db, COL.lists, listId), {
+      cardCount: increment(1),
+    });
+
+    // Compteur board
+    batch.update(doc(db, COL.boards, boardId), {
+      cardCount: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+
+    await batch.commit();
+
+    // Journal d'activité (hors batch pour ne pas bloquer)
+    this._logActivity(id, 'card_created', uid, {});
+
+    return { id, rank };
+  },
+
+  async updateCard(cardId, data, uid, activityMeta = null) {
+    const updates = { ...data, updatedAt: serverTimestamp() };
+    await updateDoc(doc(db, COL.cards, cardId), updates);
+
+    if (activityMeta) {
+      await this._logActivity(cardId, activityMeta.type, uid, activityMeta.meta || {});
+    }
+  },
+
+  /**
+   * DÉPLACEMENT D'UNE CARTE (Optimistic UI compatible)
+   * 1 seul write Firestore (juste la carte).
+   * Si rebalancing nécessaire → batch de la liste entière.
+   *
+   * @param {string}      cardId
+   * @param {string}      newListId
+   * @param {string|null} prevCardRank  — rank de la carte au-dessus dans la destination
+   * @param {string|null} nextCardRank  — rank de la carte en-dessous dans la destination
+   * @param {string}      uid
+   * @param {string}      fromListId
+   * @param {object}      listContext   — { lists: ListDoc[], cards: CardDoc[] }
+   */
+  async moveCard(cardId, newListId, prevCardRank, nextCardRank, uid, fromListId, listContext) {
+    const newRank = rankBetween(prevCardRank, nextCardRank);
+
+    if (needsRebalancing(newRank)) {
+      // Rebalance les cartes de la liste de destination
+      const destCards = sortByRank(
+        listContext.cards.filter(c => c.listId === newListId && c.id !== cardId)
+      );
+      const rebalanced = rebalance(destCards.map(c => c.id));
+
+      const batch = writeBatch(db);
+      Object.entries(rebalanced).forEach(([id, rank]) => {
+        batch.update(doc(db, COL.cards, id), { rank });
+      });
+      // Insère la carte déplacée avec son rang recalculé basé sur la nouvelle distribution
+      batch.update(doc(db, COL.cards, cardId), {
+        listId: newListId,
+        rank: rankBetween(prevCardRank ? rebalanced[prevCardRank] || prevCardRank : null,
+                          nextCardRank ? rebalanced[nextCardRank] || nextCardRank : null),
+        updatedAt: serverTimestamp(),
+      });
+      await batch.commit();
+    } else {
+      // Cas normal : 1 write
+      const updates = { rank: newRank, updatedAt: serverTimestamp() };
+      if (newListId !== fromListId) {
+        updates.listId = newListId;
+      }
+      await updateDoc(doc(db, COL.cards, cardId), updates);
+    }
+
+    // Mise à jour des compteurs si changement de liste
+    if (newListId !== fromListId) {
+      const batch2 = writeBatch(db);
+      batch2.update(doc(db, COL.lists, fromListId), { cardCount: increment(-1) });
+      batch2.update(doc(db, COL.lists, newListId),  { cardCount: increment(1) });
+      await batch2.commit();
+    }
+
+    // Activité
+    const fromList = listContext.lists.find(l => l.id === fromListId);
+    const toList   = listContext.lists.find(l => l.id === newListId);
+    await this._logActivity(cardId, 'card_moved', uid, {
+      fromListId,
+      fromListName: fromList?.name,
+      toListId: newListId,
+      toListName: toList?.name,
+    });
+  },
+
+  // ── Checklists ────────────────────────────────────────────────
+
+  subscribeChecklists(cardId, callback) {
+    const q = query(
+      collection(db, COL.cards, cardId, SUB.checklists),
+      orderBy('rank', 'asc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async createChecklist(cardId, title, uid) {
+    const id = nanoid();
+    await setDoc(doc(db, COL.cards, cardId, SUB.checklists, id), {
+      id, title, rank: rankAfter(null), items: [], createdAt: serverTimestamp(),
+    });
+    await this._logActivity(cardId, 'checklist_created', uid, { fieldName: title });
+    return id;
+  },
+
+  async toggleChecklistItem(cardId, checklistId, itemId, complete, uid, cardProgress) {
+    const clRef = doc(db, COL.cards, cardId, SUB.checklists, checklistId);
+    const clSnap = await getDoc(clRef);
+    if (!clSnap.exists()) return;
+
+    const items = clSnap.data().items.map(item =>
+      item.id === itemId
+        ? { ...item, complete, completedAt: complete ? new Date().toISOString() : null, completedBy: complete ? uid : null }
+        : item
+    );
+
+    const batch = writeBatch(db);
+    batch.update(clRef, { items });
+
+    // Met à jour le progress dénormalisé sur la card
+    const allItems = items; // juste cette checklist, approximatif mais fonctionnel
+    const totalComplete = allItems.filter(i => i.complete).length;
+    const totalItems    = allItems.length;
+    batch.update(doc(db, COL.cards, cardId), {
+      checklistProgress: {
+        total:    (cardProgress.total || totalItems),
+        complete: Math.max(0, (cardProgress.complete || 0) + (complete ? 1 : -1)),
+      },
+      updatedAt: serverTimestamp(),
+    });
+    await batch.commit();
+
+    await this._logActivity(cardId,
+      complete ? 'checklist_item_checked' : 'checklist_item_unchecked',
+      uid, {}
+    );
+  },
+
+  // ── Attachments ───────────────────────────────────────────────
+
+  async uploadAttachment(cardId, file, uid, onProgress) {
+    const id = nanoid();
+    const path = `missions/cards/${cardId}/${id}_${file.name}`;
+    const storageRef = ref(storage, path);
+
+    return new Promise((resolve, reject) => {
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      uploadTask.on('state_changed',
+        snap => onProgress && onProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
+        reject,
+        async () => {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          await setDoc(doc(db, COL.cards, cardId, SUB.attachments, id), {
+            id, name: file.name, storagePath: path, downloadUrl,
+            mimeType: file.type, size: file.size,
+            isCover: false, uploadedBy: uid, createdAt: serverTimestamp(),
+          });
+          await updateDoc(doc(db, COL.cards, cardId), {
+            attachmentCount: increment(1), updatedAt: serverTimestamp(),
+          });
+          await this._logActivity(cardId, 'attachment_added', uid, { fieldName: file.name });
+          resolve({ id, downloadUrl, name: file.name });
+        }
+      );
+    });
+  },
+
+  subscribeAttachments(cardId, callback) {
+    return onSnapshot(
+      collection(db, COL.cards, cardId, SUB.attachments),
+      snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  // ── Comments ──────────────────────────────────────────────────
+
+  subscribeComments(cardId, callback) {
+    const q = query(
+      collection(db, COL.cards, cardId, SUB.comments),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async addComment(cardId, text, uid, userName) {
+    const id = nanoid();
+    await setDoc(doc(db, COL.cards, cardId, SUB.comments, id), {
+      id, text, authorUid: uid, authorName: userName,
+      edited: false, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    });
+    await updateDoc(doc(db, COL.cards, cardId), {
+      commentCount: increment(1), updatedAt: serverTimestamp(),
+    });
+    await this._logActivity(cardId, 'comment_added', uid, {});
+    return id;
+  },
+
+  // ── Activity Log (audit) ─────────────────────────────────────
+
+  subscribeActivity(cardId, callback) {
+    const q = query(
+      collection(db, COL.cards, cardId, SUB.activity),
+      orderBy('createdAt', 'desc'),
+      limit(50)
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async _logActivity(cardId, type, actorUid, meta) {
+    try {
+      const id = nanoid();
+      await setDoc(doc(db, COL.cards, cardId, SUB.activity, id), {
+        id, type, actorUid, meta: meta || {},
+        createdAt: serverTimestamp(),
+      });
+    } catch (e) {
+      // Non bloquant : le journal ne doit jamais faire planter l'UX
+      console.warn('[MissionsFS] Activity log failed:', e.message);
+    }
+  },
+
+  // ── Liens ERP ────────────────────────────────────────────────
+
+  async addErpLink(cardId, link, uid) {
+    const cardRef = doc(db, COL.cards, cardId);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(cardRef);
+      const current = snap.data().linkedEntities || [];
+      if (current.find(l => l.entityId === link.entityId)) return; // dédoublonnage
+      tx.update(cardRef, {
+        linkedEntities: [...current, link],
+        updatedAt: serverTimestamp(),
+      });
+    });
+    await this._logActivity(cardId, 'erp_link_added', uid, { fieldName: link.label });
+  },
+
+  async removeErpLink(cardId, entityId, uid) {
+    const cardRef = doc(db, COL.cards, cardId);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(cardRef);
+      const current = snap.data().linkedEntities || [];
+      tx.update(cardRef, {
+        linkedEntities: current.filter(l => l.entityId !== entityId),
+        updatedAt: serverTimestamp(),
+      });
+    });
+    await this._logActivity(cardId, 'erp_link_removed', uid, { fieldName: entityId });
+  },
+};
+
+export default MissionsFS;
