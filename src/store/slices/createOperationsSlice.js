@@ -1,5 +1,6 @@
 import { FirestoreService, StorageService } from '../../services/firestore.service';
 import { AuthService } from '../../services/auth.service';
+import { auth } from '../../firebase/config';
 import {
   cascadeDevisToSaleOrder,
   cascadeBCToDelivery,
@@ -386,13 +387,15 @@ export const createOperationsSlice = (set, get) => ({
       
       setTimeout(() => {
          get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         const { user } = get();
-         if (user) {
+         // SOURCE OF TRUTH: Firebase Auth, pas le store. Évite que `ownerId` soit
+         // 'guest' (state initial) quand le profile Firestore n'est pas encore synchro.
+         const fbUser = auth.currentUser;
+         if (fbUser) {
            FirestoreService.setDocument(appId, newRecord.id, {
              ...newRecord,
              subModule,
-             ownerId: user.id,
-             userId: user.id,
+             ownerId: fbUser.uid,
+             userId: fbUser.uid,
              _deletedAt: null,
              _createdAt: FirestoreService.serverTimestamp()
            }, true)
