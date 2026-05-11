@@ -32,9 +32,9 @@ const SEVERITY_CONFIG = {
 };
 
 const LEVEL_CONFIG = {
-  red:    { color: '#EF4444', label: 'Attention requise',   icon: AlertTriangle },
-  orange: { color: '#F59E0B', label: 'Vigilance active',    icon: Clock },
-  green:  { color: '#10B981', label: 'Performance nominale', icon: CheckCircle2 },
+  red:    { color: '#EF4444', label: 'Attention requise',    Icon: AlertTriangle },
+  orange: { color: '#F59E0B', label: 'Vigilance active',     Icon: Clock },
+  green:  { color: '#10B981', label: 'Performance nominale', Icon: CheckCircle2 },
 };
 
 const TRIGGER_ICONS = {
