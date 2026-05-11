@@ -61,11 +61,24 @@ service cloud.firestore {
     // ── Users & HR (Unified Model 2.0) ──────────────────────────────────────
     match /users/{userId} {
       // Profile is public for authenticated users (Directory/Annuaire)
-      // Sensitive HR/Permissions data is handled by app logic or further restricted if needed
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && (isAdmin() || isCreatorEmail());
+
+      // Self-update: only allow writes on explicitly "personal" fields.
+      // All HR, financial, role, and hierarchy fields are STRICTLY blocked
+      // even if the user crafts a raw Firestore request.
       allow update: if isAuthenticated() && (
-        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions', 'hr'])) ||
+        (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          // Identity & Access — set by admin/HR only
+          'role', 'permissions', 'employeeId',
+          // HR professional fields — set by HR module only
+          'hr', 'poste', 'departement', 'contractType', 'hireDate',
+          'managerUid', 'managerName',
+          // Financial — private vault sub-collection only
+          'salary', 'salaire', 'bankDetails',
+          // Security audit trail — set by Cloud Functions only
+          '_security'
+        ])) ||
         isAdmin()
       );
       allow delete: if isSuperAdmin();

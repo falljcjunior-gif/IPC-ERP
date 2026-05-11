@@ -1,8 +1,8 @@
 import React, { useMemo, useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Zap, Clock, Briefcase, CheckCircle2, AlertCircle, 
-  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check 
+import {
+  Zap, Clock, Briefcase, CheckCircle2, AlertCircle,
+  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check
 } from 'lucide-react';
 import { useStore } from '../store';
 import GPSWorkspace from './GPSWorkspace';
@@ -13,7 +13,8 @@ import GamificationBadges from './workspace/GamificationBadges';
 import KaizenBox from './workspace/KaizenBox';
 import StaffPortal from '../modules/StaffPortal';
 import CommandCenter from './workspace/CommandCenter';
-const NexusScoreWidget = lazy(() => import('./workspace/NexusScoreWidget'));
+const NexusScoreWidget  = lazy(() => import('./workspace/NexusScoreWidget'));
+const ProfileSettings   = lazy(() => import('./workspace/ProfileSettings'));
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -185,9 +186,25 @@ const PersonalWorkspace = () => {
          <button onClick={() => setActiveTab('score')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'score' ? '#F59E0B' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'score' ? '2px solid #F59E0B' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
            ⭐ Mon Score
          </button>
+         <button
+           onClick={() => setActiveTab('profile')}
+           style={{
+             background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800,
+             color: activeTab === 'profile' ? '#8B5CF6' : 'var(--text-muted)',
+             cursor: 'pointer', paddingBottom: '0.5rem',
+             borderBottom: activeTab === 'profile' ? '2px solid #8B5CF6' : '2px solid transparent',
+             display: 'flex', alignItems: 'center', gap: '0.4rem',
+           }}
+         >
+           👤 Mon Profil
+         </button>
       </div>
 
-      {activeTab === 'commander' ? (
+      {activeTab === 'profile' ? (
+        <Suspense fallback={<div style={{ padding: '2rem', color: 'var(--text-muted)' }}>Chargement du profil…</div>}>
+          <ProfileSettings />
+        </Suspense>
+      ) : activeTab === 'commander' ? (
         <CommandCenter />
       ) : activeTab === 'score' ? (
         <Suspense fallback={<div style={{ padding: '2rem', color: 'var(--text-muted)' }}>Chargement du Score...</div>}>

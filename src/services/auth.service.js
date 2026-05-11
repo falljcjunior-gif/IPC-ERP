@@ -8,10 +8,13 @@
  */
 
 import { auth } from '../firebase/config';
-import { 
-  signInWithEmailAndPassword, 
-  updatePassword as fbUpdatePassword, 
-  signOut as fbSignOut 
+import {
+  signInWithEmailAndPassword,
+  updatePassword as fbUpdatePassword,
+  signOut as fbSignOut,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updateProfile as fbUpdateProfile,
 } from 'firebase/auth';
 import { FirestoreService } from './firestore.service';
 import { messaging } from '../firebase/config';
@@ -117,6 +120,61 @@ export const AuthService = {
     } catch (err) {
       logger.error('AuthService:passwordUpdate:failed', err);
       throw err;
+    }
+  },
+
+  /**
+   * Changement de mot de passe self-service avec ré-authentification obligatoire.
+   * Firebase exige une ré-auth récente avant toute opération sensible (security-sensitive action).
+   * @param {string} currentPassword — mot de passe actuel (pour ré-auth)
+   * @param {string} newPassword     — nouveau mot de passe (≥ 8 car.)
+   */
+  async changePassword(currentPassword, newPassword) {
+    const fbUser = auth.currentUser;
+    if (!fbUser) throw new Error('Aucun utilisateur connecté.');
+    if (!fbUser.email) throw new Error('Compte sans email — impossible de ré-authentifier.');
+
+    try {
+      // ── [SECURITY] Ré-authentification obligatoire avant updatePassword ──
+      const credential = EmailAuthProvider.credential(fbUser.email, currentPassword);
+      await reauthenticateWithCredential(fbUser, credential);
+
+      // ── reCAPTCHA Enterprise ──────────────────────────────────────────────
+      const recaptchaToken = await getRecaptchaToken(RECAPTCHA_ACTIONS.CHANGE_PASSWORD);
+      if (!recaptchaToken) {
+        logger.warn('AuthService:changePassword:recaptcha_unavailable — mode dégradé');
+      }
+
+      // ── Mise à jour du mot de passe ───────────────────────────────────────
+      await fbUpdatePassword(fbUser, newPassword);
+
+      // ── Journal de sécurité dans Firestore ───────────────────────────────
+      const updateData = {
+        '_security.lastPasswordChangeAt': new Date().toISOString(),
+      };
+      if (recaptchaToken) {
+        updateData['_security.lastRecaptchaToken'] = recaptchaToken;
+      }
+      await FirestoreService.updateDocument('users', fbUser.uid, updateData);
+
+      logger.info('AuthService:changePassword:success', { uid: fbUser.uid });
+    } catch (err) {
+      logger.error('AuthService:changePassword:failed', err);
+      throw err;
+    }
+  },
+
+  /**
+   * Mise à jour du displayName Firebase Auth (photo URL gérée séparément par Firestore).
+   */
+  async updateAuthProfile({ displayName, photoURL } = {}) {
+    const fbUser = auth.currentUser;
+    if (!fbUser) return;
+    const updates = {};
+    if (displayName != null) updates.displayName = displayName;
+    if (photoURL   != null) updates.photoURL     = photoURL;
+    if (Object.keys(updates).length > 0) {
+      await fbUpdateProfile(fbUser, updates);
     }
   },
 
