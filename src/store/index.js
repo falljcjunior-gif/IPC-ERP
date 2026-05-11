@@ -13,6 +13,7 @@ import { createMarketingSlice } from './slices/marketing/createMarketingSlice';
 import { createAdminSlice } from './slices/createAdminSlice';
 import { createCallSlice } from './slices/createCallSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
+import { createFoundationSlice } from './slices/foundation/createFoundationSlice';
 
 // ══════════════════════════════════════════════════════════════════════════
 // 🚀 IPC INTELLIGENCE ENGINE: CENTRAL STORE
@@ -86,6 +87,7 @@ export const useStore = create(
       ...createAdminSlice(set, get, ...args),
       ...createCallSlice(set, get, ...args),
       ...createOperationsSlice(set, get, ...args),
+      ...createFoundationSlice(set, get, ...args),
       
       
       hints: [],

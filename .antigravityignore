@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.firebase
+.claude
+.github
+artifacts
+playwright-report
+test-results
+*.local
+firebase-debug.log

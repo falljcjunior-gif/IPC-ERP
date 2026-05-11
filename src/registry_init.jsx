@@ -7,7 +7,7 @@ import {
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
   PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox, Shield,
-  Banknote, Wrench, Globe, Leaf, Smartphone, FlaskConical
+  Banknote, Wrench, Globe, Leaf, Smartphone, FlaskConical, GraduationCap
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -48,6 +48,8 @@ const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
 const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
 const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
+const NexusAcademy   = lazy(() => import('./modules/academy/NexusAcademy'));
+const FoundationHub  = lazy(() => import('./modules/foundation/FoundationHub'));
 const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
@@ -360,5 +362,21 @@ export const initRegistry = () => {
     id: 'mobile', label: 'Application Mobile', icon: <Smartphone size={18} />,
     category: 'admin', roles: ['ADMIN', 'SUPER_ADMIN'],
     component: MobileCompanion, priority: 52
+  });
+
+  // --- Nexus Academy ---
+  registry.register({
+    id: 'academy', label: 'Nexus Academy', icon: <GraduationCap size={18} />,
+    category: 'cockpit',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'HR', 'FINANCE', 'SALES', 'PRODUCTION', 'STAFF'],
+    component: NexusAcademy, priority: 9
+  });
+
+  // --- IPC Collect Foundation ---
+  registry.register({
+    id: 'foundation', label: 'IPC Foundation', icon: <Heart size={18} />,
+    category: 'cockpit',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
+    component: FoundationHub, priority: 10
   });
 };

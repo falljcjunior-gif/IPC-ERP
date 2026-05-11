@@ -591,6 +591,96 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions can update counters
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    // IPC COLLECT FOUNDATION — FILIALE INDÉPENDANTE
+    // Données strictement isolées du Groupe IPC Green Blocks
+    // Rôles autorisés : FOUNDATION_ADMIN | FOUNDATION_STAFF | SUPER_ADMIN | ADMIN
+    // ══════════════════════════════════════════════════════════════════
+
+    function isFoundationRole() {
+      return isAuthenticated() && (
+        isSuperAdmin() ||
+        hasRole('FOUNDATION_ADMIN') ||
+        hasRole('FOUNDATION_STAFF')
+      );
+    }
+
+    function isFoundationAdmin() {
+      return isAuthenticated() && (
+        isSuperAdmin() ||
+        hasRole('FOUNDATION_ADMIN')
+      );
+    }
+
+    // ── Foundation Finance (Dons, Décaissements, Livre Journal) ──────────
+    match /foundation_finance/{docId} {
+      allow read: if isFoundationRole();
+      allow create: if isFoundationRole();
+      // Décaissements : seul un FOUNDATION_ADMIN peut approuver/modifier le statut
+      allow update: if isFoundationRole() && (
+        isFoundationAdmin() ||
+        // Staff can update notes but NOT statut or approval fields
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'statut', 'approuve_par', 'approuve_le', 'commentaire_validation'
+        ])
+      );
+      allow delete: if false; // Traçabilité comptable — aucune suppression
+    }
+
+    // ── Foundation Employees (RH Détachés) ───────────────────────────────
+    match /foundation_employees/{docId} {
+      allow read: if isFoundationRole();
+      allow create: if isFoundationAdmin();
+      allow update: if isFoundationRole() && (
+        isFoundationAdmin() ||
+        // Staff can update non-sensitive fields (notes, statut congé)
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'salaire', 'contrat', 'date_embauche', 'poste', 'departement'
+        ])
+      );
+      allow delete: if false; // Soft-delete obligatoire (statut = 'Départ')
+    }
+
+    // ── Foundation Collecteurs (Agents Terrain) ──────────────────────────
+    match /foundation_collecteurs/{docId} {
+      allow read: if isFoundationRole();
+      allow create: if isFoundationRole();
+      allow update: if isFoundationRole();
+      allow delete: if false; // Traçabilité des cartes de collecte
+    }
+
+    // ── Foundation Centres (Centres de Tri) ───────────────────────────────
+    match /foundation_centres/{docId} {
+      allow read: if isFoundationRole();
+      allow create: if isFoundationAdmin();
+      allow update: if isFoundationRole();
+      allow delete: if false;
+    }
+
+    // ── Foundation Collectes (Tracking Plastique) ────────────────────────
+    match /foundation_collectes/{docId} {
+      allow read: if isFoundationRole();
+      allow create: if isFoundationRole();
+      allow update: if isFoundationRole();
+      allow delete: if false; // Tonnage immutable pour audit environnemental
+    }
+
+    // ── Foundation Expenses (Notes de Frais) ─────────────────────────────
+    match /foundation_expenses/{docId} {
+      allow read: if isFoundationRole();
+      // Tout staff foundation peut soumettre une note de frais
+      allow create: if isFoundationRole() &&
+                       request.resource.data.justificatif != null;
+      // Seul un admin peut approuver/rejeter
+      allow update: if isFoundationRole() && (
+        isFoundationAdmin() ||
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'statut', 'approuve_par', 'approuve_le', 'commentaire'
+        ])
+      );
+      allow delete: if false;
+    }
+
     // ── Refus par défaut (sécurité) ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
