@@ -7,7 +7,7 @@ import {
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
   PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox, Shield,
-  Banknote, Wrench, Globe, Leaf, Smartphone
+  Banknote, Wrench, Globe, Leaf, Smartphone, FlaskConical
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -61,6 +61,7 @@ const ProcurementHub = lazy(() => import('./modules/ProcurementHub'));
 const ESGHub = lazy(() => import('./modules/ESGHub'));
 const MultiEntityHub = lazy(() => import('./modules/MultiEntityHub'));
 const MobileCompanion = lazy(() => import('./modules/MobileCompanion'));
+const StrategyLab     = lazy(() => import('./modules/strategy/StrategyLab'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -117,6 +118,12 @@ export const initRegistry = () => {
     id: 'intelligence', label: 'Intelligence Stratégique', icon: <Brain size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
     component: ExecutiveIntelligence, priority: 2
+  });
+
+  registry.register({
+    id: 'strategy_lab', label: 'Strategy Lab', icon: <FlaskConical size={18} />,
+    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
+    component: StrategyLab, priority: 3
   });
 
   registry.register({
