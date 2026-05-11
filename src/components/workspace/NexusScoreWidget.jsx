@@ -130,7 +130,7 @@ function Leaderboard({ dept, weekId, myUid }) {
         .filter(r => r.department === dept && r.periodId === weekId)
         .slice(0, 5);
       setEntries(rows);
-    }).catch(() => {});
+    }).catch(() => { /* leaderboard unavailable */ });
   }, [dept, weekId]);
 
   if (entries.length === 0) return null;
@@ -201,7 +201,7 @@ export default function NexusScoreWidget() {
       const snap = await getDocs(q);
       const rows = snap.docs.map(d => d.data()).reverse();
       setHistory(rows);
-    } catch (_) {}
+    } catch (_) { /* history unavailable — silently skip */ }
   }, [uid]);
 
   useEffect(() => { loadHistory(); }, [loadHistory]);

@@ -27,7 +27,10 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_IPC_ERP }}
       - name: Deploy to Firebase
-        run: npx firebase-tools deploy --project ipc-erp --non-interactive --force
+        run: |
+          npx firebase-tools deploy --project ipc-erp --non-interactive --force \
+            2>&1 | tee /tmp/firebase_deploy.log
+          echo "FIREBASE_EXIT=${PIPESTATUS[0]}" >> "$GITHUB_ENV"
         continue-on-error: true
         id: firebase_deploy
 
@@ -100,5 +103,14 @@ jobs:
       - name: Fail if deploy failed (non-IAM error)
         if: steps.firebase_deploy.outcome == 'failure'
         run: |
-          echo "Deploy failed. Check logs above for non-IAM errors."
-          exit 1
+          # All "Failed to set invoker / IAM Policy" errors are handled by the gcloud steps above.
+          # Only fail if there is an error that is NOT an invoker/IAM issue.
+          NON_IAM=$(grep -iE "^.*(Error|error):" /tmp/firebase_deploy.log \
+            | grep -ivE "invoker|iam.?policy|set.*iam|iam.*set" || true)
+          if [ -n "$NON_IAM" ]; then
+            echo "Non-IAM deploy error detected:"
+            echo "$NON_IAM"
+            exit 1
+          else
+            echo "Only IAM/invoker errors — handled by gcloud steps above. Deploy OK."
+          fi
