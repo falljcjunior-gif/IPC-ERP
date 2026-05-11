@@ -10,6 +10,7 @@ import {
   Leaf, DollarSign, Users, Receipt, 
   MapPin, ChevronRight, Activity, 
   Shield, TrendingUp, BarChart2, Menu, X,
+  ShieldCheck, LayoutDashboard, Bell, Settings
 } from 'lucide-react';
 
 import FoundationGuard          from './FoundationGuard';
