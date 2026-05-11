@@ -16,7 +16,7 @@ import {
   FoundationCollecteSchema,
   FoundationExpenseSchema,
   isFoundationAuthorized,
-} from '../../schemas/foundation.schema';
+} from '../../../schemas/foundation.schema';
 
 const FOUNDATION_ROLES = ['FOUNDATION_ADMIN', 'FOUNDATION_STAFF', 'SUPER_ADMIN', 'ADMIN'];
 
