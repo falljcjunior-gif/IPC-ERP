@@ -21,8 +21,8 @@ import { useMissionsStore } from './store/useMissionsStore';
 import { MissionsFS, seedDefaultWorkspaces } from './services/missions.firestore';
 import { useWorkspaceAuth } from './hooks/useWorkspaceAuth';
 import { useStore }         from '../../store';
+import MissionEngine        from './MissionEngine';
 
-const MissionsBoard    = lazy(() => import('./components/MissionsBoard'));
 const CardModal        = lazy(() => import('./components/CardModal'));
 const ButlerPanel      = lazy(() => import('./components/ButlerPanel'));
 const WorkspaceSettings = lazy(() => import('./components/WorkspaceSettings'));
@@ -339,12 +339,16 @@ function BoardGrid({ workspaceId, onSelectBoard, isAdmin }) {
 export default function MissionsHub() {
   const uid              = useStore(s => s.user?.uid || s.user?.id);
 
-  const workspaces       = useMissionsStore(s => s.workspaces);
-  const workspacesLoaded = useMissionsStore(s => s.workspacesLoaded);
+  const workspaces          = useMissionsStore(s => s.workspaces);
+  const workspacesLoaded    = useMissionsStore(s => s.workspacesLoaded);
   const subscribeWorkspaces = useMissionsStore(s => s.subscribeWorkspaces);
-  const unsubscribeAll   = useMissionsStore(s => s.unsubscribeAll);
-  const cardDetail       = useMissionsStore(s => s.cardDetail);
-  const subscribeBoard   = useMissionsStore(s => s.subscribeBoard);
+  const unsubscribeAll      = useMissionsStore(s => s.unsubscribeAll);
+  const cardDetail          = useMissionsStore(s => s.cardDetail);
+  const subscribeBoard      = useMissionsStore(s => s.subscribeBoard);
+  const openCardDetail      = useMissionsStore(s => s.openCardDetail);
+  // Raw data for MissionEngine (normalized inside the engine)
+  const storeCards          = useMissionsStore(s => s.cards);
+  const storeLists          = useMissionsStore(s => s.lists);
 
   const [activeWsId, setActiveWsId]     = useState(null);
   const [activeBoard, setActiveBoard]   = useState(null);   // full BoardDoc
@@ -546,29 +550,29 @@ export default function MissionsHub() {
       <div style={{ flex:1, display:'flex', overflow:'hidden', position:'relative' }}>
 
         {/* Board view or board grid */}
-        <div style={{ flex:1, overflow:'auto' }}>
-          <Suspense fallback={<Spinner />}>
-            {activeBoard ? (
-              <MissionsBoard
-                boardId={activeBoard.id}
-                workspaceId={activeWsId}
-              />
-            ) : (
-              <div style={{ padding:'24px 28px' }}>
-                <div style={{
-                  display:'flex', alignItems:'center', gap:8, marginBottom:20,
-                }}>
-                  <LayoutGrid size={18} style={{ color:'var(--accent)' }} />
-                  <h2 style={{ margin:0, fontSize:'1rem', fontWeight:700 }}>Tableaux</h2>
-                </div>
-                <BoardGrid
-                  workspaceId={activeWsId}
-                  onSelectBoard={selectBoard}
-                  isAdmin={wsAuth.isAdmin}
-                />
+        <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+          {activeBoard ? (
+            <MissionEngine
+              rawCards={storeCards[activeBoard.id] || []}
+              listsForBoard={storeLists[activeBoard.id] || []}
+              userMap={{}}
+              boardId={activeBoard.id}
+              workspaceId={activeWsId}
+              onCardClick={openCardDetail}
+            />
+          ) : (
+            <div style={{ flex:1, overflow:'auto', padding:'24px 28px' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+                <LayoutGrid size={18} style={{ color:'var(--accent)' }} />
+                <h2 style={{ margin:0, fontSize:'1rem', fontWeight:700 }}>Tableaux</h2>
               </div>
-            )}
-          </Suspense>
+              <BoardGrid
+                workspaceId={activeWsId}
+                onSelectBoard={selectBoard}
+                isAdmin={wsAuth.isAdmin}
+              />
+            </div>
+          )}
         </div>
 
         {/* Butler panel (slide-in) */}

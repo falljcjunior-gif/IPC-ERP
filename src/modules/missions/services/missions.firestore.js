@@ -275,7 +275,7 @@ export const MissionsFS = {
     );
   },
 
-  async createCard(listId, boardId, workspaceId, title, uid, lastRankInList) {
+  async createCard(listId, boardId, workspaceId, title, uid, lastRankInList, extra = {}) {
     const id = nanoid();
     const rank = rankAfter(lastRankInList);
 
@@ -295,6 +295,10 @@ export const MissionsFS = {
       dueDate: null,
       dueDateComplete: false,
       cover: null,
+      // Mission Engine fields
+      priority:          extra.priority          ?? 'none',
+      colorTag:          extra.colorTag          ?? null,
+      relatedDepartment: extra.relatedDepartment ?? null,
       customFieldValues: {},
       linkedEntities: [],
       commentCount: 0,
