@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Zap, Clock, Briefcase, CheckCircle2, AlertCircle, 
@@ -13,7 +13,7 @@ import GamificationBadges from './workspace/GamificationBadges';
 import KaizenBox from './workspace/KaizenBox';
 import StaffPortal from '../modules/StaffPortal';
 import CommandCenter from './workspace/CommandCenter';
-import NexusScoreWidget from './workspace/NexusScoreWidget';
+const NexusScoreWidget = lazy(() => import('./workspace/NexusScoreWidget'));
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -190,7 +190,9 @@ const PersonalWorkspace = () => {
       {activeTab === 'commander' ? (
         <CommandCenter />
       ) : activeTab === 'score' ? (
-        <NexusScoreWidget />
+        <Suspense fallback={<div style={{ padding: '2rem', color: 'var(--text-muted)' }}>Chargement du Score...</div>}>
+          <NexusScoreWidget />
+        </Suspense>
       ) : activeTab === 'gps' ? (
         <GPSWorkspace />
       ) : activeTab === 'hr' ? (
