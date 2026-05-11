@@ -11,6 +11,13 @@ yarn-error.log*
 *.local
 functions_logs.txt
 firebase-debug.log
+firebase-debug.*.log
+
+# Firebase Auth export / import seed files — contain password hashes
+users.json
+# reCAPTCHA API test payloads — contain site key
+request.json
+
 artifacts/
 playwright-report/
 test-results/

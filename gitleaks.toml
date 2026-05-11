@@ -1,10 +1,40 @@
 [allowlist]
 description = "Global allowlist for IPC-ERP"
+
+# ── Files whose contents are expected / not secret ─────────────────────────
 paths = [
-    '''src/firebase/config\.js''',
-    '''public/firebase-messaging-sw\.js''',
-    '''firestore\.rules''',
-    '''.env''',
-    '''scratch/.*''',
-    '''functions/bootstrap_admin\.cjs'''
+  # Firebase web SDK config (public client-side keys, intentionally in code)
+  '''src/firebase/config\.js''',
+  '''public/firebase-messaging-sw\.js''',
+
+  # Firestore security rules — rule IDs look like keys but are not secrets
+  '''firestore\.rules''',
+
+  # reCAPTCHA Enterprise SITE KEY — public key embedded in client, not a secret
+  # (secret key is never stored in code, lives in Firebase Secret Manager)
+  '''functions/modules/recaptcha\.js''',
+  '''src/utils/recaptcha\.js''',
+
+  # Test / bootstrap files excluded from production
+  '''\.env''',
+  '''scratch/.*''',
+  '''functions/bootstrap_admin\.cjs''',
+
+  # Firebase Auth user export used for local dev seeding — gitignored going forward
+  '''users\.json''',
+
+  # reCAPTCHA API test payload — contains site key (public), not secret key
+  '''request\.json''',
+
+  # Firebase CLI debug log — may contain short-lived session tokens
+  '''firebase-debug\.log''',
+  '''firebase-debug\.\d+\.log''',
+]
+
+# ── Regex allowlist — confirmed false positives across all files ─────────────
+# "Recommandation" — French word appearing after "LinkedIn," label in TalentHub.jsx
+# "linkedinConfig" — JS variable name in ConnectTab.jsx, not a client ID
+regexes = [
+  '''Recommandation''',
+  '''linkedinConfig''',
 ]
