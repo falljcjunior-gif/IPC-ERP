@@ -14,8 +14,7 @@ import { useMissionsStore } from '../store/useMissionsStore';
 import { useStore } from '../../../store';
 
 export function useWorkspaceAuth(workspaceId) {
-  const { user }     = useStore();
-  const uid          = user?.uid || user?.id;
+  const uid = useStore(s => s.user?.uid || s.user?.id);
   const workspaces   = useMissionsStore(s => s.workspaces);
 
   return useMemo(() => {

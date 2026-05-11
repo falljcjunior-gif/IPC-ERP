@@ -47,8 +47,9 @@ export const useMissionsStore = create(
 
     // ── State ──────────────────────────────────────────────────────
 
-    workspaces:   [],
-    boards:       {},   // boardId → BoardDoc
+    workspaces:        [],
+    workspacesLoaded:  false,
+    boards:            {},   // boardId → BoardDoc
     lists:        {},   // boardId → ListDoc[]
     cards:        {},   // boardId → CardDoc[]
 
@@ -66,7 +67,7 @@ export const useMissionsStore = create(
       if (prev) prev();
 
       const unsub = MissionsFS.subscribeWorkspaces(uid, workspaces => {
-        set({ workspaces });
+        set({ workspaces, workspacesLoaded: true });
       });
       set(s => ({ listeners: { ...s.listeners, workspaces: unsub } }));
     },
@@ -104,7 +105,7 @@ export const useMissionsStore = create(
     unsubscribeAll() {
       const { listeners } = get();
       Object.values(listeners).forEach(fn => fn && fn());
-      set({ listeners: {} });
+      set({ listeners: {}, workspacesLoaded: false });
     },
 
     // ── Getters dérivés ────────────────────────────────────────────

@@ -605,4 +605,48 @@ export const MissionsFS = {
   },
 };
 
+// ── Seeding workspaces départementaux par défaut ─────────────────────────────
+
+const DEFAULT_DEPARTMENTS = [
+  { name: 'Direction Générale',         description: 'Pilotage stratégique, tableaux de bord exécutifs' },
+  { name: 'CRM & Ventes',               description: 'Suivi des prospects, pipeline commercial, commandes' },
+  { name: 'Finance & Comptabilité',     description: 'Budgets, facturation, clôtures comptables' },
+  { name: 'Ressources Humaines',        description: 'Recrutement, onboarding, congés, paie' },
+  { name: 'Opérations & Logistique',    description: 'Stocks, expéditions, achats fournisseurs' },
+  { name: 'Production',                 description: 'Ordres de fabrication, qualité, maintenance' },
+  { name: 'Marketing & Communication',  description: 'Campagnes, réseaux sociaux, contenu' },
+  { name: 'IT & Systèmes',              description: 'Infrastructure, tickets, sécurité' },
+  { name: 'Juridique & Conformité',     description: 'Contrats, audits, RGPD' },
+];
+
+/**
+ * Crée une fois les 9 workspaces départementaux + un tableau de bord dans chacun.
+ * Protégé par un flag localStorage — ne s'exécute jamais deux fois.
+ */
+export async function seedDefaultWorkspaces(uid) {
+  const key = `missions_bootstrapped_${uid}`;
+  if (localStorage.getItem(key)) return;
+
+  // Poser le flag AVANT les awaits pour éviter la double exécution en Strict Mode
+  localStorage.setItem(key, '1');
+
+  try {
+    for (const dept of DEFAULT_DEPARTMENTS) {
+      const wsId = await MissionsFS.createWorkspace(
+        { name: dept.name, description: dept.description },
+        uid
+      );
+      await MissionsFS.createBoard(wsId, {
+        name:       'Tableau de bord',
+        background: 'linear-gradient(135deg,#4f46e5,#7c3aed)',
+        visibility: 'workspace',
+      }, uid);
+    }
+  } catch (err) {
+    // Retry possible au prochain chargement
+    localStorage.removeItem(key);
+    throw err;
+  }
+}
+
 export default MissionsFS;

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 import { useMissionsStore } from './store/useMissionsStore';
-import { MissionsFS }       from './services/missions.firestore';
+import { MissionsFS, seedDefaultWorkspaces } from './services/missions.firestore';
 import { useWorkspaceAuth } from './hooks/useWorkspaceAuth';
 import { useStore }         from '../../store';
 
@@ -79,8 +79,7 @@ function CreateWorkspaceModal({ onCreated, onClose }) {
   const [name, setName]       = useState('');
   const [desc, setDesc]       = useState('');
   const [busy, setBusy]       = useState(false);
-  const { user }              = useStore();
-  const uid                   = user?.uid || user?.id;
+  const uid                   = useStore(s => s.user?.uid || s.user?.id);
 
   const submit = async () => {
     if (!name.trim()) return;
@@ -133,8 +132,7 @@ function CreateBoardModal({ workspaceId, onCreated, onClose }) {
   const [bg, setBg]           = useState(BG_PRESETS[0].value);
   const [visibility, setVis]  = useState('workspace');
   const [busy, setBusy]       = useState(false);
-  const { user }              = useStore();
-  const uid                   = user?.uid || user?.id;
+  const uid                   = useStore(s => s.user?.uid || s.user?.id);
 
   const submit = async () => {
     if (!name.trim()) return;
@@ -339,15 +337,14 @@ function BoardGrid({ workspaceId, onSelectBoard, isAdmin }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function MissionsHub() {
-  const { user }                        = useStore();
-  const uid                             = user?.uid || user?.id;
+  const uid              = useStore(s => s.user?.uid || s.user?.id);
 
-  const workspaces                      = useMissionsStore(s => s.workspaces);
-  const subscribeWorkspaces             = useMissionsStore(s => s.subscribeWorkspaces);
-  const unsubscribeAll                  = useMissionsStore(s => s.unsubscribeAll);
-  const cardDetail                      = useMissionsStore(s => s.cardDetail);
-  const activeBoardId                   = useMissionsStore(s => s.activeBoardId);
-  const subscribeBoard                  = useMissionsStore(s => s.subscribeBoard);
+  const workspaces       = useMissionsStore(s => s.workspaces);
+  const workspacesLoaded = useMissionsStore(s => s.workspacesLoaded);
+  const subscribeWorkspaces = useMissionsStore(s => s.subscribeWorkspaces);
+  const unsubscribeAll   = useMissionsStore(s => s.unsubscribeAll);
+  const cardDetail       = useMissionsStore(s => s.cardDetail);
+  const subscribeBoard   = useMissionsStore(s => s.subscribeBoard);
 
   const [activeWsId, setActiveWsId]     = useState(null);
   const [activeBoard, setActiveBoard]   = useState(null);   // full BoardDoc
@@ -355,6 +352,7 @@ export default function MissionsHub() {
   const [showSettings, setShowSettings] = useState(false);
   const [showButler, setShowButler]     = useState(false);
   const [sidebarCollapsed, setSidebar]  = useState(false);
+  const autoSelected = useRef(false);
 
   const wsAuth = useWorkspaceAuth(activeWsId);
 
@@ -365,12 +363,23 @@ export default function MissionsHub() {
     return () => unsubscribeAll();
   }, [uid]);
 
-  // Auto-select first workspace
+  // Auto-select first workspace — ref guard prevents the spin loop
   useEffect(() => {
-    if (!activeWsId && workspaces.length > 0) {
+    if (!autoSelected.current && workspaces.length > 0) {
       setActiveWsId(workspaces[0].id);
+      autoSelected.current = true;
     }
-  }, [workspaces, activeWsId]);
+  }, [workspaces]);
+
+  // Seed 9 department workspaces on first-ever load (localStorage flag prevents re-seeding)
+  useEffect(() => {
+    if (!uid || !workspacesLoaded) return;
+    if (workspaces.length === 0) {
+      seedDefaultWorkspaces(uid).catch(err =>
+        console.warn('[MissionsHub] Seeding failed:', err)
+      );
+    }
+  }, [uid, workspacesLoaded, workspaces.length]);
 
   // Subscribe board data when a board is selected
   useEffect(() => {
