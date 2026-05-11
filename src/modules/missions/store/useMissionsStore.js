@@ -22,7 +22,6 @@
  * ═══════════════════════════════════════════════════════════════════
  */
 import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
 import { MissionsFS } from '../services/missions.firestore';
 import { rankBetween, rankAfter, sortByRank, needsRebalancing, rebalance } from '../services/lexorank';
 import { useToastStore } from '../../../store/useToastStore';
@@ -42,8 +41,7 @@ const snapshot = (cards, lists, boardId) => ({
 // STORE
 // ─────────────────────────────────────────────────────────────────────
 
-export const useMissionsStore = create(
-  subscribeWithSelector((set, get) => ({
+export const useMissionsStore = create((set, get) => ({
 
     // ── State ──────────────────────────────────────────────────────
 
@@ -413,5 +411,4 @@ export const useMissionsStore = create(
     isPending(id) {
       return get().pendingOps.has(id);
     },
-  }))
-);
+}));

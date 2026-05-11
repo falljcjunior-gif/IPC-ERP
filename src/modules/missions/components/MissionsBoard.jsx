@@ -380,8 +380,7 @@ const SortableList = React.memo(function SortableList({
 // ─────────────────────────────────────────────────────────────────
 
 const MissionsBoard = ({ boardId, onOpenCard }) => {
-  const { user }   = useStore();
-  const uid        = user?.uid || user?.id || 'anonymous';
+  const uid        = useStore(s => s.user?.uid || s.user?.id || 'anonymous');
 
   const board        = useMissionsStore(s => s.boards[boardId]);
   const lists        = useMissionsStore(s => s.lists[boardId] || []);

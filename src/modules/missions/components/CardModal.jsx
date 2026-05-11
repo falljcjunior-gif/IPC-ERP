@@ -126,9 +126,8 @@ const AttachmentsSection = ({ cardId, uid }) => {
 // ─────────────────────────────────────────────────────────────────
 
 const CardModal = () => {
-  const { user }       = useStore();
-  const uid            = user?.uid || user?.id || 'anonymous';
-  const userName       = user?.nom || user?.displayName || uid.slice(0, 6);
+  const uid            = useStore(s => s.user?.uid || s.user?.id || 'anonymous');
+  const userName       = useStore(s => s.user?.nom || s.user?.displayName || (s.user?.uid || s.user?.id || 'user').slice(0, 6));
 
   const cardDetail     = useMissionsStore(s => s.cardDetail);
   const activeBoardId  = useMissionsStore(s => s.activeBoardId);

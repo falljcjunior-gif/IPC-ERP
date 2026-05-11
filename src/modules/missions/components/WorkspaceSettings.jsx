@@ -339,8 +339,7 @@ function InvitePanel({ workspaceId, existingUids, onClose }) {
 // ─────────────────────────────────────────────────────────────────
 
 const WorkspaceSettings = ({ workspaceId, onClose }) => {
-  const { user }   = useStore();
-  const uid        = user?.uid || user?.id;
+  const uid        = useStore(s => s.user?.uid || s.user?.id);
   const { isAdmin } = useWorkspaceAuth(workspaceId);
 
   const [members, setMembers]     = useState([]);
