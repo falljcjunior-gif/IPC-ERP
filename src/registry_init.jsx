@@ -48,6 +48,7 @@ const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
 const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
 const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
+const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
@@ -121,7 +122,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'missions', label: 'Portail des Missions', icon: <Rocket size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
-    component: MissionsPortal, priority: 3
+    component: MissionsHub, priority: 3
   });
 
 

@@ -4,9 +4,8 @@
  * Optimistic UI : les cartes en mutation affichent un ring de chargement discret.
  */
 import React, { useEffect, useCallback, useState } from 'react';
+import { DndContext, DragOverlay } from '@dnd-kit/core';
 import {
-  DndContext,
-  DragOverlay,
   SortableContext,
   horizontalListSortingStrategy,
   verticalListSortingStrategy,
