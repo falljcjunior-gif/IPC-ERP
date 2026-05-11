@@ -9,12 +9,13 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, CheckCircle2, Clock, XCircle,
+  Plus, CheckCircle2, CheckCircle, Clock, XCircle,
   Paperclip, Wallet, TrendingUp,
   Heart, AlertTriangle, BookOpen, Receipt,
   Check, Edit3, Trash2, Calendar, FileText,
   Mail, Phone, ShieldCheck, UserCheck, Shield,
   Search, Upload, ArrowRight,
+  Users, DollarSign, Briefcase, Download, Award,
 } from 'lucide-react';
 import { useStore } from '../../../store';
 
