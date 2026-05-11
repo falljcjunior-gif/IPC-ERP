@@ -3,7 +3,7 @@
  * Gère le DnD context, les colonnes (SortableList) et les cartes (SortableCard).
  * Optimistic UI : les cartes en mutation affichent un ring de chargement discret.
  */
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { DndContext, DragOverlay } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -20,6 +20,12 @@ import {
 import { useMissionsStore } from '../store/useMissionsStore';
 import { useDragDrop } from '../hooks/useDragDrop';
 import { useStore } from '../../../store';
+
+// ── Stable empty-array sentinel ──────────────────────────────────────────────
+// useSyncExternalStore (Zustand + React 18) requires snapshots to be
+// reference-stable. Using `|| []` inside a selector creates a new array on
+// every call → React detects a "tear" and triggers infinite re-renders (#185).
+const EMPTY_ARR = Object.freeze([]);
 
 // ─────────────────────────────────────────────────────────────────
 // SORTABLE CARD
@@ -383,9 +389,8 @@ const MissionsBoard = ({ boardId, onOpenCard }) => {
   const uid        = useStore(s => s.user?.uid || s.user?.id || 'anonymous');
 
   const board        = useMissionsStore(s => s.boards[boardId]);
-  const lists        = useMissionsStore(s => s.lists[boardId] || []);
+  const lists        = useMissionsStore(s => s.lists[boardId] ?? EMPTY_ARR);
   const pendingOps   = useMissionsStore(s => s.pendingOps);
-  const subscribeBoard = useMissionsStore(s => s.subscribeBoard);
   const setBoard       = useMissionsStore(s => s.setBoard);
   const createCard     = useMissionsStore(s => s.createCard);
   const createList     = useMissionsStore(s => s.createList);
@@ -399,12 +404,6 @@ const MissionsBoard = ({ boardId, onOpenCard }) => {
     activeCardId, activeListId, overListId,
     handleDragStart, handleDragOver, handleDragEnd, handleDragCancel,
   } = useDragDrop(boardId, uid);
-
-  // Abonne aux données temps réel du board
-  useEffect(() => {
-    if (!boardId) return;
-    subscribeBoard(boardId);
-  }, [boardId, subscribeBoard]);
 
   const handleAddCard = useCallback(async (listId, title) => {
     const workspace = board?.workspaceId;
@@ -420,7 +419,7 @@ const MissionsBoard = ({ boardId, onOpenCard }) => {
   };
 
   // Carte active pour le DragOverlay
-  const allCards = useMissionsStore(s => s.cards[boardId] || []);
+  const allCards = useMissionsStore(s => s.cards[boardId] ?? EMPTY_ARR);
   const activeCard = activeCardId ? allCards.find(c => c.id === activeCardId) : null;
 
   if (!boardId) {
