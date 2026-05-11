@@ -12,6 +12,7 @@ import QuickNotes from './workspace/QuickNotes';
 import GamificationBadges from './workspace/GamificationBadges';
 import KaizenBox from './workspace/KaizenBox';
 import StaffPortal from '../modules/StaffPortal';
+import CommandCenter from './workspace/CommandCenter';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -173,13 +174,18 @@ const PersonalWorkspace = () => {
       </motion.div>
 
       {/* SWITCH TABS */}
-      <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', flexWrap: 'wrap' }}>
          <button onClick={() => setActiveTab('overview')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'overview' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'overview' ? '2px solid var(--accent)' : '2px solid transparent' }}>Vue d'Ensemble</button>
          <button onClick={() => setActiveTab('hr')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'hr' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'hr' ? '2px solid var(--accent)' : '2px solid transparent' }}>Mon Dossier RH</button>
          <button onClick={() => setActiveTab('gps')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'gps' ? 'var(--accent)' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'gps' ? '2px solid var(--accent)' : '2px solid transparent' }}>Mon GPS Stratégique</button>
+         <button onClick={() => setActiveTab('commander')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'commander' ? '#EF4444' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'commander' ? '2px solid #EF4444' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+           🛡️ Command Center
+         </button>
       </div>
 
-      {activeTab === 'gps' ? (
+      {activeTab === 'commander' ? (
+        <CommandCenter />
+      ) : activeTab === 'gps' ? (
         <GPSWorkspace />
       ) : activeTab === 'hr' ? (
         <StaffPortal embedded={true} />

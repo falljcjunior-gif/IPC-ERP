@@ -36,6 +36,11 @@ exports.verifyRecaptcha = recaptcha.verifyRecaptcha;
 const nexus = require('./modules/nexus');
 exports.nexusChat = nexus.nexusChat;
 
+// 3b. Le Commandant — Agent de Management Proactif (scan toutes les 4h)
+const commander = require('./modules/commander');
+exports.commanderScan = commander.commanderScan;
+exports.commanderChat = commander.commanderChat;
+
 // 4. Background Triggers (Inventory, Finance, Audit, Butler)
 const triggers = require('./modules/triggers');
 
