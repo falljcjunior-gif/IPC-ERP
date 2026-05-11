@@ -443,6 +443,70 @@
         { "fieldPath": "isArchived", "order": "ASCENDING" },
         { "fieldPath": "rank", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isArchived",      "order": "ASCENDING" },
+        { "fieldPath": "dueDateComplete", "order": "ASCENDING" },
+        { "fieldPath": "isOverdue",       "order": "ASCENDING" },
+        { "fieldPath": "dueDate",         "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isArchived",      "order": "ASCENDING" },
+        { "fieldPath": "dueDateComplete", "order": "ASCENDING" },
+        { "fieldPath": "isDueSoon",       "order": "ASCENDING" },
+        { "fieldPath": "dueDate",         "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "boardId",         "order": "ASCENDING" },
+        { "fieldPath": "isArchived",      "order": "ASCENDING" },
+        { "fieldPath": "dueDateComplete", "order": "ASCENDING" },
+        { "fieldPath": "completedAt",     "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "boardId",    "order": "ASCENDING" },
+        { "fieldPath": "isArchived", "order": "ASCENDING" },
+        { "fieldPath": "isOverdue",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "boardId",    "order": "ASCENDING" },
+        { "fieldPath": "isArchived", "order": "ASCENDING" },
+        { "fieldPath": "createdAt",  "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "missions_reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "workspaceId",  "order": "ASCENDING" },
+        { "fieldPath": "generatedAt",  "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "butler_rules",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "active",     "order": "ASCENDING" },
+        { "fieldPath": "updatedAt",  "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

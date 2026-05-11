@@ -38,6 +38,17 @@ exports.nexusChat = nexus.nexusChat;
 
 // 4. Background Triggers (Inventory, Finance, Audit, Butler)
 const triggers = require('./modules/triggers');
+
+// 4b. Missions Butler (Kanban automation + CRON + cross-module)
+const missionsButler = require('./modules/missions_butler');
+exports.onMissionsCardMoved         = missionsButler.onMissionsCardMoved;
+exports.onMissionsCardCreated       = missionsButler.onMissionsCardCreated;
+exports.missionsDeadlineScanner     = missionsButler.missionsDeadlineScanner;
+exports.missionsWeeklyReport        = missionsButler.missionsWeeklyReport;
+exports.missionsResetDueSoonFlags   = missionsButler.missionsResetDueSoonFlags;
+exports.saveMissionsButlerRule      = missionsButler.saveMissionsButlerRule;
+exports.deleteMissionsButlerRule    = missionsButler.deleteMissionsButlerRule;
+exports.executeMissionsButlerRule   = missionsButler.executeMissionsButlerRule;
 exports.globalAuditTrigger = triggers.globalAuditTrigger;
 exports.syncAccountingOnInvoicePaid = triggers.syncAccountingOnInvoicePaid;
 exports.updateStockOnProductionComplete = triggers.updateStockOnProductionComplete;

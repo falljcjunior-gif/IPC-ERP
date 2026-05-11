@@ -9,6 +9,7 @@ import {
   onSnapshot, serverTimestamp, increment, writeBatch,
   runTransaction,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../../../firebase/config';
 import { nanoid } from 'nanoid';
@@ -465,6 +466,43 @@ export const MissionsFS = {
       });
     });
     await this._logActivity(cardId, 'erp_link_removed', uid, { fieldName: entityId });
+  },
+
+  // ── Butler Rules ─────────────────────────────────────────────
+
+  subscribeButlerRules(boardId, callback) {
+    const q = query(
+      collection(db, COL.boards, boardId, 'butler_rules'),
+      orderBy('updatedAt', 'desc')
+    );
+    return onSnapshot(q, snap =>
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    );
+  },
+
+  async saveButlerRule(boardId, rule) {
+    const fn = httpsCallable(getFunctions(), 'saveMissionsButlerRule');
+    const res = await fn({ boardId, rule });
+    return res.data;
+  },
+
+  async deleteButlerRule(boardId, ruleId) {
+    const fn = httpsCallable(getFunctions(), 'deleteMissionsButlerRule');
+    await fn({ boardId, ruleId });
+  },
+
+  async executeButlerRule(boardId, ruleId, cardId) {
+    const fn = httpsCallable(getFunctions(), 'executeMissionsButlerRule');
+    const res = await fn({ boardId, ruleId, cardId });
+    return res.data;
+  },
+
+  // ── Weekly Report ────────────────────────────────────────────
+
+  subscribeWeeklyReport(boardId, callback) {
+    return onSnapshot(doc(db, 'missions_reports', boardId), snap => {
+      callback(snap.exists() ? snap.data() : null);
+    });
   },
 };
 
