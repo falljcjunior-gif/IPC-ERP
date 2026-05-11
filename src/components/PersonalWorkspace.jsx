@@ -13,6 +13,7 @@ import GamificationBadges from './workspace/GamificationBadges';
 import KaizenBox from './workspace/KaizenBox';
 import StaffPortal from '../modules/StaffPortal';
 import CommandCenter from './workspace/CommandCenter';
+import NexusScoreWidget from './workspace/NexusScoreWidget';
 
 const containerVariants = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const itemVariants = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0, transition: { duration: 0.4 } } };
@@ -181,10 +182,15 @@ const PersonalWorkspace = () => {
          <button onClick={() => setActiveTab('commander')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'commander' ? '#EF4444' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'commander' ? '2px solid #EF4444' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
            🛡️ Command Center
          </button>
+         <button onClick={() => setActiveTab('score')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'score' ? '#F59E0B' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'score' ? '2px solid #F59E0B' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+           ⭐ Mon Score
+         </button>
       </div>
 
       {activeTab === 'commander' ? (
         <CommandCenter />
+      ) : activeTab === 'score' ? (
+        <NexusScoreWidget />
       ) : activeTab === 'gps' ? (
         <GPSWorkspace />
       ) : activeTab === 'hr' ? (

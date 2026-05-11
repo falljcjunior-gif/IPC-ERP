@@ -41,6 +41,12 @@ const commander = require('./modules/commander');
 exports.commanderScan = commander.commanderScan;
 exports.commanderChat = commander.commanderChat;
 
+// 3c. Nexus Score Engine — Évaluation multi-dimensionnelle (hebdo + mensuel + on-demand)
+const nexusScore = require('./modules/nexus_score');
+exports.computeNexusScoresWeekly  = nexusScore.computeNexusScoresWeekly;
+exports.computeNexusScoresMonthly = nexusScore.computeNexusScoresMonthly;
+exports.computeNexusScoresNow     = nexusScore.computeNexusScoresNow;
+
 // 4. Background Triggers (Inventory, Finance, Audit, Butler)
 const triggers = require('./modules/triggers');
 
