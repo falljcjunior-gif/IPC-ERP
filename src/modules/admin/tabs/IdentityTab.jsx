@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Users, UserPlus, ShieldCheck, Key, Lock, 
-  Activity, ShieldAlert, BadgeCheck, Search,
-  Filter, MoreVertical, LogIn, HardDrive
+  Users, UserPlus, ShieldCheck, 
+  ShieldAlert, 
+  LogIn
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import EnterpriseView from '../../../components/EnterpriseView';
@@ -45,7 +45,7 @@ const IdentityTab = ({ onOpenDetail }) => {
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
                <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.25rem' }}>Provisionnement & Identités</h3>
-               <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Gérez les comptes utilisateurs, les niveaux d'accès et le cycle de vie des identités.</p>
+               <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Gérez les comptes utilisateurs, les niveaux d&apos;accès et le cycle de vie des identités.</p>
             </div>
              <div style={{ display: 'flex', gap: '1rem' }}>
                 <button onClick={() => onOpenDetail?.(null, 'admin', 'users')} className="btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 900, background: '#0F172A', borderColor: '#0F172A', cursor: 'pointer' }}>

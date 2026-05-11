@@ -1,10 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Shield, Server, Ticket, ListFilter, Cpu, 
+  Shield, Ticket, 
   Terminal, Activity, Lock, Search, Plus,
   Monitor, Smartphone, HardDrive, Settings,
-  AlertCircle, CheckCircle2, History, ChevronRight,
   ShieldAlert, Wrench, Clock, Globe, ShieldX, Key
 } from 'lucide-react';
 
@@ -21,7 +20,7 @@ import { useToastStore } from '../../store/useToastStore';
  * Advanced Command Center with AIOps, Cybersecurity HUD, and War Room mode.
  */
 const ITModule = () => {
-  const { data, userRole } = useStore();
+  const { userRole } = useStore();
   const canSee = useCanSeeSubTab();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [criticalMode, setCriticalMode] = useState(false);

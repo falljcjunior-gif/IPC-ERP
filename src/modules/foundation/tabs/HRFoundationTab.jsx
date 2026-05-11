@@ -9,11 +9,12 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, FileText, Calendar, DollarSign,
-  Plus, Search, Filter, ChevronDown, ChevronUp,
-  CheckCircle, XCircle, Clock, Download, Upload,
-  User, Briefcase, Phone, Mail, MapPin,
-  AlertCircle, TrendingUp, Award, Shield,
+  Plus, CheckCircle2, Clock, XCircle,
+  Paperclip, Wallet, TrendingUp,
+  Heart, AlertTriangle, BookOpen, Receipt,
+  Check, Edit3, Trash2, Calendar, FileText,
+  Mail, Phone, ShieldCheck, UserCheck, Shield,
+  Search, Upload, ArrowRight,
 } from 'lucide-react';
 import { useStore } from '../../../store';
 
@@ -691,7 +692,7 @@ function NewEmployeeModal({ onClose }) {
             onClick={() => { alert(`Employé ${form.nom || '?'} créé dans foundation_employees`); onClose(); }}
             style={{ background: T.accent, border: 'none', borderRadius: '0.75rem', padding: '0.65rem 1.5rem', color: T.bg, fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
           >
-            Créer l'Employé
+            Créer l&apos;Employé
           </button>
         </div>
       </motion.div>
@@ -705,7 +706,6 @@ export default function HRFoundationTab() {
   const [view, setView] = useState('equipe');
   const [showNewEmp, setShowNewEmp] = useState(false);
 
-  const activeView = VIEWS.find(v => v.id === view) || VIEWS[0];
 
   return (
     <div style={{ padding: '1.5rem', height: '100%', overflowY: 'auto' }}>

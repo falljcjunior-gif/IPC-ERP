@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Plus, Trash2, Edit3, Database, ChevronRight, Search,
-  Type, Hash, Calendar, List as ListIcon, ToggleRight,
-  Eye, Info, Sparkles, Box, LayoutGrid, FileText, Settings,
-  RefreshCcw, Save, Trash, MousePointer2, BadgeCheck
+  Plus, Trash2, Database, ChevronRight,
+  Type, Hash, Calendar,
+  Info, Sparkles, Box, LayoutGrid,
+  Save, MousePointer2, BadgeCheck
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { registry } from '../../../services/Registry';
@@ -195,7 +195,7 @@ const StudioTab = () => {
                        <div style={{ padding: '1.5rem', borderRadius: '1.5rem', background: '#F59E0B08', border: '1px dashed #F59E0B30', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                           <Info size={20} color="#F59E0B" />
                           <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600, color: '#F59E0B' }}>
-                             Les changements apportés ici impactent instantanément l'affichage du module pour tous les utilisateurs habilités.
+                             Les changements apportés ici impactent instantanément l&apos;affichage du module pour tous les utilisateurs habilités.
                           </p>
                        </div>
                     </div>
@@ -210,7 +210,7 @@ const StudioTab = () => {
                 </div>
                 <div>
                    <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Enregistrement Permanent</div>
-                   <div style={{ fontSize: '0.7rem', opacity: 0.7, fontWeight: 500 }}>Cliquez pour synchroniser avec l'infrastructure persistante.</div>
+                   <div style={{ fontSize: '0.7rem', opacity: 0.7, fontWeight: 500 }}>Cliquez pour synchroniser avec l&apos;infrastructure persistante.</div>
                 </div>
              </div>
              <button className="btn-primary" style={{ padding: '0.8rem 1.75rem', borderRadius: '1.25rem', background: '#8B5CF6', borderColor: '#8B5CF6', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Banknote, Wallet, Users, FileText, 
   Plus, Download, CheckCircle2, TrendingUp,
-  Clock, Landmark, PieChart, ShieldCheck,
-  AlertCircle, ChevronRight, Calculator
+  Clock, Landmark, ShieldCheck,
+  Calculator
 } from 'lucide-react';
 import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';

@@ -1,11 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../../store';
 import { 
-  UserPlus, Mail, Lock, Briefcase, DollarSign, 
-  Shield, Check, Calendar, Settings, AlertCircle, Loader,
-  Search, Edit3, Save, Users, ToggleLeft, ToggleRight, ChevronRight,
-  Eye, Pencil, ShieldOff, Trash2, AlertTriangle, User,
+  UserPlus, Mail, Lock, Briefcase, 
+  Shield, Check, Calendar, Loader,
+  Search, Edit3, Save, ChevronRight,
+  AlertTriangle, User,
   FileSignature, ChevronLeft, Building2, Wallet, Target
 } from 'lucide-react';
 import { PermissionMatrix } from '../components/PermissionMatrix';
@@ -97,7 +97,7 @@ const StepContract = ({ formData, handleInputChange }) => (
         </div>
       </div>
       <div className="input-group">
-        <label>Date d'entrée</label>
+        <label>Date d&apos;entrée</label>
         <div className="input-wrapper">
           <Calendar size={18} />
           <input type="date" name="date_entree" value={formData.date_entree} onChange={handleInputChange} />
@@ -132,7 +132,7 @@ const StepPermissions = ({ localPermissions, setLocalPermissions }) => (
       <h3 style={{ margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         <Shield size={24} color="#8B5CF6" /> Gouvernance & Accès Modules
       </h3>
-      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Définissez le périmètre d'action du collaborateur dans l'ERP.</p>
+      <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Définissez le périmètre d&apos;action du collaborateur dans l&apos;ERP.</p>
     </div>
     <PermissionMatrix permissions={localPermissions} onChange={setLocalPermissions} />
   </motion.div>

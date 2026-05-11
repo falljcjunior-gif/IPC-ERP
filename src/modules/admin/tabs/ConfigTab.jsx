@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Palette, Globe, Clock, Building2, 
-  Settings, Save, RefreshCcw, Landmark,
-  Type, Hash, CreditCard, Layout,
-  Monitor, Sidebar, Sparkles, Check, Upload, Image as ImageIcon, Loader2
+  Palette, Globe, Building2, 
+  Landmark,
+  Monitor, Sparkles, Check, Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { useStore } from '../../../store';
 
@@ -47,7 +46,7 @@ const ConfigTab = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                    <div>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.75rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.75rem', textTransform: 'uppercase' }}>
-                         <Building2 size={14} /> Nom de l'Organisation
+                         <Building2 size={14} /> Nom de l&apos;Organisation
                       </label>
                       <input className="form-input" value={globalSettings.companyName} onChange={(e) => updateGlobalSettings({ companyName: e.target.value })} />
                    </div>

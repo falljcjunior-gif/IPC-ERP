@@ -4,7 +4,7 @@ import { useStore } from '../../../store';
 import { 
   Check, X, Calendar, DollarSign, Clock, 
   History, ShieldCheck, AlertCircle, 
-  ChevronRight, ArrowUpRight, Fingerprint
+  Fingerprint
 } from 'lucide-react';
 
 const ApprovalsTab = () => {
@@ -67,7 +67,7 @@ const ApprovalsTab = () => {
               display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem'
             }}
           >
-            <History size={16} /> Registre d'Audit
+            <History size={16} /> Registre d&apos;Audit
           </button>
         </div>
       </div>

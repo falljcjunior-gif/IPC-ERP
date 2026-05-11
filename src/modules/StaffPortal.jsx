@@ -6,15 +6,12 @@ import {
   Plus, 
   Clock, 
   CheckCircle2, 
-  AlertCircle,
   FileText,
-  User,
   LayoutDashboard,
   Briefcase
 } from 'lucide-react';
 import { useStore } from '../store';
 import RecordModal from '../components/RecordModal';
-import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import { generatePDF } from '../utils/PDFExporter';
 import '../components/GlobalDashboard.css';
 
@@ -221,7 +218,7 @@ const StaffPortal = ({ embedded }) => {
               display: 'flex', alignItems: 'center', gap: '0.5rem'
             }}
           >
-            <LayoutDashboard size={16} /> Vue d'ensemble
+            <LayoutDashboard size={16} /> Vue d&apos;ensemble
           </button>
           <button 
             onClick={() => setActiveTab('leaves')}

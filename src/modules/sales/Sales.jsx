@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Search, MoreVertical, CreditCard, Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import { FileText, Plus, Search, MoreVertical, Clock, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useStore } from '../../store';
 import { useCanSeeSubTab } from '../../store/selectors';
 import { salesSchema } from '../../schemas/sales.schema';
@@ -125,7 +125,6 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
   // Statistiques
   const totalInvoiced = invoices.filter(i => i.statut !== 'Annulé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
   const totalCollected = invoices.filter(i => i.statut === 'Payé').reduce((sum, i) => sum + Number(i.montant || 0), 0);
-  const pendingQuotes = quotes.filter(q => q.statut === 'Envoyé').reduce((sum, q) => sum + Number(q.montant || 0), 0);
 
   return (
     <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -139,7 +138,7 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
         
         <div style={{ display: 'flex', gap: '3rem', alignItems: 'flex-end' }}>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Chiffre d'Affaires</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Chiffre d&apos;Affaires</div>
             <div className="luxury-value-massive" style={{ fontSize: '3rem' }}>
               <AnimatedCounter from={0} to={totalInvoiced} duration={1.5} formatter={(v) => formatCurrency(v, true)} />
             </div>

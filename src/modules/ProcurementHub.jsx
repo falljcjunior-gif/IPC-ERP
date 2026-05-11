@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Search, Plus, Star, Clock, CheckCircle2, FileText, Users, TrendingUp } from 'lucide-react';
+import { ShoppingBag, Plus, Star, Clock, FileText, Users, TrendingUp } from 'lucide-react';
 import { useStore } from '../store';
 import KpiCard from '../components/KpiCard';
 import SmartButton from '../components/SmartButton';
@@ -34,7 +34,7 @@ const ProcurementHub = () => {
             </div>
             <span style={{ fontSize: '0.65rem', fontWeight: 900, letterSpacing: '2px', color: '#7C3AED', textTransform: 'uppercase' }}>Strategic Sourcing</span>
           </div>
-          <h1 style={{ fontSize: '2.75rem', fontWeight: 900, margin: 0 }}>Appels d'Offres</h1>
+          <h1 style={{ fontSize: '2.75rem', fontWeight: 900, margin: 0 }}>Appels d&apos;Offres</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Sourcing fournisseurs et gestion des marchés.</p>
         </div>
         <SmartButton variant="primary" icon={Plus} onClick={async () => useToastStore.getState().addToast('Nouvel appel d\'offres créé', 'info')}>Créer un AO</SmartButton>
@@ -48,7 +48,7 @@ const ProcurementHub = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(15,23,42,0.03)', padding: '6px', borderRadius: '1.5rem', border: '1px solid var(--border-light)', width: 'fit-content', marginBottom: '2.5rem' }}>
-        {[{id:'tenders',label:'Appels d\'Offres',icon:<FileText size={16}/>},{id:'suppliers',label:'Panel Fournisseurs',icon:<Star size={16}/>}].map(t=>(
+        {[{id:'tenders',label:'Appels d&apos;Offres',icon:<FileText size={16}/>},{id:'suppliers',label:'Panel Fournisseurs',icon:<Star size={16}/>}].map(t=>(
           <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{ display:'flex', alignItems:'center', gap:'0.5rem', padding:'0.8rem 1.5rem', borderRadius:'1.25rem', border:'none', cursor:'pointer', fontWeight:700, background: activeTab===t.id?'white':'transparent', color: activeTab===t.id?'#7C3AED':'var(--text-muted)', boxShadow: activeTab===t.id?'var(--shadow-md)':'none' }}>{t.icon} {t.label}</button>
         ))}
       </div>

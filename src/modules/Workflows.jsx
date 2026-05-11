@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, Plus, Trash2, ToggleLeft, ToggleRight, 
-  ArrowRight, Settings2, Bell, FileText, Activity, Save, X
+  Plus, Trash2, ToggleLeft, ToggleRight, 
+  Activity, X
 } from 'lucide-react';
 import { useStore } from '../store';
 // [AUDIT] Correction: Utilisation du Registry pour un couplage lâche
@@ -15,7 +15,6 @@ const Workflows = () => {
   const addRecord = useStore(state => state.addRecord);
   const updateRecord = useStore(state => state.updateRecord);
   const deleteRecord = useStore(state => state.deleteRecord);
-  const shellView = useStore(state => state.shellView || {});
 
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   
@@ -105,7 +104,7 @@ const Workflows = () => {
           <div className="luxury-widget" style={{ gridColumn: 'span 12', padding: '5rem', textAlign: 'center', background: 'rgba(255,255,255,0.9)' }}>
             <Activity size={64} color="#10B981" style={{ marginBottom: '1.5rem', opacity: 0.2, display: 'block', margin: '0 auto 1.5rem' }} />
             <h3 style={{ fontWeight: 800, fontSize: '1.5rem', color: '#1e293b', marginBottom: '0.75rem' }}>Nexus Automator est prêt</h3>
-            <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto 2rem', lineHeight: 1.6 }}>Commencez par créer votre première règle d'automatisation intelligente.</p>
+            <p style={{ color: '#64748b', maxWidth: '400px', margin: '0 auto 2rem', lineHeight: 1.6 }}>Commencez par créer votre première règle d&apos;automatisation intelligente.</p>
             <button onClick={() => setIsBuilderOpen(true)} style={{ background: '#10B981', color: 'white', border: 'none', padding: '1rem 2.5rem', borderRadius: '1rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.25)' }}>
               Concevoir une règle
             </button>

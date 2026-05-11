@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
-  ShieldCheck, ShieldAlert, Shield, Lock, 
-  Key, Eye, History, Bell, Smartphone,
-  Database, AlertTriangle, CheckCircle2,
-  Users, LogIn, Activity, ChevronRight, RefreshCw, Server
+  ShieldCheck, Shield, Lock, 
+  Eye, History, Smartphone,
+  AlertTriangle,
+  ChevronRight, RefreshCw
 } from 'lucide-react';
 import { useStore } from '../../../store';
 
@@ -114,7 +114,7 @@ const SecurityTab = () => {
                    <AlertTriangle size={24} color="#F59E0B" />
                    <div>
                       <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#F59E0B' }}>Mode Restriction Actif</div>
-                      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#F59E0B' }}>Seules les adresses IP autorisées peuvent accéder à l'administration.</div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#F59E0B' }}>Seules les adresses IP autorisées peuvent accéder à l&apos;administration.</div>
                    </div>
                 </div>
                 <button className="btn-primary" style={{ padding: '1rem', borderRadius: '1.25rem', background: '#0F172A', borderColor: '#0F172A', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center' }}>
@@ -140,7 +140,7 @@ const SecurityTab = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
              {[
-               { label: 'File d\'Attente', value: '0', sub: 'En attente', color: '#6366F1' },
+               { label: 'File d&apos;Attente', value: '0', sub: 'En attente', color: '#6366F1' },
                { label: 'Réussites (24h)', value: '1,242', sub: '+12% vs hier', color: '#10B981' },
                { label: 'Échecs / Retries', value: '3', sub: 'Retraité auto', color: '#EF4444' },
                { label: 'Uptime Bridge', value: '99.9%', sub: 'PostgreSQL Connecté', color: '#3B82F6' }
@@ -157,7 +157,7 @@ const SecurityTab = () => {
              <div style={{ opacity: 0.5, marginBottom: '8px' }}>[NEXUS_SYNC_DAEMON_V2.1]</div>
              <div>&gt; Syncing Finance::AccountingEntry [ID: acc_9281x] ... OK</div>
              <div>&gt; Syncing HR::EmployeeProfile [ID: hr_user_77] ... OK</div>
-             <motion.div animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1 }}>&gt; Scanning Firestore 'sync_queue' for new events...</motion.div>
+             <motion.div animate={{ opacity: [1, 0, 1] }} transition={{ repeat: Infinity, duration: 1 }}>&gt; Scanning Firestore &apos;sync_queue&apos; for new events...</motion.div>
           </div>
        </div>
 

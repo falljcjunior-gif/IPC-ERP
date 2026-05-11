@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  TrendingUp, TrendingDown, DollarSign, Target, Award, 
-  BarChart3, ArrowUpRight, ArrowDownRight, Zap, Crown, Activity
+  TrendingUp, DollarSign, Target, Award, 
+  Zap, Activity
 } from 'lucide-react';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  Tooltip, CartesianGrid, Cell, LineChart, Line, ComposedChart
+  Area, Bar, XAxis, YAxis,
+  Tooltip, CartesianGrid, LineChart, Line, ComposedChart
 } from 'recharts';
 import KpiCard from '../../../components/KpiCard';
 import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';

@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  ComposedChart, Legend
 } from 'recharts';
 import SafeResponsiveChart from '../components/charts/SafeResponsiveChart';
 import { useStore } from '../store';

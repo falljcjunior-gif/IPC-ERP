@@ -303,7 +303,7 @@ export const NEXUS_GUIDE_DATA = [
         logic: {
           heading: 'Comment ça fonctionne',
           icon: 'BarChart2',
-          content: `Le Nexus Score est calculé quotidiennement par la Cloud Function computeNexusScore pour chaque collaborateur. Il agrège 5 dimensions pondérées :\n\n1. Performance (30%) : atteinte des objectifs OKR\n2. Engagement (25%) : participation aux événements, utilisation de l'ERP, feedback 360°\n3. Compétences (20%) : certifications complétées, formations suivies\n4. Assiduité (15%) : ponctualité, absences justifiées vs injustifiées\n5. Alignement stratégique (10%) : contribution aux projets prioritaires de l\'entreprise\n\nLe score est normalisé entre 0 et 100 et stocké dans users/{uid}/hr_private/nexus_score.`,
+          content: `Le Nexus Score est calculé quotidiennement par la Cloud Function computeNexusScore pour chaque collaborateur. Il agrège 5 dimensions pondérées :\n\n1. Performance (30%) : atteinte des objectifs OKR\n2. Engagement (25%) : participation aux événements, utilisation de l'ERP, feedback 360°\n3. Compétences (20%) : certifications complétées, formations suivies\n4. Assiduité (15%) : ponctualité, absences justifiées vs injustifiées\n5. Alignement stratégique (10%) : contribution aux projets prioritaires de l'entreprise\n\nLe score est normalisé entre 0 et 100 et stocké dans users/{uid}/hr_private/nexus_score.`,
           bullets: [
             'Recalcul : quotidien à 02h00 UTC via Cloud Scheduler',
             'Historique : time-series sur 24 mois pour identifier les tendances',

@@ -20,7 +20,7 @@ import {
   Scale, Landmark, CheckCircle, Award, Zap, BarChart2,
   Heart, Rocket, UserPlus, Gauge, Eye, Grid, FileText,
   Wifi, Globe, Shield, Lock, Kanban, TrendingUp, Factory,
-  Users, Database, Command, ArrowRight,
+  Users, Database,
 } from 'lucide-react';
 import { NEXUS_GUIDE_DATA, searchGuide } from './nexusGuideData';
 import '../../components/GlobalDashboard.css';
@@ -181,7 +181,7 @@ function FaqEngine({ faqItems, color }) {
 
       {filtered.length === 0 && (
         <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.87rem', padding: '2rem 0' }}>
-          Aucune question ne correspond à "{query}"
+          Aucune question ne correspond à &quot;{query}&quot;
         </div>
       )}
 
@@ -330,8 +330,8 @@ function SearchOverlay({ onClose, onNavigate }) {
 
         {/* No result */}
         {query.length > 1 && results.length === 0 && (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.87rem' }}>
-            Aucun résultat pour "<strong>{query}</strong>"
+          <div style={{ padding: '3rem 2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.87rem' }}>
+            Aucun résultat pour &quot;<strong>{query}</strong>&quot;
           </div>
         )}
 

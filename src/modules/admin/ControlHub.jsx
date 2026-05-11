@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, Settings, Users, Database, 
-  Sparkles, Zap, Lock, Bell, Search,
+  Lock, 
   Power, Terminal, Cpu, Layout, Activity, RefreshCw
 } from 'lucide-react';
 import { useStore } from '../../store';
@@ -10,7 +10,6 @@ import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
 
 // Components
-import TabBar from '../marketing/components/TabBar';
 import IdentityTab from './tabs/IdentityTab';
 import StudioTab from './tabs/StudioTab';
 import ConfigTab from './tabs/ConfigTab';
@@ -20,7 +19,7 @@ import MasterData from '../MasterData';
 import History from '../History';
 
 const ControlHub = ({ onOpenDetail }) => {
-  const { userRole, config, currentUser, resetAllData, shellView } = useStore();
+  const { userRole, currentUser, resetAllData, shellView } = useStore();
   const [activeTab, setActiveTab] = useState('identity');
   const [isBackfilling, setIsBackfilling] = useState(false);
 
@@ -82,7 +81,7 @@ const ControlHub = ({ onOpenDetail }) => {
             </div>
             <h1 className="nexus-gradient-text" style={{ fontSize: '3.5rem', fontWeight: 900, margin: 0, letterSpacing: '-2px', lineHeight: 1 }}>Platform Engine</h1>
             <p style={{ color: 'var(--nexus-text-muted)', margin: '0.75rem 0 0 0', fontSize: '1.1rem', fontWeight: 500, maxWidth: '600px', lineHeight: 1.5 }}>
-              Cockpit d'administration Nexus : Pilotez les identités, la sécurité et l'architecture logicielle de votre écosystème.
+              Cockpit d&apos;administration Nexus : Pilotez les identités, la sécurité et l&apos;architecture logicielle de votre écosystème.
             </p>
           </div>
 
@@ -194,7 +193,7 @@ const ControlHub = ({ onOpenDetail }) => {
          <div style={{ flex: 1 }}>
             <h4 style={{ margin: 0, fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--nexus-primary)', marginBottom: '8px' }}>Identity & Nexus Shield</h4>
             <p style={{ margin: 0, fontSize: '1rem', fontWeight: 500, lineHeight: 1.4, opacity: 0.7 }}>
-               "Surveillance Nexus Active : Toutes les sessions sont scellées et authentifiées. Aucun accès non autorisé détecté sur le périmètre de sécurité."
+               &quot;Surveillance Nexus Active : Toutes les sessions sont scellées et authentifiées. Aucun accès non autorisé détecté sur le périmètre de sécurité.&quot;
             </p>
          </div>
       </motion.div>

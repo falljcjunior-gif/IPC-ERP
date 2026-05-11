@@ -12,8 +12,8 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
 } from 'recharts';
 import {
-  Plus, Download, CheckCircle2, Clock, XCircle,
-  FileText, Paperclip, Filter, Wallet, TrendingUp,
+  Plus, CheckCircle2, Clock, XCircle,
+  Paperclip, Wallet, TrendingUp,
   Heart, AlertTriangle, BookOpen, Receipt,
 } from 'lucide-react';
 import { useToastStore } from '../../../store/useToastStore';
@@ -32,7 +32,7 @@ const T = {
 // ── Mock data ──────────────────────────────────────────────────
 const PROJETS = ['Centre de Tri Yopougon','Autonomisation Femmes Abobo','Formation Jeunes Koumassi','Micro-crédits Porteurs','Fonds Général'];
 const MOIS = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-const JOURNAL_DATA = MOIS.map((m, i) => ({
+const JOURNAL_DATA = MOIS.map((m, _i) => ({
   mois: m,
   dons: Math.round(700000 + Math.random() * 500000),
   depenses: Math.round(300000 + Math.random() * 300000),
@@ -59,11 +59,11 @@ const STATUT_CFG = {
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(Math.abs(n)) + ' FCFA';
 
-const Input = ({ label, ...props }) => (
+const Input = ({ label, as, ...props }) => (
   <div style={{ marginBottom: '1rem' }}>
     <label style={{ fontSize: '0.75rem', fontWeight: 700, color: T.muted, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</label>
-    {props.as === 'select' ? (
-      <select {...props} as={undefined} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '0.6rem', border: `1px solid ${T.border}`, background: T.bg, color: T.text, fontSize: '0.87rem', outline: 'none', boxSizing: 'border-box' }}>
+    {as === 'select' ? (
+      <select {...props} style={{ width: '100%', padding: '0.7rem 1rem', borderRadius: '0.6rem', border: `1px solid ${T.border}`, background: T.bg, color: T.text, fontSize: '0.87rem', outline: 'none', boxSizing: 'border-box' }}>
         <option value="">Sélectionner…</option>
         {PROJETS.map(p => <option key={p} value={p}>{p}</option>)}
       </select>
