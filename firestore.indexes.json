@@ -436,10 +436,12 @@
       ]
     },
     {
-      "collectionGroup": "activity",
-      "queryScope": "COLLECTION_GROUP",
+      "collectionGroup": "missions_cards",
+      "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
+        { "fieldPath": "assignedTo", "order": "ASCENDING" },
+        { "fieldPath": "isArchived", "order": "ASCENDING" },
+        { "fieldPath": "rank", "order": "ASCENDING" }
       ]
     }
   ],

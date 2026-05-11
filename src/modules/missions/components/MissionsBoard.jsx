@@ -26,7 +26,7 @@ import { useStore } from '../../../store';
 // SORTABLE CARD
 // ─────────────────────────────────────────────────────────────────
 
-const SortableCard = React.memo(({ card, board, onOpenCard, isPending, isBeingDragged }) => {
+const SortableCard = React.memo(function SortableCard({ card, board, onOpenCard, isPending, isBeingDragged }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: card.id,
     data: { type: 'card', cardId: card.id, listId: card.listId },
@@ -191,10 +191,10 @@ const SortableCard = React.memo(({ card, board, onOpenCard, isPending, isBeingDr
 // SORTABLE LIST (Colonne Kanban)
 // ─────────────────────────────────────────────────────────────────
 
-const SortableList = React.memo(({
+const SortableList = React.memo(function SortableList({
   list, cards, board, onOpenCard, onAddCard,
   isPendingList, pendingOps, isOver, activeCardId,
-}) => {
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: list.id,
     data: { type: 'list', listId: list.id },
