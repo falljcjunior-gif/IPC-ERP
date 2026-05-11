@@ -17,7 +17,16 @@ import {
 } from 'lucide-react';
 import { useToastStore } from '../../../store/useToastStore';
 
-const T = { bg:'#0a0c10', surface:'#0d1117', card:'#111318', border:'#1f2937', accent:'#2ecc71', accentDim:'rgba(46,204,113,0.12)', text:'#e5e7eb', muted:'#6b7280' };
+const T = {
+  bg: 'var(--bg)',
+  surface: 'var(--bg-subtle)',
+  card: 'var(--bg-card)',
+  border: 'var(--border)',
+  accent: 'var(--accent)',
+  accentDim: 'var(--accent-glow)',
+  text: 'var(--text)',
+  muted: 'var(--text-muted)',
+};
 
 // ── Mock data ──────────────────────────────────────────────────
 const COLLECTEURS_INIT = [
@@ -44,10 +53,10 @@ const STATUTS_COLLECTE = {
   recu:    { color:'#6366F1', label:'Reçu'    },
   pese:    { color:'#F59E0B', label:'Pesé'    },
   trie:    { color:'#06B6D4', label:'Trié'    },
-  recycle: { color:'#2ecc71', label:'Recyclé' },
+  recycle: { color:'var(--accent)', label:'Recyclé' },
 };
 const STATUTS_CENTRE = {
-  operationnel: { color:'#2ecc71', label:'Opérationnel' },
+  operationnel: { color:'var(--accent)', label:'Opérationnel' },
   maintenance:  { color:'#F59E0B', label:'Maintenance'  },
   installation: { color:'#6366F1', label:'Installation' },
   ferme:        { color:'#EF4444', label:'Fermé'        },
@@ -62,7 +71,7 @@ const Input = ({ label, required, ...props }) => (
     <label style={{ fontSize:'0.72rem', fontWeight:700, color:T.muted, display:'block', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.06em' }}>
       {label}{required && <span style={{ color:'#EF4444', marginLeft:3 }}>*</span>}
     </label>
-    <input {...props} style={{ width:'100%', padding:'0.65rem 0.9rem', borderRadius:'0.5rem', border:`1px solid ${T.border}`, background:T.surface, color:T.text, fontSize:'0.85rem', outline:'none', boxSizing:'border-box' }} />
+    <input {...props} style={{ width:'100%', padding:'0.65rem 0.9rem', borderRadius:'0.5rem', border:`1px solid ${T.border}`, background:T.bg, color:T.text, fontSize:'0.85rem', outline:'none', boxSizing:'border-box' }} />
   </div>
 );
 
@@ -71,7 +80,7 @@ const Select = ({ label, required, options, ...props }) => (
     <label style={{ fontSize:'0.72rem', fontWeight:700, color:T.muted, display:'block', marginBottom:5, textTransform:'uppercase', letterSpacing:'0.06em' }}>
       {label}{required && <span style={{ color:'#EF4444', marginLeft:3 }}>*</span>}
     </label>
-    <select {...props} style={{ width:'100%', padding:'0.65rem 0.9rem', borderRadius:'0.5rem', border:`1px solid ${T.border}`, background:T.surface, color:T.text, fontSize:'0.85rem', outline:'none', boxSizing:'border-box' }}>
+    <select {...props} style={{ width:'100%', padding:'0.65rem 0.9rem', borderRadius:'0.5rem', border:`1px solid ${T.border}`, background:T.bg, color:T.text, fontSize:'0.85rem', outline:'none', boxSizing:'border-box' }}>
       <option value="">Sélectionner…</option>
       {options.map(o => <option key={o.val} value={o.val}>{o.label}</option>)}
     </select>
@@ -79,8 +88,8 @@ const Select = ({ label, required, options, ...props }) => (
 );
 
 const CardSection = ({ title, icon: Icon, color, children }) => (
-  <div style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'1rem', overflow:'hidden' }}>
-    <div style={{ padding:'1rem 1.5rem', borderBottom:`1px solid ${T.border}`, fontWeight:700, fontSize:'0.9rem', color:T.text, display:'flex', alignItems:'center', gap:8 }}>
+  <div className="glassmorphism" style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'1.25rem', overflow:'hidden' }}>
+    <div style={{ padding:'1rem 1.5rem', borderBottom:`1px solid ${T.border}`, fontWeight:800, fontSize:'0.9rem', color:T.text, display:'flex', alignItems:'center', gap:8, background: T.surface }}>
       <Icon size={15} color={color || T.accent} />{title}
     </div>
     {children}
@@ -136,7 +145,7 @@ export default function OperationsTab() {
         {VIEWS.map(v => { const Icon = v.icon; return (
           <button key={v.id} onClick={() => setView(v.id)}
             style={{ display:'flex', alignItems:'center', gap:7, padding:'0.5rem 1rem', borderRadius:'0.5rem', border:'none', cursor:'pointer', fontWeight:700, fontSize:'0.8rem', transition:'all 0.15s',
-              background: view===v.id ? T.accent : 'transparent', color: view===v.id ? '#000' : T.muted }}>
+              background: view===v.id ? T.accent : 'transparent', color: view===v.id ? '#FFF' : T.muted }}>
             <Icon size={13}/>{v.label}
           </button>
         );})}
@@ -150,8 +159,8 @@ export default function OperationsTab() {
           { label:'Collecteurs',   value:collecteurs.filter(c=>c.actif).length, color:'#6366F1' },
           { label:'Centres actifs',value:centres.filter(c=>c.statut==='operationnel').length, color:'#F59E0B' },
         ].map((k,i) => (
-          <div key={i} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'0.875rem', padding:'1rem 1.25rem', borderTop:`2px solid ${k.color}` }}>
-            <div style={{ fontWeight:900, fontSize:'1.4rem', color:k.color }}>{k.value}</div>
+          <div key={i} className="glassmorphism" style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'0.875rem', padding:'1rem 1.25rem', borderTop:`3px solid ${k.color}` }}>
+            <div style={{ fontWeight:900, fontSize:'1.4rem', color:k.color === T.accent ? 'var(--primary)' : k.color }}>{k.value}</div>
             <div style={{ fontSize:'0.7rem', color:T.muted, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', marginTop:3 }}>{k.label}</div>
           </div>
         ))}
@@ -163,15 +172,15 @@ export default function OperationsTab() {
           <motion.div key="centres" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0}} style={{ display:'flex', flexDirection:'column', gap:'1.5rem' }}>
             {/* Bar chart */}
             <CardSection title="Stock vs Capacité par Centre (tonnes)" icon={Factory}>
-              <div style={{ padding:'1.25rem' }}>
-                <ResponsiveContainer width="100%" height={180}>
+              <div style={{ padding:'1.5rem' }}>
+                <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={barData} margin={{top:5,right:5,bottom:0,left:0}}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
                     <XAxis dataKey="nom" tick={{fontSize:11,fill:T.muted}} axisLine={false} tickLine={false} />
                     <YAxis tick={{fontSize:10,fill:T.muted}} axisLine={false} tickLine={false} unit="t" />
-                    <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:8,fontSize:12,color:T.text}} />
-                    <Bar dataKey="capacite" fill={`${T.accent}30`} radius={[4,4,0,0]} name="Capacité" />
-                    <Bar dataKey="stock"    fill={T.accent}       radius={[4,4,0,0]} name="Stock actuel" />
+                    <Tooltip contentStyle={{background:T.card,border:`1px solid ${T.border}`,borderRadius:12,fontSize:12,color:T.text, boxShadow: 'var(--shadow-lg)'}} />
+                    <Bar dataKey="capacite" fill="var(--border)" radius={[4,4,0,0]} name="Capacité" />
+                    <Bar dataKey="stock"    fill="var(--accent)" radius={[4,4,0,0]} name="Stock actuel" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -183,30 +192,30 @@ export default function OperationsTab() {
                 const cfg = STATUTS_CENTRE[c.statut];
                 const pct = Math.round((c.stock/c.capacite)*100)||0;
                 return (
-                  <div key={c.id} style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'1rem', overflow:'hidden', cursor:'pointer' }}
+                  <div key={c.id} className="glassmorphism" style={{ background:T.card, border:`1px solid ${T.border}`, borderRadius:'1.25rem', overflow:'hidden', cursor:'pointer' }}
                     onClick={()=>setSel(selCentre===c.id?null:c.id)}>
-                    <div style={{ padding:'0.875rem 1.25rem', borderBottom:`1px solid ${T.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', background:`${cfg.color}08` }}>
-                      <div style={{ fontWeight:700, fontSize:'0.9rem', color:T.text, display:'flex', alignItems:'center', gap:8 }}><Factory size={14} color={cfg.color}/>{c.nom}</div>
-                      <span style={{ fontSize:'0.65rem', fontWeight:800, color:cfg.color, background:`${cfg.color}18`, border:`1px solid ${cfg.color}30`, borderRadius:'0.3rem', padding:'2px 7px' }}>{cfg.label}</span>
+                    <div style={{ padding:'0.875rem 1.25rem', borderBottom:`1px solid ${T.border}`, display:'flex', justifyContent:'space-between', alignItems:'center', background:T.surface }}>
+                      <div style={{ fontWeight:800, fontSize:'0.9rem', color:T.text, display:'flex', alignItems:'center', gap:8 }}><Factory size={14} color={cfg.color}/>{c.nom}</div>
+                      <span style={{ fontSize:'0.65rem', fontWeight:900, color:cfg.color, background:`${cfg.color}12`, border:`1px solid ${cfg.color}25`, borderRadius:'0.4rem', padding:'2px 7px' }}>{cfg.label}</span>
                     </div>
-                    <div style={{ padding:'1rem 1.25rem', display:'flex', flexDirection:'column', gap:'0.75rem' }}>
+                    <div style={{ padding:'1.25rem', display:'flex', flexDirection:'column', gap:'1rem' }}>
                       <div style={{ display:'flex', gap:'1.5rem', fontSize:'0.8rem' }}>
-                        <span style={{color:T.muted}}><MapPin size={11}/> {c.localisation}</span>
+                        <span style={{color:T.muted, display:'flex', alignItems:'center', gap:4}}><MapPin size={12}/> {c.localisation}</span>
                         <span style={{color:T.muted}}>Chef : <strong style={{color:T.text}}>{c.chef}</strong></span>
                       </div>
                       <div>
-                        <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.78rem',fontWeight:700,marginBottom:5}}>
-                          <span style={{color:T.muted}}>Stock / Capacité</span>
-                          <span style={{color:T.accent}}>{fmt1(c.stock)}t / {c.capacite}t</span>
+                        <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.75rem',fontWeight:800,marginBottom:6}}>
+                          <span style={{color:T.muted}}>Utilisation</span>
+                          <span style={{color:T.accent}}>{fmt1(c.stock)}t / {c.capacite}t ({pct}%)</span>
                         </div>
                         <div style={{height:6,background:T.surface,borderRadius:999,overflow:'hidden'}}>
                           <motion.div initial={{width:0}} animate={{width:`${pct}%`}} transition={{duration:0.8}}
-                            style={{height:'100%',background:pct>80?'#EF4444':T.accent,borderRadius:999}}/>
+                            style={{height:'100%',background:pct>80?'#EF4444':'var(--accent)',borderRadius:999}}/>
                         </div>
                       </div>
-                      <div style={{display:'flex',gap:'1rem',fontSize:'0.75rem'}}>
-                        <span style={{color:T.muted}}>🔧 <strong style={{color:T.text}}>{c.machines}</strong> machine(s)</span>
-                        <span style={{color:T.muted}}>📦 {pct}% capacité</span>
+                      <div style={{display:'flex',gap:'1rem',fontSize:'0.72rem', fontWeight: 600}}>
+                        <span style={{color:T.muted}}><Wrench size={11} style={{verticalAlign:'middle', marginRight:4}}/> {c.machines} machine(s)</span>
+                        <span style={{color:T.muted}}><Package size={11} style={{verticalAlign:'middle', marginRight:4}}/> Zone: {c.localisation.split('-')[0]}</span>
                       </div>
                     </div>
                   </div>
@@ -218,53 +227,53 @@ export default function OperationsTab() {
 
         {/* ── COLLECTEURS ──────────────────────────────────── */}
         {view === 'collecteurs' && (
-          <motion.div key="collecteurs" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0}} style={{display:'grid',gridTemplateColumns:'380px 1fr',gap:'1.5rem'}}>
+          <motion.div key="collecteurs" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0}} style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(380px, 1fr))',gap:'1.5rem'}}>
             {/* Form */}
             <CardSection title="Enregistrer un Collecteur" icon={Plus}>
-              <div style={{padding:'1.5rem',display:'flex',flexDirection:'column',gap:'0.9rem'}}>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem'}}>
+              <div style={{padding:'2rem',display:'flex',flexDirection:'column',gap:'1rem'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
                   <Input label="Prénom *" placeholder="Kouassi" value={colForm.prenom} onChange={e=>setColForm(f=>({...f,prenom:e.target.value}))} />
                   <Input label="Nom *"    placeholder="Amon"     value={colForm.nom}    onChange={e=>setColForm(f=>({...f,nom:e.target.value}))} />
                 </div>
                 <Input label="Zone d'activité *" placeholder="Yopougon-Lavage" value={colForm.zone} onChange={e=>setColForm(f=>({...f,zone:e.target.value}))} />
                 <Input label="Téléphone *" type="tel" placeholder="07XXXXXXXX" value={colForm.tel} onChange={e=>setColForm(f=>({...f,tel:e.target.value}))} />
-                <div style={{background:T.surface,border:`1px dashed ${T.border}`,borderRadius:'0.5rem',padding:'0.75rem',textAlign:'center'}}>
-                  <CreditCard size={16} color={T.muted} style={{marginBottom:4}}/>
-                  <div style={{fontSize:'0.78rem',color:T.muted}}>N° carte généré automatiquement</div>
-                  <div style={{fontSize:'0.75rem',color:T.accent,marginTop:2,fontFamily:'monospace'}}>COL-2025-00{collecteurs.length+1}</div>
+                <div style={{background:T.surface,border:`1px dashed ${T.border}`,borderRadius:'0.75rem',padding:'1rem',textAlign:'center'}}>
+                  <CreditCard size={18} color={T.muted} style={{marginBottom:6}}/>
+                  <div style={{fontSize:'0.75rem',color:T.muted, fontWeight: 700}}>N° carte généré automatiquement</div>
+                  <div style={{fontSize:'0.9rem',color:'var(--accent)',marginTop:4,fontFamily:'monospace', fontWeight: 900}}>COL-2025-00{collecteurs.length+1}</div>
                 </div>
-                <button onClick={addCollecteur}
-                  style={{padding:'0.85rem',borderRadius:'0.5rem',border:'none',background:T.accent,color:'#000',fontWeight:800,cursor:'pointer'}}>
-                  ✓ Enregistrer le Collecteur
+                <button onClick={addCollecteur} className="primary-button"
+                  style={{padding:'1rem',borderRadius:'0.75rem',border:'none',background:'var(--primary)',color:'#FFF',fontWeight:800,cursor:'pointer', marginTop: '0.5rem'}}>
+                  ✓ Valider & Imprimer la Carte
                 </button>
               </div>
             </CardSection>
 
             {/* Liste */}
             <CardSection title={`Registre Collecteurs (${collecteurs.filter(c=>c.actif).length} actifs)`} icon={UserCheck}>
-              <div style={{padding:'0.875rem 1.25rem',borderBottom:`1px solid ${T.border}`,display:'flex',alignItems:'center',gap:8}}>
-                <Search size={14} color={T.muted}/>
-                <input placeholder="Nom, zone, carte…" value={search} onChange={e=>setSearch(e.target.value)}
-                  style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:'0.85rem',color:T.text}}/>
+              <div style={{padding:'0.875rem 1.5rem',borderBottom:`1px solid ${T.border}`,display:'flex',alignItems:'center',gap:10, background: T.surface}}>
+                <Search size={16} color={T.muted}/>
+                <input placeholder="Rechercher (nom, zone, carte)…" value={search} onChange={e=>setSearch(e.target.value)}
+                  style={{flex:1,background:'transparent',border:'none',outline:'none',fontSize:'0.875rem',color:T.text, fontWeight: 500}}/>
               </div>
-              <div>
+              <div style={{maxHeight:'500px', overflowY:'auto'}}>
                 {colsFilt.map(c=>(
-                  <div key={c.id} style={{padding:'0.875rem 1.25rem',borderBottom:`1px solid ${T.border}`,display:'flex',alignItems:'center',gap:12}}>
-                    <div style={{width:36,height:36,borderRadius:'50%',background:`${T.accent}18`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:'0.9rem',color:T.accent,flexShrink:0}}>
+                  <div key={c.id} style={{padding:'1.25rem 1.5rem',borderBottom:`1px solid ${T.border}`,display:'flex',alignItems:'center',gap:15}}>
+                    <div style={{width:42,height:42,borderRadius:'50%',background:'var(--accent-glow)',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,fontSize:'1rem',color:'var(--accent)',flexShrink:0}}>
                       {c.prenom[0]}
                     </div>
                     <div style={{flex:1}}>
-                      <div style={{fontWeight:700,fontSize:'0.87rem',color:T.text}}>{c.prenom} {c.nom}</div>
-                      <div style={{fontSize:'0.73rem',color:T.muted,display:'flex',gap:'0.75rem',marginTop:2}}>
-                        <span><MapPin size={10}/> {c.zone}</span>
-                        <span><Phone size={10}/> {c.tel}</span>
+                      <div style={{fontWeight:800,fontSize:'0.95rem',color:T.text}}>{c.prenom} {c.nom}</div>
+                      <div style={{fontSize:'0.75rem',color:T.muted,display:'flex',gap:'1rem',marginTop:4, fontWeight: 600}}>
+                        <span style={{display:'flex', alignItems:'center', gap:4}}><MapPin size={12}/> {c.zone}</span>
+                        <span style={{display:'flex', alignItems:'center', gap:4}}><Phone size={12}/> {c.tel}</span>
                       </div>
                     </div>
                     <div style={{textAlign:'right'}}>
-                      <div style={{fontFamily:'monospace',fontSize:'0.75rem',color:T.accent,fontWeight:700}}>{c.carte}</div>
-                      <div style={{fontSize:'0.78rem',color:T.muted,marginTop:2}}>{c.tonnage}t collectés</div>
+                      <div style={{fontFamily:'monospace',fontSize:'0.78rem',color:'var(--accent)',fontWeight:900}}>{c.carte}</div>
+                      <div style={{fontSize:'0.72rem',color:T.muted,marginTop:3, fontWeight: 700}}>{c.tonnage}t collectés</div>
                     </div>
-                    <span style={{fontSize:'0.65rem',fontWeight:800,color:c.actif?T.accent:'#EF4444',background:`${c.actif?T.accent:'#EF4444'}18`,borderRadius:'0.3rem',padding:'2px 6px'}}>
+                    <span style={{fontSize:'0.6rem',fontWeight:900,color:c.actif?'var(--accent)':'#EF4444',background:`${c.actif?'var(--accent)':'#EF4444'}12`, borderRadius:'0.4rem',padding:'3px 8px', textTransform: 'uppercase'}}>
                       {c.actif?'Actif':'Inactif'}
                     </span>
                   </div>
@@ -279,7 +288,7 @@ export default function OperationsTab() {
           <motion.div key="tracking" initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0}} style={{display:'flex',flexDirection:'column',gap:'1.5rem'}}>
             {/* Saisie */}
             <CardSection title="Saisie Tonnage Reçu" icon={Package}>
-              <div style={{padding:'1.5rem',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'0.875rem'}}>
+              <div style={{padding:'2rem',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:'1rem'}}>
                 <Input label="Date *" type="date" value={saisie.date} onChange={e=>setSaisie(s=>({...s,date:e.target.value}))} />
                 <Select label="Centre *" options={CENTRES_INIT.map(c=>({val:c.id,label:c.nom}))} value={saisie.centreId} onChange={e=>setSaisie(s=>({...s,centreId:e.target.value}))} />
                 <Select label="Collecteur *" options={collecteurs.filter(c=>c.actif).map(c=>({val:c.carte,label:`${c.prenom} ${c.nom} — ${c.carte}`}))} value={saisie.collecteur} onChange={e=>setSaisie(s=>({...s,collecteur:e.target.value}))} />
@@ -287,42 +296,44 @@ export default function OperationsTab() {
                 <Select label="Type Plastique" options={TYPES_PLASTIQUE.map(t=>({val:t,label:t}))} value={saisie.type} onChange={e=>setSaisie(s=>({...s,type:e.target.value}))} />
                 <div style={{display:'flex',alignItems:'flex-end'}}>
                   <button onClick={addCollecte}
-                    style={{width:'100%',padding:'0.65rem',borderRadius:'0.5rem',border:'none',background:T.accent,color:'#000',fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
-                    <Save size={14}/> Enregistrer
+                    style={{width:'100%',padding:'1rem',borderRadius:'0.75rem',border:'none',background:'var(--primary)',color:'#FFF',fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8, fontSize: '0.9rem'}}>
+                    <Save size={16}/> Enregistrer l'Entrée
                   </button>
                 </div>
               </div>
             </CardSection>
 
             {/* Log collectes */}
-            <CardSection title="Journal des Collectes" icon={Recycle} color="#06B6D4">
-              <table style={{width:'100%',borderCollapse:'collapse'}}>
-                <thead>
-                  <tr style={{background:T.surface}}>
-                    {['Date','Centre','Collecteur','Tonnage','Type','Statut'].map(h=>(
-                      <th key={h} style={{padding:'0.65rem 1.25rem',textAlign:'left',fontSize:'0.67rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.07em',color:T.muted}}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {collectes.map((c,i)=>{
-                    const ctr = CENTRES_INIT.find(x=>x.id===c.centreId);
-                    const cfg = STATUTS_COLLECTE[c.statut];
-                    return(
-                      <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
-                        <td style={{padding:'0.75rem 1.25rem',fontSize:'0.82rem',color:T.muted}}>{c.date}</td>
-                        <td style={{padding:'0.75rem 1.25rem',fontSize:'0.85rem',color:T.text,fontWeight:600}}>{ctr?.nom||c.centreId}</td>
-                        <td style={{padding:'0.75rem 1.25rem',fontSize:'0.8rem',color:T.muted,fontFamily:'monospace'}}>{c.collecteur}</td>
-                        <td style={{padding:'0.75rem 1.25rem',fontWeight:800,color:T.accent}}>{c.tonnage}t</td>
-                        <td style={{padding:'0.75rem 1.25rem',fontSize:'0.78rem',color:T.muted}}>{c.type}</td>
-                        <td style={{padding:'0.75rem 1.25rem'}}>
-                          <span style={{fontSize:'0.68rem',fontWeight:800,color:cfg.color,background:`${cfg.color}15`,border:`1px solid ${cfg.color}30`,borderRadius:'0.3rem',padding:'2px 7px'}}>{cfg.label}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <CardSection title="Journal des Collectes en Temps Réel" icon={Recycle} color="#06B6D4">
+              <div style={{overflowX: 'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse'}}>
+                  <thead>
+                    <tr style={{background:T.surface, borderBottom:`1px solid ${T.border}`}}>
+                      {['Date','Centre','Collecteur','Tonnage','Type','Statut'].map(h=>(
+                        <th key={h} style={{padding:'1rem 1.5rem',textAlign:'left',fontSize:'0.7rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.08em',color:T.muted}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {collectes.map((c,i)=>{
+                      const ctr = CENTRES_INIT.find(x=>x.id===c.centreId);
+                      const cfg = STATUTS_COLLECTE[c.statut];
+                      return(
+                        <tr key={i} style={{borderBottom:`1px solid ${T.border}`, transition:'background 0.2s'}} className="hover-row">
+                          <td style={{padding:'1rem 1.5rem',fontSize:'0.85rem',color:T.muted}}>{c.date}</td>
+                          <td style={{padding:'1rem 1.5rem',fontSize:'0.875rem',color:T.text,fontWeight:700}}>{ctr?.nom||c.centreId}</td>
+                          <td style={{padding:'1rem 1.5rem',fontSize:'0.8rem',color:T.muted,fontFamily:'monospace', fontWeight: 600}}>{c.collecteur}</td>
+                          <td style={{padding:'1rem 1.5rem',fontWeight:900,color:'var(--accent)', fontSize: '1rem'}}>{c.tonnage}t</td>
+                          <td style={{padding:'1rem 1.5rem',fontSize:'0.75rem',color:T.muted, fontWeight: 700}}>{c.type}</td>
+                          <td style={{padding:'1rem 1.5rem'}}>
+                            <span style={{fontSize:'0.65rem',fontWeight:900,color:cfg.color,background:`${cfg.color}12`,border:`1px solid ${cfg.color}25`,borderRadius:'0.4rem',padding:'3px 8px', textTransform: 'uppercase'}}>{cfg.label}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </CardSection>
           </motion.div>
         )}

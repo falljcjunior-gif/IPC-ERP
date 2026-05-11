@@ -19,16 +19,16 @@ import { useStore } from '../../../store';
 
 // ── Design tokens ──────────────────────────────────────────────
 const T = {
-  bg:        '#0a0c10',
-  surface:   '#0d1117',
-  card:      '#111318',
-  cardHover: '#141720',
-  border:    '#1f2937',
-  accent:    '#2ecc71',
-  accentDim: 'rgba(46,204,113,0.10)',
-  accentMid: 'rgba(46,204,113,0.20)',
-  text:      '#e5e7eb',
-  muted:     '#6b7280',
+  bg:        'var(--bg)',
+  surface:   'var(--bg-subtle)',
+  card:      'var(--bg-card)',
+  cardHover: 'var(--bg-subtle)',
+  border:    'var(--border)',
+  accent:    'var(--accent)',
+  accentDim: 'var(--accent-glow)',
+  accentMid: 'rgba(16, 185, 129, 0.25)',
+  text:      'var(--text)',
+  muted:     'var(--text-muted)',
   danger:    '#EF4444',
   warning:   '#F59E0B',
   info:      '#3B82F6',
@@ -86,11 +86,12 @@ const VIEWS = [
 // ── Common card shell ────────────────────────────────────────────
 function DarkCard({ children, style = {} }) {
   return (
-    <div style={{
+    <div className="glassmorphism" style={{
       background: T.card,
       border: `1px solid ${T.border}`,
-      borderRadius: '1rem',
+      borderRadius: '1.25rem',
       padding: '1.5rem',
+      boxShadow: 'var(--shadow-md)',
       ...style,
     }}>
       {children}
@@ -182,8 +183,9 @@ function EquipeView({ employees, onNewEmployee }) {
           onClick={onNewEmployee}
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
-            background: T.accent, border: 'none', borderRadius: '0.75rem',
-            padding: '0.6rem 1.25rem', color: T.bg, fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+            background: 'var(--primary)', border: 'none', borderRadius: '0.75rem',
+            padding: '0.6rem 1.25rem', color: '#FFF', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+            boxShadow: 'var(--shadow-accent)',
           }}
         >
           <Plus size={15} /> Nouvel Employé

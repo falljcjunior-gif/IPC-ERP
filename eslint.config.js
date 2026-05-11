@@ -13,6 +13,8 @@ export default [
       'ios/**',
       'public/**',
       '.firebase/**',
+      '.claude/**',
+      'artifacts/**',
       'functions/node_modules/**',
       'build/**',
       'lint_errors.json',
