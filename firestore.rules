@@ -446,53 +446,120 @@ service cloud.firestore {
       allow delete: if isSuperAdmin();
     }
 
+    // ── Missions RBAC helpers ────────────────────────────────────────────────
+    //
+    // Workspace membership is stored as a Firestore map:
+    //   memberRoles: { uid1: 'ADMIN', uid2: 'MEMBER', uid3: 'VIEWER' }
+    //
+    // This allows an O(1) key-lookup in rules without array iteration.
+    // All missions sub-resources inherit access from their parent workspace.
+
+    function missionsWsRef(wsId) {
+      return /databases/$(database)/documents/missions_workspaces/$(wsId);
+    }
+
+    function isMissionsWsMember(wsId) {
+      return isSuperAdmin() ||
+             (isAuthenticated() &&
+              request.auth.uid in get(missionsWsRef(wsId)).data.memberRoles);
+    }
+
+    function missionsWsRole(wsId) {
+      return get(missionsWsRef(wsId)).data.memberRoles.get(request.auth.uid, 'NONE');
+    }
+
+    function canWriteMissions(wsId) {
+      return isMissionsWsMember(wsId) && missionsWsRole(wsId) != 'VIEWER';
+    }
+
+    function isMissionsWsAdmin(wsId) {
+      return isSuperAdmin() || missionsWsRole(wsId) == 'ADMIN';
+    }
+
     // ── Missions (Kanban ERP) ────────────────────────────────────────────────
-    match /missions_workspaces/{docId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && (isManager() || isSuperAdmin());
+
+    match /missions_workspaces/{wsId} {
+      // Any authenticated user can see the workspace list (workspace picker UI)
+      allow read: if isAuthenticated() &&
+                     (isSuperAdmin() ||
+                      request.auth.uid in resource.data.memberRoles);
+      // Any authenticated user can create a new workspace
+      allow create: if isAuthenticated();
+      // Only ADMIN members can update workspace metadata
+      allow update: if isAuthenticated() &&
+                       (isSuperAdmin() ||
+                        resource.data.memberRoles.get(request.auth.uid, 'NONE') == 'ADMIN');
       allow delete: if isSuperAdmin();
     }
+
     match /missions_boards/{boardId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && (isManager() || isSuperAdmin());
-      allow delete: if isSuperAdmin();
+      allow read:   if isMissionsWsMember(resource.data.workspaceId);
+      allow create: if canWriteMissions(request.resource.data.workspaceId);
+      allow update: if canWriteMissions(resource.data.workspaceId);
+      allow delete: if isMissionsWsAdmin(resource.data.workspaceId);
 
       match /butler_rules/{ruleId} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated() && (isManager() || isSuperAdmin());
+        // Board workspaceId must be fetched from the parent board doc
+        allow read:  if isMissionsWsMember(
+                          get(/databases/$(database)/documents/missions_boards/$(boardId)).data.workspaceId);
+        allow write: if isMissionsWsAdmin(
+                          get(/databases/$(database)/documents/missions_boards/$(boardId)).data.workspaceId);
       }
     }
-    match /missions_lists/{docId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated() && (isManager() || isSuperAdmin());
+
+    match /missions_lists/{listId} {
+      allow read:   if isMissionsWsMember(resource.data.workspaceId);
+      allow create: if canWriteMissions(request.resource.data.workspaceId);
+      allow update: if canWriteMissions(resource.data.workspaceId);
+      allow delete: if isMissionsWsAdmin(resource.data.workspaceId);
     }
+
     match /missions_cards/{cardId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated();
-      allow delete: if isAuthenticated() && (isManager() || isSuperAdmin());
+      allow read:   if isMissionsWsMember(resource.data.workspaceId);
+      allow create: if canWriteMissions(request.resource.data.workspaceId);
+      allow update: if canWriteMissions(resource.data.workspaceId);
+      allow delete: if isMissionsWsAdmin(resource.data.workspaceId);
 
       match /activity/{actId} {
-        allow read: if isAuthenticated();
-        allow write: if false; // Cloud Functions only
+        // Read: workspace members only. Write: Cloud Functions Admin SDK only.
+        allow read:  if isMissionsWsMember(
+                          get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow write: if false;
       }
+
       match /comments/{commentId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated() && request.resource.data.authorUid == request.auth.uid;
-        allow update, delete: if isAuthenticated() && (resource.data.authorUid == request.auth.uid || isSuperAdmin());
+        allow read:   if isMissionsWsMember(
+                           get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow create: if isAuthenticated() &&
+                         canWriteMissions(
+                           get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId) &&
+                         request.resource.data.authorUid == request.auth.uid;
+        allow update, delete: if isAuthenticated() &&
+                                  (resource.data.authorUid == request.auth.uid || isSuperAdmin());
       }
+
       match /checklists/{clId} {
-        allow read, write: if isAuthenticated();
+        allow read:        if isMissionsWsMember(
+                                get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow create, update: if canWriteMissions(
+                                    get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow delete:      if isMissionsWsAdmin(
+                                get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
       }
+
       match /attachments/{attId} {
-        allow read: if isAuthenticated();
-        allow create: if isAuthenticated();
-        allow delete: if isAuthenticated() && (resource.data.uploadedBy == request.auth.uid || isSuperAdmin());
+        allow read:   if isMissionsWsMember(
+                           get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow create: if canWriteMissions(
+                           get(/databases/$(database)/documents/missions_cards/$(cardId)).data.workspaceId);
+        allow delete: if isAuthenticated() &&
+                         (resource.data.uploadedBy == request.auth.uid || isSuperAdmin());
       }
     }
+
     match /missions_reports/{boardId} {
-      allow read: if isAuthenticated() && (isManager() || isSuperAdmin());
-      allow write: if false; // Cloud Functions only
+      allow read:  if isAuthenticated() && (isManager() || isSuperAdmin());
+      allow write: if false; // Cloud Functions only (Admin SDK)
     }
 
     // ── Audit Logs (Immuable) ────────────────────────────────────────────────

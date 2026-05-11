@@ -40,14 +40,25 @@ export const MissionsFS = {
   // ── Workspaces ────────────────────────────────────────────────
 
   subscribeWorkspaces(uid, callback) {
+    // Filter server-side to workspaces where this user is a member.
+    // Uses memberRoles map key — requires a Firestore composite index on
+    // memberRoles (array-contains is not applicable for maps; we filter
+    // client-side on the flat members array as Firestore can't query map keys).
+    // The security rules enforce membership — this is a performance filter.
     const q = query(
       collection(db, COL.workspaces),
       where('isArchived', '==', false),
       orderBy('updatedAt', 'desc')
     );
-    return onSnapshot(q, snap =>
-      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-    );
+    return onSnapshot(q, snap => {
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Client-side membership filter (Firestore can't query map keys)
+      const mine = all.filter(ws =>
+        ws.memberRoles?.[uid] ||                       // new format
+        (ws.members || []).some(m => m.uid === uid)    // legacy fallback
+      );
+      callback(mine);
+    });
   },
 
   async createWorkspace(data, uid) {
@@ -55,14 +66,100 @@ export const MissionsFS = {
     await setDoc(doc(db, COL.workspaces, id), {
       ...data,
       id,
-      members: [{ uid, role: 'ADMIN' }],
-      boardCount: 0,
-      createdBy: uid,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      isArchived: false,
+      members:     [{ uid, role: 'ADMIN' }],
+      memberRoles: { [uid]: 'ADMIN' },   // flat map for O(1) rule lookups
+      boardCount:  0,
+      createdBy:   uid,
+      createdAt:   serverTimestamp(),
+      updatedAt:   serverTimestamp(),
+      isArchived:  false,
     });
     return id;
+  },
+
+  subscribeWorkspaceMembers(workspaceId, callback) {
+    return onSnapshot(doc(db, COL.workspaces, workspaceId), snap => {
+      if (!snap.exists()) { callback([]); return; }
+      callback(snap.data().members || []);
+    });
+  },
+
+  async addWorkspaceMember(workspaceId, memberUid, role = 'MEMBER') {
+    const wsRef = doc(db, COL.workspaces, workspaceId);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(wsRef);
+      if (!snap.exists()) throw new Error('Workspace not found');
+      const data = snap.data();
+      const existing = (data.members || []).find(m => m.uid === memberUid);
+      if (existing) return; // already a member, no-op
+      tx.update(wsRef, {
+        members:                   [...(data.members || []), { uid: memberUid, role }],
+        [`memberRoles.${memberUid}`]: role,
+        updatedAt:                 serverTimestamp(),
+      });
+    });
+  },
+
+  async removeWorkspaceMember(workspaceId, memberUid) {
+    // Transactions don't support FieldValue.deleteField() for map keys.
+    // So we do a two-step: first validate + update members array,
+    // then remove the map key with a plain update.
+    const wsRef = doc(db, COL.workspaces, workspaceId);
+    const snap  = await getDoc(wsRef);
+    if (!snap.exists()) throw new Error('Workspace not found');
+    const data = snap.data();
+
+    const updatedMembers = (data.members || []).filter(m => m.uid !== memberUid);
+    const wasAdmin       = data.memberRoles?.[memberUid] === 'ADMIN';
+    const adminCount     = updatedMembers.filter(m => m.role === 'ADMIN').length;
+    if (wasAdmin && adminCount === 0) throw new Error('Cannot remove the only admin');
+
+    const { deleteField } = await import('firebase/firestore');
+    await updateDoc(wsRef, {
+      members:                      updatedMembers,
+      [`memberRoles.${memberUid}`]: deleteField(),
+      updatedAt:                    serverTimestamp(),
+    });
+  },
+
+  async updateWorkspaceMemberRole(workspaceId, memberUid, newRole) {
+    const wsRef = doc(db, COL.workspaces, workspaceId);
+    await runTransaction(db, async tx => {
+      const snap = await tx.get(wsRef);
+      if (!snap.exists()) throw new Error('Workspace not found');
+      const data = snap.data();
+      const updatedMembers = (data.members || []).map(m =>
+        m.uid === memberUid ? { ...m, role: newRole } : m
+      );
+      // Prevent downgrading the last admin
+      if (newRole !== 'ADMIN') {
+        const remainingAdmins = updatedMembers.filter(m => m.role === 'ADMIN').length;
+        if (remainingAdmins === 0) throw new Error('At least one ADMIN is required');
+      }
+      tx.update(wsRef, {
+        members:                   updatedMembers,
+        [`memberRoles.${memberUid}`]: newRole,
+        updatedAt:                 serverTimestamp(),
+      });
+    });
+  },
+
+  async searchUsersByEmail(email) {
+    if (!email || email.length < 3) return [];
+    const snap = await getDocs(
+      query(
+        collection(db, 'users'),
+        where('email', '>=', email),
+        where('email', '<=', email + ''),
+        limit(8)
+      )
+    );
+    return snap.docs.map(d => ({
+      uid:    d.id,
+      email:  d.data().email,
+      nom:    d.data().profile?.nom || d.data().nom || d.data().email,
+      avatar: d.data().profile?.avatar || '?',
+    }));
   },
 
   // ── Boards ────────────────────────────────────────────────────
@@ -87,7 +184,9 @@ export const MissionsFS = {
       ...data,
       id: boardId,
       workspaceId,
-      members: [{ uid, role: 'ADMIN' }],
+      visibility:  'workspace',             // 'workspace' | 'private'
+      members:     [{ uid, role: 'ADMIN' }],
+      memberRoles: { [uid]: 'ADMIN' },
       customFields: [],
       labels: [
         { id: nanoid(), name: 'Urgent',    color: '#EF4444' },
