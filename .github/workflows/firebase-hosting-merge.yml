@@ -79,6 +79,15 @@ jobs:
               --quiet || echo "IAM already set or skipped for $svc"
           done
 
+      - name: Fix IAM — Le Commandant callable (us-central1)
+        run: |
+          gcloud run services add-iam-policy-binding commanderchat \
+            --region=us-central1 \
+            --member=allUsers \
+            --role=roles/run.invoker \
+            --project=ipc-erp \
+            --quiet || echo "IAM already set or skipped for commanderchat"
+
       - name: Fail if deploy failed (non-IAM error)
         if: steps.firebase_deploy.outcome == 'failure'
         run: |

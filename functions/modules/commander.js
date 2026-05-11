@@ -156,7 +156,7 @@ async function computeUserScore(uid, cards) {
 // ─────────────────────────────────────────────────────────────────────
 
 exports.commanderScan = onSchedule({
-  schedule: 'every 4 hours',
+  schedule: '0 */4 * * *',
   timeZone: 'Africa/Abidjan',
   secrets: ['GEMINI_API_KEY'],
   region: 'us-central1',
