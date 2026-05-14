@@ -14,7 +14,7 @@
  *   • Group-wide approval queue
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
 import {
@@ -22,6 +22,9 @@ import {
   HOLDING_KPIS, isHoldingRole,
 } from '../../schemas/org.schema';
 import EntitySwitcher from '../../components/EntitySwitcher';
+
+const EntityManagementCenter = lazy(() => import('./tabs/EntityManagementCenter'));
+const LicenseCenter           = lazy(() => import('./tabs/LicenseCenter'));
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const T = {
@@ -61,6 +64,8 @@ const TABS = [
   { id: 'esg',         label: 'ESG & Foundation',  icon: '🌱' },
   { id: 'governance',  label: 'Gouvernance',        icon: '⚖️' },
   { id: 'intelligence',label: 'IA Stratégique',    icon: '🤖' },
+  { id: 'entities',    label: 'Entités Groupe',    icon: '🏢' },
+  { id: 'licenses',    label: 'Licences SaaS',     icon: '🔑' },
 ];
 
 export default function HoldingCockpit() {
@@ -187,7 +192,35 @@ export default function HoldingCockpit() {
         {tab === 'esg'          && <ESGTab />}
         {tab === 'governance'   && <GovernanceTab approvals={approvals} />}
         {tab === 'intelligence' && <IntelligenceTab consolidated={consolidated} />}
+        {tab === 'entities'     && (
+          <Suspense fallback={<TabLoader label="Entités Groupe" />}>
+            <EntityManagementCenter />
+          </Suspense>
+        )}
+        {tab === 'licenses'     && (
+          <Suspense fallback={<TabLoader label="Licences SaaS" />}>
+            <LicenseCenter />
+          </Suspense>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ── Suspense skeleton for lazy-loaded tabs ────────────────────────────────
+function TabLoader({ label }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', minHeight: 320, gap: 12,
+    }}>
+      <div style={{
+        width: 40, height: 40, border: `3px solid ${T.accent}33`,
+        borderTopColor: T.accent, borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite',
+      }} />
+      <div style={{ color: T.muted, fontSize: 13 }}>Chargement {label}…</div>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 }

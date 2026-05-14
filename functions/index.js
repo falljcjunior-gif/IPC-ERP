@@ -76,6 +76,15 @@ exports.refreshCockpitMetrics = triggers.refreshCockpitMetrics;
 exports.validateHRApprovalRequest = triggers.validateHRApprovalRequest;
 exports.personalManagerPilotage = triggers.personalManagerPilotage;
 
+// 4a. Entity Provisioning — Holding SaaS lifecycle management
+const entityProvisioning = require('./modules/entity_provisioning');
+exports.createGroupEntity    = entityProvisioning.createGroupEntity;
+exports.updateGroupEntity    = entityProvisioning.updateGroupEntity;
+exports.changeEntityState    = entityProvisioning.changeEntityState;
+exports.assignEntityLicense  = entityProvisioning.assignEntityLicense;
+exports.approveEntityUpgrade = entityProvisioning.approveEntityUpgrade;
+exports.duplicateGroupEntity = entityProvisioning.duplicateGroupEntity;
+
 // 4. Monitoring & Backups
 const monitoring = require('./modules/monitoring');
 const backups = require('./modules/backup_scheduler');

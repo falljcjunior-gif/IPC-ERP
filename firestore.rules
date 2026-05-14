@@ -777,6 +777,60 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ══════════════════════════════════════════════════════════════════
+    // HOLDING SaaS LICENSING — Entity Licenses, Usage & Upgrade Requests
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── Entity Licenses (plan assignments per entity) ─────────────────────
+    // Holding: full CRUD. Entities: read their own license only.
+    // Writes always go through Cloud Functions (assignEntityLicense callable).
+    match /entity_licenses/{entityId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        getEntityId() == entityId
+      );
+      allow write: if false; // Cloud Functions only (assignEntityLicense, createGroupEntity)
+    }
+
+    // ── Entity Usage Metrics ──────────────────────────────────────────────
+    // Counters updated by Cloud Functions on write triggers.
+    match /entity_usage/{entityId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        getEntityId() == entityId
+      );
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ── Upgrade Requests (subsidiary → Holding approval queue) ────────────
+    match /upgrade_requests/{reqId} {
+      // Subsidiaries: create and read their own requests.
+      // Holding: read all and approve/reject.
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        resource.data.entity_id == getEntityId()
+      );
+      allow create: if isAuthenticated() && (
+        isSubsidiaryLevel() || isFoundationLevel()
+      ) && request.resource.data.entity_id == getEntityId();
+      allow update: if isAuthenticated() && isHoldingLevel(); // approval path
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Organization Structure (departments per entity) ───────────────────
+    match /organization_structure/{entityId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        getEntityId() == entityId
+      );
+      allow create: if false; // Cloud Functions only (createGroupEntity)
+      allow update: if isAuthenticated() && (
+        isHoldingLevel() ||
+        (getEntityId() == entityId && (isManager() || isSubsidiaryLevel()))
+      );
+      allow delete: if isSuperAdmin();
+    }
+
     // ── Refus par défaut (sécurité) ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
