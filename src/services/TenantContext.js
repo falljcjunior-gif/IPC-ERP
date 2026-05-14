@@ -1,42 +1,61 @@
 /**
- * ════════════════════════════════════════════════════════════════
- * TENANT CONTEXT — Singleton d'isolation multi-tenant
- * ════════════════════════════════════════════════════════════════
+ * ════════════════════════════════════════════════════════════════════════════
+ * TENANT CONTEXT v2.0 — Group-Aware Entity Singleton
+ * ════════════════════════════════════════════════════════════════════════════
  *
- * PROBLÈME RÉSOLU :
- * FirestoreService est un module statique sans accès au store Zustand.
- * Ce singleton agit comme un pont : BusinessContext le peuple après auth,
- * FirestoreService le lit pour injecter tenant_id + company_id dans
- * chaque document créé/modifié.
+ * Extended from v1 to support the 3-level group governance model:
+ *   LEVEL 1 — HOLDING    (full group visibility)
+ *   LEVEL 2 — SUBSIDIARY (scoped to one entity)
+ *   LEVEL 3 — FOUNDATION (scoped to foundation entity)
  *
- * PATTERN : Module Singleton (safe en ESM — initialisé une seule fois
- * au chargement, muté par setTenantContext).
+ * PATTERN : Module Singleton — safe in ESM, initialized once per session.
+ * BusinessContext populates it after auth; FirestoreService reads from it
+ * to auto-inject entity fields on every document write.
  *
- * UTILISATION :
- *   // Dans BusinessContext, après auth :
- *   import { setTenantContext } from './services/TenantContext';
- *   setTenantContext({ tenant_id: 'ipc_group', company_id: 'IPC_CORE', branch_id: 'HQ' });
+ * USAGE:
+ *   // BusinessContext — after auth:
+ *   setTenantContext({
+ *     tenant_id: 'ipc_group',
+ *     entity_type: 'SUBSIDIARY',
+ *     entity_id: 'ipc_green_blocks',
+ *     entity_name: 'IPC Green Blocks',
+ *     company_id: 'ipc_green_blocks',
+ *     branch_id: null,
+ *   });
  *
- *   // Dans FirestoreService, automatiquement :
- *   import { getTenantContext } from './TenantContext';
- *   const ctx = getTenantContext(); // { tenant_id, company_id, branch_id }
+ *   // FirestoreService — auto-injected on createDocument/setDocument:
+ *   const fields = getTenantFields();
+ *   // → { tenant_id, entity_type, entity_id, company_id }
  */
 
-// ── Contexte interne (mutable, jamais exposé directement) ───────────────
-let _tenantContext = {
-  tenant_id:  'ipc_default',   // fallback sécurisé — pas de données partagées sans tenant
-  company_id: null,
-  branch_id:  null,
+import { ENTITY_TYPES } from '../schemas/org.schema';
+
+// ── Internal state ────────────────────────────────────────────────────────────
+
+let _ctx = {
+  tenant_id:    'ipc_group',          // Group-level tenant ID
+  entity_type:  ENTITY_TYPES.SUBSIDIARY, // Default — overridden post-auth
+  entity_id:    'ipc_default',        // Overridden post-auth
+  entity_name:  'IPC Group',          // Human-readable entity name
+  company_id:   null,                 // Alias for entity_id (backward compat)
+  branch_id:    null,                 // Optional sub-branch
 };
 
 let _listeners = [];
 
-// ── API publique ────────────────────────────────────────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 
 /**
- * Peuple le contexte tenant après une auth réussie.
- * Appelé une seule fois par BusinessContext au login.
- * @param {{ tenant_id: string, company_id: string|null, branch_id: string|null }} ctx
+ * Set the full tenant + entity context after successful auth.
+ * Called by BusinessContext, never by components directly.
+ *
+ * @param {object} ctx
+ * @param {string} ctx.tenant_id    - Group tenant ('ipc_group')
+ * @param {string} ctx.entity_type  - HOLDING | SUBSIDIARY | FOUNDATION
+ * @param {string} ctx.entity_id    - Entity ID from GROUP_ENTITIES
+ * @param {string} ctx.entity_name  - Human-readable entity name
+ * @param {string} [ctx.company_id] - Alias for entity_id
+ * @param {string} [ctx.branch_id]  - Optional sub-branch
  */
 export function setTenantContext(ctx) {
   if (!ctx?.tenant_id) {
@@ -44,47 +63,51 @@ export function setTenantContext(ctx) {
     return;
   }
 
-  _tenantContext = {
-    tenant_id:  ctx.tenant_id  || 'ipc_default',
-    company_id: ctx.company_id || null,
-    branch_id:  ctx.branch_id  || null,
+  _ctx = {
+    tenant_id:   ctx.tenant_id   || 'ipc_group',
+    entity_type: ctx.entity_type || ENTITY_TYPES.SUBSIDIARY,
+    entity_id:   ctx.entity_id   || 'ipc_default',
+    entity_name: ctx.entity_name || 'IPC Group',
+    company_id:  ctx.company_id  || ctx.entity_id || null,
+    branch_id:   ctx.branch_id   || null,
   };
 
-  // Notifier tous les listeners (ex: services qui cachent le contexte)
-  _listeners.forEach(fn => fn(_tenantContext));
+  _listeners.forEach(fn => fn({ ..._ctx }));
 
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] ✅ Contexte tenant défini :', _tenantContext);
+    console.info('[TenantContext] ✅ Contexte groupe défini :', _ctx);
   }
 }
 
 /**
- * Récupère le contexte tenant courant.
- * Retourne un objet snapshot (immuable pour l'appelant).
- * @returns {{ tenant_id: string, company_id: string|null, branch_id: string|null }}
+ * Get the current tenant + entity context.
+ * Returns a snapshot (safe to spread).
  */
 export function getTenantContext() {
-  return { ..._tenantContext };
+  return { ..._ctx };
 }
 
 /**
- * Réinitialise le contexte à la déconnexion.
+ * Reset context on logout.
  */
 export function clearTenantContext() {
-  _tenantContext = {
-    tenant_id:  'ipc_default',
-    company_id: null,
-    branch_id:  null,
+  _ctx = {
+    tenant_id:   'ipc_group',
+    entity_type: ENTITY_TYPES.SUBSIDIARY,
+    entity_id:   'ipc_default',
+    entity_name: 'IPC Group',
+    company_id:  null,
+    branch_id:   null,
   };
-  _listeners.forEach(fn => fn(_tenantContext));
+  _listeners.forEach(fn => fn({ ..._ctx }));
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] 🔒 Contexte tenant réinitialisé.');
+    console.info('[TenantContext] 🔒 Contexte réinitialisé.');
   }
 }
 
 /**
- * S'abonne aux changements de contexte tenant.
- * @param {Function} fn
+ * Subscribe to context changes.
+ * @param {Function} fn - callback(ctx)
  * @returns {Function} unsubscribe
  */
 export function onTenantContextChange(fn) {
@@ -95,14 +118,48 @@ export function onTenantContextChange(fn) {
 }
 
 /**
- * Retourne l'objet de champs tenant à injecter dans un document Firestore.
- * Filtre les valeurs null pour ne pas polluer les docs si company/branch non défini.
- * @returns {Object}
+ * Returns the Firestore fields to inject into every new document.
+ * Filters nulls so we don't pollute docs with empty branch_id.
+ *
+ * All 5 entity fields are included:
+ *   tenant_id, entity_type, entity_id, company_id, branch_id
  */
 export function getTenantFields() {
-  const ctx = getTenantContext();
-  const fields = { tenant_id: ctx.tenant_id };
-  if (ctx.company_id) fields.company_id = ctx.company_id;
-  if (ctx.branch_id)  fields.branch_id  = ctx.branch_id;
+  const fields = {
+    tenant_id:   _ctx.tenant_id,
+    entity_type: _ctx.entity_type,
+    entity_id:   _ctx.entity_id,
+    company_id:  _ctx.company_id || _ctx.entity_id,
+  };
+  if (_ctx.branch_id) fields.branch_id = _ctx.branch_id;
   return fields;
+}
+
+/**
+ * Returns true if the current user session is at Holding level.
+ * Holding users can see all entities.
+ */
+export function isHoldingSession() {
+  return _ctx.entity_type === ENTITY_TYPES.HOLDING;
+}
+
+/**
+ * Returns true if current session is at Foundation level.
+ */
+export function isFoundationSession() {
+  return _ctx.entity_type === ENTITY_TYPES.FOUNDATION;
+}
+
+/**
+ * Returns current entity_id (used for Firestore query scoping).
+ */
+export function getCurrentEntityId() {
+  return _ctx.entity_id;
+}
+
+/**
+ * Returns current entity_type.
+ */
+export function getCurrentEntityType() {
+  return _ctx.entity_type;
 }

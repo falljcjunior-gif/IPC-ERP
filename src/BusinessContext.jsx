@@ -362,16 +362,25 @@ export const BusinessProvider = ({ children }) => {
           console.log('✅ [BusinessContext] Profile Loaded:', userProfile);
 
           // ══════════════════════════════════════════════════════════
-          // [MULTI-TENANT] Initialisation du TenantContext
-          // Chaque document créé après ce point portera tenant_id,
-          // company_id, et branch_id du contexte de l'utilisateur.
+          // [GROUP GOVERNANCE v2] TenantContext — 3-level org model
+          // Résout l'entité active (HOLDING | SUBSIDIARY | FOUNDATION)
+          // et l'injecte dans chaque document Firestore créé.
           // ══════════════════════════════════════════════════════════
-          const tenantId  = userProfile.tenant_id  || userProfile.tenantId  || 'ipc_group';
-          const companyId = userProfile.company_id  || userProfile.companyId  ||
-                            useStore.getState().globalSettings?.brand || 'IPC_CORE';
-          const branchId  = userProfile.branch_id   || userProfile.branchId  || null;
+          const tenantId   = userProfile.tenant_id   || 'ipc_group';
+          const entityType = userProfile.entity_type  || 'SUBSIDIARY';
+          const entityId   = userProfile.entity_id    || userProfile.company_id || 'ipc_green_blocks';
+          const entityName = userProfile.entity_name  || userProfile.company_id || 'IPC Group';
+          const companyId  = userProfile.company_id   || entityId;
+          const branchId   = userProfile.branch_id    || null;
 
-          setTenantContext({ tenant_id: tenantId, company_id: companyId, branch_id: branchId });
+          setTenantContext({
+            tenant_id:   tenantId,
+            entity_type: entityType,
+            entity_id:   entityId,
+            entity_name: entityName,
+            company_id:  companyId,
+            branch_id:   branchId,
+          });
 
         } catch (err) {
           console.error('❌ [BusinessContext] Profile Sync FAILED:', err);
@@ -382,8 +391,15 @@ export const BusinessProvider = ({ children }) => {
             nom: fbUser.displayName || 'Utilisateur',
             role: 'STAFF'
           });
-          // TenantContext fallback
-          setTenantContext({ tenant_id: 'ipc_group', company_id: 'IPC_CORE', branch_id: null });
+          // TenantContext fallback — minimal group context
+          setTenantContext({
+            tenant_id:   'ipc_group',
+            entity_type: 'SUBSIDIARY',
+            entity_id:   'ipc_green_blocks',
+            entity_name: 'IPC Green Blocks',
+            company_id:  'ipc_green_blocks',
+            branch_id:   null,
+          });
         }
       } else {
         clearTenantContext();

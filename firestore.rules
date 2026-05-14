@@ -576,92 +576,204 @@ service cloud.firestore {
     }
 
     // ══════════════════════════════════════════════════════════════════
-    // IPC COLLECT FOUNDATION — FILIALE INDÉPENDANTE
-    // Données strictement isolées du Groupe IPC Green Blocks
-    // Rôles autorisés : FOUNDATION_ADMIN | FOUNDATION_STAFF | SUPER_ADMIN | ADMIN
+    // GROUP GOVERNANCE — 3-Level Org Architecture
+    // HOLDING > SUBSIDIARIES > FOUNDATION
     // ══════════════════════════════════════════════════════════════════
 
-    function isFoundationRole() {
+    // ── Helper: entity type from Custom Claims ────────────────────────────
+    function getEntityType() {
+      return isAuthenticated() ? request.auth.token.get('entity_type', '') : '';
+    }
+
+    function getEntityId() {
+      return isAuthenticated() ? request.auth.token.get('entity_id', '') : '';
+    }
+
+    // Holding roles: full group visibility
+    function isHoldingLevel() {
       return isAuthenticated() && (
         isSuperAdmin() ||
-        hasRole('FOUNDATION_ADMIN') ||
-        hasRole('FOUNDATION_STAFF')
+        hasClaimRole('HOLDING_CEO')    || hasRole('HOLDING_CEO')    ||
+        hasClaimRole('HOLDING_CFO')    || hasRole('HOLDING_CFO')    ||
+        hasClaimRole('HOLDING_CSO')    || hasRole('HOLDING_CSO')    ||
+        hasClaimRole('HOLDING_CHRO')   || hasRole('HOLDING_CHRO')   ||
+        hasClaimRole('HOLDING_CTO')    || hasRole('HOLDING_CTO')    ||
+        hasClaimRole('HOLDING_AUDITOR')|| hasRole('HOLDING_AUDITOR')||
+        hasClaimRole('HOLDING_LEGAL')  || hasRole('HOLDING_LEGAL')  ||
+        hasClaimRole('GROUP_AUDITOR')  || hasRole('GROUP_AUDITOR')
+      );
+    }
+
+    // Subsidiary roles: scoped to their entity_id
+    function isSubsidiaryLevel() {
+      return isAuthenticated() && (
+        hasClaimRole('SUBSIDIARY_DG')      || hasRole('SUBSIDIARY_DG')      ||
+        hasClaimRole('SUBSIDIARY_CFO')     || hasRole('SUBSIDIARY_CFO')     ||
+        hasClaimRole('SUBSIDIARY_RH')      || hasRole('SUBSIDIARY_RH')      ||
+        hasClaimRole('SUBSIDIARY_MANAGER') || hasRole('SUBSIDIARY_MANAGER') ||
+        hasClaimRole('SUBSIDIARY_STAFF')   || hasRole('SUBSIDIARY_STAFF')   ||
+        isAdmin() // legacy
+      );
+    }
+
+    // Foundation roles: scoped to Foundation entities only
+    function isFoundationLevel() {
+      return isAuthenticated() && (
+        isSuperAdmin() ||
+        hasClaimRole('FOUNDATION_DG')      || hasRole('FOUNDATION_DG')      ||
+        hasClaimRole('FOUNDATION_MANAGER') || hasRole('FOUNDATION_MANAGER') ||
+        hasClaimRole('FOUNDATION_STAFF')   || hasRole('FOUNDATION_STAFF')   ||
+        hasClaimRole('FOUNDATION_AUDITOR') || hasRole('FOUNDATION_AUDITOR')
       );
     }
 
     function isFoundationAdmin() {
       return isAuthenticated() && (
         isSuperAdmin() ||
-        hasRole('FOUNDATION_ADMIN')
+        hasClaimRole('FOUNDATION_DG') || hasRole('FOUNDATION_DG') ||
+        isHoldingLevel()
       );
     }
 
-    // ── Foundation Finance (Dons, Décaissements, Livre Journal) ──────────
-    match /foundation_finance/{docId} {
-      allow read: if isFoundationRole();
-      allow create: if isFoundationRole();
-      // Décaissements : seul un FOUNDATION_ADMIN peut approuver/modifier le statut
-      allow update: if isFoundationRole() && (
+    // Entity scoping: a subsidiary user can only see docs for their entity
+    function canAccessEntityDoc(docEntityId) {
+      return isHoldingLevel() ||
+             isFoundationLevel() ||
+             getEntityId() == docEntityId ||
+             !('entity_id' in resource.data); // unscoped doc = visible to all authenticated
+    }
+
+    // ── Organizations Registry (Holding-managed) ──────────────────────────
+    match /organizations/{orgId} {
+      // Holding sees all; subsidiaries see their own + parent holding
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        resource.data.id == getEntityId() ||
+        resource.data.parentId == getEntityId()
+      );
+      allow create, update: if isHoldingLevel();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Consolidated Reports (Holding-only) ───────────────────────────────
+    match /consolidated_reports/{reportId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() || hasRole('GROUP_AUDITOR')
+      );
+      allow write: if false; // Written by Cloud Functions only
+    }
+
+    // ── Intercompany Transactions & Approvals ─────────────────────────────
+    match /intercompany/{txId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        resource.data.fromEntityId == getEntityId() ||
+        resource.data.toEntityId   == getEntityId()
+      );
+      allow create: if isAuthenticated() && (isManager() || isSubsidiaryLevel());
+      allow update: if isAuthenticated() && (
+        isHoldingLevel() || // Holding approves
+        (resource.data.fromEntityId == getEntityId() && resource.data.status == 'draft')
+      );
+      allow delete: if false;
+    }
+
+    match /intercompany_approvals/{docId} {
+      allow read: if isAuthenticated() && (isHoldingLevel() || isManager());
+      allow create: if isAuthenticated() && isManager();
+      allow update: if isAuthenticated() && isHoldingLevel(); // Only Holding approves
+      allow delete: if false;
+    }
+
+    // ── Group Budgets (Consolidated + Per-entity) ─────────────────────────
+    match /group_budgets/{docId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        resource.data.entity_id == getEntityId()
+      );
+      allow create, update: if isAuthenticated() && (
+        isHoldingLevel() ||
+        (isManager() && resource.data.entity_id == getEntityId())
+      );
+      allow delete: if false;
+    }
+
+    // ── ESG Consolidated (Holding reads all; entities write their own) ─────
+    match /esg_consolidated/{docId} {
+      allow read: if isAuthenticated() && (isHoldingLevel() || isFoundationLevel() || isManager());
+      allow write: if false; // Cloud Functions aggregate from /esg per entity
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    // FOUNDATION — IPC Foundation (Non-Profit Entity)
+    // Supervised by Holding; isolated from commercial subsidiaries
+    // ══════════════════════════════════════════════════════════════════
+
+    // ── Foundation Donations ──────────────────────────────────────────────
+    match /foundation_donations/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create: if isFoundationLevel();
+      allow update: if isFoundationLevel() && (
         isFoundationAdmin() ||
-        // Staff can update notes but NOT statut or approval fields
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'statut', 'approuve_par', 'approuve_le', 'validation'
+        ])
+      );
+      allow delete: if false; // Financial immutability
+    }
+
+    // ── Foundation Programs ───────────────────────────────────────────────
+    match /foundation_programs/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create, update: if isFoundationLevel();
+      allow delete: if false;
+    }
+
+    // ── Foundation Beneficiaries ──────────────────────────────────────────
+    match /foundation_beneficiaries/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create, update: if isFoundationLevel();
+      allow delete: if false; // Personal data — soft delete only
+    }
+
+    // ── Foundation Campaigns ──────────────────────────────────────────────
+    match /foundation_campaigns/{docId} {
+      allow read: if isAuthenticated(); // Public visibility for campaigns
+      allow create, update: if isFoundationLevel();
+      allow delete: if isFoundationAdmin();
+    }
+
+    // ── Foundation Finance (Budgets, Disbursements) ───────────────────────
+    match /foundation_finance/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create: if isFoundationLevel();
+      allow update: if isFoundationLevel() && (
+        isFoundationAdmin() ||
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'statut', 'approuve_par', 'approuve_le', 'commentaire_validation'
         ])
       );
-      allow delete: if false; // Traçabilité comptable — aucune suppression
-    }
-
-    // ── Foundation Employees (RH Détachés) ───────────────────────────────
-    match /foundation_employees/{docId} {
-      allow read: if isFoundationRole();
-      allow create: if isFoundationAdmin();
-      allow update: if isFoundationRole() && (
-        isFoundationAdmin() ||
-        // Staff can update non-sensitive fields (notes, statut congé)
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'salaire', 'contrat', 'date_embauche', 'poste', 'departement'
-        ])
-      );
-      allow delete: if false; // Soft-delete obligatoire (statut = 'Départ')
-    }
-
-    // ── Foundation Collecteurs (Agents Terrain) ──────────────────────────
-    match /foundation_collecteurs/{docId} {
-      allow read: if isFoundationRole();
-      allow create: if isFoundationRole();
-      allow update: if isFoundationRole();
-      allow delete: if false; // Traçabilité des cartes de collecte
-    }
-
-    // ── Foundation Centres (Centres de Tri) ───────────────────────────────
-    match /foundation_centres/{docId} {
-      allow read: if isFoundationRole();
-      allow create: if isFoundationAdmin();
-      allow update: if isFoundationRole();
       allow delete: if false;
     }
 
-    // ── Foundation Collectes (Tracking Plastique) ────────────────────────
-    match /foundation_collectes/{docId} {
-      allow read: if isFoundationRole();
-      allow create: if isFoundationRole();
-      allow update: if isFoundationRole();
-      allow delete: if false; // Tonnage immutable pour audit environnemental
+    // ── Foundation Partners ───────────────────────────────────────────────
+    match /foundation_partners/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create, update: if isFoundationLevel();
+      allow delete: if isFoundationAdmin();
     }
 
-    // ── Foundation Expenses (Notes de Frais) ─────────────────────────────
-    match /foundation_expenses/{docId} {
-      allow read: if isFoundationRole();
-      // Tout staff foundation peut soumettre une note de frais
-      allow create: if isFoundationRole() &&
-                       request.resource.data.justificatif != null;
-      // Seul un admin peut approuver/rejeter
-      allow update: if isFoundationRole() && (
-        isFoundationAdmin() ||
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'statut', 'approuve_par', 'approuve_le', 'commentaire'
-        ])
-      );
+    // ── Foundation ESG Reports ────────────────────────────────────────────
+    match /foundation_esg_reports/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create, update: if isFoundationLevel();
+      allow delete: if false; // Immutable ESG audit trail
+    }
+
+    // ── Foundation Governance (Board decisions, minutes) ──────────────────
+    match /foundation_governance/{docId} {
+      allow read: if isFoundationLevel() || isHoldingLevel();
+      allow create, update: if isFoundationAdmin();
       allow delete: if false;
     }
 

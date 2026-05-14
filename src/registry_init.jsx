@@ -49,7 +49,8 @@ const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
 const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
 const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
 const NexusAcademy   = lazy(() => import('./modules/academy/NexusAcademy'));
-const FoundationHub  = lazy(() => import('./modules/foundation/FoundationHub'));
+const HoldingCockpit    = lazy(() => import('./modules/holding/HoldingCockpit'));
+const FoundationCockpit = lazy(() => import('./modules/foundation/FoundationCockpit'));
 const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
@@ -372,11 +373,32 @@ export const initRegistry = () => {
     component: NexusAcademy, priority: 9
   });
 
-  // --- IPC Collect Foundation ---
+  // ══════════════════════════════════════════════════════════
+  // GROUP GOVERNANCE — Holding / Foundation Cockpits
+  // Architecture 3 niveaux : HOLDING > FILIALES > FOUNDATION
+  // ══════════════════════════════════════════════════════════
+
+  // --- Holding Cockpit (Niveau 1 — Vue Groupe) ---
+  registry.register({
+    id: 'holding', label: 'Cockpit Groupe', icon: <Landmark size={18} />,
+    category: 'cockpit',
+    roles: [
+      'SUPER_ADMIN',
+      'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO', 'HOLDING_CHRO',
+      'HOLDING_CTO', 'HOLDING_AUDITOR', 'HOLDING_LEGAL', 'GROUP_AUDITOR',
+    ],
+    component: HoldingCockpit, priority: 1
+  });
+
+  // --- Foundation Cockpit (Niveau 3 — Entité Non-Lucrative) ---
   registry.register({
     id: 'foundation', label: 'IPC Foundation', icon: <Heart size={18} />,
     category: 'cockpit',
-    roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER'],
-    component: FoundationHub, priority: 10
+    roles: [
+      'SUPER_ADMIN',
+      'HOLDING_CEO', 'HOLDING_CFO', 'GROUP_AUDITOR',
+      'FOUNDATION_DG', 'FOUNDATION_MANAGER', 'FOUNDATION_STAFF', 'FOUNDATION_AUDITOR',
+    ],
+    component: FoundationCockpit, priority: 10
   });
 };
