@@ -1,21 +1,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // [DEBUG ONLY] Tout est ouvert pour débloquer le développement
-    match /{document=**} {
-      allow read, write: if isSuperAdmin();
-    }
+    // ⚠️  [PRODUCTION RULES — Debug wildcard removed]
+    // All access is governed by the per-collection rules below.
+    // SUPER_ADMIN bypass is handled at the collection level only.
 
     function isAuthenticated() {
       return request.auth != null;
     }
 
+    // [SECURITY] Creator email check removed — rely on Custom Claims only.
+    // Hardcoded personal emails in rules are a security anti-pattern.
     function isCreatorEmail() {
-      return isAuthenticated() && 
-             (request.auth.token.email == 'fall.jcjunior@gmail.com' || 
-              request.auth.token.email == 'ra.yoman@ipcgreenblocks.com' || 
-              request.auth.token.email == 'ra.yoman@gmail.com' || 
-              request.auth.token.email == 'yomanraphael26@gmail.com');
+      return false; // Désactivé — utiliser uniquement les Custom Claims
     }
 
     function getUserData() {
@@ -102,26 +99,13 @@ service cloud.firestore {
         resource.data.get('userId', '') == request.auth.uid ||
         resource.data.get('ownerId', '') == request.auth.uid
       );
-      allow create: if isAuthenticated() && (
-        isSuperAdmin() || isManager() || hasRole('HR') ||
-        request.resource.data.get('ownerId', '') == request.auth.uid ||
-        request.resource.data.get('userId', '') == request.auth.uid
-      );
-      allow update: if isAuthenticated() && (
-        isSuperAdmin() || isManager() || hasRole('HR') ||
-        // L'auteur peut modifier son propre record tant qu'il n'est pas validé
-        (
-          (resource.data.get('ownerId', '') == request.auth.uid ||
-           resource.data.get('userId', '') == request.auth.uid) &&
-          !(resource.data.get('statut', '') in ['Approuvé', 'Validé', 'Rejeté'])
-        )
-      );
-      allow delete: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('HR'));
+      allow create, update, delete: if false;
     }
 
     // [DEPRECATED] Alias for HR
     match /employees/{docId} {
-      allow read, write: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
+      allow read: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
+      allow create, update, delete: if false;
     }
 
     // ── Messages ─────────────────────────────────────────────────────────────

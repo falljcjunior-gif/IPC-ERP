@@ -12,7 +12,9 @@ export const HRSchemas = {
         nom: { label: 'Nom & Prénoms', type: 'text', required: true, search: true, placeholder: 'Ex: Mamadou Diop' },
         poste: { label: 'Intitulé du Poste / Fonction', type: 'text', required: true, search: true, placeholder: 'Ex: Responsable Production' },
         dept: { label: 'Pôle Opérationnel', type: 'selection', options: ['Direction', 'Finance', 'RH', 'IT', 'Ventes', 'Production', 'Logistique'], search: true },
-        email: { label: 'Email Pro', type: 'email', search: true },
+        email: { label: 'Email Pro', type: 'email', search: true, unique: true },
+        solde_conges: { label: 'Solde Congés (Jours)', type: 'number', default: 0, readonly: true },
+        solde_rtt: { label: 'Solde RTT (Jours)', type: 'number', default: 0, readonly: true },
         // NOTE: salaire has been moved to private_data subcollection for Bank-Grade security
         performance_score: { label: 'Performance 360° (%)', type: 'number', default: 85 },
         burnout_risk: { label: 'Risque d\'Épuisement (%)', type: 'number', default: 10 },
@@ -62,11 +64,15 @@ export const HRSchemas = {
       label: 'Pointages',
       fields: {
         date: { label: 'Date', type: 'date', required: true, search: true },
+        heure_debut: { label: 'Heure de début', type: 'time', required: true },
+        heure_fin: { label: 'Heure de fin', type: 'time', required: true },
         collaborateur: { label: 'Collaborateur', type: 'text', required: true, search: true },
         contractType: { label: 'Type de Contrat', type: 'selection', options: ['Forfait Cadre', 'Horaire (Shift)', 'Consultant'], default: 'Forfait Cadre' },
         projet: { label: 'Projet / Centre Coût', type: 'text', search: true },
         tache: { label: 'Tâche / Quart de travail', type: 'text', search: true },
-        heures: { label: 'Durée (heures / jours)', type: 'number', required: true },
+        heures: { label: 'Durée totale déclarée (h/j)', type: 'number', required: true },
+        heures_validees: { label: 'Heures effectives validées', type: 'number', readonly: true },
+        majoration: { label: 'Type Majoration', type: 'selection', options: ['Aucune', 'Nuit (+50%)', 'Dimanche (+100%)', 'Férié'], readonly: true },
         facturable: { label: 'Facturable', type: 'boolean', default: false },
         statut: { label: 'Statut', type: 'selection', options: ['En attente', 'Validé', 'Refusé'], default: 'En attente' }
       },
@@ -144,7 +150,7 @@ export const HRSchemas = {
       fields: {
         salaire: { label: 'Salaire de Base (Brut)', type: 'money', currency: 'FCFA', required: true },
         iban: { label: 'RIB / IBAN', type: 'text' },
-        ssn: { label: 'Numéro de Sécurité Sociale', type: 'text' },
+        ssn: { label: 'Numéro de Sécurité Sociale', type: 'text', unique: true },
         notes: { label: 'Notes Médicales/Disciplinaires', type: 'textarea' },
         _employeeId: { label: 'Employé ID', type: 'text', readonly: true }
       },

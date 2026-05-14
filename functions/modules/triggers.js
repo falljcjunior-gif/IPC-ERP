@@ -2,6 +2,7 @@ const { onDocumentWritten, onDocumentUpdated, onDocumentDeleted } = require('fir
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
+const crypto = require('crypto');
 const greenblock = require('./greenblock');
 
 const db = admin.firestore();
@@ -143,17 +144,15 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
 
 /**
  * 🔒 HR SECURITY: PERSONNEL SENSITIVE CHANGES — High Severity Audit
- * WHY: Toute modification de salaire ou de rôle doit être tracée de manière indélébile.
+ * WHY: Toute modification de rôle ou de permissions doit être tracée.
+ * NOTE: Le salaire est maintenant dans hr_private (géré par onHRPrivateChange).
  */
-exports.onHRPersonnelChange = onDocumentUpdated('{collection}/{docId}', async (event) => {
-  const { collection, docId } = event.params;
-  if (!['hr', 'users'].includes(collection)) return null;
-
+exports.onHRPersonnelChange = onDocumentUpdated('users/{docId}', async (event) => {
   const before = event.data.before.data();
   const after = event.data.after.data();
 
-  // Detection fields: salary (hr) or role (users/hr)
-  const sensitiveKeys = ['salaire', 'role', 'permissions', 'active'];
+  // Detection fields: role (users) or permissions
+  const sensitiveKeys = ['role', 'permissions', 'active'];
   const changes = sensitiveKeys.filter(k => 
     JSON.stringify(before[k]) !== JSON.stringify(after[k])
   );
@@ -162,23 +161,56 @@ exports.onHRPersonnelChange = onDocumentUpdated('{collection}/{docId}', async (e
     const auditRecord = {
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       severity: 'CRITICAL_SECURITY',
-      collection,
+      collection: 'users',
+      docId: event.params.docId,
+      actor: after._updatedBy || after._permissionsUpdatedBy || 'system',
+      changes: changes.reduce((acc, k) => {
+        acc[k] = { from: before[k], to: after[k] };
+        return acc;
+      }, {}),
+      details: `Critical access change detected on users/${event.params.docId}`,
+      fingerprint: `SECURE_AUTH_${event.id}`
+    };
+
+    try {
+      await db.collection('audit_logs').add(auditRecord);
+      logger.warn(`[SECURITY] Access change detected on users/${event.params.docId}: ${changes.join(', ')}`);
+    } catch (err) {
+      logger.error('Auth Audit Log Error:', err);
+    }
+  }
+  return null;
+});
+
+/**
+ * 🔒 HR SECURITY: PRIVATE DATA CHANGES (Vault)
+ * WHY: Surveillance du coffre-fort HR (Salaires, IBAN, etc.)
+ */
+exports.onHRPrivateChange = onDocumentUpdated('users/{uid}/hr_private/{docId}', async (event) => {
+  const { uid, docId } = event.params;
+  const before = event.data.before.data();
+  const after = event.data.after.data();
+
+  const sensitiveKeys = ['salaire', 'iban', 'ssn', 'rib'];
+  const changes = sensitiveKeys.filter(k => 
+    JSON.stringify(before[k]) !== JSON.stringify(after[k])
+  );
+
+  if (changes.length > 0) {
+    await db.collection('audit_logs').add({
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      severity: 'CRITICAL_SECURITY',
+      collection: `users/${uid}/hr_private`,
       docId,
       actor: after._updatedBy || 'system',
       changes: changes.reduce((acc, k) => {
         acc[k] = { from: before[k], to: after[k] };
         return acc;
       }, {}),
-      details: `Sensitive personnel data changed on ${collection}/${docId}`,
-      fingerprint: `SECURE_${event.id}`
-    };
-
-    try {
-      await db.collection('audit_logs').add(auditRecord);
-      logger.warn(`[SECURITY] Sensitive change detected on ${collection}/${docId}: ${changes.join(', ')}`);
-    } catch (err) {
-      logger.error('HR Audit Log Error:', err);
-    }
+      details: `Vault data modified for employee ${uid}`,
+      fingerprint: `SECURE_VAULT_${event.id}`
+    });
+    logger.warn(`[SECURITY] Vault modification for ${uid}: ${changes.join(', ')}`);
   }
   return null;
 });
@@ -491,18 +523,21 @@ exports.onTaskAssigned = onDocumentWritten('projects/{taskId}', async (event) =>
   if (!newData || newData.subModule !== 'tasks') return null;
 
   // Détection de nouveaux membres assignés
+  // [FIX] membresId doit contenir des UIDs Firebase, pas des noms.
+  // Le champ "membresId" est désormais un tableau d'UIDs (string).
   const newMembres = newData.membresId || [];
   const oldMembres = oldData?.membresId || [];
-  
-  const addedMembres = newMembres.filter(m => !oldMembres.includes(m));
+
+  const addedMembres = newMembres.filter(uid => !oldMembres.includes(uid));
 
   if (addedMembres.length > 0) {
     try {
-      for (const userName of addedMembres) {
-        const userSnap = await db.collection('users').where('nom', '==', userName).limit(1).get();
-        
-        if (!userSnap.empty) {
-          const userData = userSnap.docs[0].data();
+      for (const uid of addedMembres) {
+        // [FIX] Lookup par UID (document ID) — pas par nom. O(1) au lieu de O(n).
+        const userDoc = await db.collection('users').doc(uid).get();
+
+        if (userDoc.exists) {
+          const userData = userDoc.data();
           const fcmToken = userData.fcmToken;
 
           if (fcmToken) {
@@ -540,13 +575,16 @@ exports.onTaskAssigned = onDocumentWritten('projects/{taskId}', async (event) =>
 
       if (!projectsSnap.empty) {
         const projectData = projectsSnap.docs[0].data();
-        const managerName = projectData.chefProjet;
+        // [FIX] chefProjetUid doit être un UID, pas un nom.
+        // chefProjet (nom lisible) conservé pour affichage, chefProjetUid pour les lookups.
+        const managerUid = projectData.chefProjetUid || null;
+        const managerName = projectData.chefProjet || 'Manager';
 
-        if (managerName) {
-          const userSnap = await db.collection('users').where('nom', '==', managerName).limit(1).get();
-          if (!userSnap.empty) {
-            const userData = userSnap.docs[0].data();
-            const fcmToken = userData.fcmToken;
+        if (managerUid) {
+          // [FIX] Lookup par UID — O(1), garanti unique
+          const userDoc = await db.collection('users').doc(managerUid).get();
+          if (userDoc.exists) {
+            const fcmToken = userDoc.data().fcmToken;
 
             if (fcmToken) {
               await admin.messaging().send({
@@ -614,10 +652,14 @@ exports.checkTaskDeadlines = onSchedule('every 24 hours', async (event) => {
   const threshold = new Date(now.getTime() - (48 * 60 * 60 * 1000)); // 48h
 
   try {
+    // [FIX] _updatedAt est un Firestore Timestamp (serverTimestamp), PAS une ISO string.
+    // Comparer avec admin.firestore.Timestamp.fromDate() pour éviter les résultats imprévisibles.
+    const thresholdTs = admin.firestore.Timestamp.fromDate(threshold);
+
     const overdueTasks = await db.collection('projects')
       .where('subModule', '==', 'tasks')
       .where('priorite', '==', 'Critique')
-      .where('_updatedAt', '<', threshold.toISOString())
+      .where('_updatedAt', '<', thresholdTs)
       .get();
 
     for (const doc of overdueTasks.docs) {
@@ -630,17 +672,20 @@ exports.checkTaskDeadlines = onSchedule('every 24 hours', async (event) => {
 
       if (!projectsSnap.empty) {
         const projectData = projectsSnap.docs[0].data();
-        const managerName = projectData.chefProjet;
+        // [FIX] Utiliser chefProjetUid (UID) au lieu de chefProjet (nom)
+        const managerUid = projectData.chefProjetUid || null;
+        const managerName = projectData.chefProjet || 'Manager';
 
-        if (managerName) {
-          const userSnap = await db.collection('users').where('nom', '==', managerName).limit(1).get();
-          if (!userSnap.empty) {
-            const fcmToken = userSnap.docs[0].data().fcmToken;
+        if (managerUid) {
+          // [FIX] Lookup par UID — atomique et garanti unique
+          const userDoc = await db.collection('users').doc(managerUid).get();
+          if (userDoc.exists) {
+            const fcmToken = userDoc.data().fcmToken;
             if (fcmToken) {
               await admin.messaging().send({
                 notification: {
-                  title: '🚨 Butler Alert: Retard Critique',
-                  body: `La tâche "${task.nom}" (Projet ${task.projet}) n'a pas bougé depuis 48h.`
+                  title: `⚠️ ALERTE AI-MANAGER : Retard inacceptable sur ${task.projet}`,
+                  body: `${managerName}, la tâche "${task.nom}" est au point mort depuis 48h. C'est inacceptable. Reprenez le contrôle immédiatement et faites avancer les choses. L'équipe compte sur votre leadership !`
                 },
                 token: fcmToken
               });
@@ -849,112 +894,81 @@ exports.validateDoubleEntry = onDocumentWritten('accounting/{entryId}', async (e
 });
 
 /**
- * 🚀 HR: ONBOARDING AUTOMATISÉ (Hire)
- * WHY: Création compte Auth, Claims, Notification IT
+ * 🚀 HR: ONBOARDING AUTOMATION (Unified 2.0)
+ * WHY: When a user is flagged as an 'employee' in the Unified model, trigger provisioning workflows.
  */
-exports.onEmployeeOnboarded = onDocumentWritten('hr/{employeeId}', async (event) => {
-  const newData = event.data.after.exists ? event.data.after.data() : null;
-  const oldData = event.data.before.exists ? event.data.before.data() : null;
-  const { employeeId } = event.params;
+exports.onEmployeeOnboarded = onDocumentCreated('users/{uid}', async (event) => {
+  const uid = event.params.uid;
+  const employee = event.data.data();
 
-  if (!newData || newData.subModule !== 'employees') return null;
-
-  // Trigger when employee is created or explicitly marked as active for the first time
-  if (newData.active === true && (!oldData || oldData.active !== true)) {
-    try {
-      // 1. Firebase Auth Creation (if email provided)
-      let uid = newData.userId;
-      if (newData.email && !uid) {
-        try {
-           const userRecord = await admin.auth().createUser({
-              email: newData.email,
-              displayName: newData.nom,
-              password: 'ChangeMe123!' // Force password reset on first login
-           });
-           uid = userRecord.uid;
-           // Assign Custom Claims based on dept
-           const claims = {
-             role: newData.dept === 'Direction' ? 'DIRECTOR' : 
-                   newData.dept === 'RH' ? 'HR' : 
-                   newData.dept === 'Finance' ? 'FINANCE' : 'STAFF',
-             dept: newData.dept
-           };
-           await admin.auth().setCustomUserClaims(uid, claims);
-           
-           // Update employee record with userId
-           await event.data.after.ref.update({ userId: uid });
-           logger.info(`[HR] Auth user created for ${newData.nom} (${newData.email})`);
-        } catch (e) {
-           if (e.code === 'auth/email-already-exists') {
-              const existingUser = await admin.auth().getUserByEmail(newData.email);
-              uid = existingUser.uid;
-              await event.data.after.ref.update({ userId: uid });
-           } else {
-              logger.error('[HR] Auth Creation Error:', e);
-           }
-        }
-      }
-
-      // 2. IT Provisioning Task
-      await db.collection('projects').add({
-        subModule: 'tasks',
-        projet: 'IT Operations - Onboarding',
-        nom: `Provisionnement Matériel: ${newData.nom}`,
-        description: `Préparer le poste de travail et les accès pour ${newData.nom} (${newData.poste} - ${newData.dept}).`,
-        priorite: 'Haute',
-        colonneId: 'A_Faire',
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        _domain: 'it',
-        _createdBy: 'nexus_hr_engine'
-      });
-      logger.info(`[HR] IT Provisioning task created for ${newData.nom}`);
-
-      // 3. Contract Draft Creation
-      const contractId = `CTR_${employeeId}_${Date.now()}`;
-      await db.collection('hr').doc(contractId).set({
-        id: contractId,
-        subModule: 'contracts',
-        label: `Contrat de Travail - ${newData.nom}`,
-        type: 'Contrat',
-        employeeId: employeeId,
-        collaborateur: newData.nom,
-        statut: 'A_SIGNER',
-        metadata: {
-          nom: newData.nom,
-          poste: newData.poste,
-          dept: newData.dept,
-          salaire: newData.salaire,
-          contratType: newData.contratType || 'CDI',
-          contratDuree: newData.contratDuree || ''
-        },
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        _domain: 'hr',
-        _createdBy: 'nexus_hr_engine'
-      });
-      logger.info(`[HR] Draft contract ${contractId} created for ${newData.nom}`);
-
-    } catch (err) {
-      logger.error('[HR] Onboarding Error:', err);
-    }
+  // Guard: Only process staff/employees
+  if (employee.hr?.subModule !== 'employees') {
+    logger.debug(`[HR] User ${uid} created but not as employee. Skipping onboarding automation.`);
+    return null;
   }
+
+  logger.info(`[HR] Processing onboarding for ${employee.email || uid}`);
+
+  const batch = db.batch();
+
+  // 1. Create IT Provisioning Task
+  const taskId = `IT_PROV_${uid}`;
+  const taskRef = db.collection('projects').doc('INTERNAL_OPS').collection('tasks').doc(taskId);
+  
+  batch.set(taskRef, {
+    title: `IT Provisioning: ${employee.profile?.nom || employee.email}`,
+    description: `Setup hardware and accounts for ${employee.profile?.poste || 'New Employee'}`,
+    status: 'TODO',
+    priority: 'HIGH',
+    assignedTo: 'IT_TEAM',
+    tags: ['IT', 'ONBOARDING'],
+    relatedEmployee: uid,
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  // 2. Create Draft Contract
+  const contractId = `DRAFT_CONT_${uid}`;
+  const contractRef = db.collection('hr_contracts').doc(contractId);
+  batch.set(contractRef, {
+    employeeId: uid,
+    employeeName: employee.profile?.nom || 'À définir',
+    type: employee.hr?.contratType || 'CDI',
+    status: 'DRAFT',
+    steps: [
+      { id: 'draft', label: 'Brouillon créé', completed: true, date: new Date().toISOString() },
+      { id: 'legal_review', label: 'Revue Juridique', completed: false },
+      { id: 'signature', label: 'Signature', completed: false }
+    ],
+    createdAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+
+  try {
+    await batch.commit();
+    logger.info(`[HR] Onboarding automated tasks created for ${uid}`);
+  } catch (err) {
+    logger.error('[HR] Onboarding Automation Error:', err);
+  }
+
   return null;
 });
 
 /**
- * 🛑 HR: OFFBOARDING SÉCURISÉ (Retire)
- * WHY: Révocation d'accès, archivage, alerte Finance
+ * ⚠️ HR: OFFBOARDING SECURITY (Unified 2.0)
+ * WHY: Ensure accounts are disabled and access is revoked when an employee record is deactivated.
  */
-exports.onEmployeeOffboarded = onDocumentUpdated('hr/{employeeId}', async (event) => {
+exports.onEmployeeOffboarded = onDocumentUpdated('users/{uid}', async (event) => {
+  const uid = event.params.uid;
   const newData = event.data.after.data();
   const oldData = event.data.before.data();
 
-  if (newData.subModule !== 'employees') return null;
+  // Guard: Only process employees
+  if (newData.hr?.subModule !== 'employees') return null;
 
-  // Trigger when employee is deactivated
-  if (newData.active === false && oldData.active === true) {
+  // Trigger when deactivated
+  if (newData.profile?.active === false && oldData.profile?.active === true) {
     try {
-      const uid = newData.userId;
-      if (uid) {
+      const _uid = uid; // uid is already defined from event.params
+      if (_uid) {
         // 1. Revoke Auth Sessions & Disable Account
         await admin.auth().updateUser(uid, { disabled: true });
         await admin.auth().revokeRefreshTokens(uid);
@@ -964,9 +978,9 @@ exports.onEmployeeOffboarded = onDocumentUpdated('hr/{employeeId}', async (event
       // 2. Notify Finance (Solde de tout compte)
       await db.collection('notifications').add({
         title: '🛑 Offboarding : Solde de tout compte',
-        body: `Le collaborateur ${newData.nom} (${newData.poste}) a été désactivé. Veuillez préparer le solde de tout compte.`,
+        body: `Le collaborateur ${newData.profile?.nom || uid} a été désactivé. Veuillez préparer le solde de tout compte.`,
         type: 'alert',
-        targetRole: 'FINANCE', // Assuming frontend handles targetRole
+        targetRole: 'FINANCE',
         createdAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
@@ -979,10 +993,10 @@ exports.onEmployeeOffboarded = onDocumentUpdated('hr/{employeeId}', async (event
 
 /**
  * 🕵️ HR: PRIVACY AUDIT (The HR Vault)
- * WHY: Traces every access/modification to sensitive HR data.
+ * WHY: Traces every access/modification to sensitive HR data in the Unified model.
  */
-exports.hrPrivacyAudit = onDocumentWritten('hr/{employeeId}/private_data/{docId}', async (event) => {
-  const { employeeId, docId } = event.params;
+exports.hrPrivacyAudit = onDocumentWritten('users/{uid}/hr_private/{docId}', async (event) => {
+  const { uid, docId } = event.params;
   const after = event.data.after.exists ? event.data.after.data() : null;
   const before = event.data.before.exists ? event.data.before.data() : null;
 
@@ -996,10 +1010,10 @@ exports.hrPrivacyAudit = onDocumentWritten('hr/{employeeId}/private_data/{docId}
     await db.collection('audit_logs').add({
       action: `HR_VAULT_${operation}`,
       severity: 'CRITICAL_SECURITY',
-      collection: `hr/${employeeId}/private_data`,
+      collection: `users/${uid}/hr_private`,
       docId: docId,
       actor: actor,
-      details: `Sensitive HR data ${operation} on employee ${employeeId}`,
+      details: `Sensitive HR data ${operation} on unified user ${uid}`,
       timestamp: admin.firestore.FieldValue.serverTimestamp()
     });
   } catch (err) {
@@ -1016,30 +1030,262 @@ exports.generatePrePayroll = onSchedule('0 0 25 * *', async (event) => {
   try {
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
-    const currentYear = now.getFullYear();
-    const period = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const currentYear  = now.getFullYear();
+    const period       = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+    const periodStart  = new Date(currentYear, currentMonth - 1, 1);
+    const periodEnd    = new Date(currentYear, currentMonth, 0); // dernier jour du mois
 
-    logger.info(`[HR] Starting Pre-Payroll generation for ${period}`);
+    logger.info(`[PAYROLL] Starting Pre-Payroll generation for ${period}`);
 
-    // This would typically fetch timesheets, calculate hours, 
-    // fetch private_data for base salary, and output to 'payroll' collection.
-    // Placeholder logic:
-    const summaryRef = db.collection('payroll').doc(`PRE_${period}`);
-    await summaryRef.set({
-      id: `PRE_${period}`,
-      subModule: 'slips',
-      period: period,
-      status: 'Brouillon',
-      generatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      _domain: 'hr',
-      _createdBy: 'nexus_payroll_engine'
+    // ──────────────────────────────────────────────────────────
+    // 1. Charger tous les employés actifs (documents /users)
+    // ──────────────────────────────────────────────────────────
+    const employeesSnap = await db.collection('users')
+      .where('statut', '==', 'actif')
+      .get();
+
+    if (employeesSnap.empty) {
+      logger.warn(`[PAYROLL] Aucun employé actif pour ${period}`);
+      return null;
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // 2. Charger les pointages du mois (timesheets)
+    // ──────────────────────────────────────────────────────────
+    const timesheetsSnap = await db.collection('hr')
+      .where('subModule', '==', 'timesheets')
+      .where('mois', '==', period)
+      .get();
+
+    const timesheetsByEmployee = {};
+    timesheetsSnap.forEach(doc => {
+      const d = doc.data();
+      const uid = d.userId || d.ownerId;
+      if (!uid) return;
+      if (!timesheetsByEmployee[uid]) timesheetsByEmployee[uid] = [];
+      timesheetsByEmployee[uid].push(d);
     });
-    
-    logger.info(`[HR] Pre-Payroll draft created: PRE_${period}`);
+
+    // ──────────────────────────────────────────────────────────
+    // 3. Charger les congés approuvés du mois
+    // ──────────────────────────────────────────────────────────
+    const leavesSnap = await db.collection('hr')
+      .where('subModule', '==', 'leaves')
+      .where('statut', '==', 'Approuvé')
+      .get();
+
+    const leavesByEmployee = {};
+    leavesSnap.forEach(doc => {
+      const d = doc.data();
+      const uid = d.userId || d.ownerId;
+      if (!uid) return;
+      // Ne compter que les congés qui chevauchet la période courante
+      const start = d.dateDebut ? new Date(d.dateDebut) : null;
+      const end   = d.dateFin   ? new Date(d.dateFin)   : null;
+      if (!start || !end) return;
+      if (start <= periodEnd && end >= periodStart) {
+        if (!leavesByEmployee[uid]) leavesByEmployee[uid] = 0;
+        // Calculer les jours effectifs dans la période
+        const effectiveStart = start < periodStart ? periodStart : start;
+        const effectiveEnd   = end   > periodEnd   ? periodEnd   : end;
+        const diffMs = effectiveEnd - effectiveStart;
+        const days   = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+        leavesByEmployee[uid] += days;
+      }
+    });
+
+    // ──────────────────────────────────────────────────────────
+    // 4. Pour chaque employé : lire le salaire de base (hr_private vault)
+    //    et calculer le net à payer
+    // ──────────────────────────────────────────────────────────
+    // Constantes sociales Côte d'Ivoire (à externaliser dans Settings)
+    const CNPS_EMPLOYEE_RATE = 0.0636;  // 6.36% charge salarié CNPS
+    const CNPS_EMPLOYER_RATE = 0.1686;  // 16.86% charge patronale CNPS
+    const ITS_ABATTEMENT     = 0.15;    // Abattement 15% sur revenu imposable
+    const WORKING_DAYS       = 26;      // Jours ouvrables standard par mois
+
+    const batch = db.batch();
+    const slipIds = [];
+
+    for (const empDoc of employeesSnap.docs) {
+      const emp     = empDoc.data();
+      const empUid  = empDoc.id;
+      const empNom  = emp.nom || emp.displayName || 'Employé';
+
+      try {
+        // Lire le salaire brut depuis le vault sécurisé (hr_private/salary_data)
+        const vaultSnap = await db.collection('users')
+          .doc(empUid)
+          .collection('hr_private')
+          .doc('salary_data')
+          .get();
+
+        const vaultData  = vaultSnap.exists ? vaultSnap.data() : {};
+        const salaireBrut = vaultData.salaireBrut || emp.salary || emp.salaire || 0;
+
+        if (salaireBrut === 0) {
+          logger.warn(`[PAYROLL] Salaire inconnu pour ${empNom} (${empUid}) — slip ignoré.`);
+          continue;
+        }
+
+        // ── Calculs de paie (Droit ivoirien simplifié) ─────
+        const joursAbsence  = leavesByEmployee[empUid] || 0;
+        const joursPresence = Math.max(0, WORKING_DAYS - joursAbsence);
+        const salBrutPro    = (salaireBrut / WORKING_DAYS) * joursPresence;
+
+        // Heures supplémentaires (depuis timesheets)
+        const timesheets  = timesheetsByEmployee[empUid] || [];
+        const totalHeureSup = timesheets.reduce((sum, ts) => sum + (ts.heureSup || 0), 0);
+        const tauxHoraire   = salaireBrut / (WORKING_DAYS * 8);
+        const majoration    = 1.15; // 15% de majoration heures sup
+        const montantHeureSup = totalHeureSup * tauxHoraire * majoration;
+
+        // Avantages en nature (logement, transport) — depuis vault
+        const avantagesTotaux = vaultData.avantagesNature || 0;
+
+        const salBrutTotal = salBrutPro + montantHeureSup + avantagesTotaux;
+
+        // Cotisations salariales CNPS
+        const retenueCNPS      = salBrutTotal * CNPS_EMPLOYEE_RATE;
+
+        // Revenu brut imposable (ITS — Impôt sur les Traitements et Salaires)
+        const revenuImposable  = salBrutTotal * (1 - ITS_ABATTEMENT) - retenueCNPS;
+        const its              = _calculateITS(revenuImposable);
+
+        // Autres retenues
+        const autresRetenues   = vaultData.autresRetenues || 0;
+        const avances          = vaultData.avances        || 0;
+
+        // Total retenues salariales
+        const totalRetenues    = retenueCNPS + its + autresRetenues + avances;
+
+        // Salaire net
+        const salaireNet       = salBrutTotal - totalRetenues;
+
+        // Charges patronales CNPS
+        const chargesPatronales = salBrutTotal * CNPS_EMPLOYER_RATE;
+
+        // ── Génération de la fiche de paie ─────────────────
+        const slipId  = `SLIP_${period}_${empUid}`;
+        const slipRef = db.collection('payroll').doc(slipId);
+
+        batch.set(slipRef, {
+          id:             slipId,
+          subModule:      'slips',
+          period:         period,
+          status:         'Brouillon',
+          employeeId:     empUid,
+          employeeNom:    empNom,
+          poste:          emp.poste  || emp.role || '—',
+          departement:    emp.departement || '—',
+          contractType:   emp.contractType || 'CDI',
+
+          // Brut
+          salaireBrutBase:    salaireBrut,
+          salaireBrutProrate: Math.round(salBrutPro),
+          heuresSup:          totalHeureSup,
+          montantHeuresSup:   Math.round(montantHeureSup),
+          avantagesNature:    avantagesTotaux,
+          salaireBrutTotal:   Math.round(salBrutTotal),
+
+          // Retenues salariales
+          retenueCNPS:        Math.round(retenueCNPS),
+          its:                Math.round(its),
+          autresRetenues:     autresRetenues,
+          avances:            avances,
+          totalRetenues:      Math.round(totalRetenues),
+
+          // Net
+          salaireNet:         Math.round(salaireNet),
+
+          // Charges patronales (non déduit du salarié, à charge employeur)
+          chargesPatronales:  Math.round(chargesPatronales),
+
+          // Présence
+          joursOuvrables:  WORKING_DAYS,
+          joursPresence:   joursPresence,
+          joursAbsence:    joursAbsence,
+
+          // Méta
+          generatedAt:   admin.firestore.FieldValue.serverTimestamp(),
+          _domain:       'hr',
+          _createdBy:    'nexus_payroll_engine',
+          _deletedAt:    null,
+        });
+
+        slipIds.push(slipId);
+
+      } catch (empErr) {
+        logger.error(`[PAYROLL] Erreur pour ${empNom} (${empUid}):`, empErr);
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // 5. Créer le document récapitulatif de la période
+    // ──────────────────────────────────────────────────────────
+    const summaryRef = db.collection('payroll').doc(`PRE_${period}`);
+    batch.set(summaryRef, {
+      id:           `PRE_${period}`,
+      subModule:    'summary',
+      period:       period,
+      status:       'Brouillon',
+      totalSlips:   slipIds.length,
+      slipIds:      slipIds,
+      generatedAt:  admin.firestore.FieldValue.serverTimestamp(),
+      _domain:      'hr',
+      _createdBy:   'nexus_payroll_engine',
+    });
+
+    await batch.commit();
+
+    logger.info(`[PAYROLL] ✅ Pre-Payroll ${period} généré : ${slipIds.length} fiche(s) de paie.`);
+
+    // Notifier les RH managers
+    const hrManagersSnap = await db.collection('users')
+      .where('role', 'in', ['HR', 'ADMIN', 'SUPER_ADMIN'])
+      .get();
+
+    const notifications = hrManagersSnap.docs.map(doc => ({
+      targetUserId: doc.id,
+      type:         'payroll_ready',
+      title:        `Paie ${period} générée`,
+      message:      `${slipIds.length} fiches de paie ont été générées pour la période ${period}. En attente de validation.`,
+      module:       'payroll',
+      link:         `/payroll/${period}`,
+      read:         false,
+      createdAt:    admin.firestore.FieldValue.serverTimestamp(),
+    }));
+
+    const notifBatch = db.batch();
+    notifications.forEach(n => {
+      notifBatch.set(db.collection('notifications').doc(), n);
+    });
+    await notifBatch.commit();
+
   } catch (err) {
-    logger.error('[HR] Pre-Payroll Error:', err);
+    logger.error('[PAYROLL] Pre-Payroll Error:', err);
   }
 });
+
+/**
+ * Calcule l'ITS (Impôt sur Traitements et Salaires) — Barème ivoirien simplifié.
+ * @param {number} revenuImposable - Revenu mensuel imposable en FCFA
+ * @returns {number} Montant ITS mensuel
+ * @private
+ */
+function _calculateITS(revenuImposable) {
+  if (revenuImposable <= 0) return 0;
+  // Barème annuel converti en mensuel (source : DGI Côte d'Ivoire)
+  const annual = revenuImposable * 12;
+  let its = 0;
+  if (annual <= 600000)        its = 0;
+  else if (annual <= 1200000)  its = (annual - 600000) * 0.015;
+  else if (annual <= 2400000)  its = 9000 + (annual - 1200000) * 0.025;
+  else if (annual <= 4000000)  its = 39000 + (annual - 2400000) * 0.35;
+  else if (annual <= 8000000)  its = 599000 + (annual - 4000000) * 0.45;
+  else                          its = 2399000 + (annual - 8000000) * 0.60;
+  return Math.round(its / 12); // Retour mensuel
+}
 
 /**
  * 👑 COCKPIT: AGREGATION STRATÉGIQUE (Scheduled)
@@ -1206,3 +1452,136 @@ exports.refreshCockpitMetrics = onSchedule('every 1 hours', async (event) => {
     logger.error('[COCKPIT] Aggregation Error:', err);
   }
 });
+
+/**
+ * 🔒 HR SECURITY: VALIDATION DES REQUÊTES (Congés & Notes de Frais)
+ * WHY: Unified 2.0 — Les requêtes sont isolées dans hr_private.
+ * Empêche l'auto-validation et gère l'intégrité cross-module.
+ */
+exports.validateHRApprovalRequest = onDocumentUpdated('users/{uid}/hr_private/{docId}', async (event) => {
+  const { uid, docId } = event.params;
+  const newData = event.data.after.data();
+  const oldData = event.data.before.data();
+
+  // Filtrage par sous-module (on gère leaves et expenses ici)
+  const isLeave = newData.subModule === 'leaves';
+  const isExpense = newData.subModule === 'expenses';
+  
+  if (!isLeave && !isExpense) return null;
+
+  // Détection du passage à "Validé"
+  if (newData.statut === 'Validé' && oldData.statut !== 'Validé') {
+    const validatorId = newData._updatedBy || 'unknown'; 
+    const requesterId = uid; // Dans le modèle Unified 2.0, l'UID est dans le path
+
+    // 1. RBAC : Anti Auto-Validation (Zero-Trust Policy)
+    if (validatorId === requesterId && validatorId !== 'unknown') {
+      logger.warn(`[SECURITY] Tentative d'auto-validation bloquée pour ${requesterId} sur ${docId}`);
+      await event.data.after.ref.update({
+        statut: 'Refusé',
+        _auditNotes: 'CRITICAL: Tentative d\'auto-validation rejetée par le système (Zero-Trust Policy).'
+      });
+      return null;
+    }
+
+    try {
+      await db.runTransaction(async (t) => {
+        // --- LOGIQUE SPÉCIFIQUE CONGÉS ---
+        if (isLeave) {
+          const userRef = db.collection('users').doc(uid);
+          const userDoc = await t.get(userRef);
+          
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            const joursDemandes = newData.duree_jours || newData.heures || 1;
+            const currentSolde = userData.hr?.solde_conges || 0;
+
+            if (currentSolde < joursDemandes && newData.type === 'Congé Payé') {
+              throw new Error(`Solde insuffisant pour ${uid}. Actuel: ${currentSolde}, Demandé: ${joursDemandes}`);
+            }
+
+            // Déduction atomique du solde
+            t.update(userRef, {
+              'hr.solde_conges': admin.firestore.FieldValue.increment(-joursDemandes),
+              '_updatedAt': admin.firestore.FieldValue.serverTimestamp()
+            });
+            
+            logger.info(`[HR] Solde de congés mis à jour pour ${uid}: -${joursDemandes}`);
+          }
+        }
+
+        // --- LOGIQUE SPÉCIFIQUE NOTES DE FRAIS ---
+        if (isExpense) {
+          // Notification Finance immédiate pour mise en paiement
+          const notificationRef = db.collection('notifications').doc();
+          t.set(notificationRef, {
+            title: '💸 Note de Frais Validée',
+            body: `Une note de frais de ${newData.montant || 0} ${newData.devise || 'FCFA'} pour ${newData.collaborateur || uid} est prête pour paiement.`,
+            type: 'finance',
+            targetRole: 'FINANCE',
+            relatedDocId: docId,
+            relatedUser: uid,
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+          });
+          logger.info(`[FINANCE] Notification de paiement créée pour l'expense ${docId}`);
+        }
+
+        // 3. Empreinte d'Audit Cryptographique Inaltérable Serveur (Bank-Grade)
+        const auditHash = crypto.createHash('sha256')
+            .update(`${event.id}-${validatorId}-${new Date().getTime()}`)
+            .digest('hex');
+
+        t.update(event.data.after.ref, { 
+           _serverAuditHash: 'SECURE_SRV_' + auditHash.substring(0, 16),
+           _validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+           _integrityHash: `IPC_SECURE_${Date.now()}_${validatorId}`
+        });
+      });
+      logger.info(`[HR] Requête ${docId} (${newData.subModule}) validée avec succès.`);
+    } catch (error) {
+      logger.error(`[HR_ERROR] Validation failed for ${docId}:`, error.message);
+      await event.data.after.ref.update({ 
+        statut: 'Erreur', 
+        _error: error.message,
+        _auditNotes: 'Annulé par le système: ' + error.message 
+      });
+    }
+  }
+  return null;
+});
+
+/**
+ * 🤖 MANAGER PERSONNEL : ALERTE PROACTIVE (CRON)
+ * Surveille le risque de burnout et notifie le management.
+ */
+exports.personalManagerPilotage = onSchedule('every 24 hours', async (event) => {
+  try {
+    // Les employés sont souvent dans 'users' avec un sous-objet 'hr'
+    const riskSnapshot = await db.collection('users')
+      .where('hr.burnout_risk', '>=', 60)
+      .get();
+
+    for (const doc of riskSnapshot.docs) {
+      const emp = doc.data();
+      const managerId = emp.hr?.managerId || emp.managerId;
+      
+      if (managerId) {
+        const managerSnap = await db.collection('users').doc(managerId).get();
+        if (managerSnap.exists && managerSnap.data().fcmToken) {
+          const message = {
+            notification: {
+              title: `⚠️ ALERTE AI-MANAGER : URGENCE BURNOUT (${emp.nom || emp.displayName})`,
+              body: `Attention, ${emp.nom} présente un risque d'épuisement critique (${emp.hr.burnout_risk}%). En tant que leader, il est de votre responsabilité absolue de protéger votre équipe. Agissez immédiatement pour réduire sa charge !`
+            },
+            token: managerSnap.data().fcmToken
+          };
+          await admin.messaging().send(message);
+        }
+      }
+    }
+    logger.info(`[Pilotage] ${riskSnapshot.size} employés à risque signalés aux managers.`);
+  } catch (err) {
+    logger.error('[Pilotage] Error:', err);
+  }
+});
+

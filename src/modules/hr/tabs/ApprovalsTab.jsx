@@ -6,9 +6,13 @@ import {
   History, ShieldCheck, AlertCircle, 
   Fingerprint
 } from 'lucide-react';
+import ManagerPersonnelPilotage from '../../../components/Dashboard/ManagerPersonnelPilotage';
 
 const ApprovalsTab = () => {
-  const { data, updateRecord, currentUser, formatCurrency } = useStore();
+  const data = useStore(state => state.data);
+  const updateRecord = useStore(state => state.updateRecord);
+  const currentUser = useStore(state => state.currentUser);
+  const formatCurrency = useStore(state => state.formatCurrency);
   const [viewMode, setViewMode] = useState('pending'); // 'pending' | 'history'
 
   const allLeaves = data.hr?.leaves || [];
@@ -28,8 +32,9 @@ const ApprovalsTab = () => {
       ...item,
       statut: updatedStatus,
       validatedBy: currentUser?.nom,
-      validatedAt: new Date().toISOString(),
-      _auditHash: `SECURE_${Math.random().toString(36).substring(2, 15)}` // Simulated immutability fingerprint
+      validatedById: currentUser?.uid || currentUser?.id,
+      validatedAt: new Date().toISOString()
+      // L'audit hash cryptographique inviolable sera généré par le backend (Firebase Trigger)
     };
     updateRecord('hr', type, item.id, payload);
   };
@@ -71,6 +76,8 @@ const ApprovalsTab = () => {
           </button>
         </div>
       </div>
+
+      {viewMode === 'pending' && <ManagerPersonnelPilotage managerId={currentUser?.uid || currentUser?.id} />}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
         
@@ -242,7 +249,7 @@ const ApprovalsTab = () => {
                   {viewMode === 'history' && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#9ca3af', fontSize: '0.65rem', borderTop: '1px solid rgba(0,0,0,0.03)', paddingTop: '0.75rem' }}>
                       <Fingerprint size={12} />
-                      <span style={{ fontFamily: 'monospace' }}>Nexus Audit ID: {exp._auditHash || 'IMMUTABLE_LOG_ENABLED'}</span>
+                      <span style={{ fontFamily: 'monospace' }}>Nexus Audit ID: {exp._serverAuditHash || exp._auditHash || 'ATTENTE_SERVER_HASH'}</span>
                     </div>
                   )}
                 </motion.div>

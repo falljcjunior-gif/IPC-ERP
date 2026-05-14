@@ -73,6 +73,8 @@ exports.onEmployeeOffboarded = triggers.onEmployeeOffboarded;
 exports.hrPrivacyAudit = triggers.hrPrivacyAudit;
 exports.generatePrePayroll = triggers.generatePrePayroll;
 exports.refreshCockpitMetrics = triggers.refreshCockpitMetrics;
+exports.validateHRApprovalRequest = triggers.validateHRApprovalRequest;
+exports.personalManagerPilotage = triggers.personalManagerPilotage;
 
 // 4. Monitoring & Backups
 const monitoring = require('./modules/monitoring');

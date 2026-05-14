@@ -10,16 +10,16 @@ test('HR Onboarding Flow', async ({ page }) => {
   await page.waitForSelector('input[type="email"]');
   
   // Login
-  await page.fill('input[type="email"]', 'superadmin@ipc.com');
-  await page.fill('input[type="password"]', 'password123');
+  await page.fill('input[type="email"]', 'admin@ipc.com');
+  await page.fill('input[type="password"]', 'IPC-Admin-2024');
   await page.click('button[type="submit"]');
   
   // Wait for login to complete and dashboard to load
-  await page.waitForURL(/.*dashboard/, { timeout: 15000 });
+  await page.waitForSelector('aside', { timeout: 15000 });
   
   // Naviguer vers le module Ressources Humaines
   // On utilise un sélecteur plus robuste si possible, sinon le texte
-  await page.click('nav >> text=Ressources Humaines');
+  await page.click('aside >> text=Ressources Humaines');
   
   // Attendre que le module HR se charge
   await page.waitForSelector('text=Human Capital');

@@ -175,7 +175,10 @@ const DashboardTab = ({ data, onSentiment }) => {
    TAB 2 — Pipeline Recrutement
 ══════════════════════════════════════ */
 const RecrutementTab = () => {
-  const { data, addRecord, updateRecord, deleteRecord } = useStore();
+  const data = useStore(state => state.data);
+  const addRecord = useStore(state => state.addRecord);
+  const updateRecord = useStore(state => state.updateRecord);
+  const deleteRecord = useStore(state => state.deleteRecord);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
   const candidates = data.talent?.candidates || [];
@@ -282,7 +285,9 @@ const RecrutementTab = () => {
    TAB 3 — Évaluations 360°
 ══════════════════════════════════════ */
 const EvaluationsTab = () => {
-  const { data, addRecord, updateRecord } = useStore();
+  const data = useStore(state => state.data);
+  const addRecord = useStore(state => state.addRecord);
+  const updateRecord = useStore(state => state.updateRecord);
   const [showModal, setShowModal] = useState(false);
   const employees = data.hr?.employees || [];
   const appraisals = data.talent?.appraisals || [];
@@ -365,7 +370,8 @@ const EvaluationsTab = () => {
    TAB 4 — Formations & Learning
 ══════════════════════════════════════ */
 const FormationsTab = () => {
-  const { data, addRecord } = useStore();
+  const data = useStore(state => state.data);
+  const addRecord = useStore(state => state.addRecord);
   const [showModal, setShowModal] = useState(false);
   const employees = data.hr?.employees || [];
   const formations = data.talent?.formations || [];
@@ -436,7 +442,8 @@ const FormationsTab = () => {
    TAB 5 — Bien-être & Engagement
 ══════════════════════════════════════ */
 const BienEtreTab = ({ onSentiment }) => {
-  const { data, addRecord } = useStore();
+  const data = useStore(state => state.data);
+  const addRecord = useStore(state => state.addRecord);
   const [showModal, setShowModal] = useState(false);
   const surveys = data.talent?.surveys || [];
 
@@ -601,7 +608,10 @@ const OrgaTab = ({ data }) => {
    MAIN MODULE
 ══════════════════════════════════════ */
 const PeopleAndCulture = () => {
-  const { data, userRole, seedDemoData, addRecord } = useStore();
+  const data = useStore(state => state.data);
+  const userRole = useStore(state => state.userRole);
+  const seedDemoData = useStore(state => state.seedDemoData);
+  const addRecord = useStore(state => state.addRecord);
   const [tab, setTab] = useState('dashboard');
   const [showUat, setShowUat] = useState(false);
 

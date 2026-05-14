@@ -149,6 +149,12 @@ export const createOperationsSlice = (set, get) => ({
         } 
       };
     });
+    
+    // Persist sequence update to Firestore to prevent collisions
+    if (get().user) {
+      FirestoreService.setDocument('base', 'sequences', { [key]: { ...seq, next: seq.next + 1 } }, true);
+    }
+    
     return nextNum;
   },
 
@@ -435,7 +441,15 @@ export const createOperationsSlice = (set, get) => ({
          // 'guest' (state initial) quand le profile Firestore n'est pas encore synchro.
          const fbUser = auth.currentUser;
          if (fbUser) {
-           FirestoreService.setDocument(appId, newRecord.id, {
+           // 🔒 [UNIFIED 2.0] HR Data Isolation
+           // Redirection vers users/{uid}/hr_private pour les données RH
+           let targetCollection = appId;
+           if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+             const targetUid = newRecord.collaborateurId || newRecord.employeId || newRecord.uid || fbUser.uid;
+             targetCollection = `users/${targetUid}/hr_private`;
+           }
+
+           FirestoreService.setDocument(targetCollection, newRecord.id, {
              ...newRecord,
              subModule,
              ownerId: fbUser.uid,
@@ -574,7 +588,13 @@ export const createOperationsSlice = (set, get) => ({
                // mais ici elle a échoué. On laisse le state local en attendant la prochaine synchro.
             }
          } else if (get().user) {
-            FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+            // 🔒 [UNIFIED 2.0] HR Data Isolation
+            let targetCollection = appId;
+            if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+              const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
+              targetCollection = `users/${targetUid}/hr_private`;
+            }
+            FirestoreService.setDocument(targetCollection, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
          }
       }, 0);
       

@@ -141,9 +141,10 @@ const PlatformShell = ({ theme, setView }) => {
   useEffect(() => {
     const path = window.location.pathname.substring(1);
     if (path && path !== activeApp) {
-      // Check if path is a valid module
-      const modules = registry.getModules();
-      if (modules.some(m => m.id === path)) {
+      // [SECURITY FIX] Validation du module avant switch
+      const modules = registry.getAllModules();
+      const validModule = modules.find(m => m.id === path);
+      if (validModule) {
         setActiveApp(path);
       }
     }
@@ -522,8 +523,8 @@ const PlatformShell = ({ theme, setView }) => {
           if (name === 'campagne_id') return { ...f, name, type: 'selection', options: activeCampaigns };
           return { ...f, name };
         })}
-        onSave={(formData) => {
-          addRecord(details.context.appId, details.context.subModule, formData);
+        onSave={async (formData) => {
+          await addRecord(details.context.appId, details.context.subModule, formData);
           setDetails({ record: null, context: { appId: '', subModule: '' } });
         }}
       />

@@ -39,9 +39,9 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
       createdAt: new Date().toISOString()
     },
 
-    // HR Data (Basic - visible to HR/Admin)
+    // HR Metadata (Basic - visible to HR/Admin)
+    // NOTE: Sensitive data like 'salaire_base' is now in hr_private/vault
     hr: {
-      salaire_base: extraData.salaire || 0,
       contratType: extraData.contratType || 'CDI',
       date_entree: extraData.date_entree || new Date().toISOString().split('T')[0],
       performance_score: 85,
@@ -91,12 +91,30 @@ exports.provisionUser = onCall({
 
     logger.debug('Provisioning payload:', { uid, payload });
 
-    // 2. Atomic Firestore Write
+    // 2. Atomic Firestore Write (Batch)
     try {
-      await db.collection('users').doc(uid).set(payload);
-      logger.info(`Firestore document created for ${uid}`);
+      const batch = db.batch();
+      const userRef = db.collection('users').doc(uid);
+      const vaultRef = userRef.collection('hr_private').doc('vault');
+
+      // Main User Document
+      batch.set(userRef, payload);
+
+      // Sensitive HR Vault
+      batch.set(vaultRef, {
+        subModule: 'vault',
+        salaire: extraData.salaire || 0,
+        iban: extraData.iban || null,
+        ssn: extraData.ssn || null,
+        _employeeId: uid,
+        _createdAt: now,
+        _updatedAt: now
+      });
+
+      await batch.commit();
+      logger.info(`Firestore documents created for ${uid} (Profile + Vault)`);
     } catch (fsError) {
-      logger.error(`Firestore write failed for ${uid}:`, fsError);
+      logger.error(`Firestore batch write failed for ${uid}:`, fsError);
       throw fsError;
     }
 

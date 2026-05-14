@@ -53,8 +53,13 @@ const RecordModal = ({
     try {
       await onSave(formData);
       setShowSuccessAnim(true);
-      if (recordId) setIsEditMode(false);
-      setTimeout(() => setShowSuccessAnim(false), 2000);
+      if (recordId) {
+        setIsEditMode(false);
+      }
+      setTimeout(() => {
+        setShowSuccessAnim(false);
+        if (!recordId) onClose(); // Auto-close after creation success
+      }, 2000);
     } catch (err) {
       addToast("Erreur lors de l'enregistrement", 'error');
       throw err;

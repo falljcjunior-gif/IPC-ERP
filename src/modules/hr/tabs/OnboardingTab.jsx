@@ -142,7 +142,8 @@ const StepPermissions = ({ localPermissions, setLocalPermissions }) => (
 // SUB-PANEL : Modifier les accès d'un employé existant
 // ─────────────────────────────────────────────────────────────────
 const EditAccessPanel = ({ employee, onClose }) => {
-  const { permissions, permanentlyDeleteUserRecord } = useStore();
+  const permissions = useStore(state => state.permissions);
+  const permanentlyDeleteUserRecord = useStore(state => state.permanentlyDeleteUserRecord);
   const userPerms = permissions[employee?.id] || { hierarchy_level: 'Employee', modules: {} };
   
   const [localPerms, setLocalPerms] = useState(userPerms);
@@ -214,7 +215,9 @@ const EditAccessPanel = ({ employee, onClose }) => {
 // MAIN COMPONENT (HR 2.0 ONBOARDING)
 // ─────────────────────────────────────────────────────────────────
 const OnboardingTab = ({ accessLevel }) => {
-  const { createFullUser, data, permissions } = useStore();
+  const createFullUser = useStore(state => state.createFullUser);
+  const data = useStore(state => state.data);
+  const permissions = useStore(state => state.permissions);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);

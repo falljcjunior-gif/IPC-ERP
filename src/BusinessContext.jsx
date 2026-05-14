@@ -11,6 +11,8 @@ import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
 import { logger } from './utils/logger';
 import { isCreatorEmail } from './utils/creators';
+import { setTenantContext, clearTenantContext } from './services/TenantContext';
+import ConnectPublisher from './services/ConnectPublisher';
 
 /**
  * BusinessProvider (Passive Orchestrator)
@@ -83,11 +85,29 @@ export const BusinessProvider = ({ children }) => {
           }
         }
 
-        if (moduleChanged) {
+         if (moduleChanged) {
           newState[colName] = updatedModuleState;
           changed = true;
         }
       });
+
+      // 🔒 [UNIFIED 2.0] HR_PRIVATE COLLECTION GROUP MAPPING
+      if (dataStagingRef.current['hr_private']) {
+        const hrDocs = dataStagingRef.current['hr_private'];
+        const groupedHr = {};
+        hrDocs.forEach(d => {
+          const sub = d.subModule || '_others';
+          if (!groupedHr[sub]) groupedHr[sub] = [];
+          groupedHr[sub].push(d);
+        });
+        
+        newState.hr = {
+          ...(newState.hr || {}),
+          ...groupedHr
+        };
+        changed = true;
+        delete dataStagingRef.current['hr_private'];
+      }
       
       return changed ? newState : prev;
     });
@@ -110,6 +130,10 @@ export const BusinessProvider = ({ children }) => {
     // Initialize Workflow Engine
     nexusWorkflowEngine.init();
 
+    // Initialize Connect Publisher (cross-module → Mur Enterprise)
+    // Écoute l'EventBus et publie automatiquement les victoires CRM, jalons projets, etc.
+    ConnectPublisher.init();
+
     // A. Business Modules Sync — [SOFT-DELETE ENABLED] via FirestoreService
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase', 'planning',
@@ -120,18 +144,93 @@ export const BusinessProvider = ({ children }) => {
     
     const isManager = ['ADMIN', 'SUPER_ADMIN', 'HR', 'MANAGER', 'FINANCE'].includes(user?.role);
 
+    // ════════════════════════════════════════════════════════
+    // [SCALABILITY] Stratégie de pagination intelligente
+    // La limite de 300 docs était un plafond global aveugle.
+    // On adopte désormais une stratégie par collection :
+    //   - Collections transactionnelles (finance, sales, crm) :
+    //     limitées aux 90 derniers jours pour les managers,
+    //     aux enregistrements personnels pour les staff.
+    //   - Collections de référence (inventory, users, base) :
+    //     pas de filtre temporel — données maîtres stables.
+    //   - Collections de communication (connect, activities) :
+    //     limitées aux 7 derniers jours.
+    // Les modules demandent des données plus anciennes via
+    // FirestoreService.listDocuments() avec leurs propres filtres.
+    // ════════════════════════════════════════════════════════
+
+    const now90DaysAgo = new Date();
+    now90DaysAgo.setDate(now90DaysAgo.getDate() - 90);
+    const now7DaysAgo = new Date();
+    now7DaysAgo.setDate(now7DaysAgo.getDate() - 7);
+
+    // Configs par collection : { limit, recentFilter (en jours, null = aucun) }
+    const COLLECTION_CONFIGS = {
+      // Transactionnelles — volumineuses sur la durée
+      crm:        { limit: 200, recentDays: isManager ? 90  : null },
+      sales:      { limit: 200, recentDays: isManager ? 90  : null },
+      finance:    { limit: 200, recentDays: isManager ? 90  : null },
+      accounting: { limit: 200, recentDays: isManager ? 90  : null },
+      procurement:{ limit: 100, recentDays: isManager ? 90  : null },
+      // Opérationnelles — moindre volume
+      production: { limit: 150, recentDays: null },
+      inventory:  { limit: 300, recentDays: null }, // Données maîtres
+      purchase:   { limit: 150, recentDays: isManager ? 90  : null },
+      planning:   { limit: 100, recentDays: null },
+      projects:   { limit: 200, recentDays: null },
+      budget:     { limit: 100, recentDays: null },
+      maintenance:{ limit: 150, recentDays: null },
+      // RH — données stables, volume raisonnable
+      hr:         { limit: 200, recentDays: null },
+      payroll:    { limit: 100, recentDays: isManager ? 90  : null },
+      talent:     { limit: 100, recentDays: null },
+      // Communication — données éphémères
+      connect:    { limit: 100, recentDays: 7 },
+      activities: { limit: 100, recentDays: 7 },
+      marketing:  { limit: 100, recentDays: null },
+      // Documents et légal — données de référence
+      documents:  { limit: 100, recentDays: null },
+      dms:        { limit: 100, recentDays: null },
+      legal:      { limit: 100, recentDays: null },
+      signature:  { limit: 100, recentDays: null },
+      // Configuration
+      base:       { limit: 100, recentDays: null },
+      audit:      { limit: 100, recentDays: isManager ? 30  : null },
+      esg:        { limit: 100, recentDays: null },
+      commerce:   { limit: 100, recentDays: null },
+      website:    { limit: 50,  recentDays: null },
+      cockpit:    { limit: 20,  recentDays: null },
+    };
+
+    const DEFAULT_CONFIG = { limit: 150, recentDays: null };
+
     const unsubscribes = collections_to_sync.map(colName => {
-      const options = { orderByField: '_createdAt', descending: true, limitTo: 300 };
-      
-      // [SECURITY] For sensitive collections, non-managers only subscribe to their own records.
+      const colConfig = COLLECTION_CONFIGS[colName] || DEFAULT_CONFIG;
+      const options = {
+        orderByField: '_createdAt',
+        descending:   true,
+        limitTo:      colConfig.limit,
+      };
+
+      // [SECURITY] Collections sensibles : staff voit uniquement ses enregistrements
       const isSensitive = ['hr', 'dms', 'payroll', 'esg', 'legal', 'documents'].includes(colName);
-      
+      const filters = [];
+
       if (isSensitive && !isManager && user?.id) {
-        options.filters = [['ownerId', '==', user.id]];
+        filters.push(['ownerId', '==', user.id]);
       }
 
+      // [SCALABILITY] Filtre temporel pour les collections volumineuses
+      if (colConfig.recentDays && isManager) {
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - colConfig.recentDays);
+        filters.push(['_createdAt', '>=', cutoff]);
+      }
+
+      if (filters.length > 0) options.filters = filters;
+
       return FirestoreService.subscribeToCollection(
-        colName, 
+        colName,
         options,
         (docs) => {
           logger.info(`[Sync] ${colName}: ${docs.length} docs received`);
@@ -139,19 +238,38 @@ export const BusinessProvider = ({ children }) => {
         },
         (err) => {
           console.error(`[BusinessContext] ❌ Sync FAILED for ${colName}:`, err);
-          // [FALLBACK] If the filtered query fails (missing index, permissions),
-          // retry without filters — SUPER_ADMIN bypass will allow it
-          if (isManager && options.filters?.length) {
-            logger.warn(`[Sync] Retrying ${colName} without filters...`);
+          // [FALLBACK] Si la requête filtrée échoue (index manquant, permissions),
+          // réessayer sans filtres temporels mais avec la limite de base
+          if (options.filters?.length) {
+            logger.warn(`[Sync] Retrying ${colName} without date filters...`);
             FirestoreService.subscribeToCollection(
-              colName, 
-              { orderByField: '_createdAt', descending: true, limitTo: 300 },
+              colName,
+              { orderByField: '_createdAt', descending: true, limitTo: colConfig.limit },
               (docs) => scheduleUpdate(colName, docs)
             );
           }
         }
       );
     });
+
+    // 🔒 [UNIFIED 2.0] HR_PRIVATE (COLLECTION GROUP SYNC)
+    // WHY: Permet de voir TOUTES les requêtes RH (congés, frais) de TOUS les users.
+    const unsubHrPrivate = FirestoreService.subscribeToCollectionGroup(
+      'hr_private',
+      {
+        orderByField: '_createdAt',
+        descending: true,
+        limitTo: 500,
+        filters: isManager ? [] : [['ownerId', '==', user.id]]
+      },
+      (docs) => {
+        logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
+        scheduleUpdate('hr_private', docs);
+      },
+      (err) => console.error(`[BusinessContext] hr_private Sync failed:`, err)
+    );
+
+    unsubscribes.push(unsubHrPrivate);
 
     // B. BPM Workflows
     const unsubWorkflows = FirestoreService.subscribeToCollection('workflows', {}, (wfs) => {
@@ -242,6 +360,19 @@ export const BusinessProvider = ({ children }) => {
           const userProfile = await UserService.syncProfile(fbUser);
           setUser(userProfile);
           console.log('✅ [BusinessContext] Profile Loaded:', userProfile);
+
+          // ══════════════════════════════════════════════════════════
+          // [MULTI-TENANT] Initialisation du TenantContext
+          // Chaque document créé après ce point portera tenant_id,
+          // company_id, et branch_id du contexte de l'utilisateur.
+          // ══════════════════════════════════════════════════════════
+          const tenantId  = userProfile.tenant_id  || userProfile.tenantId  || 'ipc_group';
+          const companyId = userProfile.company_id  || userProfile.companyId  ||
+                            useStore.getState().globalSettings?.brand || 'IPC_CORE';
+          const branchId  = userProfile.branch_id   || userProfile.branchId  || null;
+
+          setTenantContext({ tenant_id: tenantId, company_id: companyId, branch_id: branchId });
+
         } catch (err) {
           console.error('❌ [BusinessContext] Profile Sync FAILED:', err);
           // Fallback minimal si Firestore indisponible
@@ -251,8 +382,11 @@ export const BusinessProvider = ({ children }) => {
             nom: fbUser.displayName || 'Utilisateur',
             role: 'STAFF'
           });
+          // TenantContext fallback
+          setTenantContext({ tenant_id: 'ipc_group', company_id: 'IPC_CORE', branch_id: null });
         }
       } else {
+        clearTenantContext();
         setUser({ id: 'guest', nom: 'Utilisateur', email: '', role: 'GUEST' });
       }
     });

@@ -13,7 +13,7 @@
 
 import {
   doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
-  collection, query, orderBy, limit, where, onSnapshot,
+  collection, query, orderBy, limit, where, onSnapshot, collectionGroup,
   serverTimestamp as firebaseServerTimestamp, writeBatch, arrayUnion, arrayRemove, increment
 } from 'firebase/firestore';
 
@@ -21,6 +21,7 @@ export const serverTimestamp = firebaseServerTimestamp;
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
 import { validateData } from '../utils/validation';
+import { getTenantFields } from './TenantContext';
 
 
 // ── Type Guards internes ──────────────────────────────────────────────────────
@@ -152,8 +153,15 @@ export const FirestoreService = {
     }
 
     try {
+      // [MULTI-TENANT] Injection automatique des champs d'isolation
+      // tenant_id, company_id, branch_id proviennent du TenantContext singleton
+      // peuplé par BusinessContext après auth. Garantit que TOUT document
+      // appartient à un tenant et une société spécifiques côté serveur.
+      const tenantFields = getTenantFields();
+
       const safeData = sanitizeData({
-        ...data,
+        ...tenantFields,  // tenant_id, company_id, branch_id (si définis)
+        ...data,          // les données métier (peuvent surcharger si besoin)
         _createdAt: serverTimestamp(),
         _createdBy: user.uid,
         _updatedAt: serverTimestamp(),
@@ -180,7 +188,11 @@ export const FirestoreService = {
   async setDocument(collectionName, documentId, data, merge = true) {
     const user = requireAuth();
     try {
+      // [MULTI-TENANT] Pour les creates (merge=false), injecter les champs tenant
+      const tenantFields = !merge ? getTenantFields() : {};
+
       const safeData = sanitizeData({
+        ...tenantFields,
         ...data,
         _updatedAt: serverTimestamp(),
         _updatedBy: user.uid,
@@ -303,6 +315,47 @@ export const FirestoreService = {
     } catch (err) {
       onError?.(wrapFirestoreError(err, `subscribeSetup(${collectionName})`));
       return () => {}; // no-op unsubscribe
+    }
+  },
+
+  /**
+   * Abonnement temps réel à un groupe de collections (ex: toutes les 'hr_private').
+   */
+  subscribeToCollectionGroup(collectionGroupId, options = {}, onData, onError) {
+    requireAuth();
+    const { filters = [], orderByField, limitTo, descending = false, includeDeleted = false } = options;
+    try {
+      let q = collectionGroup(db, collectionGroupId);
+      const constraints = [];
+      
+      if (!includeDeleted) constraints.push(where('_deletedAt', '==', null));
+
+      for (const filter of filters) {
+        const [field, op, value] = Array.isArray(filter) ? filter : [filter.field, filter.operator, filter.value];
+        constraints.push(where(field, op, value));
+      }
+      
+      if (orderByField) constraints.push(orderBy(orderByField, descending ? 'desc' : 'asc'));
+      if (limitTo) constraints.push(limit(limitTo));
+      
+      return onSnapshot(
+        query(q, ...constraints),
+        (snap) => {
+          if (typeof onData === 'function') {
+            onData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          }
+        },
+        (err) => {
+          if (typeof onError === 'function') {
+            onError(wrapFirestoreError(err, `subscribeGroup(${collectionGroupId})`));
+          } else {
+            console.error(`[FirestoreService] Subscription group error for ${collectionGroupId}:`, err);
+          }
+        }
+      );
+    } catch (err) {
+      onError?.(wrapFirestoreError(err, `subscribeGroupSetup(${collectionGroupId})`));
+      return () => {};
     }
   },
 
