@@ -314,17 +314,26 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
     if (!docSnap.exists) {
       const userData = buildUnifiedUserPayload(user, now);
       
-      // Auto-Admin logic
-      if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email)) {
+      // Auto-role logic — Holding CEO + SUPER_ADMIN bootstrap
+      if (email === 'ra.yoman@ipcgreenblocks.com') {
+        userData.role = 'HOLDING_CEO';
+        userData.permissions.roles = ['HOLDING_CEO'];
+        userData.entity_type = 'HOLDING';
+        userData.entity_id   = 'ipc_holding';
+      } else if (email === 'yomanraphael26@gmail.com') {
         userData.role = 'SUPER_ADMIN';
         userData.permissions.roles = ['SUPER_ADMIN'];
       }
 
       await userRef.set(userData);
-      
+
       // SET CUSTOM CLAIMS
-      await admin.auth().setCustomUserClaims(uid, { role: userData.role });
-      
+      await admin.auth().setCustomUserClaims(uid, {
+        role:        userData.role,
+        entity_type: userData.entity_type || 'SUBSIDIARY',
+        entity_id:   userData.entity_id   || 'ipc_default',
+      });
+
       logger.info(`Mirrored user ${uid} (Unified) and set role ${userData.role}`);
     } else {
       // Ensure claims are synced
@@ -362,7 +371,7 @@ exports.backfillUsers = onCall({
 
   // Security Guard
   const isSuperAdmin = callerRole === 'SUPER_ADMIN';
-  const isAuthorizedEmail = ['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(callerEmail);
+  const isAuthorizedEmail = ['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(callerEmail);
   
   if (!isSuperAdmin && !isAuthorizedEmail) {
     logger.warn('Backfill: Permission denied', { callerUid, callerEmail });
@@ -396,8 +405,13 @@ exports.backfillUsers = onCall({
           if (!userDoc.exists) {
             const userData = buildUnifiedUserPayload(user, now);
             
-            // Auto-Admin logic (same as onUserCreated)
-            if (['fall.jcjunior@gmail.com', 'ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(user.email)) {
+            // Auto-role logic (same as onUserCreated)
+            if (user.email === 'ra.yoman@ipcgreenblocks.com') {
+              userData.role = 'HOLDING_CEO';
+              userData.permissions.roles = ['HOLDING_CEO'];
+              userData.entity_type = 'HOLDING';
+              userData.entity_id   = 'ipc_holding';
+            } else if (user.email === 'yomanraphael26@gmail.com') {
               userData.role = 'SUPER_ADMIN';
               userData.permissions.roles = ['SUPER_ADMIN'];
             }

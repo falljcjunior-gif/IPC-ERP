@@ -90,7 +90,7 @@ exports.setUserRole = onCall({
  * À appeler UNE SEULE FOIS via la console Firebase ou un script d'init.
  *
  * firebase functions:shell
- * > bootstrapSuperAdmin({ email: 'fall.jcjunior@gmail.com' })
+ * > bootstrapSuperAdmin({ email: 'ra.yoman@ipcgreenblocks.com' })
  */
 exports.bootstrapSuperAdmin = onCall({
   maxInstances: 1,
