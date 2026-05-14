@@ -70,24 +70,11 @@ export default function FoundationCockpit() {
   const [data, setData] = useState({ donations: [], programs: [], beneficiaries: [], campaigns: [] });
   const [loading, setLoading] = useState(true);
 
-  // Guard: Foundation roles + Holding oversight
+  // ── All hooks MUST be above any early return (Rules of Hooks) ─────────────
   const hasAccess = isFoundationRole(role) || isHoldingRole(role) || role === ORG_ROLES.SUPER_ADMIN;
-  if (!hasAccess) {
-    return (
-      <div style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        minHeight: '100vh', background: T.bg, gap: 16,
-      }}>
-        <div style={{ fontSize: 48 }}>🔒</div>
-        <div style={{ color: T.text, fontSize: 18, fontWeight: 700 }}>Accès Foundation requis</div>
-        <div style={{ color: T.muted, fontSize: 14, textAlign: 'center', maxWidth: 400 }}>
-          Ce module est réservé aux équipes IPC Foundation et à la supervision Holding.
-        </div>
-      </div>
-    );
-  }
 
   useEffect(() => {
+    if (!hasAccess) return; // skip subscriptions for unauthorized users
     // Subscribe to Foundation collections
     const unsubs = [
       FirestoreService.subscribeToCollection('foundation_donations',
@@ -113,7 +100,23 @@ export default function FoundationCockpit() {
       unsubs.forEach(u => typeof u === 'function' && u());
       clearTimeout(timer);
     };
-  }, []);
+  }, [hasAccess]);
+
+  // Guard: Foundation roles + Holding oversight
+  if (!hasAccess) {
+    return (
+      <div style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        minHeight: '100vh', background: T.bg, gap: 16,
+      }}>
+        <div style={{ fontSize: 48 }}>🔒</div>
+        <div style={{ color: T.text, fontSize: 18, fontWeight: 700 }}>Accès Foundation requis</div>
+        <div style={{ color: T.muted, fontSize: 14, textAlign: 'center', maxWidth: 400 }}>
+          Ce module est réservé aux équipes IPC Foundation et à la supervision Holding.
+        </div>
+      </div>
+    );
+  }
 
   // Computed KPIs from real or mock data
   const kpis = {

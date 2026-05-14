@@ -74,8 +74,24 @@ export default function HoldingCockpit() {
   const [loading, setLoading]     = useState(true);
   const [approvals, setApprovals] = useState([]);
 
+  // ── All hooks MUST be above any early return (Rules of Hooks) ─────────────
+  const isAllowed = isHoldingRole(role);
+
+  useEffect(() => {
+    if (!isAllowed) return; // skip subscription for non-Holding users
+    // Load pending approvals (cross-entity validations)
+    const unsub = FirestoreService.subscribeToCollection('intercompany_approvals',
+      (docs) => {
+        setApprovals(docs.filter(d => d.status === 'pending'));
+        setLoading(false);
+      },
+      { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 }
+    );
+    return () => typeof unsub === 'function' && unsub();
+  }, [isAllowed]);
+
   // Guard — Holding roles only
-  if (!isHoldingRole(role)) {
+  if (!isAllowed) {
     return (
       <div style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -89,18 +105,6 @@ export default function HoldingCockpit() {
       </div>
     );
   }
-
-  useEffect(() => {
-    // Load pending approvals (cross-entity validations)
-    const unsub = FirestoreService.subscribeToCollection('intercompany_approvals',
-      (docs) => {
-        setApprovals(docs.filter(d => d.status === 'pending'));
-        setLoading(false);
-      },
-      { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 }
-    );
-    return () => typeof unsub === 'function' && unsub();
-  }, []);
 
   // Consolidated metrics
   const consolidated = MOCK_SUBSIDIARY_PERF.reduce((acc, s) => ({
