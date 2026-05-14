@@ -1,4 +1,4 @@
-const { onDocumentWritten, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { onDocumentWritten, onDocumentUpdated, onDocumentDeleted, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
@@ -578,7 +578,7 @@ exports.onTaskAssigned = onDocumentWritten('projects/{taskId}', async (event) =>
         // [FIX] chefProjetUid doit être un UID, pas un nom.
         // chefProjet (nom lisible) conservé pour affichage, chefProjetUid pour les lookups.
         const managerUid = projectData.chefProjetUid || null;
-        const managerName = projectData.chefProjet || 'Manager';
+        const _managerName = projectData.chefProjet || 'Manager'; // eslint-disable-line no-unused-vars
 
         if (managerUid) {
           // [FIX] Lookup par UID — O(1), garanti unique
