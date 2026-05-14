@@ -240,12 +240,21 @@ exports.deleteUserAccount = onCall({
   // 2. Security Check
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
 
-  const callerUid = request.auth.uid;
-  const isSuperAdmin = request.auth.token?.role === 'SUPER_ADMIN';
+  const callerUid   = request.auth.uid;
+  const callerRole  = request.auth.token?.role || '';
+  const callerEmail = request.auth.token?.email || '';
 
-  if (!isSuperAdmin) {
-    logger.warn(`Unauthorized delete attempt by ${callerUid}`);
-    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN can delete users.');
+  const DELETION_ROLES = new Set([
+    'SUPER_ADMIN', 'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO',
+  ]);
+  const AUTHORIZED_EMAILS = ['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'];
+
+  const canDelete = DELETION_ROLES.has(callerRole) || AUTHORIZED_EMAILS.includes(callerEmail);
+
+  if (!canDelete) {
+    logger.warn(`Unauthorized delete attempt by ${callerUid} (role: ${callerRole})`);
+    throw new HttpsError('permission-denied',
+      'Seuls les rôles HOLDING_CEO et SUPER_ADMIN peuvent supprimer des comptes.');
   }
 
   try {

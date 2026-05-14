@@ -261,10 +261,16 @@ export const createAdminSlice = (set, get) => ({
   permanentlyDeleteUserRecord: async (userId) => {
     const uid = String(userId);
     try {
+      // Force-refresh the Firebase ID token so the CF receives up-to-date
+      // custom claims (role, entity_type, entity_id) — avoids stale-token
+      // permission-denied errors after a role change without re-login.
+      const currentUser = auth.currentUser;
+      if (currentUser) await currentUser.getIdToken(true);
+
       const functions = getFunctions(app, 'europe-west1');
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
-      
-      // The Cloud Function now performs a HARD delete on Auth + Firestore
+
+      // The Cloud Function performs a HARD delete on Auth + Firestore
       await deleteUserFunc({ uid });
 
       // Immediate UI update: remove from local store
