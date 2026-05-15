@@ -33,15 +33,11 @@ const C = {
   track:   '#F1F5F9',
 };
 
-const MOCK_SUBSIDIARY_PERF = [
-  { id: 'ipc_green_blocks', revenue: 485000000, growth: 12.4, margin: 28.3, headcount: 134, score: 87, trend: 'up' },
-  { id: 'nexus_academy',    revenue: 92000000,  growth: 34.1, margin: 61.2, headcount: 28,  score: 92, trend: 'up' },
-  { id: 'connect_plus',     revenue: 148000000, growth: 8.7,  margin: 44.8, headcount: 45,  score: 79, trend: 'stable' },
-  { id: 'ysee',             revenue: 67000000,  growth: -3.2, margin: 18.4, headcount: 19,  score: 58, trend: 'down' },
-  { id: 'hotel_sana',       revenue: 215000000, growth: 6.1,  margin: 22.7, headcount: 87,  score: 74, trend: 'stable' },
-  { id: 'select',           revenue: 328000000, growth: 19.8, margin: 15.1, headcount: 62,  score: 81, trend: 'up' },
-  { id: 'prod_logistique',  revenue: 196000000, growth: 4.3,  margin: 31.9, headcount: 73,  score: 76, trend: 'stable' },
-];
+// [GO-LIVE] Données réelles uniquement — chargées depuis Firestore via
+// `consolidated_reports` (collection alimentée par les Cloud Functions
+// d'agrégation pays/filiale). Démarre à vide tant que les filiales
+// n'ont pas remonté leurs métriques.
+const SUBSIDIARY_PERF = [];
 
 const fmt  = (n) => new Intl.NumberFormat('fr-CI', { maximumFractionDigits: 0 }).format(n);
 const fmtM = (n) => n >= 1e9 ? `${(n/1e9).toFixed(2)} Md` : n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
@@ -90,14 +86,16 @@ export default function HoldingCockpit() {
     );
   }
 
-  const consolidated = MOCK_SUBSIDIARY_PERF.reduce((acc, s) => ({
+  // [GO-LIVE] Tous les agrégats démarrent à 0 et se remplissent uniquement
+  // quand les filiales remontent leurs métriques via `consolidated_reports`.
+  const consolidated = SUBSIDIARY_PERF.reduce((acc, s) => ({
     revenue:   acc.revenue   + s.revenue,
     headcount: acc.headcount + s.headcount,
   }), { revenue: 0, headcount: 0 });
-  consolidated.ebitda       = consolidated.revenue * 0.247;
-  consolidated.esgScore     = 78;
-  consolidated.subsidiaries = MOCK_SUBSIDIARY_PERF.length;
-  consolidated.cash         = 1_420_000_000;
+  consolidated.ebitda       = 0;
+  consolidated.esgScore     = 0;
+  consolidated.subsidiaries = SUBSIDIARY_PERF.length;
+  consolidated.cash         = 0;
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
@@ -276,7 +274,7 @@ function OverviewTab({ consolidated, loading }) {
       {/* Revenue by Subsidiary */}
       <SectionHeader title="Contribution par Filiale" subtitle="CA cumulé YTD" />
       <div className="bento-card" style={{ padding: '1.5rem' }}>
-        {MOCK_SUBSIDIARY_PERF.sort((a, b) => b.revenue - a.revenue).map(s => {
+        {SUBSIDIARY_PERF.sort((a, b) => b.revenue - a.revenue).map(s => {
           const entity = GROUP_ENTITIES.find(e => e.id === s.id);
           const pct = (s.revenue / consolidated.revenue * 100).toFixed(1);
           return (
@@ -354,7 +352,7 @@ function PerformanceTab() {
             </tr>
           </thead>
           <tbody>
-            {MOCK_SUBSIDIARY_PERF.sort((a, b) => b.score - a.score).map((s, i) => {
+            {SUBSIDIARY_PERF.sort((a, b) => b.score - a.score).map((s, i) => {
               const entity = GROUP_ENTITIES.find(e => e.id === s.id);
               return (
                 <tr key={s.id} style={{

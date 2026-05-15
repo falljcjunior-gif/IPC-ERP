@@ -70,7 +70,7 @@ export const baseSchema = {
           type: 'text',
           required: true,
           search: true,
-          placeholder: 'Ex: IPC Green Blocks CI'
+          placeholder: 'Ex: Ma Filiale Industrielle'
         },
         code: {
           label: 'Code Entité',

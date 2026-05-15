@@ -165,27 +165,19 @@ const ITModule = () => {
                   Exporter Inventaire
                 </button>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                {[
-                  { name: 'MacBook Pro M3 - Tech 01', score: 92, status: 'A', lastCheck: '2d ago' },
-                  { name: 'Dell Precision - Sales 04', score: 65, status: 'C', lastCheck: '1w ago' },
-                  { name: 'iPad Pro - Logistics 02', score: 88, status: 'B', lastCheck: '5h ago' },
-                  { name: 'ThinkPad - Finance 01', score: 42, status: 'D', lastCheck: '3d ago' }
-                ].map(asset => (
-                  <div key={asset.name} style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                      <span style={{ fontWeight: 800 }}>{asset.name}</span>
-                      <span style={{ 
-                        padding: '0.25rem 0.75rem', borderRadius: '8px', background: asset.score > 80 ? 'var(--accent)' : asset.score > 60 ? '#D97706' : '#DC2626',
-                        color: 'white', fontWeight: 900, fontSize: '0.8rem'
-                      }}>{asset.status}</span>
-                    </div>
-                    <div style={{ height: '6px', background: 'var(--border)', borderRadius: '999px', overflow: 'hidden', marginBottom: '0.5rem' }}>
-                      <div style={{ width: `${asset.score}%`, height: '100%', background: asset.score > 80 ? 'var(--accent)' : asset.score > 60 ? '#D97706' : '#DC2626' }} />
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>Health Score: {asset.score}% • Last Check: {asset.lastCheck}</div>
-                  </div>
-                ))}
+              {/* [GO-LIVE] Liste réelle chargée depuis `it_assets` (collection Firestore).
+                  Vide tant qu'aucun actif IT n'est inventorié. */}
+              <div style={{
+                padding: '3rem 1.5rem', borderRadius: '1.5rem',
+                border: '1px dashed var(--border)', background: 'var(--bg-subtle)',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)' }}>
+                  Aucun actif IT inventorié
+                </div>
+                <div style={{ fontSize: '0.78rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, maxWidth: 440, margin: '0.5rem auto 0' }}>
+                  Importez votre flotte via le bouton "Exporter Inventaire" ou ajoutez vos premiers postes/serveurs depuis le module IT Ops.
+                </div>
               </div>
             </div>
           )}

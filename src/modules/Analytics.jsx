@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Activity, Zap, Target, TrendingUp, DollarSign, 
-  Briefcase, Users, LayoutDashboard, ToggleRight, ToggleLeft, Sparkles
+import {
+  Activity, Zap, Target, TrendingUp, DollarSign,
+  Briefcase, Users, LayoutDashboard, Sparkles
 } from 'lucide-react';
 import { 
   AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer,
@@ -15,8 +15,8 @@ import '../components/GlobalDashboard.css';
 const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 const Analytics = () => {
-  const { data, formatCurrency, seedDemoData, shellView } = useStore();
-  const [enableDemoHistory, setEnableDemoHistory] = useState(false);
+  // [GO-LIVE] seedDemoData retiré du destructuring — plus de bouton "Générer Historique".
+  const { data, formatCurrency, shellView } = useStore();
 
   const invoices      = data.finance?.invoices      || [];
   const vendorBills   = data.finance?.vendor_bills  || [];
@@ -33,10 +33,9 @@ const Analytics = () => {
 
 
 
+  // [GO-LIVE] Cashflow trend calculé uniquement à partir des factures/dépenses réelles.
+  // Le mode "démo aléatoire" a été supprimé pour le go-live.
   const cashflowTrend = useMemo(() => {
-    if (enableDemoHistory) {
-      return ['Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar'].map(m => ({ m, ca: Math.round(caGenere * (0.1 + Math.random() * 0.15)), depenses: Math.round(dettes * (0.1 + Math.random() * 0.2)) }));
-    }
     const monthlyData = {};
     invoices.forEach(inv => {
       const date = inv.createdAt ? new Date(inv.createdAt) : new Date();
@@ -51,8 +50,8 @@ const Analytics = () => {
       monthlyData[m].depenses += parseFloat(bill.montant || 0);
     });
     const result = Object.values(monthlyData);
-    return result.length === 0 ? [{ m: new Date().toLocaleString('fr-FR', { month: 'short' }), ca: caGenere, depenses: dettes }] : result;
-  }, [caGenere, dettes, enableDemoHistory, invoices, vendorBills]);
+    return result.length === 0 ? [] : result;
+  }, [invoices, vendorBills]);
 
   const hrDeptCost = useMemo(() => {
     const depCost = {};
@@ -117,15 +116,9 @@ const Analytics = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-          <button onClick={seedDemoData} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, color: '#10B981', background: 'rgba(16,185,129,0.07)', border: 'none', cursor: 'pointer', borderRadius: '1.25rem' }}>
-            <Sparkles size={18} /> Générer Historique
-          </button>
-          <div className="luxury-widget" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem 1.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b' }}>Mode Démo</span>
-            <button onClick={() => setEnableDemoHistory(!enableDemoHistory)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: enableDemoHistory ? '#10B981' : '#cbd5e1' }}>
-              {enableDemoHistory ? <ToggleRight size={32} /> : <ToggleLeft size={32} />}
-            </button>
-          </div>
+          {/* [GO-LIVE] Bouton "Générer Historique" et toggle "Mode Démo" retirés —
+              l'ERP démarre vide, les KPI se remplissent automatiquement avec les
+              données réelles dès la première saisie. */}
         </div>
       </div>
 

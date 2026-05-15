@@ -1282,40 +1282,14 @@ export const createOperationsSlice = (set, get) => ({
     }
   },
 
+  // [GO-LIVE] seedDemoData() supprimé — l'ERP démarre vide.
+  // Les données réelles arrivent par les modules Onboarding (RH, CRM, Finance).
   seedDemoData: async () => {
-    const months = 6;
-    const now = new Date();
-    get().addHint({ title: "🌱 Seeding...", message: "Génération de 6 mois d'historique métier...", type: "info" });
-    const clientNoms = ["Industries Ouest", "TechCorp Plus", "BTP Alpha", "Giga Mart", "Auto Pro"];
-    clientNoms.forEach((nom, i) => get().addRecord("base", "contacts", { id: `CLI-00${i+1}`, nom, type: "Client", email: `contact@${nom.toLowerCase().replace(" ", "")}.com`, categorie: "B2B" }));
-    for (let m = 0; m < months; m++) {
-      const dateM = new Date(now.getFullYear(), now.getMonth() - m, 15);
-      const isPast = m > 0;
-      const count = 5 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < count; i++) {
-        const montant = 500000 + Math.floor(Math.random() * 2500000);
-        get().addRecord("finance", "invoices", {
-          client: clientNoms[i % 5],
-          montant,
-          statut: isPast ? "Payé" : "Envoyé",
-          createdAt: dateM.toISOString(),
-          type: "vente"
-        });
-        get().addRecord("finance", "vendor_bills", {
-          fournisseur: "Grossiste Global",
-          montant: montant * 0.4,
-          statut: "Payé",
-          createdAt: dateM.toISOString()
-        });
-      }
-    }
-    const hrData = [
-      { id: "T-001", nom: "Alice Martin", poste: "Dev React", source: "LinkedIn", statut: "Embauché", score: 85 },
-      { id: "T-002", nom: "Bob Dupont", poste: "Sales Manager", source: "Indeed", statut: "Offre", score: 92 },
-      { id: "T-003", nom: "Claire Lefebvre", poste: "UX Designer", source: "Portfolio", statut: "Test Technique", score: 78 }
-    ];
-    hrData.forEach(t => get().addRecord("talent", "candidates", t));
-    get().addHint({ title: "✅ Seeding Terminé", message: "Les données analytiques sont prêtes.", type: "success" });
+    get().addHint({
+      title: "Démarrage à zéro",
+      message: "Les données de démonstration ont été désactivées. Créez vos premières fiches via les modules.",
+      type: "info",
+    });
   },
 
   _logout: async () => {

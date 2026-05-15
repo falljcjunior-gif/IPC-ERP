@@ -10,17 +10,10 @@ const ProcurementHub = () => {
   const { data, formatCurrency } = useStore();
   const [activeTab, setActiveTab] = useState('tenders');
 
-  const tenders = data.procurement?.tenders || [
-    { id: 1, title: 'Ciment Portland CEM II - Q3', status: 'Publié', deadline: '2024-06-30', budget: 15000000, responses: 4 },
-    { id: 2, title: 'Transport Régional Lot 2024', status: 'En Évaluation', deadline: '2024-05-15', budget: 8500000, responses: 7 },
-    { id: 3, title: 'Moules Brique 15x20 (x50)', status: 'Attribué', deadline: '2024-04-20', budget: 3200000, responses: 3 },
-  ];
-
-  const suppliers = data.procurement?.suppliers || [
-    { id: 1, name: 'CimAfrique SA', score: 92, category: 'Ciment', status: 'Actif', orders: 34 },
-    { id: 2, name: 'Trans-Ivoire Logistics', score: 78, category: 'Transport', status: 'Actif', orders: 18 },
-    { id: 3, name: 'Agrégats du Sud', score: 85, category: 'Agrégats', status: 'En évaluation', orders: 5 },
-  ];
+  // [GO-LIVE] Données réelles uniquement — chargées depuis le store/Firestore.
+  // Vide tant qu'aucun appel d'offres / fournisseur n'est créé.
+  const tenders   = data.procurement?.tenders   || [];
+  const suppliers = data.procurement?.suppliers || [];
 
   const statusColor = { 'Publié': '#3B82F6', 'En Évaluation': '#F59E0B', 'Attribué': '#10B981', 'Clôturé': '#6B7280' };
 

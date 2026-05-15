@@ -43,47 +43,12 @@ const LC_TABS = [
   { id: 'insights',   label: 'IA & Insights',      icon: '🤖' },
 ];
 
-// ── Mock license data per entity ──────────────────────────────────────────────
-const MOCK_ENTITY_LICENSES = GROUP_ENTITIES.filter(e => e.type !== ENTITY_TYPES.HOLDING).map(entity => ({
-  entity_id:  entity.id,
-  entity:     entity,
-  planId:     entity.type === ENTITY_TYPES.FOUNDATION ? 'FOUNDATION'
-            : entity.id   === 'nexus_academy'          ? 'ACADEMY'
-            : entity.id   === 'prod_logistique'        ? 'INDUSTRIAL'
-            : 'ENTERPRISE',
-  state:      entity.id === 'ysee' ? ENTITY_STATES.SUSPENDED : ENTITY_STATES.ACTIVE,
-  // Mock usage
-  usage: {
-    userCount:     Math.floor(Math.random() * 80) + 10,
-    storageGB:     Math.floor(Math.random() * 200) + 20,
-    projectCount:  Math.floor(Math.random() * 60)  + 5,
-    workflowCount: Math.floor(Math.random() * 30)  + 2,
-    aiTokensUsed:  Math.floor(Math.random() * 400000) + 50000,
-    apiCallsUsed:  Math.floor(Math.random() * 200000) + 10000,
-    documentCount: Math.floor(Math.random() * 2000)  + 100,
-    campaignCount: Math.floor(Math.random() * 15),
-  },
-  assignedAt:  '2025-01-01',
-  expiresAt:   null,
-}));
-
-const MOCK_UPGRADE_REQUESTS = [
-  {
-    id: 'UPG001', entity_id: 'ipc_green_blocks', entity: GROUP_ENTITIES.find(e => e.id === 'ipc_green_blocks'),
-    type: 'users', currentValue: 85, requestedValue: 150, reason: 'Recrutement 65 nouveaux opérateurs Q2 2026',
-    status: 'pending', createdAt: '2026-05-10',
-  },
-  {
-    id: 'UPG002', entity_id: 'nexus_academy', entity: GROUP_ENTITIES.find(e => e.id === 'nexus_academy'),
-    type: 'plan', currentPlan: 'ACADEMY', requestedPlan: 'ENTERPRISE', reason: 'Expansion géographique — besoin SSO + API avancée',
-    status: 'pending', createdAt: '2026-05-12',
-  },
-  {
-    id: 'UPG003', entity_id: 'select', entity: GROUP_ENTITIES.find(e => e.id === 'select'),
-    type: 'storage', currentValue: 200, requestedValue: 500, reason: 'Archives images produits + DMS expansion',
-    status: 'pending', createdAt: '2026-05-13',
-  },
-];
+// [GO-LIVE] Mocks supprimés — l'ERP démarre à vide.
+// Les licences réelles sont chargées depuis `entity_licenses` + `entity_usage`
+// (Firestore). Les upgrade requests proviennent de `upgrade_requests`.
+// Tant qu'aucune filiale n'est provisionnée, ces tableaux restent vides.
+const ENTITY_LICENSES = [];
+const UPGRADE_REQUESTS = [];
 
 export default function LicenseCenter() {
   const [tab, setTab]       = useState('overview');
@@ -91,7 +56,7 @@ export default function LicenseCenter() {
   const [assignModal, setAssignModal] = useState(null); // entity to assign
 
   const totalMonthlyCost = useMemo(() => {
-    return MOCK_ENTITY_LICENSES.reduce((sum, el) => {
+    return ENTITY_LICENSES.reduce((sum, el) => {
       const plan = LICENSE_PLANS[el.planId];
       return sum + calculateMonthlyBill({
         users: {
@@ -125,13 +90,13 @@ export default function LicenseCenter() {
         ))}
       </div>
 
-      {tab === 'overview'   && <LicOverview licenses={MOCK_ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
+      {tab === 'overview'   && <LicOverview licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
       {tab === 'plans'      && <LicPlans />}
-      {tab === 'assignment' && <LicAssignment licenses={MOCK_ENTITY_LICENSES} onAssign={setAssignModal} />}
-      {tab === 'quotas'     && <LicQuotas licenses={MOCK_ENTITY_LICENSES} />}
-      {tab === 'billing'    && <LicBilling licenses={MOCK_ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
-      {tab === 'requests'   && <LicRequests requests={MOCK_UPGRADE_REQUESTS} />}
-      {tab === 'insights'   && <LicInsights licenses={MOCK_ENTITY_LICENSES} />}
+      {tab === 'assignment' && <LicAssignment licenses={ENTITY_LICENSES} onAssign={setAssignModal} />}
+      {tab === 'quotas'     && <LicQuotas licenses={ENTITY_LICENSES} />}
+      {tab === 'billing'    && <LicBilling licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
+      {tab === 'requests'   && <LicRequests requests={UPGRADE_REQUESTS} />}
+      {tab === 'insights'   && <LicInsights licenses={ENTITY_LICENSES} />}
     </div>
   );
 }

@@ -610,10 +610,9 @@ const OrgaTab = ({ data }) => {
 const PeopleAndCulture = () => {
   const data = useStore(state => state.data);
   const userRole = useStore(state => state.userRole);
-  const seedDemoData = useStore(state => state.seedDemoData);
+  // [GO-LIVE] seedDemoData retiré — l'ERP démarre vide en production.
   const addRecord = useStore(state => state.addRecord);
   const [tab, setTab] = useState('dashboard');
-  const [showUat, setShowUat] = useState(false);
 
   const canSee = useCanSeeSubTab();
 
@@ -656,32 +655,8 @@ const PeopleAndCulture = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {userRole === 'ADMIN' && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-               <button onClick={() => setShowUat(!showUat)} className="glass" style={{ padding: '0.6rem 1.2rem', borderRadius: '1rem', border: '1px solid #8B5CF6', color: '#8B5CF6', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>
-                 UAT Lab {showUat ? '▼' : '▲'}
-               </button>
-               <AnimatePresence>
-                 {showUat && (
-                   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} style={{ display: 'flex', gap: '0.5rem' }}>
-                      <SmartButton 
-                        onClick={async () => {
-                          await debugInteraction('Seed Demo Data', async () => {
-                            await seedDemoData();
-                            useToastStore.getState().addToast('Données de démonstration générées avec succès', 'success');
-                          });
-                        }} 
-                        variant="success"
-                        style={{ background: '#10B98120', border: '1px solid #10B981', color: '#10B981' }}
-                      >
-                        Seed Data
-                      </SmartButton>
-                      <div className="glass" style={{ padding: '0.6rem 1.2rem', borderRadius: '1rem', border: '1px solid #3B82F6', color: '#3B82F6', fontSize: '0.8rem', fontWeight: 700 }}>Firestore: OK</div>
-                   </motion.div>
-                 )}
-               </AnimatePresence>
-            </div>
-          )}
+          {/* [GO-LIVE] UAT Lab + bouton "Seed Data" retirés pour la livraison client.
+              Les outils de debug sont accessibles via le module Admin > Diagnostics. */}
 
           <div className="glass" style={{ padding: '1rem 1.5rem', borderRadius: '1.5rem', border: '1px solid #EC489930', display: 'flex', gap: '2rem' }}>
             {[

@@ -168,19 +168,20 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
             <Clock size={18} color="#F59E0B" /> Échéances à Venir
          </h4>
          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {[
-               { client: 'Sénégal Briques', amount: 4500000, date: 'Dans 2j', status: 'En attente' },
-               { client: 'Alpha Log', amount: 1200000, date: 'Aujourd\'hui', status: 'Retard' },
-               { client: 'Construction Plus', amount: 890000, date: 'Dans 5j', status: 'En attente' }
-            ].map((e, i) => (
-               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--nexus-border)', background: 'var(--bg-subtle)' }}>
-                  <div>
-                     <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{e.client}</div>
-                     <div style={{ fontSize: '0.7rem', color: e.status === 'Retard' ? '#EF4444' : 'var(--nexus-text-muted)', fontWeight: 800 }}>{e.date} • {e.status}</div>
-                  </div>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(e.amount)}</div>
+            {/* [GO-LIVE] Échéances dérivées de `finance.invoices` (statut non payé).
+                Vide tant qu'aucune facture n'est émise. */}
+            <div style={{
+               padding: '2rem 1rem', borderRadius: '1rem',
+               border: '1px dashed var(--nexus-border)',
+               background: 'var(--bg-subtle)', textAlign: 'center',
+            }}>
+               <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--nexus-secondary)' }}>
+                  Aucune échéance à venir
                </div>
-            ))}
+               <div style={{ fontSize: '0.7rem', marginTop: '0.4rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>
+                  Les échéances clients apparaîtront dès la première facture émise.
+               </div>
+            </div>
          </div>
       </motion.div>
 
@@ -189,20 +190,20 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
             <Wallet size={18} color="var(--nexus-primary)" /> Comptes & Soldes
          </h4>
          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {[
-               { bank: 'BCEAO Principal', acc: '**** 9402', balance: 14500000, color: 'var(--nexus-primary)' },
-               { bank: 'Société Générale', acc: '**** 1120', balance: 5200000, color: '#3B82F6' }
-            ].map((b, i) => (
-               <div key={i}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                     <span style={{ fontSize: '0.85rem', fontWeight: 800 }}>{b.bank}</span>
-                     <span style={{ fontSize: '0.85rem', fontWeight: 900 }}>{formatCurrency(b.balance)}</span>
-                  </div>
-                  <div style={{ height: '6px', background: 'var(--nexus-border)', borderRadius: '3px', overflow: 'hidden' }}>
-                     <div style={{ width: '70%', height: '100%', background: b.color }} />
-                  </div>
+            {/* [GO-LIVE] Comptes bancaires chargés depuis `finance.bank_accounts`.
+                Vide tant qu'aucun compte n'est connecté. */}
+            <div style={{
+               padding: '1.5rem 1rem', borderRadius: '1rem',
+               border: '1px dashed var(--nexus-border)',
+               background: 'var(--bg-subtle)', textAlign: 'center',
+            }}>
+               <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--nexus-secondary)' }}>
+                  Aucun compte connecté
                </div>
-            ))}
+               <div style={{ fontSize: '0.7rem', marginTop: '0.4rem', color: 'var(--nexus-text-muted)', fontWeight: 600 }}>
+                  Utilisez le bouton ci-dessous pour connecter votre premier compte bancaire.
+               </div>
+            </div>
          </div>
          <button className="nexus-card" style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
             Connecter un nouveau compte
@@ -215,12 +216,12 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
          </h4>
          <div style={{ padding: '1rem', borderRadius: '1rem', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', marginBottom: '1rem' }}>
             <p style={{ margin: 0, fontSize: '0.8rem', fontWeight: 600, color: 'var(--nexus-secondary)', lineHeight: 1.5 }}>
-               Optimisation IS possible : L'amortissement de la nouvelle ligne de production peut être accéléré de <span style={{ color: 'var(--nexus-primary)', fontWeight: 800 }}>+12%</span> cette année.
+               L'IA fiscale est en veille. Les recommandations apparaîtront dès qu'un volume comptable suffisant sera analysable.
             </p>
          </div>
          <div style={{ padding: '1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', border: '1px solid var(--nexus-border)' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Provision Prévue</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(1450000)}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(0)}</div>
          </div>
       </motion.div>
     </motion.div>

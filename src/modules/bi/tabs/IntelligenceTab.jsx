@@ -105,23 +105,22 @@ const IntelligenceTab = () => {
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {[
-              { client: 'Acme Corp', risk: 'High', score: 85, reason: 'No orders in 30d' },
-              { client: 'Global Tech', risk: 'Medium', score: 45, reason: 'Reduced usage' },
-              { client: 'Green Solutions', risk: 'Low', score: 12, reason: 'Consistent' }
-            ].map(client => (
-              <div key={client.client} style={{ padding: '1.25rem', borderRadius: '1.5rem', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 800 }}>{client.client}</span>
-                  <span style={{ 
-                    padding: '0.25rem 0.75rem', borderRadius: '8px', 
-                    background: client.risk === 'High' ? '#EF4444' : client.risk === 'Medium' ? '#F59E0B' : '#10B981',
-                    fontSize: '0.7rem', fontWeight: 900
-                  }}>{client.risk} RISK</span>
-                </div>
-                <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{client.reason}</div>
+            {/* [GO-LIVE] Données réelles uniquement — le moteur Churn Sentinel se
+                remplit dès qu'un client a un historique d'activité (commandes,
+                logins, support). Tableau vide tant qu'aucun signal n'est détecté. */}
+            <div style={{
+              padding: '2rem 1.25rem', borderRadius: '1.5rem',
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px dashed rgba(255,255,255,0.2)',
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)' }}>
+                Aucun client à risque détecté
               </div>
-            ))}
+              <div style={{ fontSize: '0.75rem', marginTop: '0.5rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
+                Les signaux de churn apparaîtront automatiquement dès que vos clients auront un historique.
+              </div>
+            </div>
           </div>
 
           <button style={{ width: '100%', marginTop: '2.5rem', padding: '1rem', borderRadius: '1rem', background: 'white', color: 'var(--primary)', border: 'none', fontWeight: 900, cursor: 'pointer' }}>

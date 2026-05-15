@@ -44,18 +44,32 @@ const Production = ({ onOpenDetail, appId }) => {
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      // [GO-LIVE] Métriques calculées depuis les workOrders réels — affichent "N/A"
+      // tant qu'aucune donnée de production n'a été enregistrée.
+      const workOrders = data?.production?.workOrders || [];
+      const completed  = workOrders.filter(w => w.status === 'completed' || w.status === 'Terminé');
+      const totalRuns  = workOrders.length;
+      const okRuns     = completed.length;
+      const availability = totalRuns > 0 ? `${((okRuns / totalRuns) * 100).toFixed(1)}%` : 'N/A';
+      const performance  = totalRuns > 0
+        ? `${(completed.reduce((s, w) => s + (w.efficiency || 0), 0) / Math.max(1, okRuns)).toFixed(1)}%`
+        : 'N/A';
+      const quality      = totalRuns > 0
+        ? `${(completed.reduce((s, w) => s + (w.qualityRate || 0), 0) / Math.max(1, okRuns)).toFixed(1)}%`
+        : 'N/A';
+
       await IPCReportGenerator.generateFinancialStatement({
         title: "Rapport de Rendement Industriel (OEE)",
         metrics: [
-          { label: 'Disponibilité', value: '98.5%' },
-          { label: 'Performance', value: '97.2%' },
-          { label: 'Qualité', value: '99.4%' }
+          { label: 'Disponibilité', value: availability },
+          { label: 'Performance',   value: performance  },
+          { label: 'Qualité',       value: quality      },
         ],
-        rows: [
-          { module: 'Ligne A', description: 'Production Briques Réfractaires', status: 'Optimal' },
-          { module: 'Ligne B', description: 'Broyage Matières Premières', status: 'Maintenance' },
-          { module: 'Ligne C', description: 'Conditionnement', status: 'Actif' }
-        ]
+        rows: workOrders.slice(0, 20).map(wo => ({
+          module:      wo.lineId || wo.line || '—',
+          description: wo.product || wo.description || '—',
+          status:      wo.status || 'En cours',
+        })),
       });
     } finally {
       setIsExporting(false);

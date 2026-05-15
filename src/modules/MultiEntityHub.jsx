@@ -8,17 +8,10 @@ import SmartButton from '../components/SmartButton';
 const MultiEntityHub = ({ onOpenDetail }) => {
   const { data, formatCurrency } = useStore();
 
-  const entities = [
-    { id: 1, name: 'IPC Green Blocks CI', country: '🇨🇮', currency: 'XOF', revenue: 450000000, status: 'Principal' },
-    { id: 2, name: 'IPC Distribution SN', country: '🇸🇳', currency: 'XOF', revenue: 120000000, status: 'Filiale' },
-    { id: 3, name: 'IPC Europe SARL', country: '🇫🇷', currency: 'EUR', revenue: 85000, status: 'Bureau' },
-  ];
-
-  const rates = [
-    { from: 'XOF', to: 'EUR', rate: 0.00152, updated: '04/05/2024' },
-    { from: 'XOF', to: 'USD', rate: 0.00164, updated: '04/05/2024' },
-    { from: 'EUR', to: 'USD', rate: 1.08, updated: '04/05/2024' },
-  ];
+  // [GO-LIVE] Données réelles uniquement — chargées depuis le store/Firestore.
+  // Démarre à vide tant qu'aucune entité ni taux n'est configuré.
+  const entities = data?.multiEntity?.entities || [];
+  const rates    = data?.multiEntity?.exchangeRates || [];
 
   return (
     <div style={{ padding: '3rem', minHeight: '100vh' }}>

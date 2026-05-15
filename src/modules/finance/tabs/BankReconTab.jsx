@@ -49,14 +49,8 @@ const BankReconTab = () => {
     reader.readAsText(file);
   };
 
-  const simulateImport = () => {
-    const mock = [
-      { id: 'B-1', date: new Date().toISOString().split('T')[0], label: 'Virement Reçu - Client Alpha', amount: 4500000, reconciledWith: null },
-      { id: 'B-2', date: new Date().toISOString().split('T')[0], label: 'Paiement Fournisseur', amount: -600000, reconciledWith: null },
-      { id: 'B-3', date: new Date().toISOString().split('T')[0], label: 'Frais Bancaires', amount: -15000, reconciledWith: null }
-    ];
-    setBankLines(mock);
-  };
+  // [GO-LIVE] simulateImport() supprimé — l'import bancaire passe désormais
+  // exclusivement par le bouton "Import CSV" (handleFileUpload).
 
   const autoReconcile = async () => {
     let matchCount = 0;
@@ -132,7 +126,6 @@ const BankReconTab = () => {
           <h3 style={{ margin: 0, fontWeight: 800 }}>Relevé Bancaire</h3>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
              <button onClick={autoReconcile} className="btn" style={{ background: '#10B981', color: 'white', border: 'none', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700 }}><Cpu size={14} /> Auto-Lettrage (IA)</button>
-             <button onClick={simulateImport} className="btn" style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', fontSize: '0.8rem' }}>Simuler</button>
              <label className="btn btn-primary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, fontSize: '0.8rem' }}>
                 <Upload size={14} /> Import CSV
                 <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} />

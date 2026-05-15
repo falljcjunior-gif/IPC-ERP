@@ -24,15 +24,29 @@ const AnalyticsTab = ({ opportunities, formatCurrency }) => {
     return { total, weighted, winRate };
   }, [opportunities]);
 
+  // [GO-LIVE] Forecast vide tant qu'aucune opportunité n'existe.
+  // Recharts gère naturellement l'empty state (axes vides).
   const forecastData = useMemo(() => {
-    return [
-      { name: 'Jan', real: 40000000, target: 35000000 },
-      { name: 'Fév', real: 32000000, target: 40000000 },
-      { name: 'Mar', real: 55000000, target: 45000000 },
-      { name: 'Avr', real: 48000000, target: 50000000 },
-      { name: 'Mai', real: pipeline.weighted || 42000000, target: 55000000 },
-    ];
-  }, [pipeline.weighted]);
+    if (!opportunities || opportunities.length === 0) return [];
+    // Agrégation par mois (12 derniers mois) sur les opportunités réelles
+    const buckets = {};
+    const now = new Date();
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toLocaleString('fr-FR', { month: 'short' });
+      buckets[key] = { name: key, real: 0, target: 0 };
+    }
+    opportunities.forEach(o => {
+      if (!o.dateCloture) return;
+      const d = new Date(o.dateCloture);
+      const key = d.toLocaleString('fr-FR', { month: 'short' });
+      if (buckets[key]) {
+        buckets[key].real   += (Number(o.montant) || 0) * (o.etape === 'Gagné' ? 1 : ((Number(o.probabilite) || 0) / 100));
+        buckets[key].target += Number(o.montant) || 0;
+      }
+    });
+    return Object.values(buckets);
+  }, [opportunities]);
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" 
