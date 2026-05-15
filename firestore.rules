@@ -42,7 +42,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSuperAdmin() || hasClaimRole('ADMIN') || hasRole('ADMIN');
+      // [3-SPACE] Les rôles HOLDING_* sont au-dessus de ADMIN — bypass complet
+      return isSuperAdmin() || isHoldingLevel() || hasClaimRole('ADMIN') || hasRole('ADMIN');
     }
 
     function isManager() {

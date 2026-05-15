@@ -175,6 +175,15 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "documents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },

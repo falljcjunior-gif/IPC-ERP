@@ -15,7 +15,7 @@ import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { isCreatorEmail } from '../utils/creators';
 import { useTranslation } from 'react-i18next';
-import { getTenantContext } from '../services/TenantContext';
+import { getTenantContext, onTenantContextChange } from '../services/TenantContext';
 import { resolveSpace, getSpaceTheme, getSpaceHome } from '../services/space.config';
 import SpaceBadge from './SpaceBadge';
 
@@ -65,7 +65,7 @@ const PlatformShell = ({ theme, setView }) => {
   // Locatized subscription for campaigns to avoid massive shell re-renders
   const marketingCampaigns = useStore(state => state.data.marketing?.campaigns || []);
 
-  const userRole = currentUser?.role || 'GUEST';
+  const userRole = currentUser?.role || tenantCtx?.role || 'GUEST';
   const activeBrand = globalSettings?.brand || 'ALL';
 
   // Unified UI Flags
@@ -218,10 +218,26 @@ const PlatformShell = ({ theme, setView }) => {
 
   const navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
 
-  // [3-SPACE] Résoudre l'espace actif depuis le profil + filtrer les modules
-  const activeSpace = useMemo(() => resolveSpace(currentUser), [currentUser?.entity_type, currentUser?.role]);
-  const spaceTheme  = useMemo(() => getSpaceTheme(activeSpace), [activeSpace]);
-  const tenantCtx   = useMemo(() => getTenantContext(), [activeSpace]);
+  // [3-SPACE] TenantContext est la source de vérité pour l'espace actif.
+  // Il est posé par BusinessContext dès que syncProfile() complète (avant même
+  // que le store user soit re-rendu), donc plus fiable que currentUser.entity_type.
+  const [tenantCtx, setTenantCtxLocal] = useState(() => getTenantContext());
+
+  useEffect(() => {
+    // Souscrire aux changements de TenantContext pour forcer le re-render
+    const unsub = onTenantContextChange((ctx) => setTenantCtxLocal({ ...ctx }));
+    return unsub;
+  }, []);
+
+  const activeSpace = useMemo(() => {
+    // Priorité 1 : TenantContext (posé par syncProfile, fiable et réactif)
+    const ctxType = tenantCtx?.entity_type;
+    if (ctxType && ctxType !== 'SUBSIDIARY') return ctxType;
+    // Priorité 2 : fallback sur le profil store (cas SUBSIDIARY ou loading)
+    return resolveSpace(currentUser);
+  }, [tenantCtx?.entity_type, tenantCtx?.role, currentUser?.entity_type, currentUser?.role]);
+
+  const spaceTheme = useMemo(() => getSpaceTheme(activeSpace), [activeSpace]);
 
   useEffect(() => {
     // Sidebar dynamique : seuls les modules autorisés pour ce type d'entité
