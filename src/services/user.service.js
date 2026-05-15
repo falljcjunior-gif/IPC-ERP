@@ -80,6 +80,12 @@ export const UserService = {
       // Si aucun claim défini, on utilise le rôle Firestore comme fallback de migration.
       const finalRole = claimedRole || profile.role || 'STAFF';
 
+      // [v3.0 AUDIT FIX] Resolve country_id for COUNTRY_* roles.
+      // Custom Claims are authoritative (server-set); Firestore is the fallback.
+      const countryId = tokenResult.claims?.country_id || profile.country_id || null;
+      const entityId  = tokenResult.claims?.entity_id  || profile.entity_id  || null;
+      const entityType= tokenResult.claims?.entity_type || profile.entity_type || null;
+
       return {
         id: fbUser.uid,
         email: fbUser.email,
@@ -89,6 +95,11 @@ export const UserService = {
         departement: profile.departement || '',
         mustChangePassword: profile.profile?.mustChangePassword || false,
         fcmToken: profile.fcmToken || null,
+        // Governance fields (country_id / entity_id from Claims → TenantContext → ABAC)
+        country_id:  countryId,
+        entity_id:   entityId,
+        entity_type: entityType,
+        permissions: profile.permissions || null,
       };
 
     } catch (err) {

@@ -372,6 +372,9 @@ export const BusinessProvider = ({ children }) => {
           const entityName = userProfile.entity_name  || userProfile.company_id || 'IPC Group';
           const companyId  = userProfile.company_id   || entityId;
           const branchId   = userProfile.branch_id    || null;
+          // [v3.0 AUDIT FIX] Propagate country_id from Custom Claims or Firestore profile
+          // for COUNTRY_* roles. This enables ABAC isolation at the write layer.
+          const countryId  = userProfile.country_id   || null;
 
           setTenantContext({
             tenant_id:   tenantId,
@@ -380,6 +383,7 @@ export const BusinessProvider = ({ children }) => {
             entity_name: entityName,
             company_id:  companyId,
             branch_id:   branchId,
+            country_id:  countryId,
           });
 
         } catch (err) {

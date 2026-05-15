@@ -39,6 +39,7 @@ let _ctx = {
   entity_name:  'IPC Group',          // Human-readable entity name
   company_id:   null,                 // Alias for entity_id (backward compat)
   branch_id:    null,                 // Optional sub-branch
+  country_id:   null,                 // [v3.0] Country scope — set for country-level users
 };
 
 let _listeners = [];
@@ -56,6 +57,7 @@ let _listeners = [];
  * @param {string} ctx.entity_name  - Human-readable entity name
  * @param {string} [ctx.company_id] - Alias for entity_id
  * @param {string} [ctx.branch_id]  - Optional sub-branch
+ * @param {string} [ctx.country_id] - [v3.0] Country scope (ISO alpha-2, e.g. 'SN')
  */
 export function setTenantContext(ctx) {
   if (!ctx?.tenant_id) {
@@ -70,6 +72,7 @@ export function setTenantContext(ctx) {
     entity_name: ctx.entity_name || 'IPC Group',
     company_id:  ctx.company_id  || ctx.entity_id || null,
     branch_id:   ctx.branch_id   || null,
+    country_id:  ctx.country_id  || null,  // [v3.0] Country governance scope
   };
 
   _listeners.forEach(fn => fn({ ..._ctx }));
@@ -98,6 +101,7 @@ export function clearTenantContext() {
     entity_name: 'IPC Group',
     company_id:  null,
     branch_id:   null,
+    country_id:  null,
   };
   _listeners.forEach(fn => fn({ ..._ctx }));
   if (import.meta.env.DEV) {
@@ -131,7 +135,11 @@ export function getTenantFields() {
     entity_id:   _ctx.entity_id,
     company_id:  _ctx.company_id || _ctx.entity_id,
   };
-  if (_ctx.branch_id) fields.branch_id = _ctx.branch_id;
+  if (_ctx.branch_id)  fields.branch_id  = _ctx.branch_id;
+  // [v3.0 AUDIT FIX] Inject country_id for country-level governance isolation.
+  // Without this, documents created by COUNTRY_* roles lacked the country_id field
+  // required by Firestore Rules (getCountryId() check), breaking ABAC isolation.
+  if (_ctx.country_id) fields.country_id = _ctx.country_id;
   return fields;
 }
 

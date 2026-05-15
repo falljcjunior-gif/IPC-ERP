@@ -84,4 +84,41 @@ const RATE_PRESETS = {
   admin:  rateLimiter({ maxRequests: 60, windowMs: 60_000 }),
 };
 
-module.exports = { rateLimiter, RATE_PRESETS };
+/**
+ * [AUDIT FIX] Firestore-based rate limiter for onCall Cloud Functions.
+ * The Express-style `RATE_PRESETS` above only works with onRequest endpoints.
+ * This helper is compatible with onCall (no req/res — uses Firestore transactions).
+ *
+ * @param {object} db          - Firestore instance
+ * @param {string} uid         - Caller UID (unique key per user per action)
+ * @param {string} action      - Action name (e.g. 'provisionUser')
+ * @param {object} [opts]      - { maxRequests, windowMs }
+ * @throws {HttpsError} 'resource-exhausted' when limit exceeded
+ */
+const checkCallRate = async (db, uid, action, { maxRequests = 20, windowMs = 60_000 } = {}) => {
+  const { HttpsError } = require('firebase-functions/v2/https');
+  const key = `${action}_${uid}`;
+  const ref = db.collection('_rate_limits').doc(key);
+
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(ref);
+    const now = Date.now();
+
+    if (doc.exists) {
+      const { count, windowStart } = doc.data();
+      if (now - windowStart < windowMs) {
+        if (count >= maxRequests) {
+          throw new HttpsError('resource-exhausted',
+            `Trop de requêtes (${action}). Réessayez dans un moment.`);
+        }
+        t.update(ref, { count: count + 1 });
+      } else {
+        t.set(ref, { count: 1, windowStart: now, action, uid });
+      }
+    } else {
+      t.set(ref, { count: 1, windowStart: now, action, uid });
+    }
+  });
+};
+
+module.exports = { rateLimiter, RATE_PRESETS, checkCallRate };

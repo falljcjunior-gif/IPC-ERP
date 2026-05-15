@@ -69,6 +69,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger }             = require('firebase-functions');
 const admin                  = require('firebase-admin');
+const { checkCallRate }      = require('./rate_limiter');
 
 const db   = admin.firestore;
 const auth = admin.auth;
@@ -205,6 +206,9 @@ exports.provisionCountryScope = onCall(
   async (request) => {
     const token   = requireHoldingRole(request);
     const actorUid = request.auth.uid;
+
+    // [AUDIT FIX] Rate limiting — provisioning is expensive; max 10 per hour
+    await checkCallRate(db(), actorUid, 'provisionCountryScope', { maxRequests: 10, windowMs: 3_600_000 });
 
     const {
       country_code,

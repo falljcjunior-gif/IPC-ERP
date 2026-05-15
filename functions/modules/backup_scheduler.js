@@ -18,17 +18,20 @@ exports.scheduledFirestoreExport = onSchedule('0 3 * * *', async (event) => {
  * ⚡ BACKUP MANUEL (Déclenché par un Admin depuis l'UI)
  */
 exports.manualFirestoreExport = onCall(async (request) => {
-  // Vérification de sécurité Admin
+  // [AUDIT FIX] Use Custom Claims (server-signed token) — no Firestore read needed.
+  // Previous bug: checked role === 'admin' (lowercase) but system uses 'ADMIN'/'SUPER_ADMIN'.
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
-  
-  const userDoc = await admin.firestore().collection('users').doc(request.auth.uid).get();
-  const userData = userDoc.data();
-  const isAdmin = userData?.role === 'admin' || userData?.permissions?.roles?.includes('SUPER_ADMIN');
 
-  if (!isAdmin) {
+  const claimedRole = request.auth.token?.role;
+  if (claimedRole !== 'SUPER_ADMIN' && claimedRole !== 'ADMIN') {
+    logger.warn('[Backup] Unauthorized manual export attempt', {
+      uid: request.auth.uid,
+      role: claimedRole,
+    });
     throw new HttpsError('permission-denied', 'Seuls les administrateurs peuvent forcer un backup.');
   }
 
+  logger.info('[Backup] Manual export authorized', { uid: request.auth.uid, role: claimedRole });
   return performExport();
 });
 

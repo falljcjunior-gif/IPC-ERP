@@ -549,6 +549,18 @@ exports.saveMissionsButlerRule = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'rule.actions must be a non-empty array');
   }
 
+  // [AUDIT FIX] IDOR guard: verify caller has write access to this board
+  const boardDoc = await db.collection('missions_boards').doc(boardId).get();
+  if (!boardDoc.exists) throw new HttpsError('not-found', 'Board not found');
+  const board = boardDoc.data();
+  const callerRole = request.auth.token?.role;
+  const isBoardMember = board.createdBy === uid ||
+    (Array.isArray(board.members) && board.members.includes(uid)) ||
+    ['SUPER_ADMIN', 'ADMIN', 'MANAGER'].includes(callerRole);
+  if (!isBoardMember) {
+    throw new HttpsError('permission-denied', 'Accès refusé : vous n\'êtes pas membre de ce tableau.');
+  }
+
   const ruleId  = rule.id || `rule_${Date.now()}`;
   const ruleRef = db.collection('missions_boards').doc(boardId)
     .collection('butler_rules').doc(ruleId);
@@ -575,6 +587,18 @@ exports.deleteMissionsButlerRule = onCall(async (request) => {
 
   const { boardId, ruleId } = request.data;
   if (!boardId || !ruleId) throw new HttpsError('invalid-argument', 'boardId and ruleId required');
+
+  // [AUDIT FIX] IDOR guard: verify caller is board owner or admin
+  const boardDoc = await db.collection('missions_boards').doc(boardId).get();
+  if (!boardDoc.exists) throw new HttpsError('not-found', 'Board not found');
+  const board = boardDoc.data();
+  const callerRole = request.auth.token?.role;
+  const canDelete = board.createdBy === uid ||
+    ['SUPER_ADMIN', 'ADMIN'].includes(callerRole);
+  if (!canDelete) {
+    throw new HttpsError('permission-denied',
+      'Seul le créateur du tableau ou un administrateur peut supprimer une règle Butler.');
+  }
 
   await db.collection('missions_boards').doc(boardId)
     .collection('butler_rules').doc(ruleId).delete();

@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
+const { checkCallRate } = require('./rate_limiter');
 
 const db = admin.firestore();
 
@@ -31,6 +32,9 @@ exports.setUserRole = onCall({
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Authentification requise');
   }
+
+  // [AUDIT FIX] Rate limiting — prevent RBAC abuse
+  await checkCallRate(db, request.auth.uid, 'setUserRole', { maxRequests: 15, windowMs: 60_000 });
 
   // 2. Seul SUPER_ADMIN peut modifier les rôles
   const callerRole = request.auth.token?.role;
@@ -95,6 +99,13 @@ exports.setUserRole = onCall({
 exports.bootstrapSuperAdmin = onCall({
   maxInstances: 1,
 }, async (request) => {
+  // [AUDIT FIX] Require the caller to be authenticated (the account to be bootstrapped
+  // must already exist in Firebase Auth before calling this). The caller's email must
+  // match the requested email — prevents a 3rd party from bootstrapping someone else.
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentification requise pour le bootstrap.');
+  }
+
   // Vérifier qu'aucun SUPER_ADMIN n'existe encore
   const existingAdmins = await db.collection('users')
     .where('role', '==', 'SUPER_ADMIN')
@@ -107,6 +118,12 @@ exports.bootstrapSuperAdmin = onCall({
 
   const email = request.data?.email;
   if (!email) throw new HttpsError('invalid-argument', 'email requis');
+
+  // [SECURITY] The caller can only bootstrap their own account
+  if (request.auth.token.email !== email) {
+    throw new HttpsError('permission-denied',
+      'Vous ne pouvez bootstrapper que votre propre compte.');
+  }
 
   try {
     const user = await admin.auth().getUserByEmail(email);

@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
+const { checkCallRate } = require('./rate_limiter');
 
 logger.info('Admin module loading...');
 const db = admin.firestore();
@@ -67,7 +68,10 @@ exports.provisionUser = onCall({
   region: 'europe-west1'
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
-  
+
+  // [AUDIT FIX] Rate limiting — prevent mass account creation abuse (max 20/min per user)
+  await checkCallRate(db, request.auth.uid, 'provisionUser', { maxRequests: 20, windowMs: 60_000 });
+
   const callerRole = request.auth.token?.role;
   if (callerRole !== 'SUPER_ADMIN' && callerRole !== 'ADMIN') {
     throw new HttpsError('permission-denied', 'Seuls les administrateurs peuvent provisionner des comptes.');
@@ -172,6 +176,9 @@ exports.updateUserPermissions = onCall({
   region: 'europe-west1'
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
+
+  // [AUDIT FIX] Rate limiting
+  await checkCallRate(db, request.auth.uid, 'updateUserPermissions', { maxRequests: 30, windowMs: 60_000 });
 
   const callerRole = request.auth.token?.role;
   if (callerRole !== 'SUPER_ADMIN' && callerRole !== 'ADMIN') {
@@ -378,13 +385,13 @@ exports.backfillUsers = onCall({
     callerRole 
   });
 
-  // Security Guard
+  // [AUDIT FIX] Remove hardcoded personal email whitelist — SUPER_ADMIN claim only.
+  // Hardcoded emails in server-side code are a security anti-pattern (GDPR risk + backdoor).
+  if (!callerUid) throw new HttpsError('unauthenticated', 'Authentification requise.');
   const isSuperAdmin = callerRole === 'SUPER_ADMIN';
-  const isAuthorizedEmail = ['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(callerEmail);
-  
-  if (!isSuperAdmin && !isAuthorizedEmail) {
-    logger.warn('Backfill: Permission denied', { callerUid, callerEmail });
-    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN or authorized developers can run backfill.');
+  if (!isSuperAdmin) {
+    logger.warn('Backfill: Permission denied', { callerUid, callerRole });
+    throw new HttpsError('permission-denied', 'Only SUPER_ADMIN can run backfill.');
   }
 
   let scanned = 0;
