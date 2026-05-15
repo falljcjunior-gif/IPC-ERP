@@ -61,13 +61,9 @@ export const BusinessProvider = ({ children }) => {
           finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
           hr: { employees: [], candidates: [], leaves: [], timesheets: [] },
           talent: { candidates: [] },
-          website: { config: {}, chats: [] },
           signature: { requests: [] },
           audit: { logs: [], sessions: [], certifications: [] },
-          maintenance: { assets: [], workOrders: [], inventory: [] },
           payroll: { slips: [], taxes: [] },
-          procurement: { requests: [], vendors: [] },
-          esg: { reports: [], metrics: [] },
           projects: { items: [] },
           budget: { allocations: [] }
         }[colName] || {};
@@ -138,8 +134,8 @@ export const BusinessProvider = ({ children }) => {
     const collections_to_sync = [
       'crm', 'sales', 'inventory', 'production', 'purchase', 'planning',
       'accounting', 'finance', 'hr', 'base', 'activities', 'legal', 'signature', 'documents', 'cockpit',
-      'audit', 'maintenance', 'payroll', 'procurement', 'esg', 'projects', 'budget',
-      'connect', 'marketing', 'commerce', 'website', 'dms', 'talent'
+      'audit', 'payroll', 'projects', 'budget',
+      'connect', 'marketing', 'dms', 'talent'
     ];
     
     const isManager = ['ADMIN', 'SUPER_ADMIN', 'HR', 'MANAGER', 'FINANCE'].includes(user?.role);
@@ -171,7 +167,6 @@ export const BusinessProvider = ({ children }) => {
       sales:      { limit: 200, recentDays: isManager ? 90  : null },
       finance:    { limit: 200, recentDays: isManager ? 90  : null },
       accounting: { limit: 200, recentDays: isManager ? 90  : null },
-      procurement:{ limit: 100, recentDays: isManager ? 90  : null },
       // Opérationnelles — moindre volume
       production: { limit: 150, recentDays: null },
       inventory:  { limit: 300, recentDays: null }, // Données maîtres
@@ -179,7 +174,6 @@ export const BusinessProvider = ({ children }) => {
       planning:   { limit: 100, recentDays: null },
       projects:   { limit: 200, recentDays: null },
       budget:     { limit: 100, recentDays: null },
-      maintenance:{ limit: 150, recentDays: null },
       // RH — données stables, volume raisonnable
       hr:         { limit: 200, recentDays: null },
       payroll:    { limit: 100, recentDays: isManager ? 90  : null },
@@ -196,9 +190,6 @@ export const BusinessProvider = ({ children }) => {
       // Configuration
       base:       { limit: 100, recentDays: null },
       audit:      { limit: 100, recentDays: isManager ? 30  : null },
-      esg:        { limit: 100, recentDays: null },
-      commerce:   { limit: 100, recentDays: null },
-      website:    { limit: 50,  recentDays: null },
       cockpit:    { limit: 20,  recentDays: null },
     };
 
@@ -224,7 +215,7 @@ export const BusinessProvider = ({ children }) => {
       };
 
       // [SECURITY] Collections sensibles : staff voit uniquement ses enregistrements
-      const isSensitive = ['hr', 'dms', 'payroll', 'esg', 'legal', 'documents'].includes(colName);
+      const isSensitive = ['hr', 'dms', 'payroll', 'legal', 'documents'].includes(colName);
       const filters = [];
 
       if (isSensitive && !isManager && user?.id) {

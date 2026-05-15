@@ -241,7 +241,7 @@ export const GROUP_ENTITIES = [
     color:        '#d35400',
     icon:         '',
     active:       true,
-    modules:      ['production', 'logistics', 'inventory', 'maintenance', 'finance', 'hr'],
+    modules:      ['production', 'logistics', 'inventory', 'finance', 'hr'],
   },
 
   // Level 3 — Foundation
@@ -258,7 +258,7 @@ export const GROUP_ENTITIES = [
     icon:         '',
     active:       true,
     isNonProfit:  true,
-    modules:      ['foundation_impact', 'foundation_donations', 'foundation_campaigns', 'foundation_esg'],
+    modules:      ['foundation_impact', 'foundation_donations', 'foundation_campaigns'],
   },
 ];
 

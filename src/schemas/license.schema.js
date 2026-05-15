@@ -55,7 +55,6 @@ export const ALL_MODULES = [
   { id: 'production', label: 'Production', category: 'Opérations', icon: '' },
   { id: 'logistics', label: 'Logistique', category: 'Opérations', icon: '' },
   { id: 'purchase', label: 'Achats', category: 'Opérations', icon: '' },
-  { id: 'maintenance', label: 'GMAO / Maintenance', category: 'Opérations', icon: '' },
   { id: 'fleet', label: 'Flotte & Mobilité', category: 'Opérations', icon: '' },
   // HR
   { id: 'hr', label: 'Ressources Humaines', category: 'RH', icon: '' },
@@ -68,7 +67,6 @@ export const ALL_MODULES = [
   // Intelligence
   { id: 'bi', label: 'BI & Analytics', category: 'Intelligence',icon: '' },
   { id: 'ai', label: 'Nexus IA', category: 'Intelligence',icon: '' },
-  { id: 'strategy', label: 'Intelligence Stratégique',category:'Intelligence',icon: '' },
   // Collaboration
   { id: 'connect', label: 'Connect Plus (Social)', category: 'Collab.', icon: '' },
   { id: 'dms', label: 'Documents Cloud', category: 'Collab.', icon: '' },
@@ -77,16 +75,13 @@ export const ALL_MODULES = [
   // Compliance
   { id: 'legal', label: 'Juridique', category: 'Conformité', icon: '' },
   { id: 'audit', label: 'Audit & Conformité', category: 'Conformité', icon: '' },
-  { id: 'esg', label: 'ESG & Environnement', category: 'Conformité', icon: '' },
   // Foundation
   { id: 'foundation_donations', label: 'Dons & Financement', category: 'Foundation', icon: '' },
   { id: 'foundation_programs', label: 'Programmes Sociaux', category: 'Foundation', icon: '' },
   { id: 'foundation_beneficiaries',label: 'Bénéficiaires', category: 'Foundation', icon: '' },
   { id: 'foundation_campaigns', label: 'Campagnes', category: 'Foundation', icon: '' },
-  { id: 'foundation_esg', label: 'Reporting ESG', category: 'Foundation', icon: '' },
   // Admin
   { id: 'academy', label: 'Nexus Academy (LMS)', category: 'Spécial', icon: '' },
-  { id: 'procurement', label: 'Appels d\'Offres', category: 'Opérations', icon: '' },
 ];
 
 // ── License Plan Definitions ──────────────────────────────────────────────────
@@ -184,7 +179,7 @@ export const LICENSE_PLANS = {
       'hr', 'recruitment', 'timesheets',
       'inventory', 'production', 'logistics', 'purchase', 'planning',
       'projects', 'missions', 'connect', 'dms', 'signature', 'helpdesk',
-      'legal', 'audit', 'esg', 'bi', 'ai', 'procurement',
+      'legal', 'audit', 'bi', 'ai',
     ],
     features: {
       bi: true,
@@ -254,9 +249,9 @@ export const LICENSE_PLANS = {
     modules: [
       'crm', 'sales', 'finance', 'budget', 'payroll',
       'hr', 'recruitment', 'timesheets',
-      'inventory', 'production', 'logistics', 'purchase', 'maintenance', 'fleet', 'planning',
+      'inventory', 'production', 'logistics', 'purchase', 'fleet', 'planning',
       'projects', 'missions', 'connect', 'dms', 'signature', 'helpdesk',
-      'legal', 'audit', 'esg', 'bi', 'ai', 'procurement',
+      'legal', 'audit', 'bi', 'ai',
     ],
     features: {
       bi: true,
@@ -313,7 +308,7 @@ export const LICENSE_PLANS = {
   [LICENSE_PLAN_IDS.FOUNDATION]: {
     id: 'FOUNDATION',
     name: 'Foundation',
-    description: 'Entité non-lucrative / ONG / ESG',
+    description: 'Entité non-lucrative / ONG',
     color: '#27ae60',
     icon: '',
     durationDays: null,
@@ -329,9 +324,9 @@ export const LICENSE_PLANS = {
     maxDocuments: 5000,
     modules: [
       'hr', 'finance', 'budget', 'projects', 'connect', 'dms', 'signature',
-      'legal', 'audit', 'esg',
+      'legal', 'audit',
       'foundation_donations', 'foundation_programs', 'foundation_beneficiaries',
-      'foundation_campaigns', 'foundation_esg',
+      'foundation_campaigns',
     ],
     features: {
       bi: true,

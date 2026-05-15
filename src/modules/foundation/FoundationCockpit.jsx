@@ -1,6 +1,6 @@
 /**
  * ════════════════════════════════════════════════════════════════════════════
- * IPC FOUNDATION COCKPIT — Social Impact & ESG/CSR Management
+ * IPC FOUNDATION COCKPIT — Social Impact & CSR Management
  * ════════════════════════════════════════════════════════════════════════════
  *
  * Design: Antigravity OS — white/glass theme matching the rest of the ERP.
@@ -33,7 +33,6 @@ const TABS = [
   { id: 'programs',     label: 'Programmes',          icon: '' },
   { id: 'beneficiaries',label: 'Bénéficiaires',       icon: '' },
   { id: 'campaigns',    label: 'Campagnes',            icon: '' },
-  { id: 'esg',          label: 'Reporting ESG',        icon: '' },
   { id: 'governance',   label: 'Gouvernance',          icon: '' },
 ];
 
@@ -193,7 +192,6 @@ export default function FoundationCockpit() {
         {tab === 'programs'      && <ProgramsTab />}
         {tab === 'beneficiaries' && <BeneficiariesTab kpis={kpis} />}
         {tab === 'campaigns'     && <CampaignsTab />}
-        {tab === 'esg'           && <ESGReportTab kpis={kpis} />}
         {tab === 'governance'    && <GovernanceTab role={role} />}
       </div>
     </div>
@@ -266,7 +264,7 @@ function ImpactDashboard({ kpis, loading }) {
           { icon: '', text: 'Programme "Jeunes Entrepreneurs" clôturé — 48 bénéficiaires', date: '12/05/2026' },
           { icon: '', text: 'Campagne "Eau Propre Abidjan" lancée', date: '10/05/2026' },
           { icon: '', text: 'Partenariat signé : Mairie d\'Adjamé', date: '08/05/2026' },
-          { icon: '', text: 'Rapport ESG Q1 2026 soumis à la Holding', date: '05/05/2026' },
+          { icon: '', text: 'Rapport Q1 2026 soumis à la Holding', date: '05/05/2026' },
         ].map((item, i, arr) => (
           <div key={i} style={{
             display: 'flex', gap: 14,
@@ -574,96 +572,6 @@ function CampaignsTab() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// ESG Report Tab
-// ════════════════════════════════════════════════════════════════════════════
-
-function ESGReportTab({ kpis }) {
-  const periods = ['Q1 2026', 'Q4 2025', 'Q3 2025', 'Q2 2025'];
-  const [selectedPeriod, setPeriod] = useState('Q1 2026');
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-        <SectionHeader title="Reporting ESG / Impact" subtitle="Rapport transmis trimestriellement à IPC Holding" />
-        <div style={{
-          display: 'flex', gap: 4, background: 'rgba(248,250,252,0.8)',
-          padding: '4px', borderRadius: '1rem', border: `1px solid ${C.border}`,
-        }}>
-          {periods.map(p => (
-            <button key={p} onClick={() => setPeriod(p)} style={{
-              padding: '5px 12px', borderRadius: '0.75rem', border: 'none',
-              cursor: 'pointer', fontSize: 12, fontWeight: 700, transition: 'all 0.2s',
-              background: selectedPeriod === p ? '#fff' : 'transparent',
-              color: selectedPeriod === p ? C.text : C.muted,
-              boxShadow: selectedPeriod === p ? '0 2px 6px rgba(0,0,0,0.07)' : 'none',
-            }}>{p}</button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        {[
-          { cat: 'Environnemental', items: [
-            { label: 'CO₂ compensé', value: '320 T', change: '+15%', pos: true },
-            { label: 'Arbres plantés', value: '4 820', change: '+22%', pos: true },
-            { label: 'Eau économisée', value: '18 200 L', change: '+8%', pos: true },
-          ]},
-          { cat: 'Social', items: [
-            { label: 'Bénéficiaires actifs', value: '4 820', change: '+12%', pos: true },
-            { label: 'Emplois créés', value: '148', change: '+34%', pos: true },
-            { label: 'Formations dispensées', value: '620 h', change: '+5%', pos: true },
-          ]},
-          { cat: 'Gouvernance', items: [
-            { label: 'Taux d\'utilisation dons', value: '91.4%', change: '+2%', pos: true },
-            { label: 'Délai validation', value: '8 jours', change: '-3j', pos: true },
-            { label: 'Partenaires actifs', value: '23', change: '+4', pos: true },
-          ]},
-          { cat: 'Financier', items: [
-            { label: 'Dons reçus', value: fmtM(kpis.donationsTotal) + ' XOF', change: '+18%', pos: true },
-            { label: 'Charges opérationnelles', value: '12.1 M XOF', change: '+3%', pos: false },
-            { label: 'Ratio impact/charges', value: '7.3×', change: '+0.4×', pos: true },
-          ]},
-        ].map(section => (
-          <div key={section.cat} className="bento-card" style={{ padding: '1.25rem 1.5rem' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginBottom: 14 }}>{section.cat}</div>
-            {section.items.map(item => (
-              <div key={item.label} style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 0', borderBottom: `1px solid ${C.border}`,
-              }}>
-                <span style={{ fontSize: 12, color: C.muted }}>{item.label}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{item.value}</span>
-                  <span style={{
-                    fontSize: 10, fontWeight: 700,
-                    color: item.pos ? C.accent : C.muted,
-                  }}>{item.change}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      <div className="bento-card" style={{
-        padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>Rapport {selectedPeriod} — Prêt pour soumission</div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
-            Transmis automatiquement à IPC Holding le 5 du mois suivant
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary"> Exporter PDF</button>
-          <button className="btn btn-primary"> Soumettre à Holding</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════════
 // Governance Tab
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -711,7 +619,7 @@ function GovernanceTab({ role }) {
             { item: 'Audit externe indépendant', statut: 'Validé', date: '20/02/2026' },
             { item: 'Déclaration fiscale OHADA', statut: 'Déposée', date: '30/04/2026' },
             { item: 'Certification ISO 26000', statut: '⏳ En cours', date: 'Prévu Q3 2026' },
-            { item: 'Rapport DPEF (ESG)', statut: 'Publié', date: '30/04/2026' },
+            { item: 'Rapport DPEF', statut: 'Publié', date: '30/04/2026' },
           ].map((c, i) => (
             <div key={i} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',

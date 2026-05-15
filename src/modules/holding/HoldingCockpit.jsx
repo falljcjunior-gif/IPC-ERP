@@ -9,7 +9,7 @@
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import {
-  Landmark, BarChart3, Wallet, Sprout, Scale, Bot, Globe, Building2, Key,
+  Landmark, BarChart3, Wallet, Scale, Globe, Building2, Key,
   TrendingUp, Lock, Clock, Award, CheckCircle2, AlertTriangle, ShieldAlert,
   Users, FileText, Activity, Zap, Target, ArrowRight,
 } from 'lucide-react';
@@ -52,9 +52,7 @@ const TABS = [
   { id: 'overview',    label: 'Vue Groupe',       Icon: Landmark   },
   { id: 'performance', label: 'Performance',       Icon: BarChart3  },
   { id: 'finance',     label: 'Consolidation',     Icon: Wallet     },
-  { id: 'esg',         label: 'ESG & Foundation',  Icon: Sprout     },
   { id: 'governance',  label: 'Gouvernance',       Icon: Scale      },
-  { id: 'intelligence',label: 'IA Stratégique',    Icon: Bot        },
   { id: 'countries',   label: 'Pays',              Icon: Globe      },
   { id: 'entities',    label: 'Entités Groupe',    Icon: Building2  },
   { id: 'licenses',    label: 'Licences SaaS',     Icon: Key        },
@@ -99,7 +97,6 @@ export default function HoldingCockpit() {
     headcount: acc.headcount + s.headcount,
   }), { revenue: 0, headcount: 0 });
   consolidated.ebitda       = 0;
-  consolidated.esgScore     = 0;
   consolidated.subsidiaries = SUBSIDIARY_PERF.length;
   consolidated.cash         = 0;
 
@@ -191,9 +188,7 @@ export default function HoldingCockpit() {
         {tab === 'overview'     && <OverviewTab consolidated={consolidated} loading={loading} />}
         {tab === 'performance'  && <PerformanceTab />}
         {tab === 'finance'      && <FinanceTab consolidated={consolidated} />}
-        {tab === 'esg'          && <ESGTab />}
         {tab === 'governance'   && <GovernanceTab approvals={approvals} />}
-        {tab === 'intelligence' && <IntelligenceTab consolidated={consolidated} />}
         {tab === 'countries'    && (
           <Suspense fallback={<TabLoader label="Country Management Center" />}>
             <CountryManagementCenter />
@@ -244,7 +239,6 @@ function OverviewTab({ consolidated, loading }) {
     { label: 'Trésorerie Conso.', value: fmtM(consolidated.cash),     unit: 'XOF', Icon: Landmark,   color: C.purple, change: '+5.1%',  pos: true },
     { label: 'Effectif Total',    value: fmt(consolidated.headcount), unit: 'emp', Icon: Users,      color: C.gold,   change: '+12',    pos: true },
     { label: 'Filiales Actives',  value: consolidated.subsidiaries,   unit: '',    Icon: Building2,  color: C.blue,   change: 'stable', pos: true },
-    { label: 'Score ESG Groupe',  value: consolidated.esgScore,       unit: '/100',Icon: Sprout,     color: C.accent, change: '+3pts',  pos: true },
   ];
 
   return (
@@ -491,77 +485,6 @@ function FinanceTab({ consolidated }) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// TAB: ESG & Foundation
-// ════════════════════════════════════════════════════════════════════════════
-
-function ESGTab() {
-  const dims = [
-    { dim: 'E — Environnement', score: 72, icon: '', color: C.teal,   items: ['CO₂ réduit de 18%', 'Déchets recyclés: 84%', 'Énergie renouvelable: 41%'] },
-    { dim: 'S — Social',        score: 81, icon: '', color: C.blue,   items: ['Indice parité: 0.87', 'Formation: 96h/emp/an', 'Accidents 0 en Q1 2026'] },
-    { dim: 'G — Gouvernance',   score: 88, icon: '', color: C.purple, items: ['Audit indépendant:', 'RGPD: conforme', 'CA diversifié 6 profils'] },
-  ];
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <SectionHeader title="ESG Groupe Consolidé" subtitle="Score global: 78/100 — Objectif 2026: 85/100" />
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-        {dims.map(d => (
-          <div key={d.dim} className="bento-card" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                background: `${d.color}12`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
-              }}>{d.icon}</div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{d.dim}</div>
-                <div style={{ fontSize: 11, color: C.muted }}>
-                  Score: <strong style={{ color: d.color }}>{d.score}/100</strong>
-                </div>
-              </div>
-            </div>
-            <div style={{ height: 8, borderRadius: 8, background: C.track, marginBottom: 14 }}>
-              <div style={{
-                width: `${d.score}%`, height: '100%', borderRadius: 8,
-                background: `linear-gradient(90deg, ${d.color}, ${d.color}88)`,
-              }} />
-            </div>
-            <ul style={{ margin: 0, padding: '0 0 0 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {d.items.map((it, i) => (
-                <li key={i} style={{ fontSize: 12, color: C.muted }}>{it}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      <SectionHeader title="IPC Foundation — Impact Social" subtitle="Entité non-lucrative supervisée par la Holding" />
-      <div className="bento-card" style={{
-        padding: '1.75rem',
-        background: `linear-gradient(135deg, ${C.gold}06, ${C.accent}06)`,
-        border: `1px solid ${C.gold}22`,
-      }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
-          {[
-            { icon: '', label: 'Dons collectés',   value: '142 M XOF', color: C.gold   },
-            { icon: '', label: 'Bénéficiaires',     value: '4 820',     color: C.teal   },
-            { icon: '', label: 'Campagnes actives', value: '7',         color: C.blue   },
-            { icon: '', label: 'CO₂ compensé',      value: '320 T',     color: C.accent },
-          ].map(k => (
-            <div key={k.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>{k.icon}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: k.color }}>{k.value}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{k.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════════
 // TAB: Governance
 // ════════════════════════════════════════════════════════════════════════════
 
@@ -605,93 +528,6 @@ function GovernanceTab({ approvals }) {
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// TAB: AI Strategic Intelligence
-// ════════════════════════════════════════════════════════════════════════════
-
-function IntelligenceTab({ consolidated }) {
-  const [prompt, setPrompt]   = useState('');
-  const [answer, setAnswer]   = useState('');
-  const [thinking, setThinking] = useState(false);
-
-  // [GO-LIVE] Insights réels uniquement — chargés depuis le moteur Nexus IA
-  // qui analyse les données consolidées. Vide tant qu'aucun signal détecté.
-  const insights = [];
-
-  const ask = async () => {
-    if (!prompt.trim()) return;
-    setThinking(true);
-    await new Promise(r => setTimeout(r, 1600));
-    setAnswer(
-      `Analyse Nexus IA — ${new Date().toLocaleDateString('fr-FR')}\n\n` +
-      `Données consolidées : CA ${fmtM(consolidated.revenue)} XOF, ${consolidated.subsidiaries} filiales actives.\n\n` +
-      `L'IA est en attente de données suffisantes pour produire des recommandations stratégiques.`
-    );
-    setThinking(false);
-  };
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <SectionHeader title="Nexus IA — Intelligence Stratégique Groupe" subtitle="Analyse consolidée · Détection de risques · Recommandations exécutives" />
-
-      {insights.map((ins, i) => (
-        <div key={i} className="bento-card" style={{
-          padding: '1.25rem 1.5rem', display: 'flex', gap: 16,
-          borderLeft: `3px solid ${ins.color}`,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-            background: `${ins.color}12`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-          }}>{ins.icon}</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                background: `${ins.color}15`, color: ins.color,
-              }}>{ins.type}</span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{ins.title}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>{ins.body}</p>
-          </div>
-        </div>
-      ))}
-
-      {/* AI Query */}
-      <div className="bento-card" style={{ padding: '1.5rem' }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 14 }}>
- Interroger Nexus Intelligence
- </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <input
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && ask()}
-            placeholder="Ex: Analyse le score ESG groupe et donne-moi un plan d'action..."
-            style={{
-              flex: 1, padding: '0.75rem 1rem', borderRadius: '0.9rem',
-              background: 'var(--bg-subtle)', border: `1px solid ${C.border}`,
-              color: C.text, fontSize: 13, outline: 'none', fontFamily: 'Inter, sans-serif',
-            }}
-          />
-          <button onClick={ask} disabled={thinking} className="btn btn-primary">
-            {thinking ? '...' : 'Analyser'}
-          </button>
-        </div>
-        {answer && (
-          <div style={{
-            marginTop: 14, padding: '1rem 1.25rem', borderRadius: '0.9rem',
-            background: `${C.accent}06`, border: `1px solid ${C.accent}22`,
-            fontSize: 13, color: C.text, lineHeight: 1.7, whiteSpace: 'pre-wrap',
-          }}>
-            {answer}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

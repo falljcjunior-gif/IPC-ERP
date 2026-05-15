@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, Reorder, AnimatePresence } from 'framer-motion';
 import { 
   GripHorizontal, TrendingUp, TrendingDown, Minus, DollarSign, Users, Truck, Target, Activity, Plus, X, Megaphone,
-  Store, ShoppingBag, Globe, ShoppingCart, Factory, FolderOpen, Briefcase, FileText, PieChart, Receipt, Scale, LineChart, Calendar, Headphones, FileDigit, Settings, Shield, CheckCircle2, Mail
+  ShoppingBag, ShoppingCart, Factory, FolderOpen, Briefcase, FileText, PieChart, Receipt, Scale, LineChart, Calendar, Headphones, FileDigit, Settings, Shield, CheckCircle2, Mail
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, Tooltip, CartesianGrid } from 'recharts';
 import { useStore } from '../store';
@@ -198,8 +198,6 @@ const WIDGET_REGISTRY = {
   // CRM & Ventes
   'crm': { id: 'crm', category: 'CRM & Ventes', label: 'CRM & Pipeline', icon: Target },
   'sales': { id: 'sales', category: 'CRM & Ventes', label: 'Ventes & Devis', icon: ShoppingBag },
-  'pos': { id: 'pos', category: 'CRM & Ventes', label: 'Point de Vente', icon: Store },
-  'website': { id: 'website', category: 'CRM & Ventes', label: 'Sites Web', icon: Globe },
   'marketing': { id: 'marketing', category: 'CRM & Ventes', label: 'Marketing Digital', icon: Megaphone },
 
   // Opérations
