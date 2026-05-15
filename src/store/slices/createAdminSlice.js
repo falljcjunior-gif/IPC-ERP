@@ -140,7 +140,17 @@ export const createAdminSlice = (set, get) => ({
       LOGISTICS:    { inventory: 'write', logistics: 'write', purchase: 'write', projects: 'read' },
       LEGAL:        { legal: 'write', signature: 'write', dms: 'write' },
       STAFF:        { connect: 'read', dms: 'read' },
-      GUEST:        {}
+      GUEST:        {},
+      // ── Country roles (v3.0) ─────────────────────────────────────────
+      // Admin local complet de la filiale pays
+      COUNTRY_DIRECTOR_SUBSIDIARY: { all: 'write' },
+      // Admin local complet de la foundation pays
+      COUNTRY_DIRECTOR_FOUNDATION: { all: 'write' },
+      // Spécialisés country-scoped
+      COUNTRY_HR:         { hr: 'write', talent: 'write', payroll: 'write', dms: 'write', connect: 'read' },
+      COUNTRY_FINANCE:    { finance: 'write', accounting: 'write', budget: 'write', sales: 'read' },
+      COUNTRY_OPERATIONS: { production: 'write', logistics: 'write', inventory: 'write', projects: 'write' },
+      COUNTRY_AUDITOR:    { all: 'read' },
     };
     for (const role of effectiveRoles) {
       const map = ROLE_MODULE_DEFAULTS[role];

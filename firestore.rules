@@ -589,6 +589,28 @@ service cloud.firestore {
       return isAuthenticated() ? request.auth.token.get('entity_id', '') : '';
     }
 
+    // v3.0 — Country governance: country_id from Custom Claims
+    function getCountryId() {
+      return isAuthenticated() ? request.auth.token.get('country_id', '') : '';
+    }
+
+    // True if user is a country-scoped role (COUNTRY_DIRECTOR_*, COUNTRY_HR…)
+    function isCountryLevel() {
+      return isAuthenticated() && (
+        hasClaimRole('COUNTRY_DIRECTOR_SUBSIDIARY') ||
+        hasClaimRole('COUNTRY_DIRECTOR_FOUNDATION') ||
+        hasClaimRole('COUNTRY_HR')         ||
+        hasClaimRole('COUNTRY_FINANCE')    ||
+        hasClaimRole('COUNTRY_OPERATIONS') ||
+        hasClaimRole('COUNTRY_AUDITOR')
+      );
+    }
+
+    // True iff the resource shares the user's country (or no country filter applies)
+    function sameCountry(docCountryId) {
+      return getCountryId() == docCountryId;
+    }
+
     // Holding roles: full group visibility
     function isHoldingLevel() {
       return isAuthenticated() && (
@@ -645,14 +667,30 @@ service cloud.firestore {
 
     // ── Organizations Registry (Holding-managed) ──────────────────────────
     match /organizations/{orgId} {
-      // Holding sees all; subsidiaries see their own + parent holding
+      // Holding sees all; country-scoped users see entities of their country;
+      // subsidiaries see their own + parent holding
       allow read: if isAuthenticated() && (
         isHoldingLevel() ||
         resource.data.id == getEntityId() ||
-        resource.data.parentId == getEntityId()
+        resource.data.parentId == getEntityId() ||
+        // v3.0 — country governance: country-scoped users see same-country entities
+        (isCountryLevel() && resource.data.country_id == getCountryId())
       );
       allow create, update: if isHoldingLevel();
       allow delete: if isSuperAdmin();
+    }
+
+    // ── Country Scopes (v3.0 — Holding governance) ────────────────────────
+    // collection top-level créée par provisionCountryScope (CF).
+    // - Holding voit tous les pays
+    // - Country-scoped users voient UNIQUEMENT leur country_id
+    // - Aucune écriture client → Cloud Functions exclusivement
+    match /country_scopes/{countryId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        countryId == getCountryId()
+      );
+      allow write: if false; // Cloud Functions only (provisionCountryScope)
     }
 
     // ── Consolidated Reports (Holding-only) ───────────────────────────────

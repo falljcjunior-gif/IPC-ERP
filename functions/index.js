@@ -85,6 +85,11 @@ exports.assignEntityLicense  = entityProvisioning.assignEntityLicense;
 exports.approveEntityUpgrade = entityProvisioning.approveEntityUpgrade;
 exports.duplicateGroupEntity = entityProvisioning.duplicateGroupEntity;
 
+// 4b. Country Provisioning v3.0 — Holding → Country → {Subsidiary, Foundation}
+const countryProvisioning = require('./modules/country_provisioning');
+exports.provisionCountryScope   = countryProvisioning.provisionCountryScope;
+exports.changeCountryScopeState = countryProvisioning.changeCountryScopeState;
+
 // 4. Monitoring & Backups
 const monitoring = require('./modules/monitoring');
 const backups = require('./modules/backup_scheduler');

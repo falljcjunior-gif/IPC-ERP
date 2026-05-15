@@ -56,6 +56,16 @@ export const ORG_ROLES = Object.freeze({
   FOUNDATION_STAFF:    'FOUNDATION_STAFF',    // Coordinateur terrain
   FOUNDATION_AUDITOR:  'FOUNDATION_AUDITOR',  // Auditeur ESG Foundation
 
+  // ── Country roles (v3.0 — country governance) ────────────────────────
+  // Pilotes pays bornés à un country_id, créés par la Holding
+  // lors du provisioning d'un Country Scope.
+  COUNTRY_DIRECTOR_SUBSIDIARY: 'COUNTRY_DIRECTOR_SUBSIDIARY',  // DG filiale pays
+  COUNTRY_DIRECTOR_FOUNDATION: 'COUNTRY_DIRECTOR_FOUNDATION',  // DG foundation pays
+  COUNTRY_HR:                  'COUNTRY_HR',                   // RH pays (filiale ou foundation)
+  COUNTRY_FINANCE:             'COUNTRY_FINANCE',              // Finance pays
+  COUNTRY_OPERATIONS:          'COUNTRY_OPERATIONS',           // Opérations pays
+  COUNTRY_AUDITOR:             'COUNTRY_AUDITOR',              // Audit pays read-only
+
   // ── Legacy (backward compat) ─────────────
   ADMIN:               'ADMIN',
   MANAGER:             'MANAGER',
@@ -93,7 +103,28 @@ export const ROLE_ENTITY_SCOPE = {
   [ORG_ROLES.FOUNDATION_MANAGER]: ENTITY_TYPES.FOUNDATION,
   [ORG_ROLES.FOUNDATION_STAFF]:   ENTITY_TYPES.FOUNDATION,
   [ORG_ROLES.FOUNDATION_AUDITOR]: ENTITY_TYPES.FOUNDATION,
+  // Country roles — bornés à un country_id, voir country.schema.js
+  [ORG_ROLES.COUNTRY_DIRECTOR_SUBSIDIARY]: ENTITY_TYPES.SUBSIDIARY,
+  [ORG_ROLES.COUNTRY_DIRECTOR_FOUNDATION]: ENTITY_TYPES.FOUNDATION,
+  [ORG_ROLES.COUNTRY_HR]:                  null,  // SUBSIDIARY ou FOUNDATION selon affectation
+  [ORG_ROLES.COUNTRY_FINANCE]:             null,
+  [ORG_ROLES.COUNTRY_OPERATIONS]:          null,
+  [ORG_ROLES.COUNTRY_AUDITOR]:             null,
 };
+
+// ── Country role helpers ─────────────────────────────────────────────────────
+
+/** Roles country-scoped (bornés à un country_id, jamais cross-pays) */
+export function isCountryRole(role) {
+  return [
+    ORG_ROLES.COUNTRY_DIRECTOR_SUBSIDIARY,
+    ORG_ROLES.COUNTRY_DIRECTOR_FOUNDATION,
+    ORG_ROLES.COUNTRY_HR,
+    ORG_ROLES.COUNTRY_FINANCE,
+    ORG_ROLES.COUNTRY_OPERATIONS,
+    ORG_ROLES.COUNTRY_AUDITOR,
+  ].includes(role);
+}
 
 // ── Registered Group Entities ─────────────────────────────────────────────────
 
@@ -301,6 +332,9 @@ export const ENTITY_FIELDS_SCHEMA = {
   entity_id:    String,   // Matches GROUP_ENTITIES[].id
   company_id:   String,   // Alias for entity_id (backward compat)
   branch_id:    String,   // Optional sub-branch
+  // ── v3.0 — Country governance ──────────────────────────────────────────
+  country_id:    String,  // ISO 3166-1 alpha-2 (ex: 'CI', 'SN', 'FR')
+  department_id: String,  // Optional department within the entity
 };
 
 // ── KPI Definitions by entity type ───────────────────────────────────────────
