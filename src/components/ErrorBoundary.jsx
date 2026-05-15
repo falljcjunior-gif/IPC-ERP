@@ -147,7 +147,7 @@ class ErrorBoundary extends React.Component {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '2rem', marginBottom: '1.5rem'
         }}>
-          {isChunkError ? '🔄' : '⚠️'}
+          {isChunkError ? '' : ''}
         </div>
 
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.75rem', letterSpacing: '-0.02em' }}>
@@ -187,8 +187,8 @@ class ErrorBoundary extends React.Component {
               fontWeight: 700, fontSize: '0.9rem'
             }}
           >
-            🔄 Recharger
-          </button>
+ Recharger
+ </button>
 
           {!isChunkError && (
             <button
@@ -213,8 +213,8 @@ class ErrorBoundary extends React.Component {
               cursor: 'pointer', fontWeight: 700, fontSize: '0.9rem'
             }}
           >
-            🗑 Vider le cache
-          </button>
+ Vider le cache
+ </button>
         </div>
       </div>
     );

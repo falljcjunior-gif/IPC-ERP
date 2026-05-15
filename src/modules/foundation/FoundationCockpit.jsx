@@ -28,24 +28,24 @@ const C = {
 };
 
 const TABS = [
-  { id: 'dashboard',    label: 'Impact Dashboard',   icon: '🌍' },
-  { id: 'donations',    label: 'Dons & Financement', icon: '🎁' },
-  { id: 'programs',     label: 'Programmes',          icon: '📋' },
-  { id: 'beneficiaries',label: 'Bénéficiaires',       icon: '👥' },
-  { id: 'campaigns',    label: 'Campagnes',            icon: '📣' },
-  { id: 'esg',          label: 'Reporting ESG',        icon: '📊' },
-  { id: 'governance',   label: 'Gouvernance',          icon: '⚖️' },
+  { id: 'dashboard',    label: 'Impact Dashboard',   icon: '' },
+  { id: 'donations',    label: 'Dons & Financement', icon: '' },
+  { id: 'programs',     label: 'Programmes',          icon: '' },
+  { id: 'beneficiaries',label: 'Bénéficiaires',       icon: '' },
+  { id: 'campaigns',    label: 'Campagnes',            icon: '' },
+  { id: 'esg',          label: 'Reporting ESG',        icon: '' },
+  { id: 'governance',   label: 'Gouvernance',          icon: '' },
 ];
 
 const SDG_GOALS = [
-  { num: 1,  label: 'Fin de la pauvreté',          icon: '🏠', active: true  },
-  { num: 2,  label: 'Faim zéro',                   icon: '🌾', active: true  },
-  { num: 4,  label: 'Éducation de qualité',         icon: '📚', active: true  },
-  { num: 8,  label: 'Travail décent & croissance',  icon: '💼', active: true  },
-  { num: 10, label: 'Inégalités réduites',          icon: '⚖️', active: true  },
-  { num: 13, label: 'Action climatique',            icon: '🌱', active: true  },
-  { num: 15, label: 'Vie terrestre',                icon: '🌳', active: false },
-  { num: 17, label: 'Partenariats',                 icon: '🤝', active: true  },
+  { num: 1,  label: 'Fin de la pauvreté',          icon: '', active: true  },
+  { num: 2,  label: 'Faim zéro',                   icon: '', active: true  },
+  { num: 4,  label: 'Éducation de qualité',         icon: '', active: true  },
+  { num: 8,  label: 'Travail décent & croissance',  icon: '', active: true  },
+  { num: 10, label: 'Inégalités réduites',          icon: '', active: true  },
+  { num: 13, label: 'Action climatique',            icon: '', active: true  },
+  { num: 15, label: 'Vie terrestre',                icon: '', active: false },
+  { num: 17, label: 'Partenariats',                 icon: '', active: true  },
 ];
 
 const fmt  = (n) => new Intl.NumberFormat('fr-CI').format(n);
@@ -88,7 +88,7 @@ export default function FoundationCockpit() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: '100vh', background: 'var(--bg)', gap: 16,
       }}>
-        <div style={{ fontSize: 48 }}>🔒</div>
+        <div style={{ fontSize: 48 }}></div>
         <div style={{ color: C.text, fontSize: 18, fontWeight: 700 }}>Accès Foundation requis</div>
         <div style={{ color: C.muted, fontSize: 14, textAlign: 'center', maxWidth: 400 }}>
           Ce module est réservé aux équipes IPC Foundation et à la supervision Holding.
@@ -147,16 +147,16 @@ export default function FoundationCockpit() {
                 background: `${C.blue}10`, border: `1px solid ${C.blue}30`,
                 fontSize: 11, fontWeight: 700, color: C.blue,
               }}>
-                👁️ Vue Holding
-              </span>
+ Vue Holding
+ </span>
             )}
             <span style={{
               padding: '5px 12px', borderRadius: 20,
               background: `${C.accent}12`, border: `1px solid ${C.accent}30`,
               fontSize: 11, fontWeight: 700, color: C.accent,
             }}>
-              🌱 Entité non-lucrative
-            </span>
+ Entité non-lucrative
+ </span>
           </div>
         </div>
 
@@ -206,14 +206,14 @@ export default function FoundationCockpit() {
 
 function ImpactDashboard({ kpis, loading }) {
   const mainKpis = [
-    { icon: '🎁', label: 'Dons Collectés',   value: fmtM(kpis.donationsTotal), unit: 'XOF', color: C.gold   },
-    { icon: '👥', label: 'Bénéficiaires',    value: fmt(kpis.beneficiaries),   unit: 'pers', color: C.teal  },
-    { icon: '📋', label: 'Programmes Actifs',value: kpis.programsActive,       unit: '',     color: C.accent },
-    { icon: '📣', label: 'Campagnes',        value: kpis.campaignsActive,      unit: '',     color: C.blue   },
-    { icon: '🌍', label: 'Score Impact',     value: `${kpis.impactScore}/100`, unit: '',     color: C.accent },
-    { icon: '🌿', label: 'CO₂ Compensé',    value: `${kpis.co2Offset} T`,     unit: '',     color: C.teal   },
-    { icon: '🤝', label: 'Bénévoles',       value: kpis.volunteersTotal,      unit: '',     color: C.muted  },
-    { icon: '💛', label: 'Donateurs',       value: kpis.donorsCount,          unit: '',     color: C.gold   },
+    { icon: '', label: 'Dons Collectés',   value: fmtM(kpis.donationsTotal), unit: 'XOF', color: C.gold   },
+    { icon: '', label: 'Bénéficiaires',    value: fmt(kpis.beneficiaries),   unit: 'pers', color: C.teal  },
+    { icon: '', label: 'Programmes Actifs',value: kpis.programsActive,       unit: '',     color: C.accent },
+    { icon: '', label: 'Campagnes',        value: kpis.campaignsActive,      unit: '',     color: C.blue   },
+    { icon: '', label: 'Score Impact',     value: `${kpis.impactScore}/100`, unit: '',     color: C.accent },
+    { icon: '', label: 'CO₂ Compensé',    value: `${kpis.co2Offset} T`,     unit: '',     color: C.teal   },
+    { icon: '', label: 'Bénévoles',       value: kpis.volunteersTotal,      unit: '',     color: C.muted  },
+    { icon: '', label: 'Donateurs',       value: kpis.donorsCount,          unit: '',     color: C.gold   },
   ];
 
   return (
@@ -262,11 +262,11 @@ function ImpactDashboard({ kpis, loading }) {
       <SectionHeader title="Activités Récentes" subtitle="Derniers événements Foundation" />
       <div className="bento-card" style={{ padding: '1.5rem' }}>
         {[
-          { icon: '🎁', text: 'Don reçu : 5 000 000 XOF — Fondation Orange CI', date: '14/05/2026' },
-          { icon: '📋', text: 'Programme "Jeunes Entrepreneurs" clôturé — 48 bénéficiaires', date: '12/05/2026' },
-          { icon: '📣', text: 'Campagne "Eau Propre Abidjan" lancée', date: '10/05/2026' },
-          { icon: '🤝', text: 'Partenariat signé : Mairie d\'Adjamé', date: '08/05/2026' },
-          { icon: '🌿', text: 'Rapport ESG Q1 2026 soumis à la Holding', date: '05/05/2026' },
+          { icon: '', text: 'Don reçu : 5 000 000 XOF — Fondation Orange CI', date: '14/05/2026' },
+          { icon: '', text: 'Programme "Jeunes Entrepreneurs" clôturé — 48 bénéficiaires', date: '12/05/2026' },
+          { icon: '', text: 'Campagne "Eau Propre Abidjan" lancée', date: '10/05/2026' },
+          { icon: '', text: 'Partenariat signé : Mairie d\'Adjamé', date: '08/05/2026' },
+          { icon: '', text: 'Rapport ESG Q1 2026 soumis à la Holding', date: '05/05/2026' },
         ].map((item, i, arr) => (
           <div key={i} style={{
             display: 'flex', gap: 14,
@@ -474,10 +474,10 @@ function BeneficiariesTab({ kpis }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
         {[
-          { label: 'Femmes',      value: '58%', icon: '👩', color: C.teal   },
-          { label: 'Hommes',      value: '42%', icon: '👨', color: C.blue   },
-          { label: '< 25 ans',    value: '34%', icon: '🎓', color: C.gold   },
-          { label: 'Zone rurale', value: '61%', icon: '🌾', color: C.accent },
+          { label: 'Femmes',      value: '58%', icon: '', color: C.teal   },
+          { label: 'Hommes',      value: '42%', icon: '', color: C.blue   },
+          { label: '< 25 ans',    value: '34%', icon: '', color: C.gold   },
+          { label: 'Zone rurale', value: '61%', icon: '', color: C.accent },
         ].map(s => (
           <div key={s.label} className="bento-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>{s.icon}</div>
@@ -603,22 +603,22 @@ function ESGReportTab({ kpis }) {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {[
-          { cat: '🌍 Environnemental', items: [
+          { cat: 'Environnemental', items: [
             { label: 'CO₂ compensé', value: '320 T', change: '+15%', pos: true },
             { label: 'Arbres plantés', value: '4 820', change: '+22%', pos: true },
             { label: 'Eau économisée', value: '18 200 L', change: '+8%', pos: true },
           ]},
-          { cat: '👥 Social', items: [
+          { cat: 'Social', items: [
             { label: 'Bénéficiaires actifs', value: '4 820', change: '+12%', pos: true },
             { label: 'Emplois créés', value: '148', change: '+34%', pos: true },
             { label: 'Formations dispensées', value: '620 h', change: '+5%', pos: true },
           ]},
-          { cat: '⚖️ Gouvernance', items: [
+          { cat: 'Gouvernance', items: [
             { label: 'Taux d\'utilisation dons', value: '91.4%', change: '+2%', pos: true },
             { label: 'Délai validation', value: '8 jours', change: '-3j', pos: true },
             { label: 'Partenaires actifs', value: '23', change: '+4', pos: true },
           ]},
-          { cat: '📊 Financier', items: [
+          { cat: 'Financier', items: [
             { label: 'Dons reçus', value: fmtM(kpis.donationsTotal) + ' XOF', change: '+18%', pos: true },
             { label: 'Charges opérationnelles', value: '12.1 M XOF', change: '+3%', pos: false },
             { label: 'Ratio impact/charges', value: '7.3×', change: '+0.4×', pos: true },
@@ -655,8 +655,8 @@ function ESGReportTab({ kpis }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <button className="btn btn-secondary">📄 Exporter PDF</button>
-          <button className="btn btn-primary">📤 Soumettre à Holding</button>
+          <button className="btn btn-secondary"> Exporter PDF</button>
+          <button className="btn btn-primary"> Soumettre à Holding</button>
         </div>
       </div>
     </div>
@@ -706,24 +706,24 @@ function GovernanceTab({ role }) {
         <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 16 }}>Conformité & Audit</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
-            { item: 'Statut Foundation déposé', statut: '✅ Conforme', date: '12/01/2024' },
-            { item: 'Rapport annuel soumis', statut: '✅ Soumis', date: '15/03/2026' },
-            { item: 'Audit externe indépendant', statut: '✅ Validé', date: '20/02/2026' },
-            { item: 'Déclaration fiscale OHADA', statut: '✅ Déposée', date: '30/04/2026' },
+            { item: 'Statut Foundation déposé', statut: 'Conforme', date: '12/01/2024' },
+            { item: 'Rapport annuel soumis', statut: 'Soumis', date: '15/03/2026' },
+            { item: 'Audit externe indépendant', statut: 'Validé', date: '20/02/2026' },
+            { item: 'Déclaration fiscale OHADA', statut: 'Déposée', date: '30/04/2026' },
             { item: 'Certification ISO 26000', statut: '⏳ En cours', date: 'Prévu Q3 2026' },
-            { item: 'Rapport DPEF (ESG)', statut: '✅ Publié', date: '30/04/2026' },
+            { item: 'Rapport DPEF (ESG)', statut: 'Publié', date: '30/04/2026' },
           ].map((c, i) => (
             <div key={i} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '10px 14px', borderRadius: '0.8rem',
-              background: c.statut.startsWith('✅') ? `${C.accent}06` : `${C.gold}06`,
-              border: `1px solid ${c.statut.startsWith('✅') ? C.accent : C.gold}22`,
+              background: c.statut.startsWith('') ? `${C.accent}06` : `${C.gold}06`,
+              border: `1px solid ${c.statut.startsWith('') ? C.accent : C.gold}22`,
             }}>
               <div>
                 <div style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>{c.item}</div>
                 <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{c.date}</div>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: c.statut.startsWith('✅') ? C.accent : C.gold }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: c.statut.startsWith('') ? C.accent : C.gold }}>
                 {c.statut}
               </span>
             </div>

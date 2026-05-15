@@ -185,9 +185,9 @@ function RuleCard({ rule, boardId, onToggle, onDelete, onTest }) {
     setTesting(true);
     try {
       const res = await MissionsFS.executeButlerRule(boardId, rule.id, testCardId.trim());
-      alert(`✅ ${res.actionsExecuted} action(s) exécutée(s).`);
+      alert(`${res.actionsExecuted} action(s) exécutée(s).`);
     } catch (e) {
-      alert(`❌ Erreur : ${e.message}`);
+      alert(`Erreur : ${e.message}`);
     } finally {
       setTesting(false);
     }

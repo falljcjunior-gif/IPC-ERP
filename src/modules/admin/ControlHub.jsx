@@ -24,15 +24,15 @@ const ControlHub = ({ onOpenDetail }) => {
   const [isBackfilling, setIsBackfilling] = useState(false);
 
   const handleBackfill = async () => {
-    if (!window.confirm('🚀 LANCER LA SYNCHRONISATION MASSIVE ? Cette opération va pousser toutes les données vers PostgreSQL.')) return;
+    if (!window.confirm('LANCER LA SYNCHRONISATION MASSIVE ? Cette opération va pousser toutes les données vers PostgreSQL.')) return;
     setIsBackfilling(true);
     try {
       const backfillFn = httpsCallable(functions, 'backfillGreenBlock');
       const result = await backfillFn();
-      alert(`✅ Backfill Terminé : ${result.data.syncs} enregistrements synchronisés.`);
+      alert(`Backfill Terminé : ${result.data.syncs} enregistrements synchronisés.`);
     } catch (err) {
       console.error(err);
-      alert('❌ Échec du Backfill. Vérifiez les logs Cloud Functions.');
+      alert('Échec du Backfill. Vérifiez les logs Cloud Functions.');
     } finally {
       setIsBackfilling(false);
     }
@@ -113,7 +113,7 @@ const ControlHub = ({ onOpenDetail }) => {
               </button>
 
              <button onClick={() => {
-               if(window.confirm('⚠️ EFFACER TOUTES LES DONNÉES : Ceci va supprimer TOUS les enregistrements irréversiblement. Confirmer ?')) {
+               if(window.confirm('EFFACER TOUTES LES DONNÉES : Ceci va supprimer TOUS les enregistrements irréversiblement. Confirmer ?')) {
                   resetAllData();
                }
              }} className="nexus-card" style={{ padding: '0.9rem 2rem', background: '#EF4444', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, cursor: 'pointer' }}>

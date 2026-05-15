@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   🚀 IPC ORCHESTRATOR: REAL-TIME DATA & ENGINE
+    IPC ORCHESTRATOR: REAL-TIME DATA & ENGINE
    ══════════════════════════════════════════════════════════════════════════ */
 
 import React, { useEffect, useRef, useCallback } from 'react';
@@ -91,7 +91,7 @@ export const BusinessProvider = ({ children }) => {
         }
       });
 
-      // 🔒 [UNIFIED 2.0] HR_PRIVATE COLLECTION GROUP MAPPING
+      //  [UNIFIED 2.0] HR_PRIVATE COLLECTION GROUP MAPPING
       if (dataStagingRef.current['hr_private']) {
         const hrDocs = dataStagingRef.current['hr_private'];
         const groupedHr = {};
@@ -237,33 +237,33 @@ export const BusinessProvider = ({ children }) => {
           scheduleUpdate(colName, docs);
         },
         (err) => {
-          console.error(`[BusinessContext] ❌ Sync FAILED for ${colName}:`, err);
+          console.error(`[BusinessContext] Sync FAILED for ${colName}:`, err);
           // [FALLBACK] Si la requête filtrée échoue (index manquant, permissions),
           // réessayer sans filtres temporels mais avec la limite de base
           if (options.filters?.length) {
             logger.warn(`[Sync] Retrying ${colName} without date filters...`);
-            FirestoreService.subscribeToCollection(
-              colName,
-              { orderByField: '_createdAt', descending: true, limitTo: colConfig.limit },
-              (docs) => scheduleUpdate(colName, docs)
-            );
-          }
-        }
-      );
-    });
+ FirestoreService.subscribeToCollection(
+ colName,
+ { orderByField: '_createdAt', descending: true, limitTo: colConfig.limit },
+ (docs) => scheduleUpdate(colName, docs)
+ );
+ }
+ }
+ );
+ });
 
-    // 🔒 [UNIFIED 2.0] HR_PRIVATE (COLLECTION GROUP SYNC)
-    // WHY: Permet de voir TOUTES les requêtes RH (congés, frais) de TOUS les users.
-    const unsubHrPrivate = FirestoreService.subscribeToCollectionGroup(
-      'hr_private',
-      {
-        orderByField: '_createdAt',
-        descending: true,
-        limitTo: 500,
-        filters: isManager ? [] : [['ownerId', '==', user.id]]
-      },
-      (docs) => {
-        logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
+ // [UNIFIED 2.0] HR_PRIVATE (COLLECTION GROUP SYNC)
+ // WHY: Permet de voir TOUTES les requêtes RH (congés, frais) de TOUS les users.
+ const unsubHrPrivate = FirestoreService.subscribeToCollectionGroup(
+ 'hr_private',
+ {
+ orderByField: '_createdAt',
+ descending: true,
+ limitTo: 500,
+ filters: isManager ? [] : [['ownerId', '==', user.id]]
+ },
+ (docs) => {
+ logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
         scheduleUpdate('hr_private', docs);
       },
       (err) => console.error(`[BusinessContext] hr_private Sync failed:`, err)
@@ -351,15 +351,15 @@ export const BusinessProvider = ({ children }) => {
 
     // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
     const unsubAuth = auth.onAuthStateChanged(async fbUser => {
-      console.log('🔐 [Auth] State Changed:', fbUser ? `Logged in as ${fbUser.uid}` : 'Logged out');
-      console.log('📍 [Firebase] Project ID:', auth.app.options.projectId);
+      console.log('[Auth] State Changed:', fbUser ? `Logged in as ${fbUser.uid}` : 'Logged out');
+      console.log('[Firebase] Project ID:', auth.app.options.projectId);
       
       if (fbUser) {
         try {
-          console.log('🔄 [BusinessContext] Syncing profile for:', fbUser.email);
+          console.log('[BusinessContext] Syncing profile for:', fbUser.email);
           const userProfile = await UserService.syncProfile(fbUser);
           setUser(userProfile);
-          console.log('✅ [BusinessContext] Profile Loaded:', userProfile);
+          console.log('[BusinessContext] Profile Loaded:', userProfile);
 
           // ══════════════════════════════════════════════════════════
           // [GROUP GOVERNANCE v2] TenantContext — 3-level org model
@@ -387,7 +387,7 @@ export const BusinessProvider = ({ children }) => {
           });
 
         } catch (err) {
-          console.error('❌ [BusinessContext] Profile Sync FAILED:', err);
+          console.error('[BusinessContext] Profile Sync FAILED:', err);
           // Fallback minimal si Firestore indisponible
           setUser({
             id: fbUser.uid,
@@ -420,7 +420,7 @@ export const BusinessProvider = ({ children }) => {
       if (unsubSettings) unsubSettings();
       CallListener.stop();
     };
-  }, [userId, user?.role, scheduleUpdate]); // 🛡️ [REACTIVE] Re-subscribe if user role changes
+  }, [userId, user?.role, scheduleUpdate]); //  [REACTIVE] Re-subscribe if user role changes
 
   return <>{children}</>;
 };

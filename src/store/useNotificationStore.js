@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 /**
- * 🔔 NEXUS OS: NOTIFICATION & EVENT STORE
+ *  NEXUS OS: NOTIFICATION & EVENT STORE
  * Centralized state for cross-module alerts, system events, and user notifications.
  */
 export const useNotificationStore = create(
@@ -13,7 +13,7 @@ export const useNotificationStore = create(
       isSidebarOpen: false,
 
       /**
-       * 📨 ADD NOTIFICATION
+       *  ADD NOTIFICATION
        * @param {Object} notification - { id, title, message, type, module, priority, metadata }
        */
       addNotification: (notification) => {

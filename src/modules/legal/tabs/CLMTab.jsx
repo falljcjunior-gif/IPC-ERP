@@ -91,7 +91,7 @@ const CLMTab = ({ onOpenDetail }) => {
               {contract.modifie && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#EF444410', borderRadius: '8px', marginBottom: '1rem', border: '1px solid #EF444420' }}>
                    <AlertCircle size={14} color="#EF4444" />
-                   <span style={{ fontSize: '0.7rem', color: '#EF4444', fontWeight: 700 }}>⚠️ Hors Template - Visa Requis</span>
+                   <span style={{ fontSize: '0.7rem', color: '#EF4444', fontWeight: 700 }}> Hors Template - Visa Requis</span>
                 </div>
               )}
 

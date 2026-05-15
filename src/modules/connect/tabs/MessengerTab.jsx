@@ -64,8 +64,8 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const inputRef = useRef();
   const fileInputRef = useRef();
 
-  const commonEmojis = ['😊', '😂', '👍', '🙏', '🔥', '🚀', '❤️', '👏', '🤔', '😎', '💡', '✅', '⏳', '📌', '📁', '🤝', '⭐', '✨', '💪', '🎯'];
-  const reactionEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
+  const commonEmojis = ['', '', '', '', '', '', '', '', '', '', '', '', '⏳', '', '', '', '⭐', '', '', ''];
+  const reactionEmojis = ['', '', '', '', '', ''];
 
   const groups = [
     { id: 'team_global', label: 'Espace Général', type: 'team', lastMsg: 'Bienvenue sur Connect Plus', time: '', members: 0 }
@@ -273,7 +273,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       const url = await StorageService.uploadFile(blob, path);
 
       await FirestoreService.createDocument('messages', {
-        text: `🎤 Mémo vocal`,
+        text: `Mémo vocal`,
         fileUrl: url,
         fileName: 'vocal.webm',
         fileType: 'audio/webm',

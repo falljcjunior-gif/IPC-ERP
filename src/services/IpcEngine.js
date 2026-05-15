@@ -231,7 +231,7 @@ export async function cascadeDevisToSaleOrder(devis, get, set) {
 
   // Notifications UI
   get().addHint({
-    title: '⚙️ Engrenage Activé',
+    title: 'Engrenage Activé',
     message: `Devis ${devis.num} → BC ${orderNum} créé. Stock virtuel réservé.${factureAcompte ? ` Facture acompte ${factureAcompte.num} émise.` : ''}`,
     type: 'success',
     appId: 'sales',
@@ -340,7 +340,7 @@ export async function cascadeBCToDelivery(bc, get, set) {
   }
 
   get().addHint({
-    title: '🚚 Expédition Validée',
+    title: 'Expédition Validée',
     message: `BL ${blNum} créé. Facture ${facNum} émise. Stock physique mis à jour.`,
     type: 'success', appId: 'logistics',
   });
@@ -412,7 +412,7 @@ export function runThreeWayMatch(po, receptionData, invoiceData) {
 export function applyThreeWayMatchResult(poId, matchResult, get, set) {
   if (matchResult.matched) {
     get().addHint({
-      title: '✅ 3-Way Match Parfait',
+      title: '3-Way Match Parfait',
       message: `Commande validée. Montant payable : ${matchResult.montantPayable.toLocaleString('fr-FR')} FCFA.`,
       type: 'success', appId: 'purchase',
     });
@@ -420,12 +420,12 @@ export function applyThreeWayMatchResult(poId, matchResult, get, set) {
   } else {
     const detail = matchResult.anomalies.join(' | ');
     get().addHint({
-      title: '🚨 Blocage 3-Way Match',
+      title: 'Blocage 3-Way Match',
       message: `Paiement impossible → ${detail}`,
       type: 'error', appId: 'finance',
     });
     get().sendNotification(
-      'FINANCE', '⚠️ Anomalie Facture Fournisseur',
+      'FINANCE', 'Anomalie Facture Fournisseur',
       `La facture liée à PO ${poId} est bloquée : ${detail}`,
       'error', 'finance'
     );
@@ -496,7 +496,7 @@ export function createAmendment(originalRecord, changes, get, set) {
   };
 
   get().addHint({
-    title: '📋 Avenant Créé',
+    title: 'Avenant Créé',
     message: `L'Avenant ${amendNum} a été créé sur la base de ${originalRecord.num || originalRecord.id}.`,
     type: 'info',
   });
@@ -581,7 +581,7 @@ export function imputerCoutAnalytique(timesheet, get) {
 
   if (success) {
     get().addHint({
-      title: '📊 Imputation Analytique',
+      title: 'Imputation Analytique',
       message: `${coutTotal.toLocaleString('fr-FR')} FCFA imputés sur [${centreLabel}] pour ${heures}h de ${timesheet.collaborateur}.`,
       type: 'success', appId: 'finance',
     });

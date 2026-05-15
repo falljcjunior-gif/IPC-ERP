@@ -8,6 +8,11 @@
  */
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import {
+  Landmark, BarChart3, Wallet, Sprout, Scale, Bot, Globe, Building2, Key,
+  TrendingUp, Lock, Clock, Award, CheckCircle2, AlertTriangle, ShieldAlert,
+  Users, FileText, Activity, Zap, Target, ArrowRight,
+} from 'lucide-react';
 import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
 import {
@@ -42,16 +47,17 @@ const SUBSIDIARY_PERF = [];
 const fmt  = (n) => new Intl.NumberFormat('fr-CI', { maximumFractionDigits: 0 }).format(n);
 const fmtM = (n) => n >= 1e9 ? `${(n/1e9).toFixed(2)} Md` : n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
 
+// [GO-LIVE] Icônes Lucide enterprise — plus d'emojis
 const TABS = [
-  { id: 'overview',    label: 'Vue Groupe',       icon: '🏛️' },
-  { id: 'performance', label: 'Performance',       icon: '📊' },
-  { id: 'finance',     label: 'Consolidation',     icon: '💰' },
-  { id: 'esg',         label: 'ESG & Foundation',  icon: '🌱' },
-  { id: 'governance',  label: 'Gouvernance',        icon: '⚖️' },
-  { id: 'intelligence',label: 'IA Stratégique',    icon: '🤖' },
-  { id: 'countries',   label: 'Pays',              icon: '🌍' },
-  { id: 'entities',    label: 'Entités Groupe',    icon: '🏢' },
-  { id: 'licenses',    label: 'Licences SaaS',     icon: '🔑' },
+  { id: 'overview',    label: 'Vue Groupe',       Icon: Landmark   },
+  { id: 'performance', label: 'Performance',       Icon: BarChart3  },
+  { id: 'finance',     label: 'Consolidation',     Icon: Wallet     },
+  { id: 'esg',         label: 'ESG & Foundation',  Icon: Sprout     },
+  { id: 'governance',  label: 'Gouvernance',       Icon: Scale      },
+  { id: 'intelligence',label: 'IA Stratégique',    Icon: Bot        },
+  { id: 'countries',   label: 'Pays',              Icon: Globe      },
+  { id: 'entities',    label: 'Entités Groupe',    Icon: Building2  },
+  { id: 'licenses',    label: 'Licences SaaS',     Icon: Key        },
 ];
 
 export default function HoldingCockpit() {
@@ -77,7 +83,7 @@ export default function HoldingCockpit() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: '100vh', background: 'var(--bg)', gap: 16,
       }}>
-        <div style={{ fontSize: 48 }}>🔒</div>
+        <Lock size={48} strokeWidth={1.5} style={{ color: C.muted }} />
         <div style={{ color: C.text, fontSize: 18, fontWeight: 700 }}>Accès Holding requis</div>
         <div style={{ color: C.muted, fontSize: 14 }}>
           Ce cockpit est réservé aux rôles HOLDING_CEO, HOLDING_CFO et SUPER_ADMIN.
@@ -137,7 +143,7 @@ export default function HoldingCockpit() {
                 fontSize: 12, color: C.gold, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 6,
               }}>
-                ⏳ {approvals.length} en attente
+                <Clock size={12} strokeWidth={2.2} /> {approvals.length} en attente
               </div>
             )}
             <EntitySwitcher compact />
@@ -160,20 +166,23 @@ export default function HoldingCockpit() {
           width: 'fit-content', maxWidth: '100%',
           marginBottom: '-1px',
         }}>
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              padding: '0.55rem 1.1rem', borderRadius: '0.9rem',
-              border: 'none', cursor: 'pointer', fontWeight: 700,
-              fontSize: '0.8rem', whiteSpace: 'nowrap',
-              transition: 'all 0.2s',
-              background: tab === t.id ? '#fff' : 'transparent',
-              color: tab === t.id ? C.text : C.muted,
-              boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-            }}>
-              <span>{t.icon}</span>{t.label}
-            </button>
-          ))}
+          {TABS.map(t => {
+            const TabIcon = t.Icon;
+            return (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '0.55rem 1.1rem', borderRadius: '0.9rem',
+                border: 'none', cursor: 'pointer', fontWeight: 700,
+                fontSize: '0.8rem', whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+                background: tab === t.id ? '#fff' : 'transparent',
+                color: tab === t.id ? C.text : C.muted,
+                boxShadow: tab === t.id ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+              }}>
+                <TabIcon size={14} strokeWidth={2} />{t.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -230,12 +239,12 @@ function TabLoader({ label }) {
 
 function OverviewTab({ consolidated, loading }) {
   const kpis = [
-    { label: 'CA Consolidé',      value: fmtM(consolidated.revenue),  unit: 'XOF', icon: '💰', color: C.teal,   change: '+14.2%', pos: true },
-    { label: 'EBITDA Groupe',     value: fmtM(consolidated.ebitda),   unit: 'XOF', icon: '📊', color: C.blue,   change: '+8.7%',  pos: true },
-    { label: 'Trésorerie Conso.', value: fmtM(consolidated.cash),     unit: 'XOF', icon: '🏦', color: C.purple, change: '+5.1%',  pos: true },
-    { label: 'Effectif Total',    value: fmt(consolidated.headcount), unit: 'emp', icon: '👥', color: C.gold,   change: '+12',    pos: true },
-    { label: 'Filiales Actives',  value: consolidated.subsidiaries,   unit: '',    icon: '🏢', color: C.blue,   change: 'stable', pos: true },
-    { label: 'Score ESG Groupe',  value: consolidated.esgScore,       unit: '/100',icon: '🌱', color: C.accent, change: '+3pts',  pos: true },
+    { label: 'CA Consolidé',      value: fmtM(consolidated.revenue),  unit: 'XOF', Icon: Wallet,     color: C.teal,   change: '+14.2%', pos: true },
+    { label: 'EBITDA Groupe',     value: fmtM(consolidated.ebitda),   unit: 'XOF', Icon: BarChart3,  color: C.blue,   change: '+8.7%',  pos: true },
+    { label: 'Trésorerie Conso.', value: fmtM(consolidated.cash),     unit: 'XOF', Icon: Landmark,   color: C.purple, change: '+5.1%',  pos: true },
+    { label: 'Effectif Total',    value: fmt(consolidated.headcount), unit: 'emp', Icon: Users,      color: C.gold,   change: '+12',    pos: true },
+    { label: 'Filiales Actives',  value: consolidated.subsidiaries,   unit: '',    Icon: Building2,  color: C.blue,   change: 'stable', pos: true },
+    { label: 'Score ESG Groupe',  value: consolidated.esgScore,       unit: '/100',Icon: Sprout,     color: C.accent, change: '+3pts',  pos: true },
   ];
 
   return (
@@ -243,16 +252,18 @@ function OverviewTab({ consolidated, loading }) {
 
       {/* KPI Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(210px,1fr))', gap: 16 }}>
-        {kpis.map(k => (
+        {kpis.map(k => {
+          const KpiIcon = k.Icon;
+          return (
           <div key={k.label} className="bento-card" style={{ padding: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
               <div style={{
                 width: 38, height: 38, borderRadius: 10,
                 background: `${k.color}15`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18,
+                color: k.color,
               }}>
-                {k.icon}
+                <KpiIcon size={18} strokeWidth={2} />
               </div>
               <span style={{
                 fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20,
@@ -268,7 +279,8 @@ function OverviewTab({ consolidated, loading }) {
             </div>
             <div style={{ fontSize: 12, color: C.muted, marginTop: 6, fontWeight: 600 }}>{k.label}</div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Revenue by Subsidiary */}
@@ -279,7 +291,7 @@ function OverviewTab({ consolidated, loading }) {
           const pct = (s.revenue / consolidated.revenue * 100).toFixed(1);
           return (
             <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-              <div style={{ width: 28, fontSize: 18 }}>{entity?.icon}</div>
+              <div style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.muted }}><Building2 size={16} strokeWidth={2} /></div>
               <div style={{ width: 160, fontSize: 13, color: C.text, fontWeight: 600 }}>{entity?.shortName}</div>
               <div style={{ flex: 1, height: 8, borderRadius: 8, background: C.track }}>
                 <div style={{
@@ -302,10 +314,10 @@ function OverviewTab({ consolidated, loading }) {
       <SectionHeader title="Alertes Stratégiques" subtitle="Éléments nécessitant votre attention" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
         {[
-          { icon: '⚠️', type: 'warning', label: 'YSEE : Croissance négative (-3.2%)', detail: 'Plan de redressement requis' },
-          { icon: '✅', type: 'success', label: 'Nexus Academy : Record CA trimestrel', detail: 'Croissance +34.1% — Felicitations' },
-          { icon: '🔔', type: 'info',    label: '3 budgets filiales en attente', detail: 'Validation Holding requise avant 30/05' },
-          { icon: '📊', type: 'info',    label: 'Score ESG en hausse (+3pts)', detail: 'Objectif 80/100 d\'ici Q4 2026 atteignable' },
+          { icon: '', type: 'warning', label: 'YSEE : Croissance négative (-3.2%)', detail: 'Plan de redressement requis' },
+          { icon: '', type: 'success', label: 'Nexus Academy : Record CA trimestrel', detail: 'Croissance +34.1% — Felicitations' },
+          { icon: '', type: 'info',    label: '3 budgets filiales en attente', detail: 'Validation Holding requise avant 30/05' },
+          { icon: '', type: 'info',    label: 'Score ESG en hausse (+3pts)', detail: 'Objectif 80/100 d\'ici Q4 2026 atteignable' },
         ].map((alert, i) => (
           <div key={i} style={{
             background: alert.type === 'warning' ? `${C.red}08`
@@ -362,7 +374,7 @@ function PerformanceTab() {
                 }}>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: 18 }}>{entity?.icon}</span>
+                      <Building2 size={16} strokeWidth={2} style={{ color: C.muted }} />
                       <div>
                         <div style={{ fontWeight: 700, color: C.text }}>{entity?.name}</div>
                         <div style={{ fontSize: 11, color: C.muted }}>{entity?.id}</div>
@@ -466,10 +478,10 @@ function FinanceTab({ consolidated }) {
       <SectionHeader title="Flux Intercompany" subtitle="Transactions entre entités en attente d'élimination" />
       <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
         {[
-          { from: '🧱 Green Blocks', to: '🏭 Prod & Log', amount: 28_000_000, type: 'Prestation', done: false },
-          { from: '📡 Connect+',     to: '🏛️ Holding',    amount: 15_000_000, type: 'Redevance',  done: false },
-          { from: '🏛️ Holding',      to: '🎓 Academy',    amount: 12_000_000, type: 'Subvention', done: true  },
-          { from: '🛒 Select',       to: '🧱 Green Blocks',amount: 27_000_000, type: 'Achat stock', done: false },
+          { from: 'Green Blocks', to: 'Prod & Log', amount: 28_000_000, type: 'Prestation', done: false },
+          { from: 'Connect+',     to: 'Holding',    amount: 15_000_000, type: 'Redevance',  done: false },
+          { from: 'Holding',      to: 'Academy',    amount: 12_000_000, type: 'Subvention', done: true  },
+          { from: 'Select',       to: 'Green Blocks',amount: 27_000_000, type: 'Achat stock', done: false },
         ].map((tx, i) => (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: 16, padding: '14px 24px',
@@ -500,9 +512,9 @@ function FinanceTab({ consolidated }) {
 
 function ESGTab() {
   const dims = [
-    { dim: 'E — Environnement', score: 72, icon: '🌍', color: C.teal,   items: ['CO₂ réduit de 18%', 'Déchets recyclés: 84%', 'Énergie renouvelable: 41%'] },
-    { dim: 'S — Social',        score: 81, icon: '👥', color: C.blue,   items: ['Indice parité: 0.87', 'Formation: 96h/emp/an', 'Accidents 0 en Q1 2026'] },
-    { dim: 'G — Gouvernance',   score: 88, icon: '⚖️', color: C.purple, items: ['Audit indépendant: ✅', 'RGPD: conforme', 'CA diversifié 6 profils'] },
+    { dim: 'E — Environnement', score: 72, icon: '', color: C.teal,   items: ['CO₂ réduit de 18%', 'Déchets recyclés: 84%', 'Énergie renouvelable: 41%'] },
+    { dim: 'S — Social',        score: 81, icon: '', color: C.blue,   items: ['Indice parité: 0.87', 'Formation: 96h/emp/an', 'Accidents 0 en Q1 2026'] },
+    { dim: 'G — Gouvernance',   score: 88, icon: '', color: C.purple, items: ['Audit indépendant:', 'RGPD: conforme', 'CA diversifié 6 profils'] },
   ];
 
   return (
@@ -548,10 +560,10 @@ function ESGTab() {
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
           {[
-            { icon: '🎁', label: 'Dons collectés',   value: '142 M XOF', color: C.gold   },
-            { icon: '👤', label: 'Bénéficiaires',     value: '4 820',     color: C.teal   },
-            { icon: '📣', label: 'Campagnes actives', value: '7',         color: C.blue   },
-            { icon: '🌍', label: 'CO₂ compensé',      value: '320 T',     color: C.accent },
+            { icon: '', label: 'Dons collectés',   value: '142 M XOF', color: C.gold   },
+            { icon: '', label: 'Bénéficiaires',     value: '4 820',     color: C.teal   },
+            { icon: '', label: 'Campagnes actives', value: '7',         color: C.blue   },
+            { icon: '', label: 'CO₂ compensé',      value: '320 T',     color: C.accent },
           ].map(k => (
             <div key={k.label} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 32, marginBottom: 8 }}>{k.icon}</div>
@@ -571,10 +583,10 @@ function ESGTab() {
 
 function GovernanceTab({ approvals }) {
   const mockItems = [
-    { id: 1, type: 'Budget',       entity: '🧱 Green Blocks', title: 'Budget Q3 2026 — 285M XOF', requestedBy: 'Dir. Financier', urgency: 'high',   date: '2026-05-14' },
-    { id: 2, type: 'Interco',      entity: '📡 Connect+',     title: 'Prestation IT → Holding — 15M XOF', requestedBy: 'CFO Connect+', urgency: 'normal', date: '2026-05-13' },
-    { id: 3, type: 'Recrutement',  entity: '🎓 Academy',      title: '3 Formateurs Séniors — Abidjan', requestedBy: 'DRH Academy', urgency: 'normal', date: '2026-05-12' },
-    { id: 4, type: 'Investissement',entity: '🏨 Hôtel Sana',  title: 'Rénovation Aile Ouest — 48M XOF', requestedBy: 'DG Sana', urgency: 'low', date: '2026-05-10' },
+    { id: 1, type: 'Budget',       entity: 'Green Blocks', title: 'Budget Q3 2026 — 285M XOF', requestedBy: 'Dir. Financier', urgency: 'high',   date: '2026-05-14' },
+    { id: 2, type: 'Interco',      entity: 'Connect+',     title: 'Prestation IT → Holding — 15M XOF', requestedBy: 'CFO Connect+', urgency: 'normal', date: '2026-05-13' },
+    { id: 3, type: 'Recrutement',  entity: 'Academy',      title: '3 Formateurs Séniors — Abidjan', requestedBy: 'DRH Academy', urgency: 'normal', date: '2026-05-12' },
+    { id: 4, type: 'Investissement',entity: 'Hôtel Sana',  title: 'Rénovation Aile Ouest — 48M XOF', requestedBy: 'DG Sana', urgency: 'low', date: '2026-05-10' },
   ];
 
   return (
@@ -592,7 +604,7 @@ function GovernanceTab({ approvals }) {
                        : `${C.muted}12`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20,
           }}>
-            {item.type === 'Budget' ? '💰' : item.type === 'Interco' ? '🔄' : item.type === 'Recrutement' ? '👤' : '🏗️'}
+            {item.type === 'Budget' ? '' : item.type === 'Interco' ? '' : item.type === 'Recrutement' ? '' : ''}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -604,8 +616,8 @@ function GovernanceTab({ approvals }) {
             </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-success btn-sm">✓ Valider</button>
-            <button className="btn btn-danger btn-sm">✗ Refuser</button>
+            <button className="btn btn-success btn-sm"> Valider</button>
+            <button className="btn btn-danger btn-sm"> Refuser</button>
           </div>
         </div>
       ))}
@@ -623,9 +635,9 @@ function IntelligenceTab({ consolidated }) {
   const [thinking, setThinking] = useState(false);
 
   const insights = [
-    { icon: '📈', type: 'Opportunité', color: C.accent, title: 'Nexus Academy — Potentiel d\'expansion géographique', body: 'Avec +34.1% de croissance YTD et une marge de 61.2%, Nexus Academy présente un profil rare. L\'IA recommande d\'évaluer une expansion vers Dakar et Bamako sur H2 2026.' },
-    { icon: '⚠️', type: 'Risque',     color: C.gold,   title: 'YSEE — Alerte performance commerciale', body: 'Décroissance de -3.2% et marge à 18.4%. Sans plan d\'action correctif dans les 60 jours, la filiale risque de passer sous le seuil de rentabilité.' },
-    { icon: '🔄', type: 'Optimisation',color: C.blue,   title: 'Cash Pooling groupe — Opportunité trésorerie', body: 'Trésoreries filiales : 1.42 Mrd XOF. Un cash pool centralisé générerait 8-12M XOF d\'économies d\'intérêts annuelles.' },
+    { icon: '', type: 'Opportunité', color: C.accent, title: 'Nexus Academy — Potentiel d\'expansion géographique', body: 'Avec +34.1% de croissance YTD et une marge de 61.2%, Nexus Academy présente un profil rare. L\'IA recommande d\'évaluer une expansion vers Dakar et Bamako sur H2 2026.' },
+    { icon: '', type: 'Risque',     color: C.gold,   title: 'YSEE — Alerte performance commerciale', body: 'Décroissance de -3.2% et marge à 18.4%. Sans plan d\'action correctif dans les 60 jours, la filiale risque de passer sous le seuil de rentabilité.' },
+    { icon: '', type: 'Optimisation',color: C.blue,   title: 'Cash Pooling groupe — Opportunité trésorerie', body: 'Trésoreries filiales : 1.42 Mrd XOF. Un cash pool centralisé générerait 8-12M XOF d\'économies d\'intérêts annuelles.' },
   ];
 
   const ask = async () => {
@@ -670,8 +682,8 @@ function IntelligenceTab({ consolidated }) {
       {/* AI Query */}
       <div className="bento-card" style={{ padding: '1.5rem' }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 14 }}>
-          🤖 Interroger Nexus Intelligence
-        </div>
+ Interroger Nexus Intelligence
+ </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <input
             value={prompt}

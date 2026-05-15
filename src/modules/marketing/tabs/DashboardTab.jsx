@@ -129,7 +129,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
       {/* Top Campagnes */}
       <motion.div variants={item} className="glass" style={{ padding: '2rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}>🏆 Top Campagnes par Conversions</h3>
+          <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1rem' }}> Top Campagnes par Conversions</h3>
           <button onClick={() => onNavigate('campaigns')} style={{ background: 'none', border: 'none', color: '#EC4899', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
             Voir tout <ArrowUpRight size={14} />
           </button>
@@ -146,7 +146,7 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
               return (
                 <div key={c.id || i} style={{ display: 'grid', gridTemplateColumns: '32px 2fr 1.5fr 1fr 1fr 80px', alignItems: 'center', gap: '1.5rem', padding: '1rem 1.5rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)' }}>
                   <div style={{ fontWeight: 900, color: i < 3 ? '#F59E0B' : 'var(--text-muted)', fontSize: '1.1rem' }}>
-                    {i < 3 ? ['🥇','🥈','🥉'][i] : `#${i+1}`}
+                    {i < 3 ? ['','',''][i] : `#${i+1}`}
                   </div>
                   <div>
                     <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{c.nom}</div>

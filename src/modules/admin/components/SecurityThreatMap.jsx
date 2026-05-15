@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { MapPin, ShieldAlert, ShieldCheck } from 'lucide-react';
 
 /**
- * 🗺️ SECURITY THREAT MAP (ELITE VISUALIZATION)
+ *  SECURITY THREAT MAP (ELITE VISUALIZATION)
  * Futuristic map visualization showing global access attempts and security events.
  */
 const SecurityThreatMap = () => {

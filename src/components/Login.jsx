@@ -36,245 +36,245 @@ const Login = ({ onLogin }) => {
       }
 
       addToast(`Noyau synchronisé. Connexion établie.`, 'success');
-      onLogin();
-    } catch (err) {
-      setError(err.message || 'Accès refusé : Identifiants invalides.');
-    } finally {
-      if (!mustChange) setIsLoading(false);
-    }
-  };
+ onLogin();
+ } catch (err) {
+ setError(err.message || 'Accès refusé : Identifiants invalides.');
+ } finally {
+ if (!mustChange) setIsLoading(false);
+ }
+ };
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      setError('Les clés ne correspondent pas.');
-      return;
-    }
-    if (newPassword.length < 6) {
-      setError('Le code doit contenir au moins 6 caractères.');
-      return;
-    }
+ const handleChangePassword = async (e) => {
+ e.preventDefault();
+ if (newPassword !== confirmPassword) {
+ setError('Les clés ne correspondent pas.');
+ return;
+ }
+ if (newPassword.length < 6) {
+ setError('Le code doit contenir au moins 6 caractères.');
+ return;
+ }
 
-    setIsLoading(true);
-    setError('');
+ setIsLoading(true);
+ setError('');
 
-    try {
-      await AuthService.mandatoryPasswordUpdate(newPassword);
-      onLogin();
-    } catch (err) {
-      setError(err.message || 'Échec de la mise à jour de sécurité.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ try {
+ await AuthService.mandatoryPasswordUpdate(newPassword);
+ onLogin();
+ } catch (err) {
+ setError(err.message || 'Échec de la mise à jour de sécurité.');
+ } finally {
+ setIsLoading(false);
+ }
+ };
 
-  return (
-    <div style={{ 
-      height: '100vh', 
-      width: '100vw', 
-      display: 'flex', 
-      background: 'var(--bg)',
-      overflow: 'hidden',
-      fontFamily: 'var(--font-main)'
-    }}>
-      {/* 🟢 LEFT SIDE: AUTH FORM */}
-      <div style={{ 
-        flex: '0 0 45%', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        padding: '2rem',
-        position: 'relative',
-        zIndex: 10,
-        background: 'var(--bg)'
-      }}>
-        <motion.div
-           initial={{ opacity: 0, x: -30 }}
-           animate={{ opacity: 1, x: 0 }}
-           transition={{ duration: 0.8, ease: "easeOut" }}
-           style={{ width: '100%', maxWidth: '420px' }}
-        >
-          {/* Header Branding */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
-             <div style={{ 
-               width: '42px', height: '42px', background: 'var(--accent)', 
-               borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-               boxShadow: '0 8px 16px var(--accent-glow)'
-             }}>
-                <Sparkles size={24} color="white" />
-             </div>
-             <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text)' }}>
-                  IPC <span style={{ color: 'var(--accent)' }}>Intelligence</span>
-                </h2>
-                <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)' }}>
-                  Business Operating System
-                </div>
-             </div>
-          </div>
+ return (
+ <div style={{ 
+ height: '100vh', 
+ width: '100vw', 
+ display: 'flex', 
+ background: 'var(--bg)',
+ overflow: 'hidden',
+ fontFamily: 'var(--font-main)'
+ }}>
+ {/* LEFT SIDE: AUTH FORM */}
+ <div style={{ 
+ flex: '0 0 45%', 
+ display: 'flex', 
+ alignItems: 'center', 
+ justifyContent: 'center',
+ padding: '2rem',
+ position: 'relative',
+ zIndex: 10,
+ background: 'var(--bg)'
+ }}>
+ <motion.div
+ initial={{ opacity: 0, x: -30 }}
+ animate={{ opacity: 1, x: 0 }}
+ transition={{ duration: 0.8, ease: "easeOut" }}
+ style={{ width: '100%', maxWidth: '420px' }}
+ >
+ {/* Header Branding */}
+ <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
+ <div style={{ 
+ width: '42px', height: '42px', background: 'var(--accent)', 
+ borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+ boxShadow: '0 8px 16px var(--accent-glow)'
+ }}>
+ <Sparkles size={24} color="white" />
+ </div>
+ <div>
+ <h2 style={{ fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.02em', color: 'var(--text)' }}>
+ IPC <span style={{ color: 'var(--accent)' }}>Intelligence</span>
+ </h2>
+ <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', color: 'var(--text-muted)' }}>
+ Business Operating System
+ </div>
+ </div>
+ </div>
 
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.04em', color: 'var(--text)' }}>
-             {mustChange ? t('auth.new_key') : t('auth.login')}
-          </h1>
-          <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1rem', lineHeight: 1.6 }}>
-             {mustChange ? t('auth.new_key_desc', { defaultValue: 'Veuillez définir votre clé d’accès personnelle.' }) : t('auth.login_desc', { defaultValue: 'Identifiez-vous pour accéder au cockpit de pilotage.' })}
-          </p>
+ <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.75rem', letterSpacing: '-0.04em', color: 'var(--text)' }}>
+ {mustChange ? t('auth.new_key') : t('auth.login')}
+ </h1>
+ <p style={{ color: 'var(--text-muted)', marginBottom: '2.5rem', fontSize: '1rem', lineHeight: 1.6 }}>
+ {mustChange ? t('auth.new_key_desc', { defaultValue: 'Veuillez définir votre clé d’accès personnelle.' }) : t('auth.login_desc', { defaultValue: 'Identifiez-vous pour accéder au cockpit de pilotage.' })}
+ </p>
 
-          <form onSubmit={mustChange ? handleChangePassword : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <AnimatePresence mode="wait">
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  style={{ 
-                    background: 'rgba(239, 68, 68, 0.08)', 
-                    color: '#EF4444', padding: '1rem', borderRadius: '1rem', fontSize: '0.85rem',
-                    fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid rgba(239, 68, 68, 0.1)'
-                  }}
-                >
-                  <AlertCircle size={18} /> {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
+ <form onSubmit={mustChange ? handleChangePassword : handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+ <AnimatePresence mode="wait">
+ {error && (
+ <motion.div 
+ initial={{ opacity: 0, y: -10 }}
+ animate={{ opacity: 1, y: 0 }}
+ exit={{ opacity: 0, y: -10 }}
+ style={{ 
+ background: 'rgba(239, 68, 68, 0.08)', 
+ color: '#EF4444', padding: '1rem', borderRadius: '1rem', fontSize: '0.85rem',
+ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid rgba(239, 68, 68, 0.1)'
+ }}
+ >
+ <AlertCircle size={18} /> {error}
+ </motion.div>
+ )}
+ </AnimatePresence>
 
-            {!mustChange && (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.cloud_id')}</label>
-                  <div className="input-field" style={{ position: 'relative' }}>
-                    <Mail size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input 
-                      type="email" 
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nom.prenom@ipc.com"
-                      style={{ 
-                        width: '100%', padding: '1.1rem 1.1rem 1.1rem 3.5rem', borderRadius: '1rem',
-                        background: 'var(--bg-subtle)', border: '2px solid transparent',
-                        color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600,
-                        transition: 'all 0.3s'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
+ {!mustChange && (
+ <>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+ <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.cloud_id')}</label>
+ <div className="input-field" style={{ position: 'relative' }}>
+ <Mail size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+ <input 
+ type="email" 
+ value={email}
+ onChange={(e) => setEmail(e.target.value)}
+ placeholder="nom.prenom@ipc.com"
+ style={{ 
+ width: '100%', padding: '1.1rem 1.1rem 1.1rem 3.5rem', borderRadius: '1rem',
+ background: 'var(--bg-subtle)', border: '2px solid transparent',
+ color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600,
+ transition: 'all 0.3s'
+ }}
+ required
+ />
+ </div>
+ </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.access_key')}</label>
-                    <a href="#" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}>{t('auth.forgot_key', { defaultValue: 'Oubliée ?' })}</a>
-                  </div>
-                  <div className="input-field" style={{ position: 'relative' }}>
-                    <Lock size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input 
-                      type="password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      style={{ 
-                        width: '100%', padding: '1.1rem 1.1rem 1.1rem 3.5rem', borderRadius: '1rem',
-                        background: 'var(--bg-subtle)', border: '2px solid transparent',
-                        color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600,
-                        transition: 'all 0.3s'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-              </>
-            )}
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+ <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+ <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginLeft: '0.2rem' }}>{t('auth.access_key')}</label>
+ <a href="#" style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}>{t('auth.forgot_key', { defaultValue: 'Oubliée ?' })}</a>
+ </div>
+ <div className="input-field" style={{ position: 'relative' }}>
+ <Lock size={18} style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+ <input 
+ type="password" 
+ value={password}
+ onChange={(e) => setPassword(e.target.value)}
+ placeholder="••••••••"
+ style={{ 
+ width: '100%', padding: '1.1rem 1.1rem 1.1rem 3.5rem', borderRadius: '1rem',
+ background: 'var(--bg-subtle)', border: '2px solid transparent',
+ color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600,
+ transition: 'all 0.3s'
+ }}
+ required
+ />
+ </div>
+ </div>
+ </>
+ )}
 
-            {mustChange && (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nouvelle Clé</label>
-                  <input 
-                    type="password" 
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    style={{ 
-                      width: '100%', padding: '1.1rem 1.25rem', borderRadius: '1rem',
-                      background: 'var(--bg-subtle)', border: '2px solid transparent',
-                      color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600
-                    }}
-                    required
-                  />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Confirmation</label>
-                  <input 
-                    type="password" 
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    style={{ 
-                      width: '100%', padding: '1.1rem 1.25rem', borderRadius: '1rem',
-                      background: 'var(--bg-subtle)', border: '2px solid transparent',
-                      color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600
-                    }}
-                    required
-                  />
-                </div>
-              </>
-            )}
+ {mustChange && (
+ <>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+ <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Nouvelle Clé</label>
+ <input 
+ type="password" 
+ value={newPassword}
+ onChange={(e) => setNewPassword(e.target.value)}
+ style={{ 
+ width: '100%', padding: '1.1rem 1.25rem', borderRadius: '1rem',
+ background: 'var(--bg-subtle)', border: '2px solid transparent',
+ color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600
+ }}
+ required
+ />
+ </div>
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+ <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Confirmation</label>
+ <input 
+ type="password" 
+ value={confirmPassword}
+ onChange={(e) => setConfirmPassword(e.target.value)}
+ style={{ 
+ width: '100%', padding: '1.1rem 1.25rem', borderRadius: '1rem',
+ background: 'var(--bg-subtle)', border: '2px solid transparent',
+ color: 'var(--text)', outline: 'none', fontSize: '0.95rem', fontWeight: 600
+ }}
+ required
+ />
+ </div>
+ </>
+ )}
 
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              disabled={isLoading}
-              style={{ 
-                padding: '1.1rem', borderRadius: '1.1rem', background: 'var(--accent)',
-                color: 'white', border: 'none', cursor: isLoading ? 'wait' : 'pointer',
-                fontWeight: 900, fontSize: '1rem', marginTop: '1.5rem',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
-                boxShadow: '0 12px 24px var(--accent-glow)'
-              }}
-            >
-              {isLoading ? (
-                <div className="spinner" style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
-              ) : (
-                <>
-                  {t('auth.authenticate')} <ArrowRight size={20} />
-                </>
-              )}
-            </motion.button>
-          </form>
+ <motion.button
+ whileHover={{ scale: 1.02, y: -2 }}
+ whileTap={{ scale: 0.98 }}
+ type="submit"
+ disabled={isLoading}
+ style={{ 
+ padding: '1.1rem', borderRadius: '1.1rem', background: 'var(--accent)',
+ color: 'white', border: 'none', cursor: isLoading ? 'wait' : 'pointer',
+ fontWeight: 900, fontSize: '1rem', marginTop: '1.5rem',
+ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem',
+ boxShadow: '0 12px 24px var(--accent-glow)'
+ }}
+ >
+ {isLoading ? (
+ <div className="spinner" style={{ width: '20px', height: '20px', border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%' }} />
+ ) : (
+ <>
+ {t('auth.authenticate')} <ArrowRight size={20} />
+ </>
+ )}
+ </motion.button>
+ </form>
 
-          {/* Footer Info */}
-          <div style={{ marginTop: '4rem', display: 'flex', alignItems: 'center', gap: '1.5rem', opacity: 0.5 }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', fontWeight: 800 }}>
-                <ShieldCheck size={14} color="#10B981" /> SECURE LINK
-             </div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', fontWeight: 800 }}>
-                <Globe size={14} /> CLOUD NODES : ACTIVE
-             </div>
-          </div>
-        </motion.div>
+ {/* Footer Info */}
+ <div style={{ marginTop: '4rem', display: 'flex', alignItems: 'center', gap: '1.5rem', opacity: 0.5 }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', fontWeight: 800 }}>
+ <ShieldCheck size={14} color="#10B981" /> SECURE LINK
+ </div>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.7rem', fontWeight: 800 }}>
+ <Globe size={14} /> CLOUD NODES : ACTIVE
+ </div>
+ </div>
+ </motion.div>
 
-        {/* CSS for hover effects */}
-        <style>{`
+ {/* CSS for hover effects */}
+ <style>{`
           .input-field input:focus { border-color: var(--accent) !important; background: var(--bg) !important; }
           @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } 
           .spinner { animation: spin 0.8s linear infinite; }
         `}</style>
-      </div>
+ </div>
 
-      {/* 🌊 WAVY DIVIDER & HERO SIDE */}
-      <div style={{ 
-        flex: 1, 
-        position: 'relative', 
-        overflow: 'hidden',
-        background: '#0F172A'
-      }}>
-        {/* The Hero Image */}
-        <motion.div
-           initial={{ scale: 1.1, opacity: 0 }}
-           animate={{ scale: 1, opacity: 1 }}
-           transition={{ duration: 1.5, ease: "easeOut" }}
-           style={{ 
-             position: 'absolute', inset: 0, 
-             backgroundImage: `url(${heroImage})`, 
+ {/* WAVY DIVIDER & HERO SIDE */}
+ <div style={{ 
+ flex: 1, 
+ position: 'relative', 
+ overflow: 'hidden',
+ background: '#0F172A'
+ }}>
+ {/* The Hero Image */}
+ <motion.div
+ initial={{ scale: 1.1, opacity: 0 }}
+ animate={{ scale: 1, opacity: 1 }}
+ transition={{ duration: 1.5, ease: "easeOut" }}
+ style={{ 
+ position: 'absolute', inset: 0, 
+ backgroundImage:`url(${heroImage})`, 
              backgroundSize: 'cover', 
              backgroundPosition: 'center' 
            }}

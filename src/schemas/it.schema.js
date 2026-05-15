@@ -1,5 +1,5 @@
 /**
- * 🛠️ NEXUS OS: IT OPERATIONS SCHEMA (ELITE 2.0)
+ *  NEXUS OS: IT OPERATIONS SCHEMA (ELITE 2.0)
  * Expanded for AIOps, Cybersecurity monitoring, and SLA tracking.
  */
 export const itSchema = {

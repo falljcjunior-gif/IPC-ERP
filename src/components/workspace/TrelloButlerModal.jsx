@@ -57,7 +57,7 @@ const TrelloButlerModal = ({ project, updateProject, onClose }) => {
   const getRuleText = (rule) => {
     let t = '';
     if (rule.trigger.type === 'move') t += `Si on déplace une carte dans "${colName(rule.trigger.targetColId)}"`;
-    t += ' ➔ ';
+    t += '';
     if (rule.effect.type === 'mark_done') t += 'Marquer la tâche comme terminée et cocher les cases';
     if (rule.effect.type === 'add_green_label') t += 'Ajouter une étiquette verte "Validé"';
     if (rule.effect.type === 'assign_me') t += "M'assigner automatiquement";
@@ -138,7 +138,7 @@ const TrelloButlerModal = ({ project, updateProject, onClose }) => {
                     <option value="mark_done">Marquer la tâche comme terminée</option>
                     <option value="add_green_label">Ajouter une étiquette verte "Validé"</option>
                     <option value="assign_me">M'assigner automatiquement</option>
-                    <option value="notify_manager">🔔 Notifier le Manager par Push</option>
+                    <option value="notify_manager"> Notifier le Manager par Push</option>
                   </select>
 
                 </div>

@@ -60,11 +60,11 @@ const AttachmentsSection = ({ cardId, uid }) => {
   };
 
   const getMimeIcon = (mime = '') => {
-    if (mime.startsWith('image/')) return '🖼️';
-    if (mime.includes('pdf')) return '📄';
-    if (mime.includes('sheet') || mime.includes('excel')) return '📊';
-    if (mime.includes('word') || mime.includes('document')) return '📝';
-    return '📎';
+    if (mime.startsWith('image/')) return '';
+    if (mime.includes('pdf')) return '';
+    if (mime.includes('sheet') || mime.includes('excel')) return '';
+    if (mime.includes('word') || mime.includes('document')) return '';
+    return '';
   };
 
   return (

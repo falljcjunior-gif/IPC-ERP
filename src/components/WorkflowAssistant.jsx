@@ -10,7 +10,7 @@ import { useToastStore } from '../store/useToastStore';
 import { debugInteraction } from '../utils/InteractionAuditor';
 
 /**
- * ⚙️ NEXUS OS: WORKFLOW & BPM ASSISTANT
+ *  NEXUS OS: WORKFLOW & BPM ASSISTANT
  * Handles system hints, AI insights, and critical business process approvals.
  */
 const WorkflowAssistant = () => {

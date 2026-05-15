@@ -39,7 +39,7 @@ const MobileCompanion = () => {
             </div>
             <div style={{ color: 'white', fontWeight: 900, fontSize: '1.25rem', textAlign: 'center' }}>Nexus OS</div>
             <div style={{ color: '#64748b', fontSize: '0.75rem', textAlign: 'center', fontWeight: 600 }}>IPC Green Blocks</div>
-            {[{l:'Scan OF',c:'#3B82F6',i:'📷'},{l:'Pointer',c:'#10B981',i:'⏱'},{l:'Livraisons',c:'#F59E0B',i:'🚚'},{l:'Alertes (3)',c:'#EF4444',i:'🔔'}].map((b,i)=>(
+            {[{l:'Scan OF',c:'#3B82F6',i:''},{l:'Pointer',c:'#10B981',i:'⏱'},{l:'Livraisons',c:'#F59E0B',i:''},{l:'Alertes (3)',c:'#EF4444',i:''}].map((b,i)=>(
               <motion.div key={i} whileTap={{scale:0.95}} style={{ padding: '1rem', borderRadius: '1rem', background: `${b.c}20`, display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer' }}>
                 <span style={{ fontSize: '1.25rem' }}>{b.i}</span>
                 <span style={{ color: 'white', fontWeight: 800, fontSize: '0.9rem' }}>{b.l}</span>

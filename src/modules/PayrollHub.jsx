@@ -12,7 +12,7 @@ import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
 
 /**
- * 💰 NEXUS OS: PAYROLL HUB (AUDIT-READY)
+ *  NEXUS OS: PAYROLL HUB (AUDIT-READY)
  * Operational engine for salary calculation and synchronization.
  */
 const PayrollHub = () => {

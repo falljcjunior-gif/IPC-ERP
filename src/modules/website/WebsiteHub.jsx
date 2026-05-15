@@ -61,14 +61,14 @@ const WebsiteHub = () => {
   // --- LIVE PREVIEW FRONT-END ACTIONS ---
   const simulateCustomerBuy = (product) => {
      addRecord('sales', 'orders', {
-        client: '🛒 Client Web (eCommerce)',
+        client: 'Client Web (eCommerce)',
         produits: product.nom,
         montant: parseFloat(product.webPrice || 0),
         statut: 'Envoyé', // Waiting for payment
         priority: 'Haute',
         source: 'Website'
      });
-     alert(`✅ Article ajouté à l'Espace Client. Allez dans "Mon Espace" pour payer la facture.`);
+     alert(`Article ajouté à l'Espace Client. Allez dans "Mon Espace" pour payer la facture.`);
   };
 
   const simulateCustomerPay = (order) => {
@@ -96,7 +96,7 @@ const WebsiteHub = () => {
          );
       }
       
-      alert(`🎉 Paiement validé ! L'argent est arrivé en Finance et l'Écriture Comptable Bilan a été générée automatiquement !`);
+      alert(`Paiement validé ! L'argent est arrivé en Finance et l'Écriture Comptable Bilan a été générée automatiquement !`);
   };
 
   const submitSupportTicket = () => {

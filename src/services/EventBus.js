@@ -158,7 +158,7 @@ const EventBus = {
    */
   emit(topic, payload = {}, opts = {}) {
     if (!topic || typeof topic !== 'string') {
-      console.warn('[EventBus] ⚠️ emit() appelé sans topic valide');
+      console.warn('[EventBus] emit() appelé sans topic valide');
       return null;
     }
 
@@ -176,7 +176,7 @@ const EventBus = {
     if (_eventLog.length > MAX_LOG) _eventLog.pop();
 
     if (import.meta.env.DEV) {
-      console.groupCollapsed(`[EventBus] 📡 ${topic}`);
+      console.groupCollapsed(`[EventBus] ${topic}`);
       console.log('Source:', event.source, '| ID:', event.eventId);
       console.log('Payload:', payload);
       console.groupEnd();

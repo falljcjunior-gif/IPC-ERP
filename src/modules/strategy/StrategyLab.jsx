@@ -202,10 +202,10 @@ function RiskGauge({ score }) {
         fontSize:'0.9rem', fontWeight:800, color:gaugeColor,
         marginTop:'-0.5rem', letterSpacing:'0.5px',
       }}>
-        {score >= 80 ? '✓ Scénario viable — Exécution recommandée'
-         : score >= 55 ? '⚡ Scénario acceptable — Surveillance requise'
-         : score >= 30 ? '⚠ Vigilance — Révisez les variables critiques'
-         : '🔴 Danger — Risque de crise de trésorerie'}
+        {score >= 80 ? 'Scénario viable — Exécution recommandée'
+         : score >= 55 ? 'Scénario acceptable — Surveillance requise'
+         : score >= 30 ? 'Vigilance — Révisez les variables critiques'
+         : 'Danger — Risque de crise de trésorerie'}
       </div>
     </div>
   );
@@ -326,9 +326,9 @@ export default function StrategyLab() {
   };
 
   const groups = [
-    { key:'marche',     label:'🌍 Marché' },
-    { key:'operations', label:'⚙️ Opérations' },
-    { key:'ventes',     label:'📦 Ventes' },
+    { key:'marche',     label:'Marché' },
+    { key:'operations', label:'Opérations' },
+    { key:'ventes',     label:'Ventes' },
   ];
 
   return (
@@ -362,7 +362,7 @@ export default function StrategyLab() {
               cursor:'pointer', color:'var(--text)',
               ':hover': { background:'var(--border)' },
             }}>
-              {type === 'pessimistic' ? '🔴 Pessimiste' : type === 'realistic' ? '🟡 Réaliste' : '🟢 Optimiste'}
+              {type === 'pessimistic' ? 'Pessimiste' : type === 'realistic' ? 'Réaliste' : 'Optimiste'}
             </button>
           ))}
           <button onClick={resetVars} style={{
@@ -540,7 +540,7 @@ export default function StrategyLab() {
                   background:'#6366F115', border:'1px solid #6366F130',
                   fontSize:'0.73rem', color:'var(--text)',
                 }}>
-                  <span style={{ fontWeight:800, color:'#6366F1' }}>⚡ Levier N°1 : </span>
+                  <span style={{ fontWeight:800, color:'#6366F1' }}> Levier N°1 : </span>
                   Une variation de 5% de <b>{sensitivity[0].label}</b> fait varier le résultat de{' '}
                   <span style={{ color:'#10B981', fontWeight:700 }}>+{sensitivity[0].upImpact}%</span>
                   {' '}/<span style={{ color:'#EF4444', fontWeight:700 }}> {sensitivity[0].dnImpact}%</span> sur l'année.

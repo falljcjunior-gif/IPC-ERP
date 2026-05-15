@@ -267,10 +267,10 @@ const Analytics = () => {
           </h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {[
-              { key: 'VIP_PLATINUM', label: '🥇 VIP Platine', color: '#7C3AED' },
-              { key: 'VIP_GOLD',     label: '🥈 VIP Or',      color: '#F59E0B' },
-              { key: 'ACTIF',        label: '🔵 Actifs',      color: '#10B981' },
-              { key: 'A_RISQUE',     label: '⚠️ À Risque',    color: '#EF4444' },
+              { key: 'VIP_PLATINUM', label: 'VIP Platine', color: '#7C3AED' },
+              { key: 'VIP_GOLD',     label: 'VIP Or',      color: '#F59E0B' },
+              { key: 'ACTIF',        label: 'Actifs',      color: '#10B981' },
+              { key: 'A_RISQUE',     label: 'À Risque',    color: '#EF4444' },
               { key: 'INACTIF',      label: '⬜ Inactifs',    color: '#9CA3AF' },
             ].map(({ key, label, color }) => {
               const count = rfmSegments[key] || 0;

@@ -134,7 +134,7 @@ function Leaderboard({ dept, weekId, myUid }) {
   }, [dept, weekId]);
 
   if (entries.length === 0) return null;
-  const medals = ['🥇', '🥈', '🥉', '4', '5'];
+  const medals = ['', '', '', '4', '5'];
 
   return (
     <div>

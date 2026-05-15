@@ -16,10 +16,10 @@ import { createOperationsSlice } from './slices/createOperationsSlice';
 import { createFoundationSlice } from './slices/foundation/createFoundationSlice';
 
 // ══════════════════════════════════════════════════════════════════════════
-// 🚀 IPC INTELLIGENCE ENGINE: CENTRAL STORE
+//  IPC INTELLIGENCE ENGINE: CENTRAL STORE
 // ══════════════════════════════════════════════════════════════════════════
 
-// 🔒 COUCHE DE SÉCURITÉ : CHIFFREMENT DU STOCKAGE LOCAL
+//  COUCHE DE SÉCURITÉ : CHIFFREMENT DU STOCKAGE LOCAL
 // La clé est lue depuis la variable d'environnement VITE_STORE_KEY.
 // Si absente, une clé éphémère par session est générée (les données ne
 // survivront pas au rechargement — comportement sécurisé par défaut).

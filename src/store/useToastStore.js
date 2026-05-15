@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 /**
- * 🍞 NEXUS OS: EPHEMERAL TOAST STORE
+ *  NEXUS OS: EPHEMERAL TOAST STORE
  * Handles non-intrusive UI feedback for actions (Success, Error, Info).
  */
 export const useToastStore = create((set) => ({

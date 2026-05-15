@@ -79,8 +79,8 @@ const Expenses = ({ onOpenDetail }) => {
             </p>
           </div>
           <div style={{ padding: '0.5rem 1.5rem', borderRadius: '999px', background: 'rgba(16,185,129,0.1)', color: '#10B981', fontWeight: 800, fontSize: '0.9rem' }}>
-            ✓ Système Certifié
-          </div>
+ Système Certifié
+ </div>
         </div>
       </div>
     </div>

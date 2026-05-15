@@ -78,7 +78,7 @@ export function setTenantContext(ctx) {
   _listeners.forEach(fn => fn({ ..._ctx }));
 
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] ✅ Contexte groupe défini :', _ctx);
+    console.info('[TenantContext] Contexte groupe défini :', _ctx);
   }
 }
 
@@ -105,7 +105,7 @@ export function clearTenantContext() {
   };
   _listeners.forEach(fn => fn({ ..._ctx }));
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] 🔒 Contexte réinitialisé.');
+    console.info('[TenantContext] Contexte réinitialisé.');
   }
 }
 

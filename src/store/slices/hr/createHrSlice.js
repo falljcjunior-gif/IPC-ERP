@@ -19,7 +19,7 @@ export const createHrSlice = (set, get) => ({
 
   hrActions: {
     /**
-     * 🧠 TALENT INTELLIGENCE: 360° Scoring Engine
+     *  TALENT INTELLIGENCE: 360° Scoring Engine
      * Dynamically calculates performance based on cross-module activity.
      */
     calculateTalentIntelligence: async () => {

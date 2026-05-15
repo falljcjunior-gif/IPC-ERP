@@ -7,9 +7,9 @@
  * entity scope. Single-entity users see their entity badge only (no switcher).
  *
  * Levels:
- *   🏛️  IPC Holding     → group consolidated view
- *   🧱  IPC Green Blocks → subsidiary operational view
- *   🌱  IPC Foundation   → foundation impact view
+ *     IPC Holding     → group consolidated view
+ *     IPC Green Blocks → subsidiary operational view
+ *     IPC Foundation   → foundation impact view
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -164,7 +164,7 @@ export default function EntitySwitcher({ onEntityChange, compact = false }) {
 
           {/* Holding */}
           <EntityGroup
-            label="🏛️ Holding"
+            label="Holding"
             entities={grouped.holding}
             activeId={activeId}
             onSelect={handleSelect}
@@ -173,7 +173,7 @@ export default function EntitySwitcher({ onEntityChange, compact = false }) {
 
           {/* Subsidiaries */}
           <EntityGroup
-            label="🏢 Filiales"
+            label="Filiales"
             entities={grouped.subsidiary}
             activeId={activeId}
             onSelect={handleSelect}
@@ -182,7 +182,7 @@ export default function EntitySwitcher({ onEntityChange, compact = false }) {
 
           {/* Foundation */}
           <EntityGroup
-            label="🌱 Foundation"
+            label="Foundation"
             entities={grouped.foundation}
             activeId={activeId}
             onSelect={handleSelect}

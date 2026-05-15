@@ -1,5 +1,5 @@
 /**
- * 🏭 NEXUS OS: GMAO (GESTION DE MAINTENANCE ASSISTÉE PAR ORDINATEUR) SCHEMA
+ *  NEXUS OS: GMAO (GESTION DE MAINTENANCE ASSISTÉE PAR ORDINATEUR) SCHEMA
  * Critical for factory operations (Presses, Mixers, Molds).
  */
 export const maintenanceSchema = {

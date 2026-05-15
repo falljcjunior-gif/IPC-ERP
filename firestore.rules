@@ -308,6 +308,36 @@ service cloud.firestore {
       allow write: if false; // Écrit uniquement par Cloud Functions (admin SDK)
     }
 
+    // ── Audit (collection legacy utilisée par BusinessContext.subscribeToCollection) ──
+    // Sans cette règle, le store génère un permission-denied spam au login.
+    match /audit/{docId} {
+      allow read: if isAuthenticated() && (isManager() || hasRole('AUDIT') || hasRole('SECURITY'));
+      allow create, update: if isAuthenticated() && isAdmin();
+      allow delete: if isSuperAdmin();
+    }
+
+    // ── Cockpit (KPI consolidés alimentés par CF refreshCockpitMetrics) ─────
+    match /cockpit/{docId} {
+      allow read: if isAuthenticated() && (
+        isManager() ||
+        hasRole('DIRECTOR') ||
+        hasRole('FINANCE') ||
+        hasRole('HR_MANAGER')
+      );
+      allow write: if false; // Cloud Functions only (refreshCockpitMetrics)
+    }
+
+    // ── hr_private collection-group queries ────────────────────────────────
+    // Sub-collection /users/{uid}/hr_private/{doc} a déjà sa règle ligne 85.
+    // collectionGroup('hr_private') nécessite une règle séparée — sinon
+    // permission-denied même pour HR_MANAGER.
+    match /{path=**}/hr_private/{docId} {
+      allow read: if isAuthenticated() && (
+        hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin()
+      );
+      allow write: if false; // Géré par la sub-collection rule ligne 85
+    }
+
     // ── DMS / Documents ───────────────────────────────────────────────────────
     match /documents/{docId} {
       allow read: if isAuthenticated() && (

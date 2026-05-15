@@ -53,7 +53,7 @@ const PlanningView = () => {
       const start = new Date(l.du || l.date_debut);
       const end = new Date(l.au || l.date_fin);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        events.push({ date: d.toISOString().split('T')[0], title: `🏖️ ${l.type}`, color: '#8B5CF6', type: 'leave' });
+        events.push({ date: d.toISOString().split('T')[0], title: ` ${l.type}`, color:'#8B5CF6', type: 'leave' });
       }
     });
 
@@ -65,7 +65,7 @@ const PlanningView = () => {
     // Projects I'm on (deadline)
     (data.projects?.projects || []).filter(p => p.team?.some(tm => tm.nom === currentUser?.nom) || p.chefProjet === currentUser?.nom).forEach(p => {
       if (p.echeance || p.dateFin) {
-        events.push({ date: p.echeance || p.dateFin, title: `📌 Échéance: ${p.nom}`, color: '#EF4444', type: 'project' });
+        events.push({ date: p.echeance || p.dateFin, title: `Échéance: ${p.nom}`, color: '#EF4444', type: 'project' });
       }
     });
 
@@ -263,7 +263,7 @@ const TempsView = () => {
       {/* Mini weekly chart */}
       {weeklyData.length > 0 && (
         <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem' }}>
-          <div style={{ fontWeight: 800, marginBottom: '1.25rem', fontSize: '0.9rem' }}>📈 Mes Heures par Semaine</div>
+          <div style={{ fontWeight: 800, marginBottom: '1.25rem', fontSize: '0.9rem' }}> Mes Heures par Semaine</div>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', height: 80 }}>
             {weeklyData.map((w, i) => (
               <div key={w.week} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>

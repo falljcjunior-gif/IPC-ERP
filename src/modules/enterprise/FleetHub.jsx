@@ -8,17 +8,17 @@ import {
 import { useStore } from '../../store';
 
 const FLEET_STATUS_COLORS = {
-  'Disponible':  { bg: '#10B98115', color: '#10B981' },
-  'En mission':  { bg: '#3B82F615', color: '#3B82F6' },
+  'Disponible': { bg: '#10B98115', color: '#10B981' },
+  'En mission': { bg: '#3B82F615', color: '#3B82F6' },
   'Maintenance': { bg: '#F59E0B15', color: '#F59E0B' },
   'Hors service':{ bg: '#EF444415', color: '#EF4444' },
 };
 
 const TABS = [
   { id: 'dashboard', label: 'Tableau de Bord', icon: <BarChart3 size={16} /> },
-  { id: 'vehicles',  label: 'Véhicules',       icon: <Car size={16} /> },
-  { id: 'missions',  label: 'Missions',         icon: <Navigation size={16} /> },
-  { id: 'maintenance', label: 'Maintenance',    icon: <Wrench size={16} /> },
+  { id: 'vehicles', label: 'Véhicules', icon: <Car size={16} /> },
+  { id: 'missions', label: 'Missions', icon: <Navigation size={16} /> },
+  { id: 'maintenance', label: 'Maintenance', icon: <Wrench size={16} /> },
 ];
 
 const StatCard = ({ icon, label, value, color, sub }) => (
@@ -197,9 +197,9 @@ const FleetHub = ({ onOpenDetail, accessLevel }) => {
               <div>
                 <div style={{ fontWeight: 800, fontSize: '1rem' }}>{m.titre}</div>
                 <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  <span>🚀 {m.depart}</span>
-                  <span>📍 {m.arrivee}</span>
-                  <span>📅 {m.dateMission}</span>
+                  <span> {m.depart}</span>
+                  <span> {m.arrivee}</span>
+                  <span> {m.dateMission}</span>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>

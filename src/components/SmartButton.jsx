@@ -4,7 +4,7 @@ import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 // import { Haptics, ImpactStyle } from '@capacitor/haptics'; // Optional: for mobile
 
 /**
- * ⚡ NEXUS OS: SMART BUTTON COMPONENT
+ *  NEXUS OS: SMART BUTTON COMPONENT
  * Features:
  * - Double-click protection (Loading state)
  * - Built-in Error & Success visual feedback

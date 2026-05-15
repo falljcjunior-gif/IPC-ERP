@@ -1,5 +1,5 @@
 /**
- * 🛡️ NEXUS OS: AUDIT & COMPLIANCE SCHEMA
+ *  NEXUS OS: AUDIT & COMPLIANCE SCHEMA
  * Expanded to handle formal audits, certifications, and internal controls.
  */
 export const auditSchema = {

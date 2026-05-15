@@ -53,7 +53,7 @@ export const SalesService = {
   },
 
   /**
-   * 🔄 CONVERSION DEVIS -> COMMANDE
+   *  CONVERSION DEVIS -> COMMANDE
    * Déclenche automatiquement la réservation des stocks.
    */
   async convertQuoteToOrder(quoteId, quoteData) {

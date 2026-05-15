@@ -16,7 +16,7 @@ import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
 
 /**
- * 🛠️ NEXUS OS: IT OPERATIONS MODULE (ELITE 2.0 COMMANDER HUD)
+ *  NEXUS OS: IT OPERATIONS MODULE (ELITE 2.0 COMMANDER HUD)
  * Advanced Command Center with AIOps, Cybersecurity HUD, and War Room mode.
  */
 const ITModule = () => {

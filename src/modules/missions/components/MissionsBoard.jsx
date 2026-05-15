@@ -354,8 +354,8 @@ const SortableList = React.memo(function SortableList({
                     color: '#64748B', cursor: 'pointer', fontSize: '0.8rem',
                   }}
                 >
-                  ✕
-                </button>
+ 
+ </button>
               </div>
             </motion.div>
           ) : (
@@ -513,8 +513,8 @@ const MissionsBoard = ({ boardId, onOpenCard }) => {
                       Ajouter
                     </button>
                     <button onClick={() => { setAddingList(false); setNewListName(''); }} style={{ padding: '0.4rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.8rem' }}>
-                      ✕
-                    </button>
+ 
+ </button>
                   </div>
                 </motion.div>
               ) : (

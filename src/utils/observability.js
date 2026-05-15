@@ -1,5 +1,5 @@
 /**
- * 🛰️ OBSERVABILITY ENGINE (SRE)
+ *  OBSERVABILITY ENGINE (SRE)
  * Tracking production health and module performance.
  */
 import { FirestoreService } from '../services/firestore.service';

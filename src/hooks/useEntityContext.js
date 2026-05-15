@@ -59,7 +59,7 @@ export function useEntityContext() {
       entityName,
       entity,
       entityColor: entity?.color || '#2ecc71',
-      entityIcon:  entity?.icon  || '🏢',
+      entityIcon:  entity?.icon  || '',
 
       // Permission helpers
       canSeeAllEntities,

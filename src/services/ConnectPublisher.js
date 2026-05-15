@@ -8,13 +8,13 @@
  * métier significatifs.
  *
  * ÉVÉNEMENTS AUTOMATISÉS :
- *   DEAL_WON          → 🏆 Victoire commerciale célébrée
- *   INVOICE_PAID      → 💰 Paiement confirmé
- *   PROJECT_MILESTONE → 🎯 Jalon projet atteint
- *   PROJECT_COMPLETED → 🎉 Projet terminé
- *   EMPLOYEE_HIRED    → 👋 Bienvenue au nouvel employé
- *   PRODUCTION_ORDER_COMPLETED → 🏭 Production terminée
- *   STOCK_LOW_ALERT   → ⚠️ Alerte stock faible (ciblée managers)
+ *   DEAL_WON          →  Victoire commerciale célébrée
+ *   INVOICE_PAID      →  Paiement confirmé
+ *   PROJECT_MILESTONE →  Jalon projet atteint
+ *   PROJECT_COMPLETED →  Projet terminé
+ *   EMPLOYEE_HIRED    →  Bienvenue au nouvel employé
+ *   PRODUCTION_ORDER_COMPLETED →  Production terminée
+ *   STOCK_LOW_ALERT   →  Alerte stock faible (ciblée managers)
  *
  * USAGE :
  *   import ConnectPublisher from './ConnectPublisher';
@@ -35,7 +35,7 @@ const POST_TEMPLATES = {
   [EVENTS.DEAL_WON]: (payload) => ({
     type:     'celebration',
     category: 'commercial',
-    icon:     '🏆',
+    icon:     '',
     title:    `Deal gagné — ${payload.clientName || 'Client'}`,
     content:  `Félicitations à l'équipe commerciale ! Le deal **${payload.dealTitle || payload.dealId}** avec **${payload.clientName || 'notre client'}** a été remporté${payload.amount ? ` pour un montant de **${new Intl.NumberFormat('fr-FR').format(payload.amount)} ${payload.currency || 'FCFA'}**` : ''}.${payload.salesPerson ? ` Bravo à **${payload.salesPerson}** pour cette belle victoire !` : ''}`,
     tags:     ['#commercial', '#victoire', '#CRM'],
@@ -45,7 +45,7 @@ const POST_TEMPLATES = {
   [EVENTS.INVOICE_PAID]: (payload) => ({
     type:     'financial',
     category: 'finance',
-    icon:     '💰',
+    icon:     '',
     title:    `Paiement reçu — ${payload.invoiceRef || payload.invoiceId}`,
     content:  `Le paiement de **${payload.amount ? new Intl.NumberFormat('fr-FR').format(payload.amount) + ' FCFA' : '—'}** a été confirmé${payload.clientName ? ` de la part de **${payload.clientName}**` : ''}. Le dossier financier est à jour.`,
     tags:     ['#finance', '#paiement'],
@@ -55,7 +55,7 @@ const POST_TEMPLATES = {
   [EVENTS.PROJECT_MILESTONE]: (payload) => ({
     type:     'milestone',
     category: 'projets',
-    icon:     '🎯',
+    icon:     '',
     title:    `Jalon atteint — ${payload.projectName || 'Projet'}`,
     content:  `Le jalon **"${payload.milestoneName || payload.milestone}"** du projet **${payload.projectName}** a été atteint${payload.completionPct ? ` (${payload.completionPct}% du projet accompli)` : ''}. Excellent travail d'équipe !`,
     tags:     ['#projets', '#milestone', `#${(payload.projectName || 'projet').replace(/\s+/g, '')}`],
@@ -65,7 +65,7 @@ const POST_TEMPLATES = {
   [EVENTS.PROJECT_COMPLETED]: (payload) => ({
     type:     'celebration',
     category: 'projets',
-    icon:     '🎉',
+    icon:     '',
     title:    `Projet terminé — ${payload.projectName}`,
     content:  `Le projet **${payload.projectName}** est officiellement clôturé avec succès !${payload.duration ? ` Durée totale : ${payload.duration}.` : ''}${payload.teamMembers?.length ? ` Félicitations à toute l'équipe projet.` : ''}`,
     tags:     ['#projets', '#succès', '#clôture'],
@@ -75,7 +75,7 @@ const POST_TEMPLATES = {
   [EVENTS.EMPLOYEE_HIRED]: (payload) => ({
     type:     'welcome',
     category: 'rh',
-    icon:     '👋',
+    icon:     '',
     title:    `Bienvenue — ${payload.employeeName}`,
     content:  `Accueillons chaleureusement **${payload.employeeName}** qui rejoint notre équipe en tant que **${payload.poste || payload.role}**${payload.departement ? ` au département **${payload.departement}**` : ''} ! N'hésitez pas à lui souhaiter la bienvenue.`,
     tags:     ['#rh', '#onboarding', '#bienvenue'],
@@ -85,7 +85,7 @@ const POST_TEMPLATES = {
   [EVENTS.PRODUCTION_ORDER_COMPLETED]: (payload) => ({
     type:     'operational',
     category: 'production',
-    icon:     '🏭',
+    icon:     '',
     title:    `Production terminée — ${payload.orderId}`,
     content:  `L'ordre de fabrication **${payload.orderId}** est terminé.${payload.quantity ? ` Quantité produite : **${payload.quantity} ${payload.unit || 'unités'}**.` : ''}${payload.qualityScore ? ` Score qualité : **${payload.qualityScore}/100**.` : ''}`,
     tags:     ['#production', '#manufacturing'],
@@ -95,7 +95,7 @@ const POST_TEMPLATES = {
   [EVENTS.STOCK_LOW_ALERT]: (payload) => ({
     type:     'alert',
     category: 'stocks',
-    icon:     '⚠️',
+    icon:     '',
     title:    `Alerte Stock — ${payload.productName}`,
     content:  `Le stock du produit **${payload.productName}** est en dessous du seuil critique (**${payload.currentStock} ${payload.unit || 'unités'}** / seuil : ${payload.threshold} ${payload.unit || 'unités'}). Une commande de réapprovisionnement est recommandée.`,
     tags:     ['#stocks', '#alerte', '#approvisionnement'],
@@ -146,7 +146,7 @@ const ConnectPublisher = {
     });
 
     if (import.meta.env.DEV) {
-      console.info('[ConnectPublisher] ✅ Initialisé — topics actifs:', [..._enabledTopics]);
+      console.info('[ConnectPublisher] Initialisé — topics actifs:', [..._enabledTopics]);
     }
   },
 
@@ -207,7 +207,7 @@ const ConnectPublisher = {
     await FirestoreService.createDocument('connect', postDoc);
 
     if (import.meta.env.DEV) {
-      console.info(`[ConnectPublisher] 📢 Post publié sur le mur : "${template.title}"`);
+      console.info(`[ConnectPublisher] Post publié sur le mur : "${template.title}"`);
     }
   },
 

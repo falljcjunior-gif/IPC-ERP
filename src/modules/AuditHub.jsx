@@ -11,7 +11,7 @@ import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
 
 /**
- * 🛡️ NEXUS OS: AUDIT & COMPLIANCE HUB
+ *  NEXUS OS: AUDIT & COMPLIANCE HUB
  * High-fidelity interface for system traceability, ISO certifications, and internal audits.
  */
 const AuditHub = ({ onOpenDetail }) => {

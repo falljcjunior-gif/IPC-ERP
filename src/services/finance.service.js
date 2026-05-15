@@ -27,7 +27,7 @@ export const FinanceService = {
   },
 
   /**
-   * 🛡️ 3-WAY MATCH (Logique Anti-Fraude)
+   *  3-WAY MATCH (Logique Anti-Fraude)
    * Vérifie la cohérence entre : 
    * 1. Bon de Commande (PO)
    * 2. Bon de Réception (GRN)
@@ -47,34 +47,34 @@ export const FinanceService = {
          note: receptionNote.id
        });
        throw new Error(`Divergence détectée ! Cmd(${qteCommandee}) ≠ Reçue(${qteRecue}) ≠ Fact(${qteFacturee})`);
-    }
+ }
 
-    return await this.createInvoice({ ...billData, type: 'vendor', status: 'paid' });
-  },
+ return await this.createInvoice({ ...billData, type: 'vendor', status: 'paid' });
+ },
 
-  /**
-   * Génération de Facture Client
-   */
-  async createInvoice(invoiceData) {
-    try {
-      const validated = FinanceSchemas.invoice(invoiceData);
-      return await FirestoreService.createDocument('finance_invoices', validated);
-    } catch (err) {
-      logger.error('FinanceService:createInvoice', err);
-      throw err;
-    }
-  },
+ /**
+ * Génération de Facture Client
+ */
+ async createInvoice(invoiceData) {
+ try {
+ const validated = FinanceSchemas.invoice(invoiceData);
+ return await FirestoreService.createDocument('finance_invoices', validated);
+ } catch (err) {
+ logger.error('FinanceService:createInvoice', err);
+ throw err;
+ }
+ },
 
-  /**
-   * ⚖️ ÉQUILIBRE COMPTABLE (Double Entrée)
-   * Valide que le total des débits égale le total des crédits.
-   */
-  validateBalance(lines) {
-    const totalDebit = lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
-    const totalCredit = lines.reduce((sum, l) => sum + (Number(l.credit) || 0), 0);
-    
-    if (Math.abs(totalDebit - totalCredit) > 0.01) {
-      throw new Error(`Écriture déséquilibrée ! Débit: ${totalDebit} ≠ Crédit: ${totalCredit}`);
+ /**
+ * ÉQUILIBRE COMPTABLE (Double Entrée)
+ * Valide que le total des débits égale le total des crédits.
+ */
+ validateBalance(lines) {
+ const totalDebit = lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0);
+ const totalCredit = lines.reduce((sum, l) => sum + (Number(l.credit) || 0), 0);
+ 
+ if (Math.abs(totalDebit - totalCredit) > 0.01) {
+ throw new Error(`Écriture déséquilibrée ! Débit: ${totalDebit} ≠ Crédit: ${totalCredit}`);
     }
     return true;
   },

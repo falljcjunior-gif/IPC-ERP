@@ -4,12 +4,12 @@
  * ════════════════════════════════════════════════════════════════════════════
  *
  * The Holding's control panel for managing all group entities :
- *   • List view — all subsidiaries + foundation with health scores
- *   • Creation wizard — guided 6-step wizard (Type → Identity → Modules →
- *     License → Director → Review + Provisioning)
- *   • Lifecycle actions — activate, suspend, archive, delete
- *   • Entity detail panel — quick settings, team, KPIs
- *   • Health monitoring — configuration completeness scoring
+ * • List view — all subsidiaries + foundation with health scores
+ * • Creation wizard — guided 6-step wizard (Type → Identity → Modules →
+ * License → Director → Review + Provisioning)
+ * • Lifecycle actions — activate, suspend, archive, delete
+ * • Entity detail panel — quick settings, team, KPIs
+ * • Health monitoring — configuration completeness scoring
  *
  * Access: Holding-level roles only (HOLDING_CEO, HOLDING_CFO, SUPER_ADMIN)
  */
@@ -28,22 +28,22 @@ import { useStore } from '../../../store';
 
 // ── Design ────────────────────────────────────────────────────────────────────
 const T = {
-  bg:      '#0a0c10', surface: '#0d1117', card: '#111318',
-  border:  '#1f2937', accent: '#2ecc71', gold: '#f39c12',
-  blue:    '#3498db', red: '#e74c3c', purple: '#8e44ad',
-  text:    '#e5e7eb', muted: '#6b7280', dim: '#1f2937',
+  bg: '#0a0c10', surface: '#0d1117', card: '#111318',
+  border: '#1f2937', accent: '#2ecc71', gold: '#f39c12',
+  blue: '#3498db', red: '#e74c3c', purple: '#8e44ad',
+  text: '#e5e7eb', muted: '#6b7280', dim: '#1f2937',
 };
 
 const fmt = (n) => new Intl.NumberFormat('fr-CI').format(n);
 
 // ── Wizard Steps ──────────────────────────────────────────────────────────────
 const WIZARD_STEPS = [
-  { id: 'type',      label: 'Type',        icon: '🏢' },
-  { id: 'identity',  label: 'Identité',    icon: '📋' },
-  { id: 'modules',   label: 'Modules',     icon: '🔧' },
-  { id: 'license',   label: 'Licence',     icon: '🔑' },
-  { id: 'director',  label: 'Directeur',   icon: '👤' },
-  { id: 'review',    label: 'Confirmation',icon: '✅' },
+  { id: 'type', label: 'Type', icon: '' },
+  { id: 'identity', label: 'Identité', icon: '' },
+  { id: 'modules', label: 'Modules', icon: '' },
+  { id: 'license', label: 'Licence', icon: '' },
+  { id: 'director', label: 'Directeur', icon: '' },
+  { id: 'review', label: 'Confirmation',icon: '' },
 ];
 
 const INDUSTRIES = [
@@ -56,33 +56,33 @@ const INDUSTRIES = [
 const COUNTRIES = ['Côte d\'Ivoire', 'Sénégal', 'Mali', 'Burkina Faso', 'Guinée', 'Cameroun', 'France', 'Autre'];
 const CURRENCIES = ['XOF', 'XAF', 'EUR', 'USD', 'GBP'];
 const AUTONOMY_LEVELS = [
-  { id: 'full',       label: 'Pleine autonomie',    desc: 'Le directeur gère tout sans validation Holding', icon: '🟢' },
-  { id: 'supervised', label: 'Supervisée',          desc: 'Décisions stratégiques validées par Holding',    icon: '🟡' },
-  { id: 'restricted', label: 'Restreinte',          desc: 'Toutes les décisions importantes remontent',     icon: '🔴' },
+  { id: 'full', label: 'Pleine autonomie', desc: 'Le directeur gère tout sans validation Holding', icon: '' },
+  { id: 'supervised', label: 'Supervisée', desc: 'Décisions stratégiques validées par Holding', icon: '' },
+  { id: 'restricted', label: 'Restreinte', desc: 'Toutes les décisions importantes remontent', icon: '' },
 ];
 
 const MODULE_CATEGORIES = [...new Set(ALL_MODULES.map(m => m.category))];
 
 export default function EntityManagementCenter() {
   const role = useStore(s => s.userRole || s.user?.role);
-  const [entities, setEntities]         = useState([]);
-  const [licenses, setLicenses]         = useState([]);
-  const [showWizard, setShowWizard]     = useState(false);
-  const [selectedId, setSelectedId]     = useState(null);
-  const [filter, setFilter]             = useState('all'); // all | subsidiary | foundation
+  const [entities, setEntities] = useState([]);
+  const [licenses, setLicenses] = useState([]);
+  const [showWizard, setShowWizard] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [filter, setFilter] = useState('all'); // all | subsidiary | foundation
   const [actionLoading, setActionLoading] = useState(null);
 
   // Wizard state
-  const [step, setStep]     = useState(0);
+  const [step, setStep] = useState(0);
   const [wizard, setWizard] = useState({
-    type:         ENTITY_TYPES.SUBSIDIARY,
-    name:         '', industry: '', country: 'Côte d\'Ivoire', currency: 'XOF',
-    timezone:     'Africa/Abidjan', logo: null,
-    modules:      [],
+    type: ENTITY_TYPES.SUBSIDIARY,
+    name: '', industry: '', country: 'Côte d\'Ivoire', currency: 'XOF',
+    timezone: 'Africa/Abidjan', logo: null,
+    modules: [],
     licensePlanId: LICENSE_PLAN_IDS.BUSINESS,
-    director:     { nom: '', prenom: '', email: '' },
+    director: { nom: '', prenom: '', email: '' },
     autonomyLevel: 'supervised',
-    customQuotas:  {},
+    customQuotas: {},
   });
   const [provisioning, setProvisioning] = useState(null); // null | 'loading' | 'done' | 'error'
 
@@ -92,8 +92,8 @@ export default function EntityManagementCenter() {
     // Mock licenses
     setLicenses(GROUP_ENTITIES.filter(e => e.type !== ENTITY_TYPES.HOLDING).map(e => ({
       entity_id: e.id,
-      planId:    e.type === ENTITY_TYPES.FOUNDATION ? 'FOUNDATION' : 'ENTERPRISE',
-      state:     e.id === 'ysee' ? ENTITY_STATES.SUSPENDED : ENTITY_STATES.ACTIVE,
+      planId: e.type === ENTITY_TYPES.FOUNDATION ? 'FOUNDATION' : 'ENTERPRISE',
+      state: e.id === 'ysee' ? ENTITY_STATES.SUSPENDED : ENTITY_STATES.ACTIVE,
       userCount: Math.floor(Math.random() * 80) + 10,
       storageGB: Math.floor(Math.random() * 200) + 20,
     })));
@@ -169,7 +169,7 @@ export default function EntityManagementCenter() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <div style={{ display: 'flex', gap: 6 }}>
             {[
-              { id: 'all',        label: `Toutes (${entities.length})` },
+              { id: 'all', label: `Toutes (${entities.length})` },
               { id: 'subsidiary', label: `Filiales (${entities.filter(e => e.type === ENTITY_TYPES.SUBSIDIARY).length})` },
               { id: 'foundation', label: `Foundation (${entities.filter(e => e.type === ENTITY_TYPES.FOUNDATION).length})` },
             ].map(f => (
@@ -195,12 +195,12 @@ export default function EntityManagementCenter() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
           {filteredEntities.map(entity => {
             const license = licenses.find(l => l.entity_id === entity.id);
-            const state   = license?.state || ENTITY_STATES.ACTIVE;
+            const state = license?.state || ENTITY_STATES.ACTIVE;
             const stateMeta = ENTITY_STATE_META[state] || ENTITY_STATE_META[ENTITY_STATES.ACTIVE];
-            const plan    = LICENSE_PLANS[license?.planId] || null;
+            const plan = LICENSE_PLANS[license?.planId] || null;
             const healthScore = EntityService.computeHealthScore(entity, plan && { maxUsers: plan.maxUsers }, license);
             const isSelected = selectedId === entity.id;
-            const isLoading  = actionLoading === entity.id;
+            const isLoading = actionLoading === entity.id;
 
             return (
               <div key={entity.id} onClick={() => setSelectedId(isSelected ? null : entity.id)} style={{
@@ -244,8 +244,8 @@ export default function EntityManagementCenter() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>
                   {[
                     { label: 'Utilisateurs', value: license?.userCount || '—' },
-                    { label: 'Stockage',     value: license?.storageGB ? `${license.storageGB} Go` : '—' },
-                    { label: 'Modules',      value: entity.modules?.length || '—' },
+                    { label: 'Stockage', value: license?.storageGB ? `${license.storageGB} Go` : '—' },
+                    { label: 'Modules', value: entity.modules?.length || '—' },
                   ].map(m => (
                     <div key={m.label} style={{ background: T.surface, borderRadius: 8, padding: '8px 10px' }}>
                       <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{m.value}</div>
@@ -280,23 +280,23 @@ export default function EntityManagementCenter() {
                     {state !== ENTITY_STATES.ACTIVE && (
                       <ActionBtn color={T.accent} disabled={isLoading}
                         onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.ACTIVE); }}>
-                        ✅ Activer
-                      </ActionBtn>
+ Activer
+ </ActionBtn>
                     )}
                     {state === ENTITY_STATES.ACTIVE && (
                       <ActionBtn color={T.gold} disabled={isLoading}
                         onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.SUSPENDED); }}>
-                        ⏸️ Suspendre
+                        ⏸ Suspendre
                       </ActionBtn>
                     )}
                     <ActionBtn color={T.blue} disabled={isLoading}
                       onClick={(e) => { e.stopPropagation(); }}>
-                      ✏️ Éditer
-                    </ActionBtn>
+ Éditer
+ </ActionBtn>
                     <ActionBtn color={T.muted} disabled={isLoading}
                       onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.ARCHIVED); }}>
-                      📦 Archiver
-                    </ActionBtn>
+ Archiver
+ </ActionBtn>
                   </div>
                 )}
               </div>
@@ -322,10 +322,10 @@ export default function EntityManagementCenter() {
             </div>
           </div>
 
-          <InfoRow label="Type"     value={selectedEntity.type} />
-          <InfoRow label="Pays"     value={selectedEntity.country || 'CI'} />
-          <InfoRow label="Devise"   value={selectedEntity.currency} />
-          <InfoRow label="Licence"  value={LICENSE_PLANS[selectedLicense?.planId]?.name || '—'} />
+          <InfoRow label="Type" value={selectedEntity.type} />
+          <InfoRow label="Pays" value={selectedEntity.country || 'CI'} />
+          <InfoRow label="Devise" value={selectedEntity.currency} />
+          <InfoRow label="Licence" value={LICENSE_PLANS[selectedLicense?.planId]?.name || '—'} />
           <InfoRow label="Utilisateurs" value={fmt(selectedLicense?.userCount || 0)} />
 
           <div>
@@ -351,15 +351,15 @@ export default function EntityManagementCenter() {
             background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
             color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
           }}>
-            🔑 Gérer la licence
-          </button>
+ Gérer la licence
+ </button>
           <button style={{
             padding: '10px', borderRadius: 10,
             background: `${T.blue}18`, border: `1px solid ${T.blue}33`,
             color: T.blue, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
           }}>
-            👥 Voir les équipes
-          </button>
+ Voir les équipes
+ </button>
         </div>
       )}
 
@@ -386,11 +386,11 @@ export default function EntityManagementCenter() {
               position: 'sticky', top: 0, background: T.surface, zIndex: 10,
             }}>
               <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}>
-                ➕ Créer une entité groupe
-              </div>
+ Créer une entité groupe
+ </div>
               <button onClick={() => { setShowWizard(false); setStep(0); }} style={{
                 background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 20,
-              }}>✕</button>
+              }}></button>
             </div>
 
             {/* Step indicators */}
@@ -406,7 +406,7 @@ export default function EntityManagementCenter() {
                     color: i < step ? '#000' : i === step ? T.accent : T.muted,
                     fontWeight: 800,
                   }}>
-                    {i < step ? '✓' : i + 1}
+                    {i < step ? '' : i + 1}
                   </div>
                   <div style={{
                     fontSize: 11, color: i <= step ? T.text : T.muted,
@@ -460,7 +460,7 @@ export default function EntityManagementCenter() {
                   background: T.accent, border: 'none', color: '#000',
                   fontWeight: 800, fontSize: 13, cursor: 'pointer',
                 }}>
-                  {step === 4 ? '📋 Récapitulatif →' : 'Suivant →'}
+                  {step === 4 ? 'Récapitulatif →' : 'Suivant →'}
                 </button>
               </div>
             )}
@@ -483,14 +483,14 @@ function StepType({ wizard, onChange }) {
         {[
           {
             type: ENTITY_TYPES.SUBSIDIARY,
-            icon: '🏢', title: 'Filiale',
+            icon: '', title: 'Filiale',
             desc: 'Société opérationnelle — CRM, Ventes, Production, Finance, RH...',
             color: '#3498db',
             examples: 'IPC Green Blocks, Nexus Academy, Hôtel Sana...',
           },
           {
             type: ENTITY_TYPES.FOUNDATION,
-            icon: '🌱', title: 'Foundation',
+            icon: '', title: 'Foundation',
             desc: 'Entité non-lucrative — Impact social, Dons, ESG, Programmes...',
             color: '#27ae60',
             examples: 'IPC Foundation, IPC Social...',
@@ -507,7 +507,7 @@ function StepType({ wizard, onChange }) {
             <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 10 }}>{opt.desc}</div>
             <div style={{ fontSize: 11, color: opt.color, fontStyle: 'italic' }}>ex: {opt.examples}</div>
             {wizard.type === opt.type && (
-              <div style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: opt.color }}>✓ Sélectionné</div>
+              <div style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: opt.color }}> Sélectionné</div>
             )}
           </div>
         ))}
@@ -543,15 +543,15 @@ function StepIdentity({ wizard, onChange }) {
         </FieldGroup>
       </div>
       <div style={{ padding: 14, borderRadius: 10, background: `${T.blue}10`, border: `1px solid ${T.blue}33`, fontSize: 12, color: T.muted }}>
-        💡 Un identifiant unique sera généré automatiquement à partir du nom.
-      </div>
+ Un identifiant unique sera généré automatiquement à partir du nom.
+ </div>
     </div>
   );
 }
 
 function StepModules({ wizard, onToggle }) {
-  const plan      = LICENSE_PLANS[wizard.licensePlanId] || {};
-  const planMods  = plan.modules?.includes('all') ? ALL_MODULES.map(m => m.id) : (plan.modules || []);
+  const plan = LICENSE_PLANS[wizard.licensePlanId] || {};
+  const planMods = plan.modules?.includes('all') ? ALL_MODULES.map(m => m.id) : (plan.modules || []);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16 }}>
@@ -571,7 +571,7 @@ function StepModules({ wizard, onToggle }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px,1fr))', gap: 8 }}>
               {catModules.map(mod => {
-                const inPlan  = planMods.includes(mod.id);
+                const inPlan = planMods.includes(mod.id);
                 const enabled = wizard.modules.includes(mod.id);
                 return (
                   <div key={mod.id} onClick={() => onToggle(mod.id)} style={{
@@ -590,7 +590,7 @@ function StepModules({ wizard, onToggle }) {
                       </div>
                       {!inPlan && <div style={{ fontSize: 10, color: T.muted }}>hors plan</div>}
                     </div>
-                    {enabled && <span style={{ color: T.accent, fontSize: 14 }}>✓</span>}
+                    {enabled && <span style={{ color: T.accent, fontSize: 14 }}></span>}
                   </div>
                 );
               })}
@@ -613,7 +613,7 @@ function StepLicense({ wizard, onChange }) {
       <div style={{ fontSize: 16, fontWeight: 700, color: T.text }}>Attribuer une licence</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px,1fr))', gap: 12 }}>
         {plansForType.map(planId => {
-          const plan     = LICENSE_PLANS[planId];
+          const plan = LICENSE_PLANS[planId];
           const selected = wizard.licensePlanId === planId;
           return (
             <div key={planId} onClick={() => onChange('licensePlanId', planId)} style={{
@@ -626,14 +626,14 @@ function StepLicense({ wizard, onChange }) {
               <div style={{ fontSize: 11, color: T.muted, margin: '4px 0 10px' }}>{plan.description}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {[
-                  `👥 ${plan.maxUsers === -1 ? '∞' : plan.maxUsers} utilisateurs`,
-                  `📦 ${plan.maxProjects === -1 ? '∞' : plan.maxProjects} projets`,
-                  `🤖 ${plan.aiTokensMonthly === -1 ? '∞' : (plan.aiTokensMonthly/1000)+'k'} tokens IA/mois`,
+                  `${plan.maxUsers === -1 ? '∞' : plan.maxUsers} utilisateurs`,
+                  `${plan.maxProjects === -1 ? '∞' : plan.maxProjects} projets`,
+                  `${plan.aiTokensMonthly === -1 ? '∞' : (plan.aiTokensMonthly/1000)+'k'} tokens IA/mois`,
                 ].map(item => (
                   <div key={item} style={{ fontSize: 11, color: T.muted }}>{item}</div>
                 ))}
               </div>
-              {selected && <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: plan.color }}>✓ Sélectionné</div>}
+              {selected && <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: plan.color }}> Sélectionné</div>}
             </div>
           );
         })}
@@ -661,8 +661,8 @@ function StepDirector({ wizard, onChange }) {
         </FieldGroup>
       </div>
       <div style={{ padding: 14, borderRadius: 10, background: `${T.accent}08`, border: `1px solid ${T.accent}22`, fontSize: 12, color: T.muted }}>
-        ✉️ Un email d&apos;invitation sera envoyé avec les instructions d&apos;activation et un lien sécurisé d&apos;onboarding.
-      </div>
+ Un email d&apos;invitation sera envoyé avec les instructions d&apos;activation et un lien sécurisé d&apos;onboarding.
+ </div>
     </div>
   );
 }
@@ -670,8 +670,8 @@ function StepDirector({ wizard, onChange }) {
 function StepReview({ wizard, provisioning, onProvision }) {
   const plan = LICENSE_PLANS[wizard.licensePlanId];
   const isLoading = provisioning === 'loading';
-  const isDone    = provisioning === 'done';
-  const isError   = provisioning === 'error';
+  const isDone = provisioning === 'done';
+  const isError = provisioning === 'error';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 16 }}>
@@ -680,15 +680,15 @@ function StepReview({ wizard, provisioning, onProvision }) {
       {/* Summary */}
       <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
         {[
-          { label: 'Type',         value: `${wizard.type === ENTITY_TYPES.SUBSIDIARY ? '🏢 Filiale' : '🌱 Foundation'}` },
-          { label: 'Nom',          value: wizard.name || '—' },
-          { label: 'Secteur',      value: wizard.industry || '—' },
-          { label: 'Pays',         value: wizard.country },
-          { label: 'Devise',       value: wizard.currency },
-          { label: 'Licence',      value: `${plan?.icon} ${plan?.name}` },
-          { label: 'Modules',      value: `${wizard.modules.length} modules sélectionnés` },
-          { label: 'Directeur',    value: `${wizard.director.prenom} ${wizard.director.nom} — ${wizard.director.email}` },
-          { label: 'Autonomie',    value: AUTONOMY_LEVELS.find(a => a.id === wizard.autonomyLevel)?.label || '—' },
+          { label: 'Type', value: `${wizard.type === ENTITY_TYPES.SUBSIDIARY ? 'Filiale' : 'Foundation'}` },
+          { label: 'Nom', value: wizard.name || '—' },
+          { label: 'Secteur', value: wizard.industry || '—' },
+          { label: 'Pays', value: wizard.country },
+          { label: 'Devise', value: wizard.currency },
+          { label: 'Licence', value: `${plan?.icon} ${plan?.name}` },
+          { label: 'Modules', value: `${wizard.modules.length} modules sélectionnés` },
+          { label: 'Directeur', value: `${wizard.director.prenom} ${wizard.director.nom} — ${wizard.director.email}` },
+          { label: 'Autonomie', value: AUTONOMY_LEVELS.find(a => a.id === wizard.autonomyLevel)?.label || '—' },
         ].map(row => (
           <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, color: T.muted }}>{row.label}</span>
@@ -720,7 +720,7 @@ function StepReview({ wizard, provisioning, onProvision }) {
               background: isDone ? `${T.accent}20` : isLoading ? `${T.blue}20` : `${T.muted}20`,
               color: isDone ? T.accent : isLoading ? T.blue : T.muted,
             }}>
-              {isDone ? '✓' : isLoading ? '⋯' : i + 1}
+              {isDone ? '' : isLoading ? '⋯' : i + 1}
             </span>
             <span style={{ fontSize: 13, color: T.muted }}>{item}</span>
           </div>
@@ -735,26 +735,26 @@ function StepReview({ wizard, provisioning, onProvision }) {
           color: '#000', fontWeight: 800, fontSize: 15,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          🚀 Lancer le provisioning
-        </button>
+ Lancer le provisioning
+ </button>
       )}
       {isLoading && (
         <div style={{ padding: 14, borderRadius: 12, background: `${T.blue}15`,
           border: `1px solid ${T.blue}33`, textAlign: 'center', fontSize: 13, color: T.blue, fontWeight: 700 }}>
-          ⚙️ Provisioning en cours... Veuillez patienter.
-        </div>
+ Provisioning en cours... Veuillez patienter.
+ </div>
       )}
       {isDone && (
         <div style={{ padding: 14, borderRadius: 12, background: `${T.accent}15`,
           border: `1px solid ${T.accent}33`, textAlign: 'center', fontSize: 13, color: T.accent, fontWeight: 700 }}>
-          ✅ Entité créée ! Invitation envoyée à {wizard.director.email}.
-        </div>
-      )}
-      {isError && (
-        <div style={{ padding: 14, borderRadius: 12, background: `${T.red}15`,
+ Entité créée ! Invitation envoyée à {wizard.director.email}.
+ </div>
+ )}
+ {isError && (
+ <div style={{ padding: 14, borderRadius: 12, background:`${T.red}15`,
           border: `1px solid ${T.red}33`, textAlign: 'center', fontSize: 13, color: T.red, fontWeight: 700 }}>
-          ❌ Erreur de provisioning. Vérifiez les données et réessayez.
-        </div>
+ Erreur de provisioning. Vérifiez les données et réessayez.
+ </div>
       )}
     </div>
   );

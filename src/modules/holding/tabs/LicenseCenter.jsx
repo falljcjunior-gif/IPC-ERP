@@ -4,13 +4,13 @@
  * ════════════════════════════════════════════════════════════════════════════
  *
  * Holding-level cockpit to manage all group entity licenses:
- *   • Overview — license consumption heatmap, costs, saturation
- *   • Plans matrix — feature comparison across all plans
- *   • Attribution — assign/change/upgrade licenses per entity
- *   • Quotas — real-time usage bars per entity per resource
- *   • Billing — internal refacturation per entity, total ERP cost
- *   • Upgrade queue — process subsidiary upgrade requests
- *   • IA insights — usage anomalies, under-utilization, saturation alerts
+ * • Overview — license consumption heatmap, costs, saturation
+ * • Plans matrix — feature comparison across all plans
+ * • Attribution — assign/change/upgrade licenses per entity
+ * • Quotas — real-time usage bars per entity per resource
+ * • Billing — internal refacturation per entity, total ERP cost
+ * • Upgrade queue — process subsidiary upgrade requests
+ * • IA insights — usage anomalies, under-utilization, saturation alerts
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -30,17 +30,17 @@ const T = {
   text: '#e5e7eb', muted: '#6b7280', dim: '#1f2937',
 };
 
-const fmt   = (n) => new Intl.NumberFormat('fr-CI').format(n);
-const fmtM  = (n) => n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
+const fmt = (n) => new Intl.NumberFormat('fr-CI').format(n);
+const fmtM = (n) => n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
 
 const LC_TABS = [
-  { id: 'overview',   label: 'Vue d\'ensemble',   icon: '📊' },
-  { id: 'plans',      label: 'Plans & Features',  icon: '📋' },
-  { id: 'assignment', label: 'Attribution',        icon: '🔑' },
-  { id: 'quotas',     label: 'Quotas & Usage',     icon: '📈' },
-  { id: 'billing',    label: 'Facturation interne',icon: '💰' },
-  { id: 'requests',   label: 'Demandes upgrade',  icon: '⬆️' },
-  { id: 'insights',   label: 'IA & Insights',      icon: '🤖' },
+  { id: 'overview', label: 'Vue d\'ensemble', icon: '' },
+  { id: 'plans', label: 'Plans & Features', icon: '' },
+  { id: 'assignment', label: 'Attribution', icon: '' },
+  { id: 'quotas', label: 'Quotas & Usage', icon: '' },
+  { id: 'billing', label: 'Facturation interne',icon: '' },
+  { id: 'requests', label: 'Demandes upgrade', icon: '⬆' },
+  { id: 'insights', label: 'IA & Insights', icon: '' },
 ];
 
 // [GO-LIVE] Mocks supprimés — l'ERP démarre à vide.
@@ -51,7 +51,7 @@ const ENTITY_LICENSES = [];
 const UPGRADE_REQUESTS = [];
 
 export default function LicenseCenter() {
-  const [tab, setTab]       = useState('overview');
+  const [tab, setTab] = useState('overview');
   const [selected, setSelected] = useState(null);
   const [assignModal, setAssignModal] = useState(null); // entity to assign
 
@@ -60,14 +60,14 @@ export default function LicenseCenter() {
       const plan = LICENSE_PLANS[el.planId];
       return sum + calculateMonthlyBill({
         users: {
-          admin:    Math.floor(el.usage.userCount * 0.15),
-          manager:  Math.floor(el.usage.userCount * 0.25),
+          admin: Math.floor(el.usage.userCount * 0.15),
+          manager: Math.floor(el.usage.userCount * 0.25),
           standard: Math.floor(el.usage.userCount * 0.5),
           readonly: Math.floor(el.usage.userCount * 0.1),
         },
         storageGB: el.usage.storageGB,
-        aiTokens:  el.usage.aiTokensUsed,
-        apiCalls:  el.usage.apiCallsUsed,
+        aiTokens: el.usage.aiTokensUsed,
+        apiCalls: el.usage.apiCallsUsed,
         enabledFeatures: plan?.features ? Object.keys(plan.features).filter(f => plan.features[f]) : [],
       });
     }, 0);
@@ -90,13 +90,13 @@ export default function LicenseCenter() {
         ))}
       </div>
 
-      {tab === 'overview'   && <LicOverview licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
-      {tab === 'plans'      && <LicPlans />}
+      {tab === 'overview' && <LicOverview licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
+      {tab === 'plans' && <LicPlans />}
       {tab === 'assignment' && <LicAssignment licenses={ENTITY_LICENSES} onAssign={setAssignModal} />}
-      {tab === 'quotas'     && <LicQuotas licenses={ENTITY_LICENSES} />}
-      {tab === 'billing'    && <LicBilling licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
-      {tab === 'requests'   && <LicRequests requests={UPGRADE_REQUESTS} />}
-      {tab === 'insights'   && <LicInsights licenses={ENTITY_LICENSES} />}
+      {tab === 'quotas' && <LicQuotas licenses={ENTITY_LICENSES} />}
+      {tab === 'billing' && <LicBilling licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
+      {tab === 'requests' && <LicRequests requests={UPGRADE_REQUESTS} />}
+      {tab === 'insights' && <LicInsights licenses={ENTITY_LICENSES} />}
     </div>
   );
 }
@@ -106,18 +106,18 @@ export default function LicenseCenter() {
 // ════════════════════════════════════════════════════════════════════════════
 
 function LicOverview({ licenses, totalCost }) {
-  const totalUsers     = licenses.reduce((s, l) => s + l.usage.userCount, 0);
-  const totalStorage   = licenses.reduce((s, l) => s + l.usage.storageGB, 0);
-  const totalAI        = licenses.reduce((s, l) => s + l.usage.aiTokensUsed, 0);
-  const suspended      = licenses.filter(l => l.state === ENTITY_STATES.SUSPENDED).length;
+  const totalUsers = licenses.reduce((s, l) => s + l.usage.userCount, 0);
+  const totalStorage = licenses.reduce((s, l) => s + l.usage.storageGB, 0);
+  const totalAI = licenses.reduce((s, l) => s + l.usage.aiTokensUsed, 0);
+  const suspended = licenses.filter(l => l.state === ENTITY_STATES.SUSPENDED).length;
 
   const kpis = [
-    { icon: '🏢', label: 'Entités actives',     value: licenses.length - suspended, sub: `${suspended} suspendue(s)`,   color: T.accent },
-    { icon: '👥', label: 'Utilisateurs groupe',  value: fmt(totalUsers),              sub: 'tous niveaux confondus',      color: T.blue   },
-    { icon: '💾', label: 'Stockage total',        value: `${totalStorage} Go`,         sub: 'consommé groupe',             color: T.purple },
-    { icon: '🤖', label: 'Tokens IA (mois)',      value: fmtM(totalAI),               sub: 'Nexus Intelligence',          color: T.gold   },
-    { icon: '💰', label: 'Coût ERP / mois',      value: `${fmtM(totalCost)} XOF`,    sub: 'refacturation interne',       color: T.red    },
-    { icon: '📦', label: 'Licences actives',      value: licenses.filter(l => l.state === ENTITY_STATES.ACTIVE).length, sub: 'plans assignés', color: T.accent },
+    { icon: '', label: 'Entités actives', value: licenses.length - suspended, sub: `${suspended} suspendue(s)`, color: T.accent },
+    { icon: '', label: 'Utilisateurs groupe', value: fmt(totalUsers), sub: 'tous niveaux confondus', color: T.blue },
+    { icon: '', label: 'Stockage total', value: `${totalStorage} Go`, sub: 'consommé groupe', color: T.purple },
+    { icon: '', label: 'Tokens IA (mois)', value: fmtM(totalAI), sub: 'Nexus Intelligence', color: T.gold },
+    { icon: '', label: 'Coût ERP / mois', value: `${fmtM(totalCost)} XOF`, sub: 'refacturation interne', color: T.red },
+    { icon: '', label: 'Licences actives', value: licenses.filter(l => l.state === ENTITY_STATES.ACTIVE).length, sub: 'plans assignés', color: T.accent },
   ];
 
   return (
@@ -137,11 +137,11 @@ function LicOverview({ licenses, totalCost }) {
       <SectionHdr title="Heatmap Licences" sub="Plan attribué par entité + état de consommation" />
       <div style={{ background: T.card, borderRadius: 16, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
         {licenses.map((l, i) => {
-          const plan      = LICENSE_PLANS[l.planId];
+          const plan = LICENSE_PLANS[l.planId];
           const stateMeta = ENTITY_STATE_META[l.state] || ENTITY_STATE_META[ENTITY_STATES.ACTIVE];
-          const userPct   = plan?.maxUsers === -1 ? 0 : l.usage.userCount / (plan?.maxUsers || 1);
-          const aiPct     = plan?.aiTokensMonthly === -1 ? 0 : l.usage.aiTokensUsed / (plan?.aiTokensMonthly || 1);
-          const storPct   = plan?.maxStorageMB === -1 ? 0 : (l.usage.storageGB * 1024) / (plan?.maxStorageMB || 1);
+          const userPct = plan?.maxUsers === -1 ? 0 : l.usage.userCount / (plan?.maxUsers || 1);
+          const aiPct = plan?.aiTokensMonthly === -1 ? 0 : l.usage.aiTokensUsed / (plan?.aiTokensMonthly || 1);
+          const storPct = plan?.maxStorageMB === -1 ? 0 : (l.usage.storageGB * 1024) / (plan?.maxStorageMB || 1);
 
           return (
             <div key={l.entity_id} style={{
@@ -161,7 +161,7 @@ function LicOverview({ licenses, totalCost }) {
               <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
                 {[
                   { label: 'Users', pct: userPct },
-                  { label: 'IA',    pct: aiPct   },
+                  { label: 'IA', pct: aiPct },
                   { label: 'Stock', pct: storPct },
                 ].map(bar => (
                   <div key={bar.label}>
@@ -175,7 +175,7 @@ function LicOverview({ licenses, totalCost }) {
                       <div style={{
                         width: `${Math.min(100, bar.pct * 100)}%`, height: '100%', borderRadius: 5,
                         background: bar.pct > QUOTA_THRESHOLDS.CRITICAL ? T.red
-                                  : bar.pct > QUOTA_THRESHOLDS.WARNING   ? T.gold : T.accent,
+                                  : bar.pct > QUOTA_THRESHOLDS.WARNING ? T.gold : T.accent,
                       }} />
                     </div>
                   </div>
@@ -201,17 +201,17 @@ function LicPlans() {
   ].map(id => LICENSE_PLANS[id]);
 
   const featureRows = [
-    { key: 'maxUsers',        label: '👥 Utilisateurs max', format: v => v === -1 ? '∞' : v },
-    { key: 'maxProjects',     label: '📋 Projets max',      format: v => v === -1 ? '∞' : v },
-    { key: 'maxStorageMB',    label: '💾 Stockage',         format: v => v === -1 ? '∞' : v >= 1048576 ? `${v/1048576} To` : v >= 1024 ? `${v/1024} Go` : `${v} Mo` },
-    { key: 'aiTokensMonthly', label: '🤖 Tokens IA/mois',   format: v => v === -1 ? '∞' : fmtM(v) },
-    { key: 'bi',              label: '📈 BI & Analytics',   feature: true, format: v => v ? '✅' : '—' },
-    { key: 'automations',     label: '⚡ Automatisations',   feature: true, format: v => v ? '✅' : '—' },
-    { key: 'sso',             label: '🔐 SSO Entreprise',   feature: true, format: v => v ? '✅' : '—' },
-    { key: 'apiAccess',       label: '🔌 Accès API',        feature: true, format: v => v ? '✅' : '—' },
-    { key: 'multiCurrency',   label: '💱 Multi-devises',    feature: true, format: v => v ? '✅' : '—' },
-    { key: 'consolidation',   label: '📊 Consolidation',    feature: true, format: v => v ? '✅' : '—' },
-    { key: 'customReports',   label: '📄 Rapports custom',  feature: true, format: v => v ? '✅' : '—' },
+    { key: 'maxUsers', label: 'Utilisateurs max', format: v => v === -1 ? '∞' : v },
+    { key: 'maxProjects', label: 'Projets max', format: v => v === -1 ? '∞' : v },
+    { key: 'maxStorageMB', label: 'Stockage', format: v => v === -1 ? '∞' : v >= 1048576 ? `${v/1048576} To` : v >= 1024 ? `${v/1024} Go` : `${v} Mo` },
+    { key: 'aiTokensMonthly', label: 'Tokens IA/mois', format: v => v === -1 ? '∞' : fmtM(v) },
+    { key: 'bi', label: 'BI & Analytics', feature: true, format: v => v ? '' : '—' },
+    { key: 'automations', label: 'Automatisations', feature: true, format: v => v ? '' : '—' },
+    { key: 'sso', label: 'SSO Entreprise', feature: true, format: v => v ? '' : '—' },
+    { key: 'apiAccess', label: 'Accès API', feature: true, format: v => v ? '' : '—' },
+    { key: 'multiCurrency', label: 'Multi-devises', feature: true, format: v => v ? '' : '—' },
+    { key: 'consolidation', label: 'Consolidation', feature: true, format: v => v ? '' : '—' },
+    { key: 'customReports', label: 'Rapports custom', feature: true, format: v => v ? '' : '—' },
   ];
 
   return (
@@ -242,9 +242,9 @@ function LicPlans() {
                 {row.label}
               </td>
               {plans.map(plan => {
-                const raw   = row.feature ? plan.features?.[row.key] : plan[row.key];
-                const val   = row.format ? row.format(raw) : raw;
-                const isPos = val === '✅';
+                const raw = row.feature ? plan.features?.[row.key] : plan[row.key];
+                const val = row.format ? row.format(raw) : raw;
+                const isPos = val === '';
                 const isNeg = val === '—';
                 return (
                   <td key={plan.id} style={{
@@ -275,7 +275,7 @@ function LicAssignment({ licenses, onAssign }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <SectionHdr title="Attribution des licences" sub="Gérez les plans assignés à chaque entité du groupe" />
       {licenses.map(l => {
-        const plan      = LICENSE_PLANS[l.planId];
+        const plan = LICENSE_PLANS[l.planId];
         const stateMeta = ENTITY_STATE_META[l.state] || ENTITY_STATE_META[ENTITY_STATES.ACTIVE];
         return (
           <div key={l.entity_id} style={{
@@ -304,15 +304,15 @@ function LicAssignment({ licenses, onAssign }) {
                 background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
                 color: T.accent, fontWeight: 700, fontSize: 12, cursor: 'pointer',
               }}>
-                🔄 Changer
-              </button>
+ Changer
+ </button>
               <button style={{
                 padding: '7px 16px', borderRadius: 8,
                 background: `${T.blue}18`, border: `1px solid ${T.blue}33`,
                 color: T.blue, fontWeight: 700, fontSize: 12, cursor: 'pointer',
               }}>
-                ⚙️ Quotas
-              </button>
+ Quotas
+ </button>
             </div>
           </div>
         );
@@ -327,10 +327,10 @@ function LicAssignment({ licenses, onAssign }) {
 
 function LicQuotas({ licenses }) {
   const QUOTA_KEYS = [
-    { key: 'users',     label: '👥 Utilisateurs', maxKey: 'maxUsers',        usedKey: 'userCount'    },
-    { key: 'storage',   label: '💾 Stockage (Go)', maxKey: 'maxStorageMB',    usedKey: 'storageGB', usedScale: 1024 },
-    { key: 'projects',  label: '📋 Projets',       maxKey: 'maxProjects',     usedKey: 'projectCount' },
-    { key: 'aiTokens',  label: '🤖 Tokens IA',     maxKey: 'aiTokensMonthly', usedKey: 'aiTokensUsed' },
+    { key: 'users', label: 'Utilisateurs', maxKey: 'maxUsers', usedKey: 'userCount' },
+    { key: 'storage', label: 'Stockage (Go)', maxKey: 'maxStorageMB', usedKey: 'storageGB', usedScale: 1024 },
+    { key: 'projects', label: 'Projets', maxKey: 'maxProjects', usedKey: 'projectCount' },
+    { key: 'aiTokens', label: 'Tokens IA', maxKey: 'aiTokensMonthly', usedKey: 'aiTokensUsed' },
   ];
 
   return (
@@ -340,9 +340,9 @@ function LicQuotas({ licenses }) {
           <SectionHdr title={qk.label} sub="Consommation vs quotas par entité" />
           <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
             {licenses.map((l, i) => {
-              const plan  = LICENSE_PLANS[l.planId];
-              const max   = plan?.[qk.maxKey] || 0;
-              const used  = qk.usedScale ? l.usage[qk.usedKey] * qk.usedScale : l.usage[qk.usedKey] || 0;
+              const plan = LICENSE_PLANS[l.planId];
+              const max = plan?.[qk.maxKey] || 0;
+              const used = qk.usedScale ? l.usage[qk.usedKey] * qk.usedScale : l.usage[qk.usedKey] || 0;
               const { pct, status } = getQuotaStatus(used, max);
               const barColor = status === 'exceeded' ? T.red : status === 'critical' ? '#e67e22' : status === 'warning' ? T.gold : T.accent;
 
@@ -378,8 +378,8 @@ function LicQuotas({ licenses }) {
                       {Math.round((pct || 0) * 100)}%
                     </span>
                   )}
-                  {status === 'exceeded' && <span title="Quota dépassé" style={{ color: T.red }}>⚠️</span>}
-                  {status === 'critical' && <span title="Seuil critique" style={{ color: '#e67e22' }}>🔔</span>}
+                  {status === 'exceeded' && <span title="Quota dépassé" style={{ color: T.red }}></span>}
+                  {status === 'critical' && <span title="Seuil critique" style={{ color: '#e67e22' }}></span>}
                 </div>
               );
             })}
@@ -398,8 +398,8 @@ function LicBilling({ licenses, totalCost }) {
   const rows = licenses.map(l => {
     const plan = LICENSE_PLANS[l.planId];
     const users = {
-      admin:    Math.floor(l.usage.userCount * 0.15),
-      manager:  Math.floor(l.usage.userCount * 0.25),
+      admin: Math.floor(l.usage.userCount * 0.15),
+      manager: Math.floor(l.usage.userCount * 0.25),
       standard: Math.floor(l.usage.userCount * 0.5),
       readonly: Math.floor(l.usage.userCount * 0.1),
     };
@@ -432,8 +432,8 @@ function LicBilling({ licenses, totalCost }) {
           background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
           color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}>
-          📄 Générer rapport
-        </button>
+ Générer rapport
+ </button>
       </div>
 
       {/* Per-entity breakdown */}
@@ -458,9 +458,9 @@ function LicBilling({ licenses, totalCost }) {
                 + (r.users.manager * INTERNAL_BILLING.perUserManager)
                 + (r.users.standard * INTERNAL_BILLING.perUserStandard)
                 + (r.users.readonly * INTERNAL_BILLING.perUserReadOnly);
-              const storCost  = r.usage.storageGB * INTERNAL_BILLING.storagePerGB;
-              const aiCost    = Math.ceil(r.usage.aiTokensUsed / 1000) * INTERNAL_BILLING.aiTokensPer1k;
-              const featCost  = r.cost - userCost - storCost - aiCost;
+              const storCost = r.usage.storageGB * INTERNAL_BILLING.storagePerGB;
+              const aiCost = Math.ceil(r.usage.aiTokensUsed / 1000) * INTERNAL_BILLING.aiTokensPer1k;
+              const featCost = r.cost - userCost - storCost - aiCost;
               return (
                 <tr key={r.entity_id} style={{ background: i % 2 === 0 ? T.card : T.surface }}>
                   <td style={{ padding: '12px 14px', borderBottom: `1px solid ${T.border}22` }}>
@@ -518,7 +518,7 @@ function LicRequests({ requests }) {
       <SectionHdr title="File de demandes d'upgrade" sub={`${requests.length} demandes en attente`} />
       {requests.map(req => {
         const status = processed[req.id] || req.status;
-        const plan   = req.requestedPlan ? LICENSE_PLANS[req.requestedPlan] : null;
+        const plan = req.requestedPlan ? LICENSE_PLANS[req.requestedPlan] : null;
         return (
           <div key={req.id} style={{
             background: T.card, borderRadius: 14, border: `1px solid ${
@@ -536,7 +536,7 @@ function LicRequests({ requests }) {
                       background: req.type === 'plan' ? `${T.purple}20` : `${T.blue}20`,
                       color: req.type === 'plan' ? T.purple : T.blue,
                     }}>
-                      {req.type === 'plan' ? '🔼 Upgrade Plan' : req.type === 'users' ? '👥 +Users' : '💾 +Storage'}
+                      {req.type === 'plan' ? 'Upgrade Plan' : req.type === 'users' ? '+Users' : '+Storage'}
                     </span>
                   </div>
                   <div style={{ fontSize: 13, color: T.muted, marginBottom: 6 }}>{req.reason}</div>
@@ -559,12 +559,12 @@ function LicRequests({ requests }) {
                     padding: '8px 18px', borderRadius: 8,
                     background: `${T.accent}20`, border: `1px solid ${T.accent}44`,
                     color: T.accent, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                  }}>✅ Approuver</button>
+                  }}> Approuver</button>
                   <button onClick={() => handleReject(req)} style={{
                     padding: '8px 18px', borderRadius: 8,
                     background: `${T.red}20`, border: `1px solid ${T.red}44`,
                     color: T.red, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                  }}>✗ Refuser</button>
+                  }}> Refuser</button>
                 </div>
               ) : (
                 <span style={{
@@ -572,7 +572,7 @@ function LicRequests({ requests }) {
                   background: status === 'approved' ? `${T.accent}20` : `${T.red}20`,
                   color: status === 'approved' ? T.accent : T.red,
                 }}>
-                  {status === 'approved' ? '✅ Approuvé' : '✗ Refusé'}
+                  {status === 'approved' ? 'Approuvé' : 'Refusé'}
                 </span>
               )}
             </div>
@@ -590,31 +590,31 @@ function LicRequests({ requests }) {
 function LicInsights({ licenses }) {
   const insights = [
     {
-      icon: '💤', type: 'Sous-utilisation', color: T.blue, priority: 'medium',
+      icon: '', type: 'Sous-utilisation', color: T.blue, priority: 'medium',
       title: 'IPC Green Blocks — modules BI sous-utilisés',
       body: 'Le module BI (Business Intelligence) est activé mais n\'a généré que 12 accès en 30 jours sur 134 utilisateurs. Considérez une formation ou la désactivation pour économiser 20 000 XOF/mois.',
       action: 'Voir le rapport',
     },
     {
-      icon: '🔔', type: 'Saturation imminente', color: T.gold, priority: 'high',
+      icon: '', type: 'Saturation imminente', color: T.gold, priority: 'high',
       title: 'IPC Green Blocks — quota utilisateurs à 85%',
       body: 'Avec 85 utilisateurs actifs sur un maximum de 100, le seuil d\'alerte est atteint. À ce rythme de recrutement, le quota sera dépassé dans ~18 jours.',
       action: 'Gérer le quota',
     },
     {
-      icon: '🤖', type: 'Optimisation IA', color: T.purple, priority: 'low',
+      icon: '', type: 'Optimisation IA', color: T.purple, priority: 'low',
       title: 'Nexus Academy — consommation IA optimale',
       body: '68% des tokens IA utilisés ont généré des réponses à valeur ajoutée. Score d\'efficacité IA : 8.4/10. La filiale exploite bien les capacités Nexus Intelligence.',
       action: null,
     },
     {
-      icon: '⚠️', type: 'Risque conformité', color: T.red, priority: 'critical',
+      icon: '', type: 'Risque conformité', color: T.red, priority: 'critical',
       title: 'YSEE — licence suspendue depuis 8 jours',
       body: 'L\'entité YSEE est suspendue. Les données restent accessibles en lecture seule, mais aucune opération n\'est possible. Risque de perte de données non sauvegardées si suspension > 30 jours.',
       action: 'Réactiver',
     },
     {
-      icon: '💡', type: 'Recommandation', color: T.accent, priority: 'medium',
+      icon: '', type: 'Recommandation', color: T.accent, priority: 'medium',
       title: 'Select — upgrade vers ENTERPRISE recommandé',
       body: 'Select utilise 94% de son quota projets, 91% du stockage et demande régulièrement des accès API avancés. L\'upgrade vers ENTERPRISE générerait un surcoût de 45 000 XOF/mois mais éviterait 3 blocages opérationnels.',
       action: 'Préparer upgrade',
@@ -647,7 +647,7 @@ function LicInsights({ licenses }) {
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
                 background: `${priorityColors[ins.priority]}20`, color: priorityColors[ins.priority],
               }}>
-                {ins.priority === 'critical' ? '🔴' : ins.priority === 'high' ? '🟡' : ins.priority === 'medium' ? '🔵' : '⚪'} {ins.priority}
+                {ins.priority === 'critical' ? '' : ins.priority === 'high' ? '' : ins.priority === 'medium' ? '' : ''} {ins.priority}
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{ins.title}</span>
             </div>

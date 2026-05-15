@@ -8,24 +8,24 @@ import {
 import { useStore } from '../../store';
 
 const PRIORITY_COLORS = {
-  'Urgent':  { bg: '#EF444415', color: '#EF4444', dot: '#EF4444' },
-  'Haute':   { bg: '#F59E0B15', color: '#F59E0B', dot: '#F59E0B' },
+  'Urgent': { bg: '#EF444415', color: '#EF4444', dot: '#EF4444' },
+  'Haute': { bg: '#F59E0B15', color: '#F59E0B', dot: '#F59E0B' },
   'Normale': { bg: '#3B82F615', color: '#3B82F6', dot: '#3B82F6' },
-  'Basse':   { bg: '#10B98115', color: '#10B981', dot: '#10B981' },
+  'Basse': { bg: '#10B98115', color: '#10B981', dot: '#10B981' },
 };
 
 const STATUS_COLORS = {
-  'Ouvert':      { bg: '#3B82F615', color: '#3B82F6' },
-  'En cours':    { bg: '#8B5CF615', color: '#8B5CF6' },
-  'En attente':  { bg: '#F59E0B15', color: '#F59E0B' },
-  'Résolu':      { bg: '#10B98115', color: '#10B981' },
-  'Fermé':       { bg: '#6B728015', color: '#6B7280' },
+  'Ouvert': { bg: '#3B82F615', color: '#3B82F6' },
+  'En cours': { bg: '#8B5CF615', color: '#8B5CF6' },
+  'En attente': { bg: '#F59E0B15', color: '#F59E0B' },
+  'Résolu': { bg: '#10B98115', color: '#10B981' },
+  'Fermé': { bg: '#6B728015', color: '#6B7280' },
 };
 
 const TABS = [
-  { id: 'kanban',    label: 'Vue Kanban',   icon: <BarChart3 size={16} /> },
-  { id: 'liste',     label: 'Tous les Tickets', icon: <Tag size={16} /> },
-  { id: 'sla',       label: 'SLA & Alertes', icon: <Zap size={16} /> },
+  { id: 'kanban', label: 'Vue Kanban', icon: <BarChart3 size={16} /> },
+  { id: 'liste', label: 'Tous les Tickets', icon: <Tag size={16} /> },
+  { id: 'sla', label: 'SLA & Alertes', icon: <Zap size={16} /> },
 ];
 
 const KANBAN_COLS = ['Ouvert', 'En cours', 'En attente', 'Résolu'];
@@ -46,7 +46,7 @@ const TicketCard = ({ ticket, onClick }) => {
       </div>
       <div style={{ fontWeight: 700, fontSize: '0.9rem', lineHeight: 1.4 }}>{ticket.titre}</div>
       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-        <span>👤 {ticket.demandeur || 'N/A'}</span>
+        <span> {ticket.demandeur || 'N/A'}</span>
         <span>{ticket.createdAt?.slice(0, 10)}</span>
       </div>
     </motion.div>
@@ -222,12 +222,12 @@ const HelpdeskHub = ({ onOpenDetail, accessLevel }) => {
               <h3 style={{ fontWeight: 800, margin: 0 }}>Tickets Urgents en SLA Risk</h3>
             </div>
             {tickets.filter(t => t.priorite === 'Urgent' && (t.statut === 'Ouvert' || t.statut === 'En cours')).length === 0
-              ? <p style={{ color: 'var(--text-muted)', margin: 0 }}>✅ Aucun ticket urgent en risque SLA.</p>
+              ? <p style={{ color: 'var(--text-muted)', margin: 0 }}> Aucun ticket urgent en risque SLA.</p>
               : tickets.filter(t => t.priorite === 'Urgent' && (t.statut === 'Ouvert' || t.statut === 'En cours')).map(t => (
                 <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#EF444408', borderRadius: '0.75rem', border: '1px solid #EF444430', marginBottom: '0.75rem' }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>{t.titre}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#EF4444' }}>⚠️ Ticket urgent — SLA: {t.slaHeures || 4}h</div>
+                    <div style={{ fontSize: '0.8rem', color: '#EF4444' }}> Ticket urgent — SLA: {t.slaHeures || 4}h</div>
                   </div>
                   <button onClick={() => updateRecord('helpdesk', 'tickets', t.id, { statut: 'En cours' })} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', borderRadius: '0.5rem' }}>Prendre en charge</button>
                 </div>

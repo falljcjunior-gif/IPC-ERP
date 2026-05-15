@@ -12,17 +12,17 @@ const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const INTERET_CFG = {
   'Très Chaud': { color: '#EF4444', bg: '#EF444415', icon: <Flame size={12} />, priority: 4 },
-  'Chaud':      { color: '#F59E0B', bg: '#F59E0B15', icon: <Zap size={12} />, priority: 3 },
-  'Tiède':      { color: '#3B82F6', bg: '#3B82F615', icon: <ThumbsUp size={12} />, priority: 2 },
-  'Froid':      { color: '#6B7280', bg: '#6B728015', icon: <Minus size={12} />, priority: 1 },
+  'Chaud': { color: '#F59E0B', bg: '#F59E0B15', icon: <Zap size={12} />, priority: 3 },
+  'Tiède': { color: '#3B82F6', bg: '#3B82F615', icon: <ThumbsUp size={12} />, priority: 2 },
+  'Froid': { color: '#6B7280', bg: '#6B728015', icon: <Minus size={12} />, priority: 1 },
 };
 
 const STATUT_CFG = {
-  'Nouveau':              { color: '#3B82F6', bg: '#3B82F615' },
-  'Qualifié':             { color: '#10B981', bg: '#10B98115' },
+  'Nouveau': { color: '#3B82F6', bg: '#3B82F615' },
+  'Qualifié': { color: '#10B981', bg: '#10B98115' },
   'En Cours de Traitement': { color: '#F59E0B', bg: '#F59E0B15' },
-  'Transféré CRM':        { color: '#8B5CF6', bg: '#8B5CF615' },
-  'Non Qualifié':         { color: '#EF4444', bg: '#EF444415' },
+  'Transféré CRM': { color: '#8B5CF6', bg: '#8B5CF615' },
+  'Non Qualifié': { color: '#EF4444', bg: '#EF444415' },
 };
 
 const SOURCE_COLORS = {
@@ -154,12 +154,12 @@ const LeadsEntrantsTab = ({ leads, onNew, onOpenDetail, navigateToCrm }) => {
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                     {lead.source && (
                       <div style={{ padding: '3px 10px', borderRadius: '2rem', fontSize: '0.68rem', fontWeight: 800, background: `${sourceColor}15`, color: sourceColor }}>
-                        📍 {lead.source}
+                         {lead.source}
                       </div>
                     )}
                     {lead.campagne && (
                       <div style={{ padding: '3px 10px', borderRadius: '2rem', fontSize: '0.68rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-muted)' }}>
-                        🎯 {lead.campagne}
+                         {lead.campagne}
                       </div>
                     )}
                   </div>
@@ -177,8 +177,8 @@ const LeadsEntrantsTab = ({ leads, onNew, onOpenDetail, navigateToCrm }) => {
                       </button>
                     ) : (
                       <div style={{ flex: 1.5, padding: '0.6rem 1rem', borderRadius: '0.75rem', background: '#10B98115', color: '#10B981', fontWeight: 800, fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                        <CheckCircle2 size={13} /> Transféré ✓
-                      </div>
+                        <CheckCircle2 size={13} /> Transféré 
+ </div>
                     )}
                   </div>
                 </div>

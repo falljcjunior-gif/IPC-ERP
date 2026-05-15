@@ -14,7 +14,7 @@ const COLUMNS = [
   { key: 'daysRemaining',     label: 'J. restants',     width: 90,  sortable: true },
   { key: 'completionPct',     label: '% Réalisé',       width: 100, sortable: true },
   { key: 'relatedDepartment', label: 'Département',     width: 140, sortable: true },
-  { key: 'commentCount',      label: '💬',              width: 50,  sortable: true },
+  { key: 'commentCount',      label: '',              width: 50,  sortable: true },
 ];
 
 // ── Sub-renderers ─────────────────────────────────────────────────────────────

@@ -315,8 +315,8 @@ function ChatPanel({ uid, activeAlert, onClose }) {
           onClick={onClose}
           style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
         >
-          ✕
-        </button>
+ 
+ </button>
       </div>
 
       {/* Messages */}
@@ -364,8 +364,8 @@ function ChatPanel({ uid, activeAlert, onClose }) {
                   background: '#10B98120', borderRadius: '0.5rem',
                   fontSize: '0.72rem', color: '#10B981', fontWeight: 700,
                 }}>
-                  ✓ Alerte clôturée
-                </div>
+ Alerte clôturée
+ </div>
               )}
             </div>
           </div>

@@ -8,7 +8,7 @@ import {
 import { useStore } from '../../../store';
 
 /**
- * 🧠 NEXUS OS: INTELLIGENCE & PREDICTIVE ANALYTICS
+ *  NEXUS OS: INTELLIGENCE & PREDICTIVE ANALYTICS
  * Cross-module data correlation: IT (Assets) + RH (Salaries) + CRM (Churn).
  */
 const IntelligenceTab = () => {

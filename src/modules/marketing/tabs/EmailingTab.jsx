@@ -10,12 +10,12 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
 
 const TEMPLATES = [
-  { id: 'promo', label: 'Promotionnel', color: '#EC4899', icon: '🎯', desc: 'Offres spéciales, remises' },
-  { id: 'news', label: 'Newsletter', color: '#3B82F6', icon: '📰', desc: 'Actualités, nouveautés IPC' },
-  { id: 'invite', label: 'Invitation', color: '#8B5CF6', icon: '🎟️', desc: 'Événements, salons' },
-  { id: 'relance', label: 'Relance', color: '#F59E0B', icon: '🔔', desc: 'Relance prospects, devis' },
-  { id: 'welcome', label: 'Bienvenue', color: '#10B981', icon: '👋', desc: 'Onboarding nouveaux clients' },
-  { id: 'transac', label: 'Transactionnel', color: '#06B6D4', icon: '📋', desc: 'Confirmation, suivi' },
+  { id: 'promo', label: 'Promotionnel', color: '#EC4899', icon: '', desc: 'Offres spéciales, remises' },
+  { id: 'news', label: 'Newsletter', color: '#3B82F6', icon: '', desc: 'Actualités, nouveautés IPC' },
+  { id: 'invite', label: 'Invitation', color: '#8B5CF6', icon: '', desc: 'Événements, salons' },
+  { id: 'relance', label: 'Relance', color: '#F59E0B', icon: '', desc: 'Relance prospects, devis' },
+  { id: 'welcome', label: 'Bienvenue', color: '#10B981', icon: '', desc: 'Onboarding nouveaux clients' },
+  { id: 'transac', label: 'Transactionnel', color: '#06B6D4', icon: '', desc: 'Confirmation, suivi' },
 ];
 
 const STATUT_CFG = {
@@ -67,7 +67,7 @@ const EmailingTab = ({ emailings, onNew, onOpenDetail, formatCurrency }) => {
 
       {/* Template Picker */}
       <motion.div variants={item} className="glass" style={{ padding: '1.75rem', borderRadius: '2rem', border: '1px solid var(--border)' }}>
-        <h4 style={{ margin: '0 0 1rem 0', fontWeight: 900, fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>📐 Choisir un Template</h4>
+        <h4 style={{ margin: '0 0 1rem 0', fontWeight: 900, fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}> Choisir un Template</h4>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 180px), 1fr))', gap: '0.75rem' }}>
           {TEMPLATES.map(t => (
             <div key={t.id} onClick={() => setSelectedTemplate(selectedTemplate === t.id ? null : t.id)}

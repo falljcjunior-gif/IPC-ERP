@@ -101,31 +101,31 @@ const Timesheets = () => {
                     <span style={{ color: p.fill, fontWeight: 700 }}>{p.heures}h · {pct}%</span>
                   </div>
                   <div style={{ height: '8px', background: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1, delay: i * 0.1 }}
-                      style={{ height: '100%', background: p.fill, borderRadius: '4px' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%`}} transition={{ duration: 1, delay: i * 0.1 }}
+ style={{ height: '100%', background: p.fill, borderRadius: '4px' }} />
+ </div>
+ </div>
+ );
+ })}
+ </div>
+ </div>
+ </div>
+ </div>
+ );
 
-  const renderSaisies = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {isManager && timesheets.filter(t => t.statut === 'En attente').length > 0 && (
-        <div className="luxury-widget" style={{ padding: '1.25rem 2rem', borderLeft: '4px solid #F59E0B', borderRadius: '1rem' }}>
-          <span style={{ fontWeight: 700, color: '#F59E0B', fontSize: '0.9rem' }}>
-            ⚠️ {timesheets.filter(t => t.statut === 'En attente').length} saisie(s) en attente de validation
-          </span>
-        </div>
-      )}
-      {timesheets.map((ts) => (
-        <motion.div key={ts.id} whileHover={{ x: 4 }}
-          className="luxury-widget"
-          style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', borderLeft: `4px solid ${ts.statut === 'Validé' ? '#10B981' : ts.statut === 'Refusé' ? '#EF4444' : '#F59E0B'}` }}>
+ const renderSaisies = () => (
+ <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+ {isManager && timesheets.filter(t => t.statut === 'En attente').length > 0 && (
+ <div className="luxury-widget" style={{ padding: '1.25rem 2rem', borderLeft: '4px solid #F59E0B', borderRadius: '1rem' }}>
+ <span style={{ fontWeight: 700, color: '#F59E0B', fontSize: '0.9rem' }}>
+ {timesheets.filter(t => t.statut === 'En attente').length} saisie(s) en attente de validation
+ </span>
+ </div>
+ )}
+ {timesheets.map((ts) => (
+ <motion.div key={ts.id} whileHover={{ x: 4 }}
+ className="luxury-widget"
+ style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap', borderLeft:`4px solid ${ts.statut === 'Validé' ? '#10B981' : ts.statut === 'Refusé' ? '#EF4444' : '#F59E0B'}` }}>
           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#f8fafc', border: '2px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, color: '#3B82F6', fontSize: '0.9rem', flexShrink: 0 }}>
             {ts.collaborateur.split(' ').map(n => n[0]).join('')}
           </div>

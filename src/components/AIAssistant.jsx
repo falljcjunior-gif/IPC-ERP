@@ -176,7 +176,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
     const navKey = Object.keys(NAV_MAP).find(k => lowInput.startsWith('va vers ' + k) || lowInput === k || lowInput === 'ouvre ' + k);
     if (navKey) {
       navigateTo(NAV_MAP[navKey]);
-      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Navigation vers le module ${navKey.toUpperCase()} effectuée par Antigravity.` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Navigation vers le module ${navKey.toUpperCase()} effectuée par Antigravity.` }]);
       setSpotlightOpen(false);
       setIsOpen(false);
       setIsProcessing(false);
@@ -197,7 +197,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
         role: 'assistant',
         content: response || 'Antigravity : Aucune réponse exploitable reçue.',
         action: action || null,
-        error: !success ? '⚠️ Protocole partiel' : null
+        error: !success ? 'Protocole partiel' : null
       }]);
 
     } catch (err) {
@@ -220,10 +220,10 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
       navigateTo(action.appId);
       setSpotlightOpen(false);
       setIsOpen(false);
-      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Déploiement du module "${action.appId}" terminé.` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Déploiement du module "${action.appId}" terminé.` }]);
     } else if (action.type === 'CREATE_RECORD') {
       addRecord?.(action.appId, action.subModule, {});
-      setMessages(prev => [...prev, { role: 'assistant', content: `✅ Séquence de création initiée dans ${action.appId} [${action.subModule}].` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `Séquence de création initiée dans ${action.appId} [${action.subModule}].` }]);
     }
   }, [navigateTo, addRecord, setSpotlightOpen]);
 

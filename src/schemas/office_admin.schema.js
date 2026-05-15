@@ -3,7 +3,7 @@ export const officeAdminSchema = {
   title: 'Services Généraux & Administration',
   icon: 'inbox',
   models: {
-    // 📨 Gestion du Courrier & Colis
+    //  Gestion du Courrier & Colis
     mail_logs: {
       label: 'Courriers & Colis',
       fields: {
@@ -22,7 +22,7 @@ export const officeAdminSchema = {
       }
     },
     
-    // 🏢 Fournitures & Achats internes
+    //  Fournitures & Achats internes
     office_supplies: {
       label: 'Fournitures & Matériel',
       fields: {
@@ -42,7 +42,7 @@ export const officeAdminSchema = {
       }
     },
 
-    // 🤝 Registre des Visiteurs
+    //  Registre des Visiteurs
     visitors_log: {
       label: 'Registre des Visiteurs',
       fields: {
@@ -61,7 +61,7 @@ export const officeAdminSchema = {
       }
     },
 
-    // 📅 Espaces & Interventions (Services Généraux)
+    //  Espaces & Interventions (Services Généraux)
     facilities_tickets: {
       label: 'Demandes d\'Intervention',
       fields: {

@@ -2,7 +2,7 @@ import React from 'react';
 import { useStore } from '../store';
 
 /**
- * 🔒 IPC PERMISSION GUARD
+ *  IPC PERMISSION GUARD
  * Wraps content to ensure users only see what they are authorized for.
  * 
  * Usage:

@@ -399,7 +399,7 @@ function PasswordModal({ onClose }) {
                         }} />
                       </div>
                       <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                        {newPwd.length < 8 ? 'Trop court' : newPwd.length < 12 ? 'Acceptable' : 'Fort ✓'}
+                        {newPwd.length < 8 ? 'Trop court' : newPwd.length < 12 ? 'Acceptable' : 'Fort'}
                       </div>
                     </div>
                   )}
@@ -639,7 +639,7 @@ function NexusScoreMini({ uid }) {
       {/* Descriptor */}
       <div>
         <div style={{ fontWeight: 800, fontSize: '1rem', color }}>
-          {s >= 80 ? 'Excellent 🏆' : s >= 60 ? 'Bien 👍' : s >= 40 ? 'Moyen ⚡' : 'À améliorer 📈'}
+          {s >= 80 ? 'Excellent' : s >= 60 ? 'Bien' : s >= 40 ? 'Moyen' : 'À améliorer'}
         </div>
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', lineHeight: 1.4 }}>
           {score != null
@@ -782,8 +782,8 @@ export default function ProfileSettings() {
                 style={{ ...READONLY_FIELD, cursor: 'default' }}
               />
               <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                🔒 Modifiable uniquement par les RH.
-              </div>
+ Modifiable uniquement par les RH.
+ </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>

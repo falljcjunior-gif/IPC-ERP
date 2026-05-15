@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 /**
- * 🛠️ INFRASTRUCTURE HEALTH MONITOR (ELITE 2.0)
+ *  INFRASTRUCTURE HEALTH MONITOR (ELITE 2.0)
  * Integrated AIOps, Self-Healing Actions, and Topology Visualization.
  */
 const InfrastructureHealth = () => {

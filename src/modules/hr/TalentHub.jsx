@@ -102,7 +102,7 @@ const DashboardTab = ({ data, onSentiment }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         {/* Répartition par Département */}
         <motion.div variants={fade} className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '0.95rem' }}>👥 Effectif par Département</h4>
+          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '0.95rem' }}> Effectif par Département</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {byDept.slice(0, 6).map(([dept, count]) => {
               const color = DEPT_COLORS[dept] || '#8B5CF6';
@@ -125,7 +125,7 @@ const DashboardTab = ({ data, onSentiment }) => {
 
         {/* Baromètre du Bien-être */}
         <motion.div variants={fade} className="glass" style={{ padding: '1.75rem', borderRadius: '1.5rem' }}>
-          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '0.95rem' }}>❤️ Baromètre Bien-être</h4>
+          <h4 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, fontSize: '0.95rem' }}> Baromètre Bien-être</h4>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '2rem' }}>
             {moods.map(m => (
               <div key={m.label} onClick={() => onSentiment(m.label)} style={{ textAlign: 'center', flex: 1, cursor: 'pointer' }}>
@@ -250,8 +250,8 @@ const RecrutementTab = () => {
                         )}
                         <button onClick={() => deleteRecord('talent', 'candidates', c.id)}
                           style={{ padding: '3px 6px', borderRadius: 6, border: 'none', background: '#EF444415', color: '#EF4444', cursor: 'pointer', fontSize: '0.65rem' }}>
-                          ✕
-                        </button>
+ 
+ </button>
                       </div>
                     </motion.div>
                   ))}
@@ -448,17 +448,17 @@ const BienEtreTab = ({ onSentiment }) => {
   const surveys = data.talent?.surveys || [];
 
   const initiatives = [
-    { icon: '🏃', title: 'Challenges Sport Mensuel', desc: 'Défi de mars : 10 000 pas/jour', color: '#10B981', participants: 18, badge: 'Actif' },
-    { icon: '🧘', title: 'Séance Mindfulness', desc: 'Chaque vendredi 12h - Salle Zen', color: '#8B5CF6', participants: 12, badge: '2x/semaine' },
-    { icon: '🎉', title: 'Team Building Q2', desc: 'Sortie Karting prévue le 15 Mai', color: '#F59E0B', participants: 24, badge: 'À venir' },
-    { icon: '💬', title: 'Cercle de Parole', desc: 'Exprimez vos idées sur la culture', color: '#3B82F6', participants: 9, badge: 'Mensuel' },
+    { icon: '', title: 'Challenges Sport Mensuel', desc: 'Défi de mars : 10 000 pas/jour', color: '#10B981', participants: 18, badge: 'Actif' },
+    { icon: '', title: 'Séance Mindfulness', desc: 'Chaque vendredi 12h - Salle Zen', color: '#8B5CF6', participants: 12, badge: '2x/semaine' },
+    { icon: '', title: 'Team Building Q2', desc: 'Sortie Karting prévue le 15 Mai', color: '#F59E0B', participants: 24, badge: 'À venir' },
+    { icon: '', title: 'Cercle de Parole', desc: 'Exprimez vos idées sur la culture', color: '#3B82F6', participants: 9, badge: 'Mensuel' },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Initiatives */}
       <div>
-        <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 900 }}>🌟 Initiatives Bien-être</h3>
+        <h3 style={{ margin: '0 0 1.25rem 0', fontWeight: 900 }}> Initiatives Bien-être</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 260px),1fr))', gap: '1.25rem' }}>
           {initiatives.map((init, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="glass"
@@ -500,7 +500,7 @@ const BienEtreTab = ({ onSentiment }) => {
             Comment évalueriez-vous votre niveau d'énergie et de motivation cette semaine ?
           </p>
           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
-            {[['😔', 'Bas'], ['😐', 'Moyen'], ['🙂', 'Bien'], ['😄', 'Excellent']].map(([emoji, label]) => (
+            {[['', 'Bas'], ['', 'Moyen'], ['', 'Bien'], ['', 'Excellent']].map(([emoji, label]) => (
               <button key={label} 
                 onClick={() => onSentiment(label)}
                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '1rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontSize: '1.5rem', transition: '0.2s' }}
@@ -512,7 +512,7 @@ const BienEtreTab = ({ onSentiment }) => {
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem', opacity: 0.7 }}>
-          <span>🔒 Réponses anonymes garanties</span>
+          <span> Réponses anonymes garanties</span>
           <span>{surveys.length} réponses ce mois</span>
         </div>
       </div>

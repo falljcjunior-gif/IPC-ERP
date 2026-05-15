@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 /**
- * 🏛️ NEXUS OS: GOVERNANCE MATRIX
+ *  NEXUS OS: GOVERNANCE MATRIX
  * A high-precision permission management component.
  */
 

@@ -106,13 +106,13 @@ const PlatformShell = ({ theme, setView }) => {
   // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
   useEffect(() => {
     if (isCreatorEmail(currentUser?.email) && userRole !== 'SUPER_ADMIN') {
-      console.warn('🛡️ [Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
+      console.warn('[Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
       useStore.getState().setUserRole('SUPER_ADMIN');
       useStore.getState().setUser({ ...currentUser, role: 'SUPER_ADMIN' });
     }
   }, [currentUser, userRole]);
 
-  // 🌐 [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
+  //  [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
   useEffect(() => {
     if (!activeApp) return;
     const currentPath = window.location.pathname;

@@ -197,8 +197,8 @@ const Checklist = ({ checklist, cardId, cardProgress, uid }) => {
               Ajouter
             </button>
             <button onClick={() => { setAddingItem(false); setNewItemText(''); }} style={{ padding: '0.35rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.8rem' }}>
-              ✕
-            </button>
+ 
+ </button>
           </div>
         </div>
       ) : (
@@ -260,8 +260,8 @@ const ChecklistSection = ({ cardId, cardProgress, uid }) => {
               Créer
             </button>
             <button onClick={() => { setAddingCl(false); setNewClTitle(''); }} style={{ padding: '0.4rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer' }}>
-              ✕
-            </button>
+ 
+ </button>
           </div>
         </div>
       ) : (

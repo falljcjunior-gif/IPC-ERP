@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 /**
- * ⚙️ NEXUS OS: WORKFLOW & BPM SCHEMA
+ *  NEXUS OS: WORKFLOW & BPM SCHEMA
  * Handles multi-stage approvals, SLA escalations, and automated business processes.
  */
 

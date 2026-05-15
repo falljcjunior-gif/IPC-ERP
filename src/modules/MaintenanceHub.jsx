@@ -11,7 +11,7 @@ import SmartButton from '../components/SmartButton';
 import { useToastStore } from '../store/useToastStore';
 
 /**
- * 🏭 NEXUS OS: GMAO (GESTION DE MAINTENANCE)
+ *  NEXUS OS: GMAO (GESTION DE MAINTENANCE)
  * Operational cockpit for factory machinery and technical interventions.
  */
 const MaintenanceHub = () => {

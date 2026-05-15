@@ -55,7 +55,7 @@ const MailTab = () => {
       id: '3',
       sender: 'Nexus AI Butler',
       email: 'butler@nexus-os.ai',
-      subject: '🚨 Alerte : Stock critique sur Résine PVC',
+      subject: 'Alerte : Stock critique sur Résine PVC',
       preview: 'Le stock de Résine PVC est passé sous le seuil d\'alerte. Commande suggérée : 50 tonnes.',
       content: 'Bonjour,\n\nJe détecte que le stock de Résine PVC (Réf: PVC-GEN-01) est de 1.2 tonnes. Votre consommation hebdomadaire moyenne est de 8.5 tonnes.\n\nJ\'ai préparé un brouillon de commande fournisseur dans le module Achats.\n\nNexus Butler.',
       date: 'Hier',

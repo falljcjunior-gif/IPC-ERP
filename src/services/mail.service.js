@@ -2,7 +2,7 @@ import { collection, doc, setDoc, getDoc, query, where, getDocs, orderBy, onSnap
 import { db } from '../firebase/config';
 
 /**
- * 📧 IPC MAIL SERVICE
+ *  IPC MAIL SERVICE
  * Handles OAuth integration and mailbox synchronization for Gmail, Outlook, and Private Servers.
  */
 class MailService {

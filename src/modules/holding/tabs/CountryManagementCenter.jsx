@@ -49,11 +49,11 @@ const C = {
 };
 
 const STATE_BADGE = {
-  ACTIVE:       { color: C.accent, label: 'Actif',         icon: '✓'  },
+  ACTIVE:       { color: C.accent, label: 'Actif',         icon: ''  },
   PROVISIONING: { color: C.gold,   label: 'En cours',      icon: '⏳' },
   SUSPENDED:    { color: C.red,    label: 'Gelé',          icon: '⏸' },
-  ARCHIVED:     { color: C.muted,  label: 'Archivé',       icon: '📦' },
-  DRAFT:        { color: C.blue,   label: 'Brouillon',     icon: '📝' },
+  ARCHIVED:     { color: C.muted,  label: 'Archivé',       icon: '' },
+  DRAFT:        { color: C.blue,   label: 'Brouillon',     icon: '' },
 };
 
 // ── Plans de licence disponibles (alignés sur license.schema.js) ────────────
@@ -165,14 +165,14 @@ export default function CountryManagementCenter() {
           fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
           boxShadow: `0 4px 14px ${C.accent}55`,
         }}>
-          <span style={{ fontSize: 16 }}>➕</span> Nouveau pays
+          <span style={{ fontSize: 16 }}></span> Nouveau pays
         </button>
       </div>
 
       {/* ── Stats cards ────────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-        <StatCard label="Total pays"  value={stats.total}     icon="🌍" color={C.text} />
-        <StatCard label="Actifs"      value={stats.active}    icon="✓"  color={C.accent} />
+        <StatCard label="Total pays"  value={stats.total}     icon="" color={C.text} />
+        <StatCard label="Actifs"      value={stats.active}    icon=""  color={C.accent} />
         <StatCard label="En cours"    value={stats.pending}   icon="⏳" color={C.gold} />
         <StatCard label="Gelés"       value={stats.suspended} icon="⏸"  color={C.red} />
       </div>
@@ -252,7 +252,7 @@ function CountryCard({ scope }) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 32 }}>{country.flag || scope.flag || '🌍'}</div>
+          <div style={{ fontSize: 32 }}>{country.flag || scope.flag || ''}</div>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{scope.country_name}</div>
             <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, letterSpacing: '0.05em' }}>
@@ -270,8 +270,8 @@ function CountryCard({ scope }) {
 
       {/* Entités jumelles */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <EntityMini icon="🏢" label="Filiale" name={scope.subsidiary_id} plan={scope.licenses?.subsidiary_plan} color={C.blue} />
-        <EntityMini icon="🌱" label="Foundation" name={scope.foundation_id} plan={scope.licenses?.foundation_plan} color={C.accent} />
+        <EntityMini icon="" label="Filiale" name={scope.subsidiary_id} plan={scope.licenses?.subsidiary_plan} color={C.blue} />
+        <EntityMini icon="" label="Foundation" name={scope.foundation_id} plan={scope.licenses?.foundation_plan} color={C.accent} />
       </div>
 
       {/* Erreurs si provisioning partiel */}
@@ -279,20 +279,20 @@ function CountryCard({ scope }) {
         <div style={{
           padding: 10, borderRadius: 10,
           background: `${C.red}10`, border: `1px solid ${C.red}33`,
-          fontSize: 11, color: C.red,
-        }}>
-          ⚠ Provisioning partiel — {scope.errors.length} erreur(s)
-        </div>
-      )}
-    </div>
-  );
+ fontSize: 11, color: C.red,
+ }}>
+ Provisioning partiel — {scope.errors.length} erreur(s)
+ </div>
+ )}
+ </div>
+ );
 }
 
 function EntityMini({ icon, label, name, plan, color }) {
-  return (
-    <div style={{
-      padding: 10, borderRadius: 10, background: C.bg,
-      border: `1px solid ${C.border}`,
+ return (
+ <div style={{
+ padding: 10, borderRadius: 10, background: C.bg,
+ border:`1px solid ${C.border}`,
     }}>
       <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
         {icon} {label}
@@ -313,7 +313,7 @@ function EmptyState({ onCreate }) {
       padding: '60px 20px', textAlign: 'center', background: '#fff',
       borderRadius: 18, border: `2px dashed ${C.border}`,
     }}>
-      <div style={{ fontSize: 56, marginBottom: 12 }}>🌍</div>
+      <div style={{ fontSize: 56, marginBottom: 12 }}></div>
       <div style={{ fontSize: 18, fontWeight: 200, color: C.text, marginBottom: 6 }}>
         Aucun pays provisionné
       </div>
@@ -326,8 +326,8 @@ function EmptyState({ onCreate }) {
         background: C.accent, color: '#fff', border: 'none', cursor: 'pointer',
         fontWeight: 700, fontSize: 13,
       }}>
-        ➕ Créer le premier pays
-      </button>
+ Créer le premier pays
+ </button>
     </div>
   );
 }
@@ -397,7 +397,7 @@ function CountryWizard({ existingCountryIds, onClose }) {
       });
 
       addHint?.({
-        title:   '🌍 Pays provisionné',
+        title:   'Pays provisionné',
         message: `${country.name} créé · ${result.data.subsidiary_id} + ${result.data.foundation_id}`,
         type:    'success',
       });
@@ -435,7 +435,7 @@ function CountryWizard({ existingCountryIds, onClose }) {
             <button onClick={onClose} style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
               fontSize: 22, color: C.muted, padding: 4,
-            }}>✕</button>
+            }}></button>
           </div>
 
           {/* Stepper */}
@@ -493,7 +493,7 @@ function CountryWizard({ existingCountryIds, onClose }) {
               fontSize: 12, fontWeight: 700, cursor: submitting ? 'wait' : 'pointer',
               display: 'flex', alignItems: 'center', gap: 8,
             }}>
-              {submitting ? '⏳ Provisioning…' : '🚀 Lancer le provisioning'}
+              {submitting ? '⏳ Provisioning…' : 'Lancer le provisioning'}
             </button>
           )}
         </div>
@@ -547,7 +547,7 @@ function StepSubsidiary({ form, setForm, country }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ padding: 12, borderRadius: 10, background: `${C.blue}10`, border: `1px solid ${C.blue}33` }}>
-        <div style={{ fontSize: 11, color: C.blue, fontWeight: 700, marginBottom: 4 }}>🏢 ENTITÉ FILIALE</div>
+        <div style={{ fontSize: 11, color: C.blue, fontWeight: 700, marginBottom: 4 }}> ENTITÉ FILIALE</div>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{names?.subsidiary_name || '—'}</div>
         <div style={{ fontSize: 11, color: C.muted, fontFamily: 'monospace', marginTop: 2 }}>{ids?.subsidiary_id}</div>
       </div>
@@ -576,7 +576,7 @@ function StepFoundation({ form, setForm, country }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ padding: 12, borderRadius: 10, background: `${C.accent}10`, border: `1px solid ${C.accent}33` }}>
-        <div style={{ fontSize: 11, color: C.accent, fontWeight: 700, marginBottom: 4 }}>🌱 ENTITÉ FOUNDATION</div>
+        <div style={{ fontSize: 11, color: C.accent, fontWeight: 700, marginBottom: 4 }}> ENTITÉ FOUNDATION</div>
         <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{names?.foundation_name || '—'}</div>
         <div style={{ fontSize: 11, color: C.muted, fontFamily: 'monospace', marginTop: 2 }}>{ids?.foundation_id}</div>
       </div>
@@ -614,13 +614,13 @@ function StepDirectors({ form, setForm }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       <DirectorBlock
-        title="🏢 Directeur Pays · Filiale" color={C.blue}
+        title="Directeur Pays · Filiale" color={C.blue}
         role="COUNTRY_DIRECTOR_SUBSIDIARY"
         value={form.subsidiary.director}
         onChange={(d) => setForm(f => ({ ...f, subsidiary: { ...f.subsidiary, director: d } }))}
       />
       <DirectorBlock
-        title="🌱 Directeur Pays · Foundation" color={C.accent}
+        title="Directeur Pays · Foundation" color={C.accent}
         role="COUNTRY_DIRECTOR_FOUNDATION"
         value={form.foundation.director}
         onChange={(d) => setForm(f => ({ ...f, foundation: { ...f.foundation, director: d } }))}
@@ -663,13 +663,13 @@ function StepConfirm({ form, country }) {
         </div>
       </div>
 
-      <SummaryRow icon="🏢" label="Filiale" color={C.blue}>
+      <SummaryRow icon="" label="Filiale" color={C.blue}>
         <div><b>{names?.subsidiary_name}</b> <span style={{ color: C.muted, fontSize: 11 }}>({ids?.subsidiary_id})</span></div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Plan : <b style={{ color: C.blue }}>{form.licenses.subsidiary_plan}</b> · {form.subsidiary.modules.length} modules</div>
         <div style={{ fontSize: 11, color: C.muted }}>Directeur : <b>{form.subsidiary.director.prenom} {form.subsidiary.director.nom}</b> · {form.subsidiary.director.email}</div>
       </SummaryRow>
 
-      <SummaryRow icon="🌱" label="Foundation" color={C.accent}>
+      <SummaryRow icon="" label="Foundation" color={C.accent}>
         <div><b>{names?.foundation_name}</b> <span style={{ color: C.muted, fontSize: 11 }}>({ids?.foundation_id})</span></div>
         <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>Plan : <b style={{ color: C.accent }}>{form.licenses.foundation_plan}</b> · {form.foundation.modules.length} modules</div>
         <div style={{ fontSize: 11, color: C.muted }}>Directeur : <b>{form.foundation.director.prenom} {form.foundation.director.nom}</b> · {form.foundation.director.email}</div>
@@ -679,9 +679,9 @@ function StepConfirm({ form, country }) {
         padding: 12, borderRadius: 10, background: `${C.gold}10`,
         border: `1px solid ${C.gold}33`, fontSize: 11, color: '#B45309',
       }}>
-        ⚠ Action irréversible. Les comptes Auth des 2 directeurs seront créés et liés
-        aux entités. Un email de bienvenue leur sera envoyé.
-      </div>
+ Action irréversible. Les comptes Auth des 2 directeurs seront créés et liés
+ aux entités. Un email de bienvenue leur sera envoyé.
+ </div>
     </div>
   );
 }
@@ -730,7 +730,7 @@ function ModuleGrid({ modules, selected, onChange }) {
             color: on ? C.accent : C.muted,
             fontSize: 11, fontWeight: 700, textAlign: 'left',
           }}>
-            {on ? '✓ ' : ''}{m.label}
+            {on ? '' : ''}{m.label}
           </button>
         );
       })}

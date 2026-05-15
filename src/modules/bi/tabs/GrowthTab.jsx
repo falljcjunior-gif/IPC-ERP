@@ -59,54 +59,54 @@ const GrowthTab = ({ data, formatCurrency }) => {
          />
          <KpiCard 
            title="Taux de Conversion" value={`${conversionRate.toFixed(1)}%`} 
-           icon={<MousePointer2 size={20}/>} color="#10B981" 
-         />
-         <KpiCard 
-           title="Santé SSOT" value="Consolidé" 
-           icon={<ShieldCheck size={20}/>} color="#6366F1" 
-         />
-      </div>
+ icon={<MousePointer2 size={20}/>} color="#10B981" 
+ />
+ <KpiCard 
+ title="Santé SSOT" value="Consolidé" 
+ icon={<ShieldCheck size={20}/>} color="#6366F1" 
+ />
+ </div>
 
-      {/* 💎 AI INSIGHT : The Strategic Mind */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }} 
-        animate={{ opacity: 1, scale: 1 }}
-        className="glass" 
-        style={{ padding: '2rem', borderRadius: '2.5rem', background: 'linear-gradient(90deg, #6366F1 0%, #A855F7 100%)', color: 'white', display: 'flex', alignItems: 'center', gap: '2rem', boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)' }}
-      >
-         <div style={{ padding: '1.5rem', borderRadius: '2rem', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
-            <Star size={32} />
-         </div>
-         <div style={{ flex: 1 }}>
-            <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>Analyse Prédictive Nexus AI</h3>
-            <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontWeight: 500, lineHeight: 1.4 }}>
-               "Basé sur la vélocité actuelle du Q2, nous prévoyons une augmentation de <strong>18% du CA</strong> d'ici fin Juin. Recommandation : Optimiser le stock de matières premières dans le module Production pour éviter les ruptures."
-            </p>
-         </div>
-         <SmartButton variant="outline" style={{ borderColor: 'white', color: 'white', padding: '0.8rem 1.5rem' }}>Voir Détails IA</SmartButton>
-      </motion.div>
+ {/* AI INSIGHT : The Strategic Mind */}
+ <motion.div 
+ initial={{ opacity: 0, scale: 0.95 }} 
+ animate={{ opacity: 1, scale: 1 }}
+ className="glass" 
+ style={{ padding: '2rem', borderRadius: '2.5rem', background: 'linear-gradient(90deg, #6366F1 0%, #A855F7 100%)', color: 'white', display: 'flex', alignItems: 'center', gap: '2rem', boxShadow: '0 20px 40px rgba(99, 102, 241, 0.2)' }}
+ >
+ <div style={{ padding: '1.5rem', borderRadius: '2rem', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
+ <Star size={32} />
+ </div>
+ <div style={{ flex: 1 }}>
+ <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>Analyse Prédictive Nexus AI</h3>
+ <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontWeight: 500, lineHeight: 1.4 }}>
+ "Basé sur la vélocité actuelle du Q2, nous prévoyons une augmentation de <strong>18% du CA</strong> d'ici fin Juin. Recommandation : Optimiser le stock de matières premières dans le module Production pour éviter les ruptures."
+ </p>
+ </div>
+ <SmartButton variant="outline" style={{ borderColor: 'white', color: 'white', padding: '0.8rem 1.5rem' }}>Voir Détails IA</SmartButton>
+ </motion.div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-         {/* Sales Funnel */}
-         <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
-               <div style={{ padding: '8px', borderRadius: '10px', background: '#D946EF15', color: '#D946EF' }}>
-                  <TrendingUp size={20} />
-               </div>
-               <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Tunnel de Conversion Dynamique</h4>
-            </div>
-            <div style={{ height: '350px', minHeight: '350px' }}>
-               <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
-                  <FunnelChart>
-                     <Tooltip />
-                     <Funnel
-                        dataKey="value"
-                        data={funnelData}
-                        isAnimationActive
-                     >
-                        <LabelList position="right" fill="var(--text-muted)" stroke="none" dataKey="name" style={{ fontWeight: 800, fontSize: '0.8rem' }} />
-                        {funnelData.map((entry, index) => (
-                           <Cell key={`cell-${index}`} fill={entry.fill} />
+ <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+ {/* Sales Funnel */}
+ <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+ <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2.5rem' }}>
+ <div style={{ padding: '8px', borderRadius: '10px', background: '#D946EF15', color: '#D946EF' }}>
+ <TrendingUp size={20} />
+ </div>
+ <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Tunnel de Conversion Dynamique</h4>
+ </div>
+ <div style={{ height: '350px', minHeight: '350px' }}>
+ <SafeResponsiveChart minHeight={350} fallbackHeight={350}>
+ <FunnelChart>
+ <Tooltip />
+ <Funnel
+ dataKey="value"
+ data={funnelData}
+ isAnimationActive
+ >
+ <LabelList position="right" fill="var(--text-muted)" stroke="none" dataKey="name" style={{ fontWeight: 800, fontSize: '0.8rem' }} />
+ {funnelData.map((entry, index) => (
+ <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))}
                      </Funnel>
                   </FunnelChart>

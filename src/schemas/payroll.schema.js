@@ -1,5 +1,5 @@
 /**
- * 💰 NEXUS OS: PAYROLL (PAIE & SOCIAL) SCHEMA
+ *  NEXUS OS: PAYROLL (PAIE & SOCIAL) SCHEMA
  * Handles salaries, social security contributions, and pay slip generation.
  */
 export const payrollSchema = {

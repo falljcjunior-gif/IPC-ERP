@@ -186,7 +186,7 @@ class WorkflowEngine {
 
         // 2. Envoyer un message dans le salon "Général" si c'est important
         await FirestoreService.createDocument('messages', {
-          text: `🤖 **Nexus Automator**: ${message}`,
+          text: `**Nexus Automator**: ${message}`,
           roomId: 'team_global',
           userId: 'nexus_bot',
           userName: 'Nexus Bot',

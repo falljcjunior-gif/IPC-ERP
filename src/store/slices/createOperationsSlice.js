@@ -407,46 +407,46 @@ export const createOperationsSlice = (set, get) => ({
     let processedRecord = { ...inputData };
     if (!processedRecord.num || processedRecord.num === "") {
       const seqKey = `${appId}__${subModule}`;
-      if (get().data.base?.sequences?.[seqKey]) processedRecord.num = get().getNextSequence(seqKey);
-    }
-    const { user } = get();
-    // 🛡️ [SECURITY] Fallback to Firebase Auth UID if store user is guest/stale
-    const currentUid = (user?.id && user.id !== 'guest') ? user.id : (AuthService.getCurrentUser()?.uid);
-    
-    const newRecord = { 
-      ...processedRecord, 
-      id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
-      createdAt: processedRecord.createdAt || new Date().toISOString(),
-      subModule,
-      _subModule: subModule,
-      ownerId: currentUid,
-      userId: currentUid,
-      brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
-    };
-    set(prev => {
-      const data = prev.data || {};
-      const moduleData = data[appId] || {};
-      const subModuleData = moduleData[subModule] || [];
-      const nextState = { 
-        ...prev, 
-        data: {
-          ...data,
-          [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] }
-        }
-      };
-      
-      setTimeout(() => {
-         get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
-         // SOURCE OF TRUTH: Firebase Auth, pas le store. Évite que `ownerId` soit
-         // 'guest' (state initial) quand le profile Firestore n'est pas encore synchro.
-         const fbUser = auth.currentUser;
-         if (fbUser) {
-           // 🔒 [UNIFIED 2.0] HR Data Isolation
-           // Redirection vers users/{uid}/hr_private pour les données RH
-           let targetCollection = appId;
-           if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
-             const targetUid = newRecord.collaborateurId || newRecord.employeId || newRecord.uid || fbUser.uid;
-             targetCollection = `users/${targetUid}/hr_private`;
+ if (get().data.base?.sequences?.[seqKey]) processedRecord.num = get().getNextSequence(seqKey);
+ }
+ const { user } = get();
+ // [SECURITY] Fallback to Firebase Auth UID if store user is guest/stale
+ const currentUid = (user?.id && user.id !== 'guest') ? user.id : (AuthService.getCurrentUser()?.uid);
+ 
+ const newRecord = { 
+ ...processedRecord, 
+ id: processedRecord.id || Date.now().toString() + Math.random().toString(36).substr(2, 5), 
+ createdAt: processedRecord.createdAt || new Date().toISOString(),
+ subModule,
+ _subModule: subModule,
+ ownerId: currentUid,
+ userId: currentUid,
+ brandId: get().globalSettings.brand !== 'ALL' ? get().globalSettings.brand : 'IPC_CORE'
+ };
+ set(prev => {
+ const data = prev.data || {};
+ const moduleData = data[appId] || {};
+ const subModuleData = moduleData[subModule] || [];
+ const nextState = { 
+ ...prev, 
+ data: {
+ ...data,
+ [appId]: { ...moduleData, [subModule]: [newRecord, ...subModuleData] }
+ }
+ };
+ 
+ setTimeout(() => {
+ get().logAction(`Création ${subModule}`, `${processedRecord.num || newRecord.id}`, appId);
+         // SOURCE OF TRUTH: Firebase Auth, pas le store. Évite que `ownerId`soit
+ // 'guest' (state initial) quand le profile Firestore n'est pas encore synchro.
+ const fbUser = auth.currentUser;
+ if (fbUser) {
+ // [UNIFIED 2.0] HR Data Isolation
+ // Redirection vers users/{uid}/hr_private pour les données RH
+ let targetCollection = appId;
+ if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+ const targetUid = newRecord.collaborateurId || newRecord.employeId || newRecord.uid || fbUser.uid;
+ targetCollection =`users/${targetUid}/hr_private`;
            }
 
            FirestoreService.setDocument(targetCollection, newRecord.id, {
@@ -526,7 +526,7 @@ export const createOperationsSlice = (set, get) => ({
            } else if (wf.actionType === 'LOG_ACTION') {
                get().logAction('I.P.C. Automator', wf.actionPayload, appId, newRecord.id);
            }
-           get().addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
+           get().addHint({ title: "Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée.`, type: 'info', appId });
        }
     });
   },
@@ -542,7 +542,7 @@ export const createOperationsSlice = (set, get) => ({
       const lockCheck = checkDocumentLock(existingRecord, stateSnapshot.userRole);
       if (lockCheck.blocked) {
         stateSnapshot.addHint({
-          title: '🔒 Document Verrouillé',
+          title: 'Document Verrouillé',
           message: lockCheck.reason,
           type: 'error',
         });
@@ -572,27 +572,27 @@ export const createOperationsSlice = (set, get) => ({
       const record = updatedList.find(o => o.id === id);
       setTimeout(async () => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);
-         
-         // 🛡️ [SECURITY HARDENING] Role updates MUST go through Cloud Functions for Custom Claims
-         if (appId === 'admin' && subModule === 'users' && newData.role && newData.role !== oldRecord.role) {
-            try {
-               const { httpsCallable } = await import('firebase/functions');
-               const { functions } = await import('../../firebase/config');
-               const setUserRoleFn = httpsCallable(functions, 'setUserRole');
-               await setUserRoleFn({ uid: id, role: newData.role });
-               get().addHint({ title: "Accréditation Mise à Jour", message: `Le rôle de ${record.nom} a été scellé par Custom Claims.`, type: 'success' });
-            } catch (err) {
-               console.error('[Admin] setUserRole Error:', err);
-               get().addHint({ title: "Échec RBAC", message: "Impossible de mettre à jour les droits d'accès via Custom Claims.", type: 'error' });
-               // On ne rollback pas le state local ici car Firestore sera mis à jour par la fonction si elle réussit,
-               // mais ici elle a échoué. On laisse le state local en attendant la prochaine synchro.
-            }
-         } else if (get().user) {
-            // 🔒 [UNIFIED 2.0] HR Data Isolation
-            let targetCollection = appId;
-            if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
-              const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
-              targetCollection = `users/${targetUid}/hr_private`;
+ 
+ // [SECURITY HARDENING] Role updates MUST go through Cloud Functions for Custom Claims
+ if (appId === 'admin' && subModule === 'users' && newData.role && newData.role !== oldRecord.role) {
+ try {
+ const { httpsCallable } = await import('firebase/functions');
+ const { functions } = await import('../../firebase/config');
+ const setUserRoleFn = httpsCallable(functions, 'setUserRole');
+ await setUserRoleFn({ uid: id, role: newData.role });
+ get().addHint({ title: "Accréditation Mise à Jour", message:`Le rôle de ${record.nom} a été scellé par Custom Claims.`, type: 'success' });
+ } catch (err) {
+ console.error('[Admin] setUserRole Error:', err);
+ get().addHint({ title: "Échec RBAC", message: "Impossible de mettre à jour les droits d'accès via Custom Claims.", type: 'error' });
+ // On ne rollback pas le state local ici car Firestore sera mis à jour par la fonction si elle réussit,
+ // mais ici elle a échoué. On laisse le state local en attendant la prochaine synchro.
+ }
+ } else if (get().user) {
+ // [UNIFIED 2.0] HR Data Isolation
+ let targetCollection = appId;
+ if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+ const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
+ targetCollection =`users/${targetUid}/hr_private`;
             }
             FirestoreService.setDocument(targetCollection, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
          }
@@ -796,7 +796,7 @@ export const createOperationsSlice = (set, get) => ({
              } else if (wf.actionType === 'LOG_ACTION') {
                  get().logAction('I.P.C. Automator', wf.actionPayload, appId, id);
              }
-             get().addHint({ title: "💡 Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée avec succès.`, type: 'info', appId });
+             get().addHint({ title: "Règle Exécutée", message: `La règle "${wf.name}" a été déclenchée avec succès.`, type: 'info', appId });
          }
       });
     return nextState;
@@ -1040,9 +1040,9 @@ export const createOperationsSlice = (set, get) => ({
     });
 
     if (shortages.length > 0) {
-      get().addHint({ title: "⚠️ Rupture détectée", message: `${shortages.length} article(s) en dessous du seuil. Commandes brouillon créées dans les Achats.`, type: 'warning', appId: 'production' });
+      get().addHint({ title: "Rupture détectée", message: `${shortages.length} article(s) en dessous du seuil. Commandes brouillon créées dans les Achats.`, type: 'warning', appId: 'production' });
     } else {
-      get().addHint({ title: "✅ OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
+      get().addHint({ title: "OF Lancé", message: `L'Ordre de Fabrication ${order.num} a été lancé. Stock mis à jour.`, type: 'success', appId: 'production' });
     }
     get().logAction('Production', `Lancement OF ${order.num} — ${order.qte} × ${order.produit}`, 'production');
   },

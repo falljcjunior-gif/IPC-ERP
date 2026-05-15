@@ -11,7 +11,7 @@ import { useNotificationStore } from '../store/useNotificationStore';
 import { useStore } from '../store';
 
 /**
- * 🔔 NEXUS OS: CENTRALIZED NOTIFICATION SIDEBAR (ELITE 2.0)
+ *  NEXUS OS: CENTRALIZED NOTIFICATION SIDEBAR (ELITE 2.0)
  * Sophisticated sidebar with cross-module event capture and priority-based alerting.
  */
 const NotificationCenter = () => {
