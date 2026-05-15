@@ -64,7 +64,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   const inputRef = useRef();
   const fileInputRef = useRef();
 
-  const commonEmojis = ['', '', '', '', '', '', '', '', '', '', '', '', '⏳', '', '', '', '⭐', '', '', ''];
+  const commonEmojis = ['', '', '', '', '', '', '', '', '', '', '', '', '⏳', '', '', '', '', '', '', ''];
   const reactionEmojis = ['', '', '', '', '', ''];
 
   const groups = [

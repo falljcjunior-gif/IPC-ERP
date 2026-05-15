@@ -32,11 +32,11 @@ export const crmSchema = {
           label: 'Indice de Priorité', 
           type: 'selection', 
           options: [
-            { label: '⭐ (Exploration)', value: '⭐' },
-            { label: '⭐⭐ (Qualifié)', value: '⭐⭐' },
-            { label: '⭐⭐⭐ (Prioritaire)', value: '⭐⭐⭐' }
+            { label: ' (Exploration)', value: '' },
+            { label: ' (Qualifié)', value: '' },
+            { label: ' (Prioritaire)', value: '' }
           ],
-          default: '⭐'
+          default: ''
         },
         statut: { label: 'Qualification', type: 'selection', options: ['Nouveau', 'En cours', 'Converti', 'Perdu'], default: 'Nouveau' },
         budget_estime: { label: 'Budget Estimé', type: 'money', currency: 'FCFA' },
@@ -49,7 +49,7 @@ export const crmSchema = {
         search: {
           filters: [
             { id: 'active', label: 'Prospects Actifs', domain: [['statut', '!=', 'Perdu']] },
-            { id: 'hot', label: 'Priorité Haute', domain: [['priorite', '==', '⭐⭐⭐']] }
+            { id: 'hot', label: 'Priorité Haute', domain: [['priorite', '==', '']] }
           ],
           groups: [
             { id: 'source', label: 'Par Source' },
@@ -75,11 +75,11 @@ export const crmSchema = {
           label: 'Priorité', 
           type: 'selection', 
           options: [
-            { label: '⭐ (Basse)', value: '⭐' },
-            { label: '⭐⭐ (Moyenne)', value: '⭐⭐' },
-            { label: '⭐⭐⭐ (Haute)', value: '⭐⭐⭐' }
+            { label: ' (Basse)', value: '' },
+            { label: ' (Moyenne)', value: '' },
+            { label: ' (Haute)', value: '' }
           ],
-          default: '⭐'
+          default: ''
         },
         responsable: { label: 'Commercial Assingné', type: 'text' },
         tag: { 
@@ -107,7 +107,7 @@ export const crmSchema = {
           filters: [
             { id: 'won', label: 'Gagnées', domain: [['etape', '==', 'Gagné']] },
             { id: 'hot', label: 'Fort Montant', domain: [['montant', '>', 1000000]] },
-            { id: 'strategic', label: 'Stratégique', domain: [['priorite', '==', '⭐⭐⭐']] }
+            { id: 'strategic', label: 'Stratégique', domain: [['priorite', '==', '']] }
           ],
           groups: [
             { id: 'etape', label: 'Par Étape' },

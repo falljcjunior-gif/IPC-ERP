@@ -39,7 +39,7 @@ const LC_TABS = [
   { id: 'assignment', label: 'Attribution', icon: '' },
   { id: 'quotas', label: 'Quotas & Usage', icon: '' },
   { id: 'billing', label: 'Facturation interne',icon: '' },
-  { id: 'requests', label: 'Demandes upgrade', icon: '⬆' },
+  { id: 'requests', label: 'Demandes upgrade', icon: '' },
   { id: 'insights', label: 'IA & Insights', icon: '' },
 ];
 

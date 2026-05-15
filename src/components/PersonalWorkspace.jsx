@@ -2,7 +2,7 @@ import React, { useMemo, useState, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import {
   Zap, Clock, Briefcase, CheckCircle2, AlertCircle,
-  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check
+  Target, TrendingUp, Calendar, ChevronRight, Activity, XOctagon, Edit2, Check, Star
 } from 'lucide-react';
 import { useStore } from '../store';
 import GPSWorkspace from './GPSWorkspace';
@@ -184,7 +184,7 @@ const PersonalWorkspace = () => {
  Command Center
  </button>
          <button onClick={() => setActiveTab('score')} style={{ background: 'transparent', border: 'none', fontSize: '1rem', fontWeight: 800, color: activeTab === 'score' ? '#F59E0B' : 'var(--text-muted)', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: activeTab === 'score' ? '2px solid #F59E0B' : '2px solid transparent', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-           ⭐ Mon Score
+           <Star size={16} strokeWidth={2} /> Mon Score
          </button>
          <button
            onClick={() => setActiveTab('profile')}

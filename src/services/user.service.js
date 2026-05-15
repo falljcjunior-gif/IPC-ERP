@@ -26,16 +26,17 @@ export const UserService = {
     try {
       // ── [SECURITY] Lire le rôle depuis les Custom Claims (token signé côté serveur) ──
       // Immuable côté client — seul le SDK Admin peut modifier les claims.
-      let tokenResult = await fbUser.getIdTokenResult(true); // force refresh
+      // [BUG FIX auth/quota-exceeded] : Premier appel SANS forceRefresh — utilise le cache.
+      // On ne force le refresh QUE si on détecte un mismatch claim/Firestore.
+      let tokenResult = await fbUser.getIdTokenResult(false);
       let claimedRole = tokenResult.claims?.role || null;
 
       const profile = await FirestoreService.getDocument('users', fbUser.uid);
 
       // Si le claim ne correspond pas au rôle Firestore (ex: claim posé via admin SDK
-      // après l'émission du token courant), retry une fois pour forcer une nouvelle émission.
-      // Sans ça, l'utilisateur reste sur l'ancien rôle jusqu'au logout/login.
+      // après l'émission du token courant), forcer une nouvelle émission de token.
       if (profile?.role && claimedRole && profile.role !== claimedRole) {
-        logger.warn('[UserService] Mismatch claim/Firestore role, retry getIdTokenResult', {
+        logger.warn('[UserService] Mismatch claim/Firestore role, force refresh', {
           claim: claimedRole, firestore: profile.role
         });
         tokenResult = await fbUser.getIdTokenResult(true);

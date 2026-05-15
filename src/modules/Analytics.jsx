@@ -18,18 +18,18 @@ const Analytics = () => {
   // [GO-LIVE] seedDemoData retiré du destructuring — plus de bouton "Générer Historique".
   const { data, formatCurrency, shellView } = useStore();
 
-  const invoices      = data.finance?.invoices      || [];
-  const vendorBills   = data.finance?.vendor_bills  || [];
-  const opportunities = data.crm?.opportunities     || [];
-  const employees     = data.hr?.employees           || [];
-  const clients       = data.crm?.clients            || [];
+  const invoices = data.finance?.invoices || [];
+  const vendorBills = data.finance?.vendor_bills || [];
+  const opportunities = data.crm?.opportunities || [];
+  const employees = data.hr?.employees || [];
+  const clients = data.crm?.clients || [];
 
-  const caGenere       = invoices.reduce((acc, inv) => acc + (parseFloat(inv.montant || 0)), 0);
-  const dettes         = vendorBills.reduce((acc, bill) => acc + (parseFloat(bill.montant || 0)), 0);
-  const pipelineValue  = opportunities.filter(o => o.etape !== 'Perdu').reduce((acc, o) => acc + (parseFloat(o.montant || 0)), 0);
+  const caGenere = invoices.reduce((acc, inv) => acc + (parseFloat(inv.montant || 0)), 0);
+  const dettes = vendorBills.reduce((acc, bill) => acc + (parseFloat(bill.montant || 0)), 0);
+  const pipelineValue = opportunities.filter(o => o.etape !== 'Perdu').reduce((acc, o) => acc + (parseFloat(o.montant || 0)), 0);
   const masseSalariale = employees.reduce((acc, emp) => acc + (parseFloat(emp.salaire || 0)), 0);
   const activeWorkflows = (Array.isArray(data.workflows) ? data.workflows : (data.workflows?.[''] || data.workflows?.workflows || [])).filter(w => w.active).length;
-  const signedDocs     = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
+  const signedDocs = (data.signature?.requests || []).filter(r => r.statut === 'Signé').length;
 
 
 
@@ -96,13 +96,13 @@ const Analytics = () => {
   }, [invoices, opportunities]);
 
   const oppStageCount = opportunities.reduce((acc, o) => { acc[o.etape] = (acc[o.etape] || 0) + 1; return acc; }, {});
-  const pieData       = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
+  const pieData = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
 
   const kpis = [
-    { label: 'CA Brut Consolidé', value: caGenere,       isAmount: true,  color: '#10B981', tag: 'Revenue',   icon: <DollarSign size={24} />, sub: '+12.4% vs LMT', subColor: '#10B981' },
-    { label: 'Pipeline Pondéré',  value: pipelineValue,  isAmount: true,  color: '#3B82F6', tag: 'Sales',     icon: <Target size={24} />,     sub: `${opportunities.filter(o=>o.etape!=='Perdu').length} opps actives`, subColor: '#3B82F6' },
-    { label: 'LTV Moyenne',       value: ltv,            isAmount: true,  color: '#8B5CF6', tag: 'LTV',       icon: <Users size={24} />,      sub: `${totalClients} clients total`, subColor: '#8B5CF6' },
-    { label: 'Masse Salariale',   value: masseSalariale, isAmount: true,  color: '#F59E0B', tag: 'Payroll',   icon: <Briefcase size={24} />,  sub: `${employees.length} Collaborateurs`, subColor: '#F59E0B' },
+    { label: 'CA Brut Consolidé', value: caGenere, isAmount: true, color: '#10B981', tag: 'Revenue', icon: <DollarSign size={24} />, sub: '+12.4% vs LMT', subColor: '#10B981' },
+    { label: 'Pipeline Pondéré', value: pipelineValue, isAmount: true, color: '#3B82F6', tag: 'Sales', icon: <Target size={24} />, sub: `${opportunities.filter(o=>o.etape!=='Perdu').length} opps actives`, subColor: '#3B82F6' },
+    { label: 'LTV Moyenne', value: ltv, isAmount: true, color: '#8B5CF6', tag: 'LTV', icon: <Users size={24} />, sub: `${totalClients} clients total`, subColor: '#8B5CF6' },
+    { label: 'Masse Salariale', value: masseSalariale, isAmount: true, color: '#F59E0B', tag: 'Payroll', icon: <Briefcase size={24} />, sub: `${employees.length} Collaborateurs`, subColor: '#F59E0B' },
   ];
 
   return (
@@ -189,12 +189,12 @@ const Analytics = () => {
           </h4>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', overflowY: 'auto', maxHeight: '320px' }}>
             {[
-              { user: 'Raphaël',    action: 'Devis #942 approuvé',       time: 'Il y a 2m',  color: '#3B82F6' },
-              { user: 'Système',    action: 'Backup IPC terminé',         time: 'Il y a 15m', color: '#10B981' },
-              { user: 'Marie',      action: 'Nouvel employé : Jean D.',   time: 'Il y a 1h',  color: '#8B5CF6' },
-              { user: 'Finance',    action: 'Rapprochement effectué',     time: 'Il y a 3h',  color: '#F59E0B' },
-              { user: 'Logistique', action: 'Arrivage Stock A-12',        time: 'Il y a 5h',  color: '#EF4444' },
-              { user: 'Marketing',  action: 'Campagne été lancée',        time: 'Il y a 1j',  color: '#10B981' },
+              { user: 'Raphaël', action: 'Devis #942 approuvé', time: 'Il y a 2m', color: '#3B82F6' },
+              { user: 'Système', action: 'Backup IPC terminé', time: 'Il y a 15m', color: '#10B981' },
+              { user: 'Marie', action: 'Nouvel employé : Jean D.', time: 'Il y a 1h', color: '#8B5CF6' },
+              { user: 'Finance', action: 'Rapprochement effectué', time: 'Il y a 3h', color: '#F59E0B' },
+              { user: 'Logistique', action: 'Arrivage Stock A-12', time: 'Il y a 5h', color: '#EF4444' },
+              { user: 'Marketing', action: 'Campagne été lancée', time: 'Il y a 1j', color: '#10B981' },
             ].map((log, i) => (
               <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem 1.25rem', borderRadius: '1rem', border: '1px solid #f1f5f9', background: '#fafafa' }}>
                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: log.color, flexShrink: 0 }} />
@@ -268,10 +268,10 @@ const Analytics = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {[
               { key: 'VIP_PLATINUM', label: 'VIP Platine', color: '#7C3AED' },
-              { key: 'VIP_GOLD',     label: 'VIP Or',      color: '#F59E0B' },
-              { key: 'ACTIF',        label: 'Actifs',      color: '#10B981' },
-              { key: 'A_RISQUE',     label: 'À Risque',    color: '#EF4444' },
-              { key: 'INACTIF',      label: '⬜ Inactifs',    color: '#9CA3AF' },
+              { key: 'VIP_GOLD', label: 'VIP Or', color: '#F59E0B' },
+              { key: 'ACTIF', label: 'Actifs', color: '#10B981' },
+              { key: 'A_RISQUE', label: 'À Risque', color: '#EF4444' },
+              { key: 'INACTIF', label: ' Inactifs', color: '#9CA3AF' },
             ].map(({ key, label, color }) => {
               const count = rfmSegments[key] || 0;
               const pct = totalClients > 0 ? Math.round((count / totalClients) * 100) : 0;
@@ -309,9 +309,9 @@ const Analytics = () => {
 
         {/* ── STAT MINI CARDS ── */}
         {[
-          { label: 'Règles BPM Actives',  value: activeWorkflows, color: '#10B981' },
-          { label: 'Documents Scellés',    value: signedDocs,      color: '#1e293b' },
-          { label: 'Disponibilité IPC',    value: '100%',          color: '#10B981' },
+          { label: 'Règles BPM Actives', value: activeWorkflows, color: '#10B981' },
+          { label: 'Documents Scellés', value: signedDocs, color: '#1e293b' },
+          { label: 'Disponibilité IPC', value: '100%', color: '#10B981' },
         ].map((s, i) => (
           <div key={i} className="luxury-widget" style={{ gridColumn: 'span 4', padding: '2.5rem', textAlign: 'center' }}>
             <div style={{ fontSize: '3.5rem', fontWeight: 900, color: s.color, marginBottom: '0.5rem', letterSpacing: '-2px' }}>
