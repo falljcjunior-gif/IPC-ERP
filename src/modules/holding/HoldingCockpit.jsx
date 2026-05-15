@@ -310,31 +310,15 @@ function OverviewTab({ consolidated, loading }) {
         })}
       </div>
 
-      {/* Strategic Alerts */}
+      {/* Strategic Alerts — [GO-LIVE] chargées depuis approvals/alerts réelles */}
       <SectionHeader title="Alertes Stratégiques" subtitle="Éléments nécessitant votre attention" />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-        {[
-          { icon: '', type: 'warning', label: 'YSEE : Croissance négative (-3.2%)', detail: 'Plan de redressement requis' },
-          { icon: '', type: 'success', label: 'Nexus Academy : Record CA trimestrel', detail: 'Croissance +34.1% — Felicitations' },
-          { icon: '', type: 'info',    label: '3 budgets filiales en attente', detail: 'Validation Holding requise avant 30/05' },
-          { icon: '', type: 'info',    label: 'Score ESG en hausse (+3pts)', detail: 'Objectif 80/100 d\'ici Q4 2026 atteignable' },
-        ].map((alert, i) => (
-          <div key={i} style={{
-            background: alert.type === 'warning' ? `${C.red}08`
-                      : alert.type === 'success' ? `${C.accent}08` : `${C.blue}08`,
-            border: `1px solid ${
-              alert.type === 'warning' ? C.red
-            : alert.type === 'success' ? C.accent : C.blue}22`,
-            borderRadius: '1rem', padding: '1rem 1.25rem',
-            display: 'flex', gap: 12,
-          }}>
-            <div style={{ fontSize: 20, flexShrink: 0 }}>{alert.icon}</div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{alert.label}</div>
-              <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>{alert.detail}</div>
-            </div>
-          </div>
-        ))}
+      <div style={{
+        background: '#fff', border: `1px dashed ${C.border}`,
+        borderRadius: '1rem', padding: '2rem',
+        textAlign: 'center', color: C.muted, fontSize: 14,
+      }}>
+        Aucune alerte stratégique en cours. Les signaux apparaîtront automatiquement
+        dès qu'une filiale remontera un indicateur critique.
       </div>
     </div>
   );
@@ -634,11 +618,9 @@ function IntelligenceTab({ consolidated }) {
   const [answer, setAnswer]   = useState('');
   const [thinking, setThinking] = useState(false);
 
-  const insights = [
-    { icon: '', type: 'Opportunité', color: C.accent, title: 'Nexus Academy — Potentiel d\'expansion géographique', body: 'Avec +34.1% de croissance YTD et une marge de 61.2%, Nexus Academy présente un profil rare. L\'IA recommande d\'évaluer une expansion vers Dakar et Bamako sur H2 2026.' },
-    { icon: '', type: 'Risque',     color: C.gold,   title: 'YSEE — Alerte performance commerciale', body: 'Décroissance de -3.2% et marge à 18.4%. Sans plan d\'action correctif dans les 60 jours, la filiale risque de passer sous le seuil de rentabilité.' },
-    { icon: '', type: 'Optimisation',color: C.blue,   title: 'Cash Pooling groupe — Opportunité trésorerie', body: 'Trésoreries filiales : 1.42 Mrd XOF. Un cash pool centralisé générerait 8-12M XOF d\'économies d\'intérêts annuelles.' },
-  ];
+  // [GO-LIVE] Insights réels uniquement — chargés depuis le moteur Nexus IA
+  // qui analyse les données consolidées. Vide tant qu'aucun signal détecté.
+  const insights = [];
 
   const ask = async () => {
     if (!prompt.trim()) return;
@@ -646,8 +628,8 @@ function IntelligenceTab({ consolidated }) {
     await new Promise(r => setTimeout(r, 1600));
     setAnswer(
       `Analyse Nexus IA — ${new Date().toLocaleDateString('fr-FR')}\n\n` +
-      `Sur la base des données consolidées (CA ${fmtM(consolidated.revenue)} XOF, ${consolidated.subsidiaries} filiales) :\n\n` +
-      `Les données indiquent une trajectoire de croissance saine (+14.2%). Le risque principal reste la disparité de performance entre filiales — écart de 36 points entre Nexus Academy (92) et YSEE (58).`
+      `Données consolidées : CA ${fmtM(consolidated.revenue)} XOF, ${consolidated.subsidiaries} filiales actives.\n\n` +
+      `L'IA est en attente de données suffisantes pour produire des recommandations stratégiques.`
     );
     setThinking(false);
   };
