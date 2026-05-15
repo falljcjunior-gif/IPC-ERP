@@ -284,35 +284,12 @@ export const FirestoreService = {
         constraints.push(where('_deletedAt', '==', null));
       }
 
-      // [3-SPACE ISOLATION — Defense-in-depth] Si l'utilisateur n'est PAS Holding,
-      // auto-injection du filtre entity_id == sien. Empêche le client de lire les
-      // documents d'une autre filiale/foundation, en plus des Firestore Rules.
-      // skipEntityFilter=true pour les collections globales (users, organizations).
-      if (!skipEntityFilter) {
-        try {
-          // Bypass robuste : Holding session OU rôle privilégié
-          let isPrivileged = isHoldingSession();
-          if (!isPrivileged) {
-            try {
-              // Lecture défensive du userRole depuis le store (lazy import)
-              // pour éviter cycle store ↔ firestore.service
-              const role = window?.__IPC_USER_ROLE__ || null;
-              if (role && (
-                role === 'SUPER_ADMIN' ||
-                role.startsWith('HOLDING_') ||
-                role === 'GROUP_AUDITOR'
-              )) isPrivileged = true;
-            } catch { /* noop */ }
-          }
-
-          if (!isPrivileged) {
-            const ctx = getTenantContext();
-            if (ctx?.entity_id && ctx.entity_id !== 'ipc_default') {
-              constraints.push(where('entity_id', '==', ctx.entity_id));
-            }
-          }
-        } catch { /* TenantContext pas dispo — fallback aux rules */ }
-      }
+      // [3-SPACE ISOLATION] Filtre entity_id côté client DÉSACTIVÉ pour go-live.
+      // Raison : nécessiterait des index composites Firestore pour chaque collection
+      // (entity_id + _deletedAt + _createdAt). La sécurité est déjà garantie par
+      // les Firestore Rules `canReadOwnEntity()`. Le defense-in-depth client pourra
+      // être réactivé en V2 après création des index via `firebase deploy --only firestore:indexes`.
+      // `skipEntityFilter` reste utilisable pour les collections globales.
 
       for (const filter of filters) {
         if (Array.isArray(filter)) {
