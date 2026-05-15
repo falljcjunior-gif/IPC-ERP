@@ -128,7 +128,7 @@ Génère l'intervention du Commandant pour cet utilisateur. Sois précis, direct
   return result.response.text();
 }
 
-async function pushCommanderAlert(uid, { message, triggers, severity, logId }) {
+async function pushCommanderAlert(uid, { message, triggers, severity, logId, entityId, entityType, countryId }) {
   await db.collection('commander_alerts').doc(uid)
     .collection('messages').add({
       type: 'commander',
@@ -137,6 +137,9 @@ async function pushCommanderAlert(uid, { message, triggers, severity, logId }) {
       severity,
       status: 'new',
       logId,
+      entity_id:   entityId   || null,
+      entity_type: entityType || null,
+      country_id:  countryId  || null,
       createdAt: FS.FieldValue.serverTimestamp(),
     });
 }
@@ -343,15 +346,18 @@ exports.commanderScan = onSchedule({
     // Sauvegarde dans ai_management_logs
     const logRef = await db.collection('ai_management_logs').add({
       uid,
-      userName: userContext.name,
-      userRole: userContext.role,
+      userName:     userContext.name,
+      userRole:     userContext.role,
       triggerCount: triggers.length,
-      triggers: triggers.map(t => ({ ...t, cardId: t.cardId || null })),
+      triggers:     triggers.map(t => ({ ...t, cardId: t.cardId || null })),
       generatedMessage: aiMessage,
       severity,
       scoreAtTime: currentScore,
-      isRead: false,
-      responded: false,
+      isRead:      false,
+      responded:   false,
+      entity_id:   user.entity_id   || null,
+      entity_type: user.entity_type || null,
+      country_id:  user.country_id  || null,
       sentAt: FS.FieldValue.serverTimestamp(),
     });
 
@@ -360,7 +366,10 @@ exports.commanderScan = onSchedule({
       message: aiMessage,
       triggers,
       severity,
-      logId: logRef.id,
+      logId:      logRef.id,
+      entityId:   user.entity_id   || null,
+      entityType: user.entity_type || null,
+      countryId:  user.country_id  || null,
     });
 
     // Met à jour le statut de l'utilisateur

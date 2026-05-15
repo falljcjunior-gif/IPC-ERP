@@ -92,10 +92,9 @@ service cloud.firestore {
     }
 
     // [DEPRECATED] Root HR collection — will be removed after migration
-    // Self-service: tout user authentifié peut créer/lire/modifier ses propres
-    // records (ownerId == auth.uid). Les managers/HR voient et valident tout.
+    // [3-SPACE ISOLATION] Chaque entité ne voit que ses propres enregistrements RH.
     match /hr/{docId} {
-      allow read: if isAuthenticated() && (
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) && (
         isSuperAdmin() || isManager() || hasRole('HR') ||
         resource.data.get('userId', '') == request.auth.uid ||
         resource.data.get('ownerId', '') == request.auth.uid
@@ -103,23 +102,24 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
-    // [DEPRECATED] Alias for HR
+    // [DEPRECATED] Alias for HR — entity scoped
     match /employees/{docId} {
-      allow read: if isAuthenticated() && (isManager() || hasRole('HR') || isSuperAdmin());
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isManager() || hasRole('HR') || isSuperAdmin());
       allow create, update, delete: if false;
     }
 
     // ── Messages ─────────────────────────────────────────────────────────────
-    // Lecture : tout utilisateur authentifié membre du room
-    // Création : authentifié, avec son propre userId
-    // Mise à jour : auteur (édition) ou tout le monde (readBy/reactions uniquement)
-    // Suppression (soft) : auteur ou admin
+    // [3-SPACE ISOLATION] Les messages sont scopés par entité (entity_id dans le doc).
+    // HOLDING voit tous les messages de toutes les entités (supervision groupe).
+    // Design : un room cross-entité (ex. intercompany) doit avoir entity_id = 'HOLDING' ou null.
     match /messages/{msgId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
       allow create: if isAuthenticated()
         && request.resource.data.userId == request.auth.uid
+        && canWriteOwnEntity(request.resource.data.entity_id)
         && request.resource.data.keys().hasAll(['text', 'roomId', 'userId', 'userName']);
-      allow update: if isAuthenticated() && (
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id) && (
         // Auteur peut modifier son message
         resource.data.userId == request.auth.uid ||
         // N'importe qui peut marquer comme lu ou ajouter une réaction
@@ -127,15 +127,17 @@ service cloud.firestore {
           .hasOnly(['readBy', 'reactions', 'isDeleted', 'text']) ||
         isAdmin()
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
     // ── Rooms (salons de discussion) ──────────────────────────────────────────
+    // [3-SPACE ISOLATION] Les rooms sont scopées par entité.
+    // Rooms intercompany : entity_id = 'HOLDING' ou null → visibles par tous.
     match /rooms/{roomId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id);
+      allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
 
       // Sous-collections room
       match /participants/{uid} {
@@ -179,9 +181,11 @@ service cloud.firestore {
     }
 
     // ── Workflows (BPM) ───────────────────────────────────────────────────────
+    // [3-SPACE ISOLATION] Les workflows sont scopés par entité.
+    // HOLDING voit tous les workflows (supervision des processus) — lecture seule.
     match /workflows/{wfId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && isManager();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow write: if isAuthenticated() && isManager() && canWriteOwnEntity(request.resource.data.entity_id);
     }
 
     // ── Modules Métier ────────────────────────────────────────────────────────
@@ -217,7 +221,7 @@ service cloud.firestore {
     match /finance/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
       allow delete: if false;
     }
@@ -237,7 +241,7 @@ service cloud.firestore {
     match /sales/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('STAFF') || hasRole('FINANCE'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('STAFF'));
       allow delete: if false;
     }
@@ -245,42 +249,42 @@ service cloud.firestore {
     match /crm/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('CRM') || hasRole('STAFF'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('CRM'));
       allow delete: if false;
     }
 
     match /inventory/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('LOGISTICS') || hasRole('PRODUCTION'));
       allow delete: if false;
     }
 
     match /production/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('PRODUCTION'));
       allow delete: if false;
     }
 
     match /purchase/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('LOGISTICS') || hasRole('PURCHASE'));
       allow delete: if false;
     }
 
     match /logistics/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('LOGISTICS'));
       allow delete: if false;
     }
 
     match /planning/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('HR') || isSuperAdmin());
       allow delete: if isSuperAdmin();
     }
@@ -288,15 +292,16 @@ service cloud.firestore {
     match /legal/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('LEGAL'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('LEGAL'));
       allow delete: if false;
     }
 
+    // [3-SPACE ISOLATION] Documents de signature scopés par entité.
     match /signature/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
-      allow delete: if isAdmin();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
     match /base/{docId} {
@@ -305,19 +310,22 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // [3-SPACE ISOLATION] Activités scopées par entité.
     match /activities/{docId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id) && (
         resource.data._createdBy == request.auth.uid || isAdmin()
       );
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
+    // [3-SPACE ISOLATION] Campagnes marketing scopées par entité.
     match /marketing/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (isManager() || hasRole('MARKETING'));
-      allow delete: if isManager();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow write: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id) &&
+                   (isManager() || hasRole('MARKETING'));
+      allow delete: if isManager() && canWriteOwnEntity(resource.data.entity_id);
     }
 
     // ── Audit Trail (lecture seule pour tous, écriture Cloud Functions) ────────
@@ -327,16 +335,20 @@ service cloud.firestore {
     }
 
     // ── Audit (collection legacy utilisée par BusinessContext.subscribeToCollection) ──
-    // Sans cette règle, le store génère un permission-denied spam au login.
+    // [3-SPACE ISOLATION] Chaque entité ne voit que ses propres audits.
+    // HOLDING voit tous les audits (supervision groupe — lecture seule).
     match /audit/{docId} {
-      allow read: if isAuthenticated() && (isManager() || hasRole('AUDIT') || hasRole('SECURITY'));
-      allow create, update: if isAuthenticated() && isAdmin();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isManager() || hasRole('AUDIT') || hasRole('SECURITY'));
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id) && isAdmin();
       allow delete: if isSuperAdmin();
     }
 
     // ── Cockpit (KPI consolidés alimentés par CF refreshCockpitMetrics) ─────
+    // [3-SPACE ISOLATION] Les filiales voient uniquement leurs propres KPI.
+    // HOLDING voit les cockpits de TOUTES les entités (vision consolidée — lecture seule).
     match /cockpit/{docId} {
-      allow read: if isAuthenticated() && (
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) && (
         isManager() ||
         hasRole('DIRECTOR') ||
         hasRole('FINANCE') ||
@@ -349,11 +361,22 @@ service cloud.firestore {
     // Sub-collection /users/{uid}/hr_private/{doc} a déjà sa règle ligne 85.
     // collectionGroup('hr_private') nécessite une règle séparée — sinon
     // permission-denied même pour HR_MANAGER.
+    // [3-SPACE ISOLATION] HR local ne voit QUE les salaires de sa propre entité.
+    // HOLDING_CHRO voit tout (supervision groupe) via isHoldingLevel().
     match /{path=**}/hr_private/{docId} {
       allow read: if isAuthenticated() && (
-        hasRole('HR_MANAGER') || hasRole('DIRECTOR') || isSuperAdmin()
+        isSuperAdmin() ||
+        // HOLDING HR voit tous les dossiers du groupe (consolidation RH)
+        isHoldingLevel() ||
+        // HR local voit uniquement les dossiers de son entité (entity_id dans le doc ou pas encore migré)
+        (
+          (hasRole('HR_MANAGER') || hasRole('DIRECTOR')) && (
+            !('entity_id' in resource.data) ||
+            resource.data.entity_id == getEntityId()
+          )
+        )
       );
-      allow write: if false; // Géré par la sub-collection rule ligne 85
+      allow write: if false; // Géré par la sub-collection rule ci-dessus
     }
 
     // ── DMS / Documents ───────────────────────────────────────────────────────
@@ -363,7 +386,7 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid ||
         ('ownerId' in resource.data && resource.data.ownerId == request.auth.uid)
       );
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id);
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if false;
     }
 
@@ -398,7 +421,7 @@ service cloud.firestore {
     // ── Maintenance (GMAO) ──────────────────────────────────────────────────
     match /maintenance/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('PRODUCTION') || hasRole('MAINTENANCE'));
       allow delete: if false;
     }
@@ -407,7 +430,7 @@ service cloud.firestore {
     match /payroll/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('HR') || hasRole('FINANCE'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('HR') || hasRole('FINANCE'));
       allow delete: if false;
     }
@@ -415,7 +438,7 @@ service cloud.firestore {
     // ── Appels d'Offres (Procurement) ──────────────────────────────────────
     match /procurement/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('PURCHASE') || hasRole('FINANCE'));
       allow delete: if false;
     }
@@ -423,7 +446,7 @@ service cloud.firestore {
     // ── ESG & Environnement ────────────────────────────────────────────────
     match /esg/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('PRODUCTION'));
       allow delete: if false;
     }
@@ -432,7 +455,7 @@ service cloud.firestore {
     match /projects/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('STAFF') || hasRole('PRODUCTION'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('STAFF'));
       allow delete: if false;
     }
@@ -441,7 +464,7 @@ service cloud.firestore {
     match /budget/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('FINANCE'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('FINANCE'));
       allow delete: if false;
     }
@@ -473,21 +496,21 @@ service cloud.firestore {
     match /talent/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isSuperAdmin() || isManager() || hasRole('HR'));
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isSuperAdmin() || isManager() || hasRole('HR'));
       allow delete: if isSuperAdmin();
     }
 
     match /commerce/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('SALES'));
       allow delete: if false;
     }
 
     match /website/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id)
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('MARKETING') || hasRole('STAFF'));
       allow delete: if isSuperAdmin();
     }
@@ -496,13 +519,16 @@ service cloud.firestore {
     // ne voient PAS les conversations des autres espaces.
     match /connect/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canReadOwnEntity(request.resource.data.entity_id);
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if isSuperAdmin() || isOwner(resource.data.userId);
     }
 
+    // [3-SPACE ISOLATION] Le GED (DMS) est strictement scopé par entité.
+    // Un manager filiale ne doit JAMAIS voir les documents DMS d'une autre filiale.
     match /dms/{docId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('STAFF') || resource.data.ownerId == request.auth.uid);
-      allow create, update: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isSuperAdmin() || isManager() || hasRole('STAFF') || resource.data.ownerId == request.auth.uid);
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if isSuperAdmin();
     }
 
@@ -623,8 +649,11 @@ service cloud.firestore {
     }
 
     // ── Audit Logs (Immuable) ────────────────────────────────────────────────
+    // [3-SPACE ISOLATION] Chaque entité ne voit que ses propres logs d'audit.
+    // HOLDING voit tous les logs (surveillance groupe).
     match /audit_logs/{logId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || isManager() || hasRole('SECURITY') || hasRole('AUDIT'));
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isSuperAdmin() || isManager() || hasRole('SECURITY') || hasRole('AUDIT'));
       allow write: if false; // Uniquement via Cloud Functions (Admin SDK)
     }
 
@@ -675,12 +704,26 @@ service cloud.firestore {
     }
 
     // ── [3-SPACE ISOLATION] Helper: tenant-aware read access ───────────────
-    // HOLDING : voit tout
+    // HOLDING : voit tout (consolidation stratégique — lecture uniquement)
     // Sinon  : voit uniquement les docs de SON entity_id
     // Si le doc n'a pas d'entity_id (collections globales pré-existantes),
     // autorisation accordée pour compat — à durcir au cas par cas.
     function canReadOwnEntity(docEntityId) {
       return isHoldingLevel() ||
+             docEntityId == null ||
+             docEntityId == '' ||
+             docEntityId == getEntityId();
+    }
+
+    // ── [3-SPACE ISOLATION] Helper: tenant-aware WRITE access ──────────────
+    // CRITIQUE : PAS DE BYPASS HOLDING — la Holding ne peut écrire QUE ses propres docs.
+    // La Holding supervise en LECTURE (canReadOwnEntity), mais ne modifie JAMAIS
+    // les données opérationnelles locales (filiales/foundations).
+    //
+    // Règle : entity_id du doc doit correspondre à entity_id du caller.
+    //         Exception : SUPER_ADMIN (opérations d'urgence) et docs sans entity_id (legacy).
+    function canWriteOwnEntity(docEntityId) {
+      return isSuperAdmin() ||
              docEntityId == null ||
              docEntityId == '' ||
              docEntityId == getEntityId();

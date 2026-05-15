@@ -204,12 +204,23 @@ export const BusinessProvider = ({ children }) => {
 
     const DEFAULT_CONFIG = { limit: 150, recentDays: null };
 
+    // [3-SPACE ISOLATION] Collections sans entity_id (user-centric ou globales).
+    // skipEntityFilter=true désactive le filtre entity_id côté client pour ces collections.
+    // Les Firestore Rules restent la ligne de défense principale.
+    const SKIP_ENTITY_FILTER = new Set([
+      'connect',     // Posts du mur — can be entity-less for legacy docs
+      'activities',  // Activités utilisateur — user-scoped, pas entity-scoped
+      'base',        // Configuration globale — sans entity_id
+      'cockpit',     // KPI CF-écrits — entity_id ajouté progressivement par CF
+    ]);
+
     const unsubscribes = collections_to_sync.map(colName => {
       const colConfig = COLLECTION_CONFIGS[colName] || DEFAULT_CONFIG;
       const options = {
-        orderByField: '_createdAt',
-        descending:   true,
-        limitTo:      colConfig.limit,
+        orderByField:     '_createdAt',
+        descending:       true,
+        limitTo:          colConfig.limit,
+        skipEntityFilter: SKIP_ENTITY_FILTER.has(colName),
       };
 
       // [SECURITY] Collections sensibles : staff voit uniquement ses enregistrements
@@ -252,18 +263,24 @@ export const BusinessProvider = ({ children }) => {
  );
  });
 
- // [UNIFIED 2.0] HR_PRIVATE (COLLECTION GROUP SYNC)
- // WHY: Permet de voir TOUTES les requêtes RH (congés, frais) de TOUS les users.
- const unsubHrPrivate = FirestoreService.subscribeToCollectionGroup(
- 'hr_private',
- {
- orderByField: '_createdAt',
- descending: true,
- limitTo: 500,
- filters: isManager ? [] : [['ownerId', '==', user.id]]
- },
- (docs) => {
- logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
+    // [UNIFIED 2.0] HR_PRIVATE (COLLECTION GROUP SYNC)
+    // [3-SPACE ISOLATION] HR local ne voit QUE les dossiers de son entité.
+    // HOLDING voit tous (Firestore Rules: isHoldingLevel bypass dans collectionGroup rule).
+    // Staff : voit uniquement ses propres docs (ownerId == uid).
+    const hrPrivateFilters = isManager
+      ? []  // Manager : Firestore Rules filtrent par entity via le token claim
+      : [['ownerId', '==', user.id]];  // Staff : ses propres docs uniquement
+
+    const unsubHrPrivate = FirestoreService.subscribeToCollectionGroup(
+      'hr_private',
+      {
+        orderByField: '_createdAt',
+        descending: true,
+        limitTo: 500,
+        filters: hrPrivateFilters
+      },
+      (docs) => {
+        logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
         scheduleUpdate('hr_private', docs);
       },
       (err) => console.error(`[BusinessContext] hr_private Sync failed:`, err)
@@ -271,26 +288,29 @@ export const BusinessProvider = ({ children }) => {
 
     unsubscribes.push(unsubHrPrivate);
 
-    // B. BPM Workflows
-    const unsubWorkflows = FirestoreService.subscribeToCollection('workflows', {}, (wfs) => {
+    // B. BPM Workflows (entity-scoped — filtre automatique via FirestoreService)
+    const unsubWorkflows = FirestoreService.subscribeToCollection('workflows', {
+      orderByField: '_createdAt', descending: true, limitTo: 100
+    }, (wfs) => {
       useStore.getState().setWorkflows(wfs);
     });
 
-    // C. Global Notifications
+    // C. Global Notifications (user-scoped — pas d'entity_id)
     const unsubNotify = FirestoreService.subscribeToCollection(
-      'notifications', 
-      { 
-        orderByField: '_createdAt', 
-        descending: true, 
+      'notifications',
+      {
+        orderByField: '_createdAt',
+        descending: true,
         limitTo: 100,
+        skipEntityFilter: true, // Notifications are user-targeted, not entity-scoped
         filters: isManager ? [] : [['targetUserId', '==', user.id]]
       },
       (ns) => useStore.getState().setNotifications(ns)
     );
 
-    // D. User Permissions & Global Employee List
+    // D. User Permissions & Global Employee List (users = global directory — pas de filtre entity)
     let _lastSelfPermsHash = null;
-    const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
+    const unsubUsers = FirestoreService.subscribeToCollection('users', { skipEntityFilter: true }, (users) => {
       // 1. Map all permissions for Admin/HR modules
       const permissionsMap = {};
       users.forEach(u => {
@@ -343,8 +363,8 @@ export const BusinessProvider = ({ children }) => {
     // E. Call Listener (Decoupled Service)
     CallListener.init(userId);
 
-    // F. Global Settings (Hub de Configuration)
-    const unsubSettings = FirestoreService.subscribeToCollection('settings', {}, (settingsDocs) => {
+    // F. Global Settings (Hub de Configuration — global, pas entity-scoped)
+    const unsubSettings = FirestoreService.subscribeToCollection('settings', { skipEntityFilter: true }, (settingsDocs) => {
       const coreSettings = settingsDocs.find(d => d.id === 'core') || {};
       useStore.getState().setConfig(prev => ({ ...prev, ...coreSettings }));
     });

@@ -117,6 +117,12 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
     });
   }
 
+  // [3-SPACE ISOLATION] Propager entity_id/entity_type du document source dans le log.
+  // Permet aux filiales de ne voir que leurs propres logs d'audit (Firestore Rules canReadOwnEntity).
+  const sourceEntityId   = afterData?.entity_id   || beforeData?.entity_id   || null;
+  const sourceEntityType = afterData?.entity_type  || beforeData?.entity_type  || null;
+  const sourceCountryId  = afterData?.country_id   || beforeData?.country_id   || null;
+
   const auditRecord = {
     timestamp: admin.firestore.FieldValue.serverTimestamp(),
     appId: collection.split('_')[0],
@@ -125,6 +131,10 @@ exports.globalAuditTrigger = onDocumentWritten('{collection}/{docId}', async (ev
     userName,
     details: `${operation} on ${collection}/${docId}`,
     diff,
+    // [3-SPACE] Champs d'isolation multi-entités
+    entity_id:   sourceEntityId,
+    entity_type: sourceEntityType,
+    country_id:  sourceCountryId,
     metadata: {
       eventId: event.id,
       traceId: event.traceparent || null,
@@ -169,7 +179,11 @@ exports.onHRPersonnelChange = onDocumentUpdated('users/{docId}', async (event) =
         return acc;
       }, {}),
       details: `Critical access change detected on users/${event.params.docId}`,
-      fingerprint: `SECURE_AUTH_${event.id}`
+      fingerprint: `SECURE_AUTH_${event.id}`,
+      // [3-SPACE ISOLATION] Scope the HR audit log to the user's entity
+      entity_id:   after.entity_id   || before.entity_id   || null,
+      entity_type: after.entity_type || before.entity_type || null,
+      country_id:  after.country_id  || before.country_id  || null,
     };
 
     try {

@@ -284,12 +284,23 @@ export const FirestoreService = {
         constraints.push(where('_deletedAt', '==', null));
       }
 
-      // [3-SPACE ISOLATION] Filtre entity_id côté client DÉSACTIVÉ pour go-live.
-      // Raison : nécessiterait des index composites Firestore pour chaque collection
-      // (entity_id + _deletedAt + _createdAt). La sécurité est déjà garantie par
-      // les Firestore Rules `canReadOwnEntity()`. Le defense-in-depth client pourra
-      // être réactivé en V2 après création des index via `firebase deploy --only firestore:indexes`.
-      // `skipEntityFilter` reste utilisable pour les collections globales.
+      // [3-SPACE ISOLATION] Defense-in-depth côté client — ACTIVÉ.
+      // Les Firestore Rules garantissent l'isolation côté serveur (canReadOwnEntity).
+      // Ce filtre est une deuxième couche : réduit le volume de données reçues
+      // et évite d'exposer des données cross-entité en cas de mauvaise query.
+      //
+      // Règle :
+      //   - HOLDING → voit tout (pas de filtre ajouté, rules le gèrent)
+      //   - Autres → filtre entity_id == getCurrentEntityId() ajouté automatiquement
+      //
+      // Les collections sans entity_id (messages, rooms, settings, etc.) doivent
+      // passer `skipEntityFilter: true` dans leurs options.
+      if (!skipEntityFilter && !isHoldingSession()) {
+        const ctx = getTenantContext();
+        if (ctx?.entity_id) {
+          constraints.push(where('entity_id', '==', ctx.entity_id));
+        }
+      }
 
       for (const filter of filters) {
         if (Array.isArray(filter)) {
