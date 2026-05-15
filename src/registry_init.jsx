@@ -51,6 +51,7 @@ const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
 const NexusAcademy   = lazy(() => import('./modules/academy/NexusAcademy'));
 const HoldingCockpit    = lazy(() => import('./modules/holding/HoldingCockpit'));
 const FoundationCockpit = lazy(() => import('./modules/foundation/FoundationCockpit'));
+const SubsidiaryCockpit = lazy(() => import('./modules/subsidiary/SubsidiaryCockpit'));
 const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
 const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
@@ -382,6 +383,7 @@ export const initRegistry = () => {
   registry.register({
     id: 'holding', label: 'Cockpit Groupe', icon: <Landmark size={18} />,
     category: 'cockpit',
+    entityTypes: ['HOLDING'],   // [3-SPACE] Visible UNIQUEMENT pour Holding
     roles: [
       'SUPER_ADMIN',
       'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO', 'HOLDING_CHRO',
@@ -390,15 +392,32 @@ export const initRegistry = () => {
     component: HoldingCockpit, priority: 1
   });
 
+  // --- Subsidiary Cockpit (Niveau 2 — Vue Filiale) ---
+  registry.register({
+    id: 'subsidiary', label: 'Cockpit Filiale', icon: <Landmark size={18} />,
+    category: 'cockpit',
+    entityTypes: ['SUBSIDIARY'],   // [3-SPACE] Visible UNIQUEMENT pour Filiales
+    roles: [
+      'SUPER_ADMIN', 'ADMIN',
+      'SUBSIDIARY_DG', 'SUBSIDIARY_CFO', 'SUBSIDIARY_RH',
+      'COUNTRY_DIRECTOR_SUBSIDIARY', 'COUNTRY_HR', 'COUNTRY_FINANCE',
+      'COUNTRY_OPERATIONS', 'COUNTRY_AUDITOR',
+      'MANAGER', 'DIRECTOR',
+    ],
+    component: SubsidiaryCockpit, priority: 1
+  });
+
   // --- Foundation Cockpit (Niveau 3 — Entité Non-Lucrative) ---
   registry.register({
     id: 'foundation', label: 'IPC Foundation', icon: <Heart size={18} />,
     category: 'cockpit',
+    entityTypes: ['FOUNDATION'],   // [3-SPACE] Visible UNIQUEMENT pour Foundation
     roles: [
       'SUPER_ADMIN',
       'HOLDING_CEO', 'HOLDING_CFO', 'GROUP_AUDITOR',
       'FOUNDATION_DG', 'FOUNDATION_MANAGER', 'FOUNDATION_STAFF', 'FOUNDATION_AUDITOR',
+      'COUNTRY_DIRECTOR_FOUNDATION',
     ],
-    component: FoundationCockpit, priority: 10
+    component: FoundationCockpit, priority: 1
   });
 };

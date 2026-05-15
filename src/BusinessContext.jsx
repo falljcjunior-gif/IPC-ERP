@@ -384,7 +384,14 @@ export const BusinessProvider = ({ children }) => {
             company_id:  companyId,
             branch_id:   branchId,
             country_id:  countryId,
+            role:        userProfile.role,   // [3-SPACE] permet isHoldingSession bypass
           });
+
+          // [3-SPACE] Global window flag pour fallback bypass dans firestore.service
+          // (utilisé par subscribeToCollection() defense-in-depth)
+          if (typeof window !== 'undefined') {
+            window.__IPC_USER_ROLE__ = userProfile.role;
+          }
 
         } catch (err) {
           console.error('[BusinessContext] Profile Sync FAILED:', err);

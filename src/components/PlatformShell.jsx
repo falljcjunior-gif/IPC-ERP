@@ -15,6 +15,9 @@ import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { isCreatorEmail } from '../utils/creators';
 import { useTranslation } from 'react-i18next';
+import { getTenantContext } from '../services/TenantContext';
+import { resolveSpace, getSpaceTheme, getSpaceHome } from '../services/space.config';
+import SpaceBadge from './SpaceBadge';
 
 // Lazy loaded components
 const DetailOverlay = lazy(() => import('./DetailOverlay'));
@@ -215,9 +218,25 @@ const PlatformShell = ({ theme, setView }) => {
 
   const navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
 
+  // [3-SPACE] Résoudre l'espace actif depuis le profil + filtrer les modules
+  const activeSpace = useMemo(() => resolveSpace(currentUser), [currentUser?.entity_type, currentUser?.role]);
+  const spaceTheme  = useMemo(() => getSpaceTheme(activeSpace), [activeSpace]);
+  const tenantCtx   = useMemo(() => getTenantContext(), [activeSpace]);
+
   useEffect(() => {
-    setAppsPool(registry.getModulesByCategory());
-  }, [userRole]);
+    // Sidebar dynamique : seuls les modules autorisés pour ce type d'entité
+    setAppsPool(registry.getModulesByCategoryForSpace(activeSpace));
+  }, [userRole, activeSpace]);
+
+  // [3-SPACE] Auto-routing vers le cockpit du bon espace au premier mount
+  useEffect(() => {
+    if (!activeApp || activeApp === 'home') {
+      const spaceHome = getSpaceHome(activeSpace);
+      // Ne reroute QUE si l'app active n'est pas valide pour cet espace
+      if (spaceHome) setActiveApp(spaceHome);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpace]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -319,6 +338,13 @@ const PlatformShell = ({ theme, setView }) => {
             </div>
           )}
         </div>
+
+        {/* [3-SPACE] Space Badge — indicateur visuel d'espace actif */}
+        <SpaceBadge
+          entityType={activeSpace}
+          entityName={tenantCtx?.entity_name || tenantCtx?.entity_id}
+          collapsed={!shellView.sidebar}
+        />
 
         {/* Navigation Section */}
         <div style={{ flex: 1, padding: '1rem 0.5rem', overflowY: 'auto' }}>

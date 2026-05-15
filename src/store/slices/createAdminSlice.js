@@ -103,6 +103,18 @@ export const createAdminSlice = (set, get) => ({
     // Always allow access to Personal Space
     if (moduleId === 'home') return 'write';
 
+    // [3-SPACE ISOLATION] Vérifier que le module est compatible avec l'espace
+    // de l'utilisateur. Si le module déclare `entityTypes: ['HOLDING']` et que
+    // user.entity_type !== 'HOLDING', refuser l'accès quel que soit le rôle.
+    // `registry` est importé statiquement ligne 7 — pas de cycle.
+    try {
+      const mod = registry?.getModule?.(moduleId);
+      if (mod?.entityTypes && mod.entityTypes.length > 0) {
+        const userEntityType = user?.entity_type || 'SUBSIDIARY';
+        if (!mod.entityTypes.includes(userEntityType)) return 'none';
+      }
+    } catch { /* registry pas prêt — fallback */ }
+
     const userPerms = permissions[userId];
 
     // 1. Check New Nested Structure (modules[id].access)

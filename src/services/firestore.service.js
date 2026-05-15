@@ -21,7 +21,7 @@ export const serverTimestamp = firebaseServerTimestamp;
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
 import { validateData } from '../utils/validation';
-import { getTenantFields } from './TenantContext';
+import { getTenantFields, getTenantContext, isHoldingSession } from './TenantContext';
 
 
 // ── Type Guards internes ──────────────────────────────────────────────────────
@@ -274,14 +274,44 @@ export const FirestoreService = {
    */
   subscribeToCollection(collectionName, options = {}, onData, onError) {
     requireAuth();
-    const { filters = [], orderByField, limitTo, descending = false, includeDeleted = false } = options;
+    const { filters = [], orderByField, limitTo, descending = false, includeDeleted = false, skipEntityFilter = false } = options;
     try {
       let q = collection(db, collectionName);
       const constraints = [];
-      
+
       // [SOFT-DELETE FILTER] Par défaut, on ne montre pas les supprimés
       if (!includeDeleted) {
         constraints.push(where('_deletedAt', '==', null));
+      }
+
+      // [3-SPACE ISOLATION — Defense-in-depth] Si l'utilisateur n'est PAS Holding,
+      // auto-injection du filtre entity_id == sien. Empêche le client de lire les
+      // documents d'une autre filiale/foundation, en plus des Firestore Rules.
+      // skipEntityFilter=true pour les collections globales (users, organizations).
+      if (!skipEntityFilter) {
+        try {
+          // Bypass robuste : Holding session OU rôle privilégié
+          let isPrivileged = isHoldingSession();
+          if (!isPrivileged) {
+            try {
+              // Lecture défensive du userRole depuis le store (lazy import)
+              // pour éviter cycle store ↔ firestore.service
+              const role = window?.__IPC_USER_ROLE__ || null;
+              if (role && (
+                role === 'SUPER_ADMIN' ||
+                role.startsWith('HOLDING_') ||
+                role === 'GROUP_AUDITOR'
+              )) isPrivileged = true;
+            } catch { /* noop */ }
+          }
+
+          if (!isPrivileged) {
+            const ctx = getTenantContext();
+            if (ctx?.entity_id && ctx.entity_id !== 'ipc_default') {
+              constraints.push(where('entity_id', '==', ctx.entity_id));
+            }
+          }
+        } catch { /* TenantContext pas dispo — fallback aux rules */ }
       }
 
       for (const filter of filters) {

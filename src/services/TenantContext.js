@@ -73,6 +73,7 @@ export function setTenantContext(ctx) {
     company_id:  ctx.company_id  || ctx.entity_id || null,
     branch_id:   ctx.branch_id   || null,
     country_id:  ctx.country_id  || null,  // [v3.0] Country governance scope
+    role:        ctx.role        || null,  // [3-SPACE] Pour isHoldingSession() bypass
   };
 
   _listeners.forEach(fn => fn({ ..._ctx }));
@@ -146,9 +147,24 @@ export function getTenantFields() {
 /**
  * Returns true if the current user session is at Holding level.
  * Holding users can see all entities.
+ *
+ * [3-SPACE FIX] Étendu pour reconnaître aussi les rôles HOLDING_* et SUPER_ADMIN,
+ * pas uniquement le entity_type. Évite l'application d'un filtre client inutile
+ * (et la nécessité d'index composite) pour les utilisateurs avec accès total.
  */
 export function isHoldingSession() {
-  return _ctx.entity_type === ENTITY_TYPES.HOLDING;
+  if (_ctx.entity_type === ENTITY_TYPES.HOLDING) return true;
+  // Fallback : rôle dans le store (SUPER_ADMIN bypass)
+  try {
+    // Lazy lookup pour éviter cycle store ↔ TenantContext
+    const role = _ctx.role || _ctx.user_role || null;
+    if (role && (
+      role === 'SUPER_ADMIN' ||
+      role.startsWith('HOLDING_') ||
+      role === 'GROUP_AUDITOR'
+    )) return true;
+  } catch { /* noop */ }
+  return false;
 }
 
 /**

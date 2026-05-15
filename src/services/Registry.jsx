@@ -63,6 +63,38 @@ class ModuleRegistry {
       items: this.getAllModules().filter(m => m.category === cat.id)
     })).filter(cat => cat.items.length > 0);
   }
+
+  /**
+   * [3-SPACE ISOLATION] Filtre les modules visibles pour un type d'entité.
+   *
+   * Règle :
+   *   - Module SANS `entityTypes` = GLOBAL (visible partout)
+   *   - Module AVEC `entityTypes: ['HOLDING']` = visible uniquement Holding
+   *   - Module AVEC `entityTypes: ['SUBSIDIARY','FOUNDATION']` = les 2 espaces
+   *
+   * @param {string} entityType - HOLDING | SUBSIDIARY | FOUNDATION
+   * @returns {Array} liste de modules autorisés
+   */
+  getModulesByEntityType(entityType) {
+    if (!entityType) return this.getAllModules();
+    return this.getAllModules().filter(m => {
+      // Pas de restriction → visible partout
+      if (!m.entityTypes || m.entityTypes.length === 0) return true;
+      return m.entityTypes.includes(entityType);
+    });
+  }
+
+  /**
+   * Variante de getModulesByCategory() qui applique le filtre entity_type.
+   * Utilisée par PlatformShell pour générer la sidebar dynamique.
+   */
+  getModulesByCategoryForSpace(entityType) {
+    const allowed = this.getModulesByEntityType(entityType);
+    return this.categories.map(cat => ({
+      ...cat,
+      items: allowed.filter(m => m.category === cat.id),
+    })).filter(cat => cat.items.length > 0);
+  }
 }
 
 export const registry = new ModuleRegistry();
