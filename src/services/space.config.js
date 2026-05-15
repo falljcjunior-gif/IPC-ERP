@@ -44,12 +44,11 @@ export const SPACE_NAV = {
     'hr', 'talent', 'payroll', 'planning', 'helpdesk', 'dms',
     'office_admin', 'signature',
     // ── Finance & Contrôle de gestion ──────────────────
-    'finance', 'accounting', 'budget', 'expenses', 'legal',
+    'finance', 'accounting', 'expenses', 'legal',
     'bi', 'analytics', 'audit_hub',
     // ── Opérations (supervision groupe) ────────────────
     'crm', 'sales', 'inventory', 'production',
-    'projects', 'logistics',
-    'quality', 'fleet', 'shipping', 'purchase',
+    'projects', 'quality', 'fleet', 'shipping',
     // ── Marketing & Digital ─────────────────────────────
     'marketing',
     // ── Administration ──────────────────────────────────
@@ -62,9 +61,6 @@ export const SPACE_NAV = {
     'sales',
     'inventory',
     'production',
-    'manufacturing',
-    'logistics',
-    'purchase',
     'finance',
     'accounting',
     'hr',
@@ -79,21 +75,14 @@ export const SPACE_NAV = {
     'helpdesk',
   ],
   [ENTITY_TYPES.FOUNDATION]: [
-    // Mission / impact / ESG
+    // ── Cockpit Foundation (mission, impact, dons, programmes, gouvernance)
     'foundation',
-    'foundation-programs',
-    'foundation-beneficiaries',
-    'foundation-donations',
-    'foundation-campaigns',
-    'foundation-field',
-    'foundation-impact-report',
-    'foundation-dms',
-    'foundation-compliance',
-    'foundation-hr-field',
-    'foundation-projects',
-    'foundation-communication',
-    'foundation-audit-impact',
-    'foundation-ai-esg',
+    // ── RH & Organisation ──────────────────────────────
+    'hr', 'talent', 'payroll', 'planning',
+    // ── Finance & Conformité ────────────────────────────
+    'finance', 'accounting', 'legal',
+    // ── Opérations terrain ──────────────────────────────
+    'projects', 'dms', 'signature', 'helpdesk',
   ],
 };
 
@@ -105,8 +94,6 @@ export const GLOBAL_MODULES = [
   'connect',
   'missions',
   'academy',
-  'signature',
-  'documents',
 ];
 
 // ── Thèmes visuels par espace (CSS variables) ───────────────────────────────
