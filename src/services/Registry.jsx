@@ -44,7 +44,10 @@ class ModuleRegistry {
       component: module.component,
       schema: module.schema || null,
       priority: module.priority || 100,
-      hidden: module.hidden || false
+      hidden: module.hidden || false,
+      // [3-SPACE ISOLATION] Conserver le filtre entity_type déclaré dans registry_init
+      // undefined = global (visible partout) ; tableau = espaces autorisés uniquement
+      entityTypes: module.entityTypes || null,
     });
     return this;
   }

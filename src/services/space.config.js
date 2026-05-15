@@ -38,25 +38,24 @@ export const SPACE_HOME = {
 // sont automatiquement ajoutés en plus de la whitelist.
 export const SPACE_NAV = {
   [ENTITY_TYPES.HOLDING]: [
-    // Cockpit + gouvernance groupe
+    // ── Cockpit groupe ──────────────────────────────────
     'holding',
-    'holding-governance',
-    'holding-consolidation',
-    'holding-bi',
-    'holding-audit',
-    'holding-risk',
-    'holding-compliance',
-    'holding-licensing',
-    'holding-entities',
-    'holding-hr',
-    'holding-budget',
-    'holding-ai',
-    'holding-analytics',
-    'holding-security',
-    'holding-countries',
-    'holding-workflows',
-    'holding-approvals',
-    'holding-strategic-intel',
+    // ── RH & Gestion du personnel Holding ──────────────
+    'hr', 'talent', 'payroll', 'planning', 'helpdesk', 'dms',
+    'office_admin', 'signature',
+    // ── Finance & Contrôle de gestion ──────────────────
+    'finance', 'accounting', 'budget', 'expenses', 'legal',
+    'bi', 'analytics', 'multi_entity', 'audit_hub',
+    // ── Stratégie & Intelligence ────────────────────────
+    'intelligence', 'strategy_lab',
+    // ── Opérations (supervision groupe) ────────────────
+    'crm', 'sales', 'commerce', 'inventory', 'production',
+    'projects', 'procurement', 'esg', 'logistics',
+    'maintenance', 'quality', 'fleet', 'shipping', 'purchase',
+    // ── Marketing & Digital ─────────────────────────────
+    'marketing', 'website',
+    // ── Administration ──────────────────────────────────
+    'control_hub', 'it', 'mobile',
   ],
   [ENTITY_TYPES.SUBSIDIARY]: [
     // Opérationnel local
@@ -150,9 +149,26 @@ export const SPACE_THEME = {
  * Fallback sur SUBSIDIARY si entity_type manquant (cas legacy).
  */
 export function resolveSpace(user) {
+  // Priorité 1 : entity_type explicite du document Firestore
   const t = user?.entity_type || user?.entityType;
   if (t === ENTITY_TYPES.HOLDING)    return ENTITY_TYPES.HOLDING;
   if (t === ENTITY_TYPES.FOUNDATION) return ENTITY_TYPES.FOUNDATION;
+  if (t === ENTITY_TYPES.SUBSIDIARY) return ENTITY_TYPES.SUBSIDIARY;
+
+  // Priorité 2 : inférence depuis le rôle (robustesse en cas de profil partiellement chargé)
+  const role = user?.role || '';
+  if (
+    role === 'SUPER_ADMIN' ||
+    role === 'GROUP_AUDITOR' ||
+    role.startsWith('HOLDING_')
+  ) return ENTITY_TYPES.HOLDING;
+
+  if (
+    role.startsWith('FOUNDATION_') ||
+    role === 'COUNTRY_DIRECTOR_FOUNDATION'
+  ) return ENTITY_TYPES.FOUNDATION;
+
+  // Fallback sécurisé (cas legacy / guest)
   return ENTITY_TYPES.SUBSIDIARY;
 }
 

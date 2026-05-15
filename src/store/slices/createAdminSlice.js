@@ -140,6 +140,17 @@ export const createAdminSlice = (set, get) => ({
     const effectiveRoles = new Set([roleFromState, ...rolesArr].filter(Boolean));
 
     const ROLE_MODULE_DEFAULTS = {
+      // ── Holding (Niveau 1 — Gouvernance groupe) ──────────────────────────────
+      // Accès total à tous les modules : le Holding supervise l'ensemble du groupe
+      HOLDING_CEO:      { all: 'write' },
+      HOLDING_CFO:      { all: 'write' },
+      HOLDING_CSO:      { all: 'write' },
+      HOLDING_CHRO:     { all: 'write' },
+      HOLDING_CTO:      { all: 'write' },
+      HOLDING_AUDITOR:  { all: 'read' },
+      HOLDING_LEGAL:    { legal: 'write', signature: 'write', dms: 'write', finance: 'read', audit_hub: 'read' },
+      GROUP_AUDITOR:    { all: 'read' },
+      // ── Roles génériques ─────────────────────────────────────────────────────
       ADMIN:        { all: 'write' },
       MANAGER:      { all: 'write' },
       DIRECTOR:     { all: 'write' },
