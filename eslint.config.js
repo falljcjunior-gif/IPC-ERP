@@ -21,7 +21,10 @@ export default [
       'scratch/**',
       '**/temp.js',
       'scripts/**',
-      'playwright.config.js'
+      'playwright.config.js',
+      // [design-lab] Livrable standalone Tailwind/Next.js — utilise CJS pour la config,
+      // pas inclus dans le build de production. Hors périmètre du lint principal.
+      'design-lab/**'
     ]
   },
   {
