@@ -30,7 +30,7 @@
  *      },
  *      foundation: {
  *        name:    'IPC Foundation Sénégal',      // optionnel
- *        modules: ['foundation_impact','foundation_donations','foundation_campaigns','foundation_esg','dms'],
+ *        modules: ['foundation_impact','foundation_donations','foundation_campaigns','dms'],
  *        director: {
  *          email:  'foundation.sn@ipc.com',
  *          nom:    'Ndiaye',

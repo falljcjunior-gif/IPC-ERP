@@ -6,8 +6,8 @@ import {
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, Layout, UserCircle, Scale, Heart, Rocket, Brain, Inbox, Shield,
-  Banknote, Wrench, Globe, Leaf, Smartphone, FlaskConical, GraduationCap
+  PieChart, History as HistoryIcon, UserCircle, Scale, Heart, Rocket, Inbox, Shield,
+  Banknote, Smartphone, GraduationCap
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -22,8 +22,6 @@ const FinanceControlCenter = lazy(() => import('./modules/finance/FinanceControl
 const EnterpriseHub = lazy(() => import('./modules/enterprise/EnterpriseHub'));
 const Connect = lazy(() => import('./modules/connect/ConnectHub'));
 const ControlHub = lazy(() => import('./modules/admin/ControlHub'));
-const WebsiteHub = lazy(() => import('./modules/website/WebsiteHub'));
-const CommerceHub = lazy(() => import('./modules/sales/CommerceHub'));
 const TalentHub = lazy(() => import('./modules/hr/TalentHub'));
 const HR = lazy(() => import('./modules/HR'));
 const Project = lazy(() => import('./modules/Project'));
@@ -53,19 +51,13 @@ const HoldingCockpit    = lazy(() => import('./modules/holding/HoldingCockpit'))
 const FoundationCockpit = lazy(() => import('./modules/foundation/FoundationCockpit'));
 const SubsidiaryCockpit = lazy(() => import('./modules/subsidiary/SubsidiaryCockpit'));
 const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
-const ExecutiveIntelligence = lazy(() => import('./modules/ExecutiveIntelligence'));
 const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
 const ITModule = lazy(() => import('./modules/admin/ITModule'));
 const Manufacturing = lazy(() => import('./modules/Manufacturing'));
 const AuditHub = lazy(() => import('./modules/AuditHub'));
-const MaintenanceHub = lazy(() => import('./modules/MaintenanceHub'));
 const PayrollHub = lazy(() => import('./modules/PayrollHub'));
-const ProcurementHub = lazy(() => import('./modules/ProcurementHub'));
-const ESGHub = lazy(() => import('./modules/ESGHub'));
-const MultiEntityHub = lazy(() => import('./modules/MultiEntityHub'));
 const MobileCompanion = lazy(() => import('./modules/MobileCompanion'));
-const StrategyLab     = lazy(() => import('./modules/strategy/StrategyLab'));
 
 // Schemas (Keeping these eager for now as they are small and needed for UI metadata)
 import { crmSchema } from './schemas/crm.schema';
@@ -85,16 +77,11 @@ import { legalSchema } from './schemas/legal.schema';
 import { helpdeskSchema } from './schemas/helpdesk.schema';
 import { marketingSchema } from './schemas/marketing.schema';
 import { signatureSchema } from './schemas/signature.schema';
-import { websiteSchema } from './schemas/website.schema';
 import { shippingSchema } from './schemas/shipping.schema';
-import { commerceSchema } from './schemas/commerce.schema';
 import { dmsSchema } from './schemas/dms.schema';
 import { officeAdminSchema } from './schemas/office_admin.schema';
 import { itSchema } from './schemas/it.schema';
-import { maintenanceSchema } from './schemas/maintenance.schema';
 import { payrollSchema } from './schemas/payroll.schema';
-import { procurementSchema } from './schemas/procurement.schema';
-import { esgSchema } from './schemas/esg.schema';
 
 /**
  * Initialize the Platform Registry with Enterprise Modules
@@ -109,25 +96,13 @@ export const initRegistry = () => {
   // Register Schemas
   [crmSchema, hrSchema, salesSchema, inventorySchema, accountingSchema, 
    financeSchema, budgetSchema, productionSchema, projectSchema, purchaseSchema,
-    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, websiteSchema, shippingSchema, commerceSchema, dmsSchema, helpdeskSchema, officeAdminSchema, itSchema, maintenanceSchema, payrollSchema, procurementSchema, esgSchema].forEach(s => registry.registerSchema(s));
+    baseSchema, auditSchema, adminSchema, marketingSchema, legalSchema, signatureSchema, shippingSchema, dmsSchema, helpdeskSchema, officeAdminSchema, itSchema, payrollSchema].forEach(s => registry.registerSchema(s));
 
   // --- Cockpit ---
   registry.register({
     id: 'home', label: 'Espace Personnel', icon: <UserCircle size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF', 'PRODUCTION'],
     component: PersonalWorkspace, priority: 1
-  });
-
-  registry.register({
-    id: 'intelligence', label: 'Intelligence Stratégique', icon: <Brain size={18} />,
-    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
-    component: ExecutiveIntelligence, priority: 2
-  });
-
-  registry.register({
-    id: 'strategy_lab', label: 'Strategy Lab', icon: <FlaskConical size={18} />,
-    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
-    component: StrategyLab, priority: 3
   });
 
   registry.register({
@@ -161,18 +136,6 @@ export const initRegistry = () => {
     id: 'sales', label: 'Ventes & Devis', icon: <ShoppingCart size={18} />,
     category: 'crm', roles: ['ADMIN', 'SALES', 'FINANCE'],
     component: Sales, priority: 11
-  });
-
-  registry.register({
-    id: 'commerce', label: 'PdV & Abonnements', icon: <ShoppingBag size={18} />,
-    category: 'crm', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: CommerceHub, priority: 12
-  });
-
-  registry.register({
-    id: 'website', label: 'Sites Web', icon: <Layout size={18} />,
-    category: 'crm', roles: ['ADMIN', 'SALES', 'MARKETING', 'STAFF'],
-    component: WebsiteHub, priority: 13
   });
 
   registry.register({
@@ -222,12 +185,6 @@ export const initRegistry = () => {
     id: 'fleet', label: 'Flotte', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'LOGISTICS', 'SUPER_ADMIN'],
     component: FleetHub, priority: 25
-  });
-
-  registry.register({
-    id: 'maintenance', label: 'GMAO (Maintenance)', icon: <Wrench size={18} />,
-    category: 'operations', roles: ['ADMIN', 'PRODUCTION', 'SUPER_ADMIN'],
-    component: MaintenanceHub, priority: 26, schema: maintenanceSchema
   });
 
   // --- Finance & Stratégie ---
@@ -326,25 +283,6 @@ export const initRegistry = () => {
     id: 'payroll', label: 'Paie & Social', icon: <Banknote size={18} />,
     category: 'hr', roles: ['ADMIN', 'HR', 'FINANCE', 'SUPER_ADMIN'],
     component: PayrollHub, priority: 46, schema: payrollSchema
-  });
-
-  // --- Stratégie & International ---
-  registry.register({
-    id: 'procurement', label: 'Appels d\'Offres', icon: <ShoppingBag size={18} />,
-    category: 'operations', roles: ['ADMIN', 'FINANCE', 'SUPER_ADMIN'],
-    component: ProcurementHub, priority: 27, schema: procurementSchema
-  });
-
-  registry.register({
-    id: 'esg', label: 'ESG & Environnement', icon: <Leaf size={18} />,
-    category: 'operations', roles: ['ADMIN', 'SUPER_ADMIN', 'PRODUCTION'],
-    component: ESGHub, priority: 28, schema: esgSchema
-  });
-
-  registry.register({
-    id: 'multi_entity', label: 'Multi-Société & Devises', icon: <Globe size={18} />,
-    category: 'finance', roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE'],
-    component: MultiEntityHub, priority: 38
   });
 
   // --- Configuration & Admin ---

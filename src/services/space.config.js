@@ -45,15 +45,13 @@ export const SPACE_NAV = {
     'office_admin', 'signature',
     // ── Finance & Contrôle de gestion ──────────────────
     'finance', 'accounting', 'budget', 'expenses', 'legal',
-    'bi', 'analytics', 'multi_entity', 'audit_hub',
-    // ── Stratégie & Intelligence ────────────────────────
-    'intelligence', 'strategy_lab',
+    'bi', 'analytics', 'audit_hub',
     // ── Opérations (supervision groupe) ────────────────
-    'crm', 'sales', 'commerce', 'inventory', 'production',
-    'projects', 'procurement', 'esg', 'logistics',
-    'maintenance', 'quality', 'fleet', 'shipping', 'purchase',
+    'crm', 'sales', 'inventory', 'production',
+    'projects', 'logistics',
+    'quality', 'fleet', 'shipping', 'purchase',
     // ── Marketing & Digital ─────────────────────────────
-    'marketing', 'website',
+    'marketing',
     // ── Administration ──────────────────────────────────
     'control_hub', 'it', 'mobile',
   ],
@@ -73,11 +71,9 @@ export const SPACE_NAV = {
     'talent',
     'payroll',
     'projects',
-    'maintenance',
     'fleet',
     'quality',
     'marketing',
-    'website',
     'bi',
     'shipping',
     'helpdesk',
@@ -86,7 +82,6 @@ export const SPACE_NAV = {
     // Mission / impact / ESG
     'foundation',
     'foundation-programs',
-    'foundation-esg',
     'foundation-beneficiaries',
     'foundation-donations',
     'foundation-campaigns',

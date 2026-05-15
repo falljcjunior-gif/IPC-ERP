@@ -66,7 +66,7 @@ const SUBSIDIARY_PLANS = [
 ];
 
 const FOUNDATION_PLANS = [
-  { id: 'FOUNDATION', label: 'Foundation',     desc: 'Programmes · Bénéficiaires · ESG' },
+  { id: 'FOUNDATION', label: 'Foundation',     desc: 'Programmes · Bénéficiaires' },
   { id: 'CUSTOM',     label: 'Custom mission', desc: 'Configuration sur mesure' },
 ];
 
@@ -84,9 +84,7 @@ const SUBSIDIARY_MODULES = [
   { id: 'payroll',     label: 'Paie' },
   { id: 'projects',    label: 'Projets' },
   { id: 'marketing',   label: 'Marketing' },
-  { id: 'commerce',    label: 'E-commerce' },
   { id: 'planning',    label: 'Planning' },
-  { id: 'maintenance', label: 'Maintenance' },
   { id: 'dms',         label: 'Documents' },
   { id: 'signature',   label: 'Signature' },
   { id: 'legal',       label: 'Juridique' },
@@ -97,7 +95,6 @@ const FOUNDATION_MODULES = [
   { id: 'foundation_impact',    label: 'Impact & Programmes' },
   { id: 'foundation_donations', label: 'Dons' },
   { id: 'foundation_campaigns', label: 'Campagnes' },
-  { id: 'foundation_esg',       label: 'ESG / Reporting' },
   { id: 'foundation_benef',     label: 'Bénéficiaires' },
   { id: 'projects',             label: 'Projets' },
   { id: 'dms',                  label: 'Documents' },
@@ -349,7 +346,7 @@ function CountryWizard({ existingCountryIds, onClose }) {
       director: { email: '', nom: '', prenom: '' },
     },
     foundation: {
-      modules: ['foundation_impact', 'foundation_donations', 'foundation_esg', 'dms'],
+      modules: ['foundation_impact', 'foundation_donations', 'dms'],
       director: { email: '', nom: '', prenom: '' },
     },
   });
@@ -583,7 +580,7 @@ function StepFoundation({ form, setForm, country }) {
 
       <div>
         <FieldLabel>Modules mission/impact ({form.foundation.modules.length})</FieldLabel>
-        <FieldHelp>Modules spécialisés ONG · impact · ESG.</FieldHelp>
+        <FieldHelp>Modules spécialisés ONG · impact.</FieldHelp>
         <ModuleGrid modules={FOUNDATION_MODULES} selected={form.foundation.modules}
           onChange={(modules) => setForm(f => ({ ...f, foundation: { ...f.foundation, modules } }))} />
       </div>
@@ -602,7 +599,7 @@ function StepLicenses({ form, setForm }) {
       </div>
       <div>
         <FieldLabel>Plan Foundation</FieldLabel>
-        <FieldHelp>Spécialisé impact / programmes / ESG.</FieldHelp>
+        <FieldHelp>Spécialisé impact / programmes.</FieldHelp>
         <PlanGrid plans={FOUNDATION_PLANS} selected={form.licenses.foundation_plan}
           onChange={(plan) => setForm(f => ({ ...f, licenses: { ...f.licenses, foundation_plan: plan } }))} color={C.accent} />
       </div>

@@ -24,15 +24,6 @@ const categories = [
     apps: [
       { id: 'crm', name: 'CRM', icon: <Users />, color: '#3B82F6' },
       { id: 'sales', name: 'Ventes', icon: <ShoppingCart />, color: '#10B981' },
-      { id: 'commerce', name: 'PdV / Abonnements / Location', icon: <ShoppingBag />, color: '#F59E0B' },
-    ]
-  },
-  {
-    name: 'Sites Web',
-    apps: [
-      { id: 'website', name: 'Site Web / eCommerce / Blog / Forum', icon: <Globe />, color: '#3B82F6' },
-      { id: 'website', name: 'Live Chat', icon: <Headphones />, color: '#06B6D4' },
-      { id: 'website', name: 'eLearning', icon: <GraduationCap />, color: '#8B5CF6' },
     ]
   },
   {

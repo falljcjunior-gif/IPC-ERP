@@ -418,36 +418,12 @@ service cloud.firestore {
       allow write: if isSuperAdmin(); // Uniquement pour le Super Admin
     }
 
-    // ── Maintenance (GMAO) ──────────────────────────────────────────────────
-    match /maintenance/{docId} {
-      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
-                  && (isManager() || hasRole('PRODUCTION') || hasRole('MAINTENANCE'));
-      allow delete: if false;
-    }
-
     // ── Paie & Social ──────────────────────────────────────────────────────
     match /payroll/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('HR') || hasRole('FINANCE'));
       allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isManager() || hasRole('HR') || hasRole('FINANCE'));
-      allow delete: if false;
-    }
-
-    // ── Appels d'Offres (Procurement) ──────────────────────────────────────
-    match /procurement/{docId} {
-      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
-                  && (isManager() || hasRole('PURCHASE') || hasRole('FINANCE'));
-      allow delete: if false;
-    }
-
-    // ── ESG & Environnement ────────────────────────────────────────────────
-    match /esg/{docId} {
-      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
-                  && (isManager() || hasRole('PRODUCTION'));
       allow delete: if false;
     }
 
@@ -498,20 +474,6 @@ service cloud.firestore {
                   && (isSuperAdmin() || isManager() || hasRole('HR'));
       allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
                   && (isSuperAdmin() || isManager() || hasRole('HR'));
-      allow delete: if isSuperAdmin();
-    }
-
-    match /commerce/{docId} {
-      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
-                  && (isManager() || hasRole('SALES'));
-      allow delete: if false;
-    }
-
-    match /website/{docId} {
-      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
-      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
-                  && (isManager() || hasRole('MARKETING') || hasRole('STAFF'));
       allow delete: if isSuperAdmin();
     }
 
@@ -862,12 +824,6 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ── ESG Consolidated (Holding reads all; entities write their own) ─────
-    match /esg_consolidated/{docId} {
-      allow read: if isAuthenticated() && (isHoldingLevel() || isFoundationLevel() || isManager());
-      allow write: if false; // Cloud Functions aggregate from /esg per entity
-    }
-
     // ══════════════════════════════════════════════════════════════════
     // FOUNDATION — IPC Foundation (Non-Profit Entity)
     // Supervised by Holding; isolated from commercial subsidiaries
@@ -925,13 +881,6 @@ service cloud.firestore {
       allow read: if isFoundationLevel() || isHoldingLevel();
       allow create, update: if isFoundationLevel();
       allow delete: if isFoundationAdmin();
-    }
-
-    // ── Foundation ESG Reports ────────────────────────────────────────────
-    match /foundation_esg_reports/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create, update: if isFoundationLevel();
-      allow delete: if false; // Immutable ESG audit trail
     }
 
     // ── Foundation Governance (Board decisions, minutes) ──────────────────

@@ -253,14 +253,6 @@
       ]
     },
     {
-      "collectionGroup": "maintenance",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "payroll",
       "queryScope": "COLLECTION",
       "fields": [
@@ -271,31 +263,6 @@
     },
     {
       "collectionGroup": "payroll",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "procurement",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "esg",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "esg",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
@@ -328,22 +295,6 @@
     },
     {
       "collectionGroup": "marketing",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "commerce",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "website",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "_deletedAt", "order": "ASCENDING" },
