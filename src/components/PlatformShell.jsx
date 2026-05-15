@@ -104,13 +104,18 @@ const PlatformShell = ({ theme, setView }) => {
   }, []);
 
   // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
+  // [BUG FIX RE-RENDER LOOP] N'utiliser que l'EMAIL dans les deps (string stable),
+  // pas l'objet `currentUser` (référence change à chaque setUser → boucle infinie
+  // ping-pong avec le syncProfile de BusinessContext).
+  const creatorEmail = currentUser?.email;
   useEffect(() => {
-    if (isCreatorEmail(currentUser?.email) && userRole !== 'SUPER_ADMIN') {
+    if (isCreatorEmail(creatorEmail) && userRole !== 'SUPER_ADMIN') {
       console.warn('[Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
       useStore.getState().setUserRole('SUPER_ADMIN');
-      useStore.getState().setUser({ ...currentUser, role: 'SUPER_ADMIN' });
+      // Note: on ne réécrit PAS l'objet user complet — uniquement le role via setUserRole,
+      // pour préserver la stabilité de la référence user et éviter la boucle.
     }
-  }, [currentUser, userRole]);
+  }, [creatorEmail, userRole]);
 
   //  [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
   useEffect(() => {

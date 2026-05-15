@@ -420,7 +420,12 @@ export const BusinessProvider = ({ children }) => {
       if (unsubSettings) unsubSettings();
       CallListener.stop();
     };
-  }, [userId, user?.role, scheduleUpdate]); //  [REACTIVE] Re-subscribe if user role changes
+    // [BUG FIX RE-RENDER LOOP] Ne PAS inclure user?.role dans les deps :
+    // setUser() à l'intérieur du listener change user.role → re-exécute l'effet →
+    // re-registre onAuthStateChanged → boucle infinie (rafraîchissement permanent
+    // en arrière-plan). Les listeners doivent rester stables pour la durée de la session.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   return <>{children}</>;
 };
