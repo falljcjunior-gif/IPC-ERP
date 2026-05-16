@@ -238,9 +238,9 @@
 .os-skeleton {
   background:      linear-gradient(
     90deg,
-    rgba(0,0,0,0.04) 25%,
-    rgba(0,0,0,0.08) 50%,
-    rgba(0,0,0,0.04) 75%
+    rgba(0,0,0,0.07) 25%,
+    rgba(0,0,0,0.14) 50%,
+    rgba(0,0,0,0.07) 75%
   );
   background-size: 800px 100%;
   animation:       os-shimmer 1.5s ease infinite;
