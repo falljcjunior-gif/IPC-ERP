@@ -1,0 +1,117 @@
+/**
+ * FoundationShell.css — ANTIGRAVITY OS · Foundation Space Shell Overrides
+ *
+ * Scoped to [data-space="FOUNDATION"] — zero bleed into HOLDING or SUBSIDIARY.
+ * Identity: White + Vert + Vert Kaki + Bleu Cyan — humaine, mission-driven, terrain, impact social.
+ *
+ * Palette:
+ *   Primary green:  #16A34A (green-600) — nature, terrain, impact
+ *   Khaki:          #78716C (stone-500) — warmth, human, grounded
+ *   Cyan blue:      #0891B2 (cyan-700)  — data, clarity, reporting
+ */
+
+/* ── CSS token overrides scoped to FOUNDATION ────────────────────────────── */
+[data-space="FOUNDATION"] {
+  --antigravity-primary:      #16A34A;
+  --antigravity-primary-glow: rgba(22,163,74,0.12);
+  --antigravity-glass:        rgba(255,255,255,0.97);
+  --antigravity-border:       rgba(22,163,74,0.10);
+  --antigravity-card:         #FFFFFF;
+  --antigravity-bg:           #F0FDF4;
+  --antigravity-text:         #14532D;
+  --antigravity-text-muted:   #6B7280;
+}
+
+/* ── Sidebar — white with green accent ───────────────────────────────────── */
+[data-space="FOUNDATION"] .antigravity-floating-sidebar {
+  background:      rgba(255,255,255,0.97) !important;
+  border:          1px solid rgba(22,163,74,0.10) !important;
+  box-shadow:      0 2px 24px rgba(22,163,74,0.08) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* Kill any emerald pseudo-elements on sidebar */
+[data-space="FOUNDATION"] .antigravity-floating-sidebar::before,
+[data-space="FOUNDATION"] .antigravity-floating-sidebar::after {
+  display: none !important;
+}
+
+/* ── Sidebar logo cube — green accent ────────────────────────────────────── */
+[data-space="FOUNDATION"] .antigravity-glow {
+  background:  #16A34A !important;
+  box-shadow:  0 0 12px rgba(22,163,74,0.28) !important;
+}
+
+/* ── Sidebar "Antigravity OS" gradient text → stone/muted ────────────────── */
+[data-space="FOUNDATION"] .antigravity-gradient-text {
+  background:               none !important;
+  -webkit-background-clip:  unset !important;
+  background-clip:          unset !important;
+  -webkit-text-fill-color:  #9CA3AF !important;
+  color:                    #9CA3AF !important;
+}
+
+/* ── Sidebar nav items — green active tint ───────────────────────────────── */
+[data-space="FOUNDATION"] .antigravity-floating-sidebar [class*="active"]::before,
+[data-space="FOUNDATION"] .antigravity-floating-sidebar [class*="accent-bar"] {
+  display: none !important;
+}
+
+/* Active nav item — green on white */
+[data-space="FOUNDATION"] .antigravity-floating-sidebar [class*="active"],
+[data-space="FOUNDATION"] .antigravity-floating-sidebar [aria-current="page"] {
+  color:      #16A34A !important;
+  background: rgba(22,163,74,0.07) !important;
+}
+
+/* ── SpaceBadge — green pill with khaki warmth ───────────────────────────── */
+[data-space="FOUNDATION"] [class*="SpaceBadge"],
+[data-space="FOUNDATION"] [class*="space-badge"],
+[data-space="FOUNDATION"] [class*="space_badge"] {
+  background:   #16A34A !important;
+  color:        #FFFFFF !important;
+  border:       1px solid rgba(22,163,74,0.20) !important;
+  font-weight:  700 !important;
+  letter-spacing: 0.08em !important;
+  box-shadow:   0 2px 8px rgba(22,163,74,0.18) !important;
+}
+
+/* ── Bento-card inside FOUNDATION — override global emerald accent bar ────── */
+[data-space="FOUNDATION"] .bento-card {
+  background:    #FFFFFF !important;
+  border:        1px solid rgba(22,163,74,0.08) !important;
+  box-shadow:    0 1px 3px rgba(22,163,74,0.06) !important;
+}
+[data-space="FOUNDATION"] .bento-card:hover {
+  background:    #F0FDF4 !important;
+  border-color:  rgba(22,163,74,0.14) !important;
+  transform:     none !important;
+  box-shadow:    0 4px 16px rgba(22,163,74,0.09) !important;
+}
+[data-space="FOUNDATION"] .bento-card::before,
+[data-space="FOUNDATION"] .bento-card:hover::before {
+  opacity: 0 !important;
+}
+
+/* ── antigravity-card in FOUNDATION → clean white card with green tint ────── */
+[data-space="FOUNDATION"] .antigravity-card {
+  background:   #FFFFFF !important;
+  border:       1px solid rgba(22,163,74,0.08) !important;
+  box-shadow:   0 1px 3px rgba(22,163,74,0.06) !important;
+}
+[data-space="FOUNDATION"] .antigravity-card:hover {
+  transform:    translateY(-2px) !important;
+  box-shadow:   0 6px 20px rgba(22,163,74,0.10) !important;
+  border-color: rgba(22,163,74,0.16) !important;
+}
+
+/* ── Buttons + interactive elements — green accent ───────────────────────── */
+[data-space="FOUNDATION"] .antigravity-btn-primary,
+[data-space="FOUNDATION"] button[class*="primary"] {
+  background: #16A34A !important;
+  color:      #FFFFFF !important;
+}
+[data-space="FOUNDATION"] .antigravity-btn-primary:hover,
+[data-space="FOUNDATION"] button[class*="primary"]:hover {
+  background: #15803D !important;
+}

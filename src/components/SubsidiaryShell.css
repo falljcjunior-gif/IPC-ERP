@@ -1,0 +1,114 @@
+/**
+ * SubsidiaryShell.css — ANTIGRAVITY OS · Subsidiary Space Shell Overrides
+ *
+ * Scoped to [data-space="SUBSIDIARY"] — zero bleed into HOLDING or FOUNDATION.
+ * Identity: White + Vert Cyan — dynamique, productive, moderne, opérationnelle.
+ *
+ * Palette: pure white base, cyan-teal accent (#0891B2), operational energy
+ */
+
+/* ── CSS token overrides scoped to SUBSIDIARY ────────────────────────────── */
+[data-space="SUBSIDIARY"] {
+  --antigravity-primary:      #0891B2;
+  --antigravity-primary-glow: rgba(8,145,178,0.12);
+  --antigravity-glass:        rgba(255,255,255,0.97);
+  --antigravity-border:       rgba(8,145,178,0.12);
+  --antigravity-card:         #FFFFFF;
+  --antigravity-bg:           #F0FDFF;
+  --antigravity-text:         #0C4A6E;
+  --antigravity-text-muted:   #6B7280;
+}
+
+/* ── Sidebar — white with cyan accent line ───────────────────────────────── */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar {
+  background:      rgba(255,255,255,0.97) !important;
+  border:          1px solid rgba(8,145,178,0.10) !important;
+  box-shadow:      0 2px 24px rgba(8,145,178,0.08) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+/* Kill any emerald pseudo-elements on sidebar */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar::before,
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar::after {
+  display: none !important;
+}
+
+/* ── Sidebar logo cube — cyan accent ─────────────────────────────────────── */
+[data-space="SUBSIDIARY"] .antigravity-glow {
+  background:  #0891B2 !important;
+  box-shadow:  0 0 12px rgba(8,145,178,0.30) !important;
+}
+
+/* ── Sidebar "Antigravity OS" gradient text → cyan muted ─────────────────── */
+[data-space="SUBSIDIARY"] .antigravity-gradient-text {
+  background:               none !important;
+  -webkit-background-clip:  unset !important;
+  background-clip:          unset !important;
+  -webkit-text-fill-color:  #9CA3AF !important;
+  color:                    #9CA3AF !important;
+}
+
+/* ── Sidebar nav items — cyan active tint ────────────────────────────────── */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="active"]::before,
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="accent-bar"] {
+  display: none !important;
+}
+
+/* Active nav item — cyan on white */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="active"],
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [aria-current="page"] {
+  color:      #0891B2 !important;
+  background: rgba(8,145,178,0.08) !important;
+}
+
+/* ── SpaceBadge — cyan pill ──────────────────────────────────────────────── */
+[data-space="SUBSIDIARY"] [class*="SpaceBadge"],
+[data-space="SUBSIDIARY"] [class*="space-badge"],
+[data-space="SUBSIDIARY"] [class*="space_badge"] {
+  background:   #0891B2 !important;
+  color:        #FFFFFF !important;
+  border:       1px solid rgba(8,145,178,0.20) !important;
+  font-weight:  700 !important;
+  letter-spacing: 0.08em !important;
+  box-shadow:   0 2px 8px rgba(8,145,178,0.20) !important;
+}
+
+/* ── Bento-card inside SUBSIDIARY — override global emerald accent bar ───── */
+[data-space="SUBSIDIARY"] .bento-card {
+  background:    #FFFFFF !important;
+  border:        1px solid rgba(8,145,178,0.08) !important;
+  box-shadow:    0 1px 3px rgba(8,145,178,0.06) !important;
+}
+[data-space="SUBSIDIARY"] .bento-card:hover {
+  background:    #F0FDFF !important;
+  border-color:  rgba(8,145,178,0.16) !important;
+  transform:     none !important;
+  box-shadow:    0 4px 16px rgba(8,145,178,0.10) !important;
+}
+[data-space="SUBSIDIARY"] .bento-card::before,
+[data-space="SUBSIDIARY"] .bento-card:hover::before {
+  opacity: 0 !important;
+}
+
+/* ── antigravity-card in SUBSIDIARY → clean white card with cyan tint ────── */
+[data-space="SUBSIDIARY"] .antigravity-card {
+  background:   #FFFFFF !important;
+  border:       1px solid rgba(8,145,178,0.08) !important;
+  box-shadow:   0 1px 3px rgba(8,145,178,0.06) !important;
+}
+[data-space="SUBSIDIARY"] .antigravity-card:hover {
+  transform:    translateY(-2px) !important;
+  box-shadow:   0 6px 20px rgba(8,145,178,0.12) !important;
+  border-color: rgba(8,145,178,0.18) !important;
+}
+
+/* ── Buttons + interactive elements — cyan accent ───────────────────────── */
+[data-space="SUBSIDIARY"] .antigravity-btn-primary,
+[data-space="SUBSIDIARY"] button[class*="primary"] {
+  background: #0891B2 !important;
+  color:      #FFFFFF !important;
+}
+[data-space="SUBSIDIARY"] .antigravity-btn-primary:hover,
+[data-space="SUBSIDIARY"] button[class*="primary"]:hover {
+  background: #0E7490 !important;
+}

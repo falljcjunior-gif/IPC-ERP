@@ -21,17 +21,18 @@ import {
 import { useStore } from '../../store';
 import { getCurrentEntityId, getTenantContext } from '../../services/TenantContext';
 
-// ── Design tokens (emerald-glass) ───────────────────────────────────────────
+// ── Design tokens (white + cyan-green) ──────────────────────────────────────
 const C = {
-  accent:  '#10B981',
-  accentSoft: '#ECFDF5',
-  gold:    '#F59E0B',
-  blue:    '#3B82F6',
-  red:     '#EF4444',
-  purple:  '#8B5CF6',
-  text:    '#0F172A',
-  muted:   '#64748B',
-  border:  '#E2E8F0',
+  accent:     '#0891B2',
+  accentSoft: '#ECFEFF',
+  gold:       '#D97706',
+  blue:       '#2563EB',
+  red:        '#DC2626',
+  purple:     '#7C3AED',
+  teal:       '#0D9488',
+  text:       '#0F0F10',
+  muted:      '#6B7280',
+  border:     'rgba(8,145,178,0.10)',
 };
 
 const fmt  = (n) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(n);

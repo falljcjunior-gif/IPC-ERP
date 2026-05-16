@@ -51,7 +51,7 @@ export default function SpaceBadge({ entityType, entityName, collapsed = false }
       background: theme.badgeBg,
       color: theme.badgeFg,
       borderRadius: 12,
-      boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+      boxShadow: `0 2px 8px ${theme.badgeBg}33`,
     }}>
       <div style={{
         width: 32, height: 32, borderRadius: 8,
