@@ -494,7 +494,7 @@ const Login = ({ onLogin }) => {
         flex: 1,
         position: 'relative',
         overflow: 'hidden',
-        borderRadius: isMobile ? '28px 28px 0 0' : '0 28px 28px 0',
+        borderRadius: 0,
         minHeight: isMobile ? 220 : undefined,
         height: isMobile ? '42vw' : undefined,
         maxHeight: isMobile ? 300 : undefined,
@@ -553,26 +553,13 @@ const Login = ({ onLogin }) => {
   return (
     <div style={{
       height: '100vh', width: '100vw',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: L.bg, overflow: isMobile ? 'auto' : 'hidden',
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      overflow: isMobile ? 'auto' : 'hidden',
       fontFamily: "'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     }}>
-
-      {/* Main card */}
-      <div style={{
-        display: 'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        width: isMobile ? '100%' : 'calc(100% - 4rem)',
-        maxWidth: isMobile ? undefined : 1100,
-        height: isMobile ? '100%' : undefined,
-        minHeight: isMobile ? undefined : 640,
-        borderRadius: isMobile ? 0 : 28,
-        overflow: 'hidden',
-        boxShadow: isMobile ? 'none' : '0 32px 80px rgba(0,0,0,0.13), 0 0 0 1px rgba(0,0,0,0.05)',
-      }}>
-        {VideoPanel}
-        {LeftPanel}
-      </div>
+      {VideoPanel}
+      {LeftPanel}
 
       <style>{`
         @keyframes login-spin { to { transform: rotate(360deg); } }
