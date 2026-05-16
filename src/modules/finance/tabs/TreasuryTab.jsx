@@ -25,8 +25,8 @@ const TreasuryTab = () => {
   // Logic: Sum of all debits - credits in cash/bank accounts
   const currentCash = useMemo(() => {
     const cash = entries.reduce((sum, e) => sum + (Number(e.debit || 0) - Number(e.credit || 0)), 0);
-    // If no entries, fallback to a base simulation for demo/startup purposes
-    return cash || 12450000; 
+    // Return real balance; 0 when no entries yet (EmptyState handled in render)
+    return cash || 0;
   }, [entries]);
 
   // 2. Projected Inflows (Unpaid Invoices)

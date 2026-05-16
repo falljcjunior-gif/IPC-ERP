@@ -64,7 +64,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
                    </div>
                 </div>
 
-                <button className="glass" style={{ width: '100%', padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
+                <button className="glass" onClick={() => onOpenDetail && onOpenDetail(b, 'budget', 'budgets')} style={{ width: '100%', padding: '0.75rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem', cursor: 'pointer', border: '1px solid var(--border)' }}>
                    <Activity size={14} /> Voir Détails OPEX
                 </button>
              </motion.div>
@@ -107,7 +107,7 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
          <div className="glass" style={{ padding: '2.5rem', borderRadius: '2.5rem', border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                <h4 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem' }}>Enveloppes de Dépenses</h4>
-               <button className="btn-primary" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', background: '#6366F1', borderColor: '#6366F1' }}>
+               <button className="btn-primary" onClick={() => onOpenDetail && onOpenDetail(null, 'budget', 'envelopes')} style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', background: '#6366F1', borderColor: '#6366F1', cursor: 'pointer' }}>
                  <Plus size={18} /> Nouvelle Enveloppe
                </button>
             </div>

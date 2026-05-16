@@ -9,12 +9,36 @@ import {
 import EnterpriseView from '../../../components/EnterpriseView';
 import { financeSchema } from '../../../schemas/finance.schema';
 import Chip from '../../marketing/components/Chip';
+import { useStore } from '../../../store';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
 const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
+  const { data } = useStore();
   const [activeView, setActiveView] = useState('invoices'); // 'invoices', 'vendor_bills'
+
+  const handleExportJournal = () => {
+    const invoices = data?.finance?.invoices || [];
+    if (invoices.length === 0) { alert('Aucune facture à exporter.'); return; }
+    const header_csv = ['N° Facture', 'Client', 'Date', 'Échéance', 'Montant TTC', 'Statut'].join(';');
+    const rows = invoices.map(inv => [
+      inv.number || inv.id || '—',
+      `"${inv.clientName || inv.client || '—'}"`,
+      inv.date || inv.createdAt?.slice(0, 10) || '—',
+      inv.dueDate || '—',
+      Number(inv.amountTTC || inv.totalTTC || inv.montant || 0).toFixed(0),
+      inv.status || inv.statut || '—',
+    ].join(';'));
+    const csv = [header_csv, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `journal-factures-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
@@ -71,7 +95,7 @@ const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem' }}>
-           <button className="glass" style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem' }}>
+           <button className="glass" onClick={handleExportJournal} style={{ padding: '0.7rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.6rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', border: '1px solid var(--border)' }}>
              <Download size={18} /> Export Journal
            </button>
            <button 

@@ -93,7 +93,7 @@ const SalesItem = ({ item, type, formatCurrency, onOpenDetail }) => {
 
       {/* Actions */}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <button style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.5rem' }}>
+        <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(item, 'sales', type); }} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', padding: '0.5rem' }}>
           <MoreVertical size={20} />
         </button>
       </div>

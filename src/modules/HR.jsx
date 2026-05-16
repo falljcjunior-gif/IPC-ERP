@@ -23,6 +23,18 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
     ...(hrData.expenses || []).filter(e => e.statut === 'En attente' || e.statut === 'Brouillon')
   ].length;
 
+  // Performance Index: % of employees with evaluation score >= 3/5 (or any score > 0)
+  const performanceIndex = React.useMemo(() => {
+    const employees = hrData.employees || [];
+    if (employees.length === 0) return 0;
+    const scored = employees.filter(e => Number(e.performanceScore || e.score || 0) > 0);
+    const avgScore = scored.length > 0
+      ? scored.reduce((s, e) => s + Number(e.performanceScore || e.score || 0), 0) / scored.length
+      : 0;
+    // Normalize to 0-100: assume scores are 0-5
+    return avgScore > 0 ? Math.round((avgScore / 5) * 100) : 0;
+  }, [hrData.employees]);
+
   return (
     <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -37,7 +49,10 @@ const HRControlCenter = ({ onOpenDetail, accessLevel }) => {
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.2em', marginBottom: '0.5rem' }}>Indice de Performance</div>
             <div style={{ fontSize: '3.5rem', fontWeight: 900, color: '#111827', lineHeight: 1 }}>
-              <AnimatedCounter from={0} to={89} duration={2} formatter={(v) => `${v}%`} />
+              {performanceIndex > 0
+                ? <AnimatedCounter from={0} to={performanceIndex} duration={2} formatter={(v) => `${Math.round(v)}%`} />
+                : <span style={{ fontSize: '2rem', color: '#9ca3af' }}>—</span>
+              }
             </div>
           </div>
           

@@ -27,6 +27,12 @@ const AuditHub = ({ onOpenDetail }) => {
     { id: 3, name: 'Norme Environnementale', validUntil: '2026-01-01', status: 'Actif', score: 91 }
   ];
 
+  const complianceScore = useMemo(() => {
+    const scored = certs.filter(c => c.score > 0);
+    if (scored.length === 0) return null;
+    return Math.round(scored.reduce((s, c) => s + c.score, 0) / scored.length);
+  }, [certs]);
+
   const filteredLogs = useMemo(() => {
     return logs
       .filter(l => l.details?.toLowerCase().includes(searchQuery.toLowerCase()) || l.action?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -67,10 +73,10 @@ const AuditHub = ({ onOpenDetail }) => {
 
       {/* KPI ROW */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-        <KpiCard title="Intégrité Système" value="99.9%" icon={<ShieldCheck size={20} />} color="#10B981" trend="0.2" trendType="up" sparklineData={[{val: 99}, {val: 99.5}, {val: 99.9}]} />
-        <KpiCard title="Alertes Sécurité" value="0" icon={<ShieldCheck size={20} />} color="#EF4444" trend="0" trendType="up" sparklineData={[{val: 0}, {val: 0}, {val: 0}]} />
-        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" trend="12" trendType="up" sparklineData={[{val: 2}, {val: 4}, {val: 5}]} />
-        <KpiCard title="Score Conformité" value="92%" icon={<Award size={20} />} color="#8B5CF6" trend="2.4" trendType="up" sparklineData={[{val: 85}, {val: 90}, {val: 92}]} />
+        <KpiCard title="Intégrité Système" value="—" icon={<ShieldCheck size={20} />} color="#10B981" />
+        <KpiCard title="Alertes Sécurité" value={logs.filter(l => l.level === 'error' || l.level === 'alert').length.toString()} icon={<ShieldCheck size={20} />} color="#EF4444" />
+        <KpiCard title="Audits Clôturés" value={sessions.length} icon={<CheckCircle2 size={20} />} color="#3B82F6" />
+        <KpiCard title="Score Conformité" value={complianceScore !== null ? `${complianceScore}%` : '—'} icon={<Award size={20} />} color="#8B5CF6" />
       </div>
 
       {/* NAVIGATION TABS */}

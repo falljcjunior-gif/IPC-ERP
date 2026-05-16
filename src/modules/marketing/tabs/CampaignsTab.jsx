@@ -54,7 +54,7 @@ const CampaignsTab = ({ campaigns, formatCurrency, onOpenDetail, onNew }) => {
               className="glass" placeholder="Rechercher une campagne..."
               style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.6rem', borderRadius: '1rem', border: 'none', fontSize: '0.85rem' }} />
           </div>
-          <button className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.85rem' }}>
+          <button disabled title="Filtres avancés — bientôt disponibles" className="glass" style={{ padding: '0.75rem 1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'not-allowed', opacity: 0.5 }}>
             <Filter size={16} /> Filtres
           </button>
         </div>

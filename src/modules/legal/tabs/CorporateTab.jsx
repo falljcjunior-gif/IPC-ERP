@@ -80,10 +80,10 @@ const CorporateTab = ({ onOpenDetail }) => {
             </div>
             
             <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between' }}>
-               <button className="glass" style={{ padding: '8px 15px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+               <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(entity, 'legal', 'corporate'); }} className="glass" style={{ padding: '8px 15px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <PieChart size={14} /> Actionnariat
                </button>
-               <button className="glass" style={{ padding: '8px 15px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>
+               <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(entity, 'legal', 'corporate'); }} className="glass" style={{ padding: '8px 15px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)', cursor: 'pointer' }}>
                   Gérer l'entité
                </button>
             </div>

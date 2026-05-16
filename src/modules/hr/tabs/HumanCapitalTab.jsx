@@ -68,7 +68,7 @@ const HumanCapitalTab = ({ data, onOpenDetail, searchQuery = '' }) => {
           value={`${globalMetrics.performance}%`} 
           icon={<TrendingUp size={24} />} 
           color="#0D9488"
-          trend="+2.4% vs Q1"
+          trend={null}
           description="Basé sur les objectifs CRM & Opérations"
         />
         <KpiCard 
@@ -84,7 +84,7 @@ const HumanCapitalTab = ({ data, onOpenDetail, searchQuery = '' }) => {
           value={`${globalMetrics.wellness}%`} 
           icon={<Heart size={24} />} 
           color="#EC4899"
-          trend="-1.2% (Charge de travail)"
+          trend={null}
           description="Monitoring de la charge et congés"
         />
       </motion.div>

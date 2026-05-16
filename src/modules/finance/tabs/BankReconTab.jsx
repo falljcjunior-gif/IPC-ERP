@@ -37,7 +37,7 @@ const BankReconTab = () => {
         if (!lines[i].trim()) continue;
         const [date, label, amountStr] = lines[i].split(',');
         imported.push({
-          id: `BNK-${Math.random().toString(36).substring(7)}`,
+          id: `BNK-${Date.now().toString(36).toUpperCase()}-${i}`,
           date: date?.trim(),
           label: label?.trim(),
           amount: parseFloat(amountStr?.trim() || 0),

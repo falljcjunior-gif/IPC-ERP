@@ -28,6 +28,9 @@ const GrowthTab = ({ data, formatCurrency }) => {
     { name: 'Clients (Gagnés)', value: opportunities.filter(o => o.etape === 'Gagné').length, fill: '#10B981' },
   ], [leads, opportunities]);
 
+  const conversionRate = leads.length > 0 ? (opportunities.filter(o => o.etape === 'Gagné').length / leads.length) * 100 : 0;
+  const avgDealSize = opportunities.length > 0 ? opportunities.reduce((acc, o) => acc + parseFloat(o.montant || 0), 0) / opportunities.length : 0;
+
   // 2. Channel Performance (Derived from Leads Source)
   const channelROI = useMemo(() => {
     const sources = {};
@@ -35,14 +38,15 @@ const GrowthTab = ({ data, formatCurrency }) => {
       const src = l.source || 'Direct';
       sources[src] = (sources[src] || 0) + 1;
     });
+    const dealAvg = opportunities.length > 0 ? opportunities.reduce((acc, o) => acc + parseFloat(o.montant || 0), 0) / opportunities.length : 0;
     return Object.keys(sources).map(key => ({
       name: key,
-      roi: (sources[key] * (1.5 + Math.random() * 2)).toFixed(1)
+      // ROI proxy: (expected revenue from leads) / (cost-per-lead × count)
+      roi: dealAvg > 0
+        ? ((sources[key] * dealAvg * 0.3) / (sources[key] * 50000)).toFixed(1)
+        : (sources[key] * 2.5).toFixed(1)
     })).sort((a,b) => b.roi - a.roi);
-  }, [leads]);
-
-  const conversionRate = leads.length > 0 ? (opportunities.filter(o => o.etape === 'Gagné').length / leads.length) * 100 : 0;
-  const avgDealSize = opportunities.length > 0 ? opportunities.reduce((acc, o) => acc + parseFloat(o.montant || 0), 0) / opportunities.length : 0;
+  }, [leads, opportunities]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>

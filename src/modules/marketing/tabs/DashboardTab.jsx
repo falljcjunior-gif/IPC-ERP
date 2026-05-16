@@ -68,10 +68,10 @@ const MarketingDashboard = ({ data, formatCurrency, onNavigate }) => {
     <motion.div variants={container} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '1.25rem' }}>
-        <KpiCard title="Campagnes Actives" value={stats.activeCampaigns} sub="+2 ce mois" trend={2} trendType="up" icon={<Megaphone size={26} />} color="#EC4899" />
-        <KpiCard title="ROI Global" value={`${stats.roi}%`} sub="vs objectif 150%" trend={stats.roi > 150 ? 1 : -1} trendType={stats.roi > 150 ? 'up' : 'down'} icon={<TrendingUp size={26} />} color="#10B981" />
-        <KpiCard title="Leads Générés" value={stats.totalConversions + stats.newLeads} sub="+18 cette semaine" trend={18} trendType="up" icon={<Users2 size={26} />} color="#8B5CF6" />
-        <KpiCard title="Taux Ouverture Email" value={`${stats.openRate}%`} sub="Moyenne secteur: 22%" trend={1} trendType="up" icon={<Mail size={26} />} color="#3B82F6" />
+        <KpiCard title="Campagnes Actives" value={stats.activeCampaigns} trend={2} trendType="up" icon={<Megaphone size={26} />} color="#EC4899" />
+        <KpiCard title="ROI Global" value={`${stats.roi}%`} trend={stats.roi > 150 ? 1 : -1} trendType={stats.roi > 150 ? 'up' : 'down'} icon={<TrendingUp size={26} />} color="#10B981" />
+        <KpiCard title="Leads Générés" value={stats.totalConversions + stats.newLeads} trend={18} trendType="up" icon={<Users2 size={26} />} color="#8B5CF6" />
+        <KpiCard title="Taux Ouverture Email" value={`${stats.openRate}%`} trend={1} trendType="up" icon={<Mail size={26} />} color="#3B82F6" />
         <KpiCard title="Budget Engagé" value={formatCurrency ? formatCurrency(stats.totalDepense, true) : `${stats.totalDepense.toLocaleString()} F`} sub={`sur ${formatCurrency ? formatCurrency(stats.totalBudget, true) : stats.totalBudget.toLocaleString()} F`} trend={-1} trendType="down" icon={<DollarSign size={26} />} color="#F59E0B" />
         <KpiCard title="Événements à Venir" value={stats.upcomingEvents} sub="Prochainement" trend={1} trendType="up" icon={<CalendarDays size={26} />} color="#06B6D4" />
       </div>

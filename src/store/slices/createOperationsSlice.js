@@ -831,7 +831,7 @@ export const createOperationsSlice = (set, get) => ({
   },
 
   processPOSOrder: (order) => {
-    const newId = `POS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
+    const newId = `POS-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-4)}`;
     const dateStr = new Date().toISOString().split('T')[0];
 
     get().addRecord('commerce', 'posOrders', {

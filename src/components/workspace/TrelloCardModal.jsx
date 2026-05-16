@@ -14,7 +14,7 @@ const TrelloCardModal = ({ task, project, updateTask, onClose, projectColumns, c
 
   const logActivity = (actionText) => {
     const newActivity = {
-      id: Date.now().toString() + Math.random(),
+      id: `act-${Date.now().toString(36)}-${(task.customData?.activities?.length || 0)}`,
       type: 'activity',
       text: actionText,
       author: currentUser?.nom || 'Inconnu',

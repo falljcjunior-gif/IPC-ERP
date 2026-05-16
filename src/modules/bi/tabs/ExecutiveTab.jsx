@@ -36,9 +36,17 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
       monthly[m].ca += parseFloat(inv.montant || 0) / 1000000; // in Millions
     });
 
-    // Mock margin logic: Margins are between 15% and 40%
+    // Compute real margin: (CA - costs) / CA for each month
+    bills.forEach(bill => {
+      const m = new Date(bill.createdAt || Date.now()).toLocaleString('fr-FR', { month: 'short' });
+      if (monthly[m]) {
+        monthly[m]._costs = (monthly[m]._costs || 0) + parseFloat(bill.montant || 0) / 1000000;
+      }
+    });
     Object.keys(monthly).forEach(m => {
-      monthly[m].margin = 20 + Math.random() * 15;
+      const ca = monthly[m].ca;
+      const costs = monthly[m]._costs || 0;
+      monthly[m].margin = ca > 0 ? Math.round(((ca - costs) / ca) * 100) : 0;
     });
 
     return Object.values(monthly);
