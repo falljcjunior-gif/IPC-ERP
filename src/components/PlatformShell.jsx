@@ -36,6 +36,8 @@ import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';
 import AntigravitySearch from './NexusSearch';
 import './HoldingShell.css';
+import './SubsidiaryShell.css';
+import './FoundationShell.css';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)

@@ -13,18 +13,20 @@ import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
 import { isHoldingRole, isFoundationRole, ORG_ROLES } from '../../schemas/org.schema';
 
-// ── ERP design tokens (light theme) ──────────────────────────────────────────
+// ── Design tokens (white + green/khaki/cyan) ─────────────────────────────────
 const C = {
-  accent:  '#10B981',
-  gold:    '#F59E0B',
-  blue:    '#3B82F6',
-  red:     '#EF4444',
+  accent:  '#16A34A',
+  khaki:   '#78716C',
+  cyan:    '#0891B2',
+  gold:    '#D97706',
+  blue:    '#2563EB',
+  red:     '#DC2626',
   teal:    '#0D9488',
-  purple:  '#8B5CF6',
-  border:  '#E2E8F0',
-  text:    '#0F172A',
-  muted:   '#64748B',
-  track:   '#F1F5F9',
+  purple:  '#7C3AED',
+  border:  'rgba(22,163,74,0.10)',
+  text:    '#0F0F10',
+  muted:   '#6B7280',
+  track:   'rgba(22,163,74,0.06)',
 };
 
 const TABS = [

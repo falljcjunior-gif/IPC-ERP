@@ -109,17 +109,17 @@ export const SPACE_THEME = {
   [ENTITY_TYPES.SUBSIDIARY]: {
     label:        'Espace Filiale',
     description:  'Opérations & performance locale',
-    accent:       '#10B981',   // emerald — opérationnel, croissance
-    accentSoft:   '#ECFDF5',
-    badgeBg:      '#10B981',
+    accent:       '#0891B2',   // cyan-700 — dynamique, opérationnel, moderne
+    accentSoft:   '#ECFEFF',
+    badgeBg:      '#0891B2',
     badgeFg:      '#FFFFFF',
   },
   [ENTITY_TYPES.FOUNDATION]: {
     label:        'Espace Foundation',
     description:  'Mission, impact & ESG',
-    accent:       '#8B5CF6',   // violet — mission, humain, ESG
-    accentSoft:   '#F5F3FF',
-    badgeBg:      '#8B5CF6',
+    accent:       '#16A34A',   // green-600 — terrain, humain, impact social
+    accentSoft:   '#F0FDF4',
+    badgeBg:      '#16A34A',
     badgeFg:      '#FFFFFF',
   },
 };
