@@ -25,12 +25,17 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
   const employees = (data?.employees && data.employees.length > 0) ? data.employees : (data?.hr?.employees || []);
 
   useEffect(() => {
-    const unsub = FirestoreService.subscribeToCollection('users', {}, (users) => {
-      const pMap = {};
-      users.forEach(u => { pMap[u.id] = u; });
-      setPresenceData(pMap);
-    });
-    return () => unsub();
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToCollection('users', {}, (users) => {
+        const pMap = {};
+        users.forEach(u => { pMap[u.id] = u; });
+        setPresenceData(pMap);
+      });
+    } catch (err) {
+      console.warn('[DirectoryTab] Firestore non disponible (mode DEV sans auth):', err.message);
+    }
+    return () => typeof unsub === 'function' && unsub();
   }, []);
 
   const getDmRoomId = (userId) => {

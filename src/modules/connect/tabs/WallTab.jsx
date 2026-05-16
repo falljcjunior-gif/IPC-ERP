@@ -121,17 +121,21 @@ const WallTab = ({ data, currentUser }) => {
   // Subscribe to comments when a post is expanded
   useEffect(() => {
     const unsubs = [];
-    Object.keys(openComments).forEach(postId => {
-      if (openComments[postId] && !commentsData[postId]) {
-        const unsub = FirestoreService.subscribeToCollection(
-          `connect/${postId}/comments`,
-          { orderByField: '_createdAt', descending: false },
-          (comments) => setCommentsData(prev => ({ ...prev, [postId]: comments }))
-        );
-        unsubs.push(unsub);
-      }
-    });
-    return () => unsubs.forEach(u => u());
+    try {
+      Object.keys(openComments).forEach(postId => {
+        if (openComments[postId] && !commentsData[postId]) {
+          const unsub = FirestoreService.subscribeToCollection(
+            `connect/${postId}/comments`,
+            { orderByField: '_createdAt', descending: false },
+            (comments) => setCommentsData(prev => ({ ...prev, [postId]: comments }))
+          );
+          unsubs.push(unsub);
+        }
+      });
+    } catch (err) {
+      console.warn('[WallTab] Firestore non disponible (mode DEV sans auth):', err.message);
+    }
+    return () => unsubs.forEach(u => typeof u === 'function' && u());
   }, [openComments]);
 
   const handleImageChange = (e) => {

@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Calendar as CalIcon, ChevronLeft, ChevronRight, 
+import {
+  Calendar as CalIcon, ChevronLeft, ChevronRight,
   Filter, Plus, Briefcase, Users, Truck, Factory
 } from 'lucide-react';
+import { useStore } from '../store';
+import RecordModal from '../components/RecordModal';
 import '../components/GlobalDashboard.css';
+
+const EVENT_COLORS = { project: '#3B82F6', fleet: '#F59E0B', hr: '#8B5CF6', production: '#10B981' };
 
 const LEGENDS = [
   { icon: <Briefcase size={14} />, label: 'Projets',    color: '#3B82F6' },
@@ -14,9 +18,33 @@ const LEGENDS = [
 ];
 
 const Planning = () => {
-  const [currentMonth] = useState('Avril 2026');
-  const events = [];
-  const days   = Array.from({ length: 30 }, (_, i) => i + 1);
+  const { data, addRecord } = useStore();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const currentMonth = currentDate.toLocaleString('fr-FR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === currentDate.getFullYear() && today.getMonth() === currentDate.getMonth();
+
+  const goToPrevMonth = () => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+  const goToNextMonth = () => setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+
+  // Aggregate events from all modules
+  const events = useMemo(() => {
+    const result = [];
+    const yr = currentDate.getFullYear();
+    const mo = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const prefix = `${yr}-${mo}`;
+    // Planning-specific events
+    (data?.planning?.events || []).forEach(e => { if (e.date?.startsWith(prefix)) result.push({ ...e, color: EVENT_COLORS[e.type] || '#6366F1' }); });
+    // Projects
+    (data?.projects?.projects || []).forEach(p => { if (p.dateDebut?.startsWith(prefix)) result.push({ id: `p-${p.id}`, date: p.dateDebut, title: p.nom || p.title, color: EVENT_COLORS.project }); });
+    // HR leaves
+    (data?.hr?.leaves || []).forEach(l => { if (l.dateDebut?.startsWith(prefix)) result.push({ id: `l-${l.id}`, date: l.dateDebut, title: `Congé — ${l.employeNom || ''}`, color: EVENT_COLORS.hr }); });
+    return result;
+  }, [data, currentDate]);
 
   return (
     <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
@@ -31,15 +59,15 @@ const Planning = () => {
         <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
           {/* Month Navigator */}
           <div className="luxury-widget" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '0.75rem 1.5rem' }}>
-            <button style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronLeft size={18} /></button>
-            <span style={{ fontWeight: 800, fontSize: '1rem', color: '#1e293b', minWidth: '110px', textAlign: 'center' }}>{currentMonth}</span>
-            <button style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronRight size={18} /></button>
+            <button onClick={goToPrevMonth} style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronLeft size={18} /></button>
+            <span style={{ fontWeight: 800, fontSize: '1rem', color: '#1e293b', minWidth: '130px', textAlign: 'center' }}>{currentMonth}</span>
+            <button onClick={goToNextMonth} style={{ padding: '0.4rem', borderRadius: '0.6rem', border: 'none', cursor: 'pointer', background: '#f1f5f9', display: 'flex' }}><ChevronRight size={18} /></button>
           </div>
 
           <button className="luxury-widget" style={{ padding: '0.9rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, color: '#475569', borderRadius: '1.25rem', background: 'rgba(255,255,255,0.9)' }}>
             <Filter size={18} /> Filtrer
           </button>
-          <button className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
+          <button onClick={() => setIsModalOpen(true)} className="luxury-widget" style={{ padding: '0.9rem 1.75rem', background: '#111827', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', border: 'none', cursor: 'pointer', fontWeight: 700, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)', borderRadius: '1.5rem' }}>
             <Plus size={18} /> Nouvel Événement
           </button>
         </div>
@@ -68,9 +96,11 @@ const Planning = () => {
         {/* Days */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
           {days.map(day => {
-            const dateStr = `2026-04-${day.toString().padStart(2, '0')}`;
-            const dayEvents = events.filter(e => e.date === dateStr);
-            const isToday = day === 28;
+            const yr = currentDate.getFullYear();
+            const mo = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const dateStr = `${yr}-${mo}-${day.toString().padStart(2, '0')}`;
+            const dayEvents = events.filter(e => e.date === dateStr || e.date?.startsWith(dateStr));
+            const isToday = isCurrentMonth && day === today.getDate();
 
             return (
               <div key={day} style={{ minHeight: '120px', padding: '1rem', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', background: isToday ? 'rgba(16,185,129,0.02)' : 'white' }}>
@@ -100,6 +130,27 @@ const Planning = () => {
           })}
         </div>
       </div>
+
+      <RecordModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nouvel Événement Planning"
+        fields={[
+          { name: 'title', label: 'Titre', type: 'text', required: true },
+          { name: 'date', label: 'Date', type: 'date', required: true },
+          { name: 'type', label: 'Type', type: 'select', options: [
+            { value: 'project', label: 'Projet' },
+            { value: 'hr', label: 'RH' },
+            { value: 'fleet', label: 'Flotte' },
+            { value: 'production', label: 'Production' },
+          ]},
+          { name: 'description', label: 'Description', type: 'textarea' },
+        ]}
+        onSave={(formData) => {
+          addRecord('planning', 'events', formData);
+          setIsModalOpen(false);
+        }}
+      />
     </div>
   );
 };

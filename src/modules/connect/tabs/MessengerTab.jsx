@@ -97,8 +97,9 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
   // Messages Subscription & Read Receipts
   useEffect(() => {
     if (!currentUser?.id || !activeRoom?.id) return;
-
-    const unsubscribe = FirestoreService.subscribeToCollection('messages', {
+    let unsubscribe;
+    try {
+    unsubscribe = FirestoreService.subscribeToCollection('messages', {
       filters: [{ field: 'roomId', operator: '==', value: activeRoom.id }],
       orderByField: '_createdAt',
       descending: false,
@@ -138,21 +139,29 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       }
     });
 
-    return () => {
-       unsubscribe();
-       if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
+    } catch (err) {
+      console.warn('[MessengerTab] Messages Firestore non disponible (mode DEV sans auth):', err.message);
     }
+    return () => {
+      typeof unsubscribe === 'function' && unsubscribe();
+      if (readReceiptTimerRef.current) clearTimeout(readReceiptTimerRef.current);
+    };
   }, [activeRoom?.id, currentUser?.id]);
 
   // Participants Subscription
   useEffect(() => {
     if (!activeRoom?.id) return;
-    const unsub = FirestoreService.subscribeToCollection(`rooms/${activeRoom.id}/participants`, (participants) => {
-      const pMap = {};
-      participants.forEach(p => { pMap[p.id] = p; });
-      setActiveParticipants(pMap);
-    });
-    return () => unsub();
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToCollection(`rooms/${activeRoom.id}/participants`, (participants) => {
+        const pMap = {};
+        participants.forEach(p => { pMap[p.id] = p; });
+        setActiveParticipants(pMap);
+      });
+    } catch (err) {
+      console.warn('[MessengerTab] Participants Firestore non disponible (mode DEV sans auth):', err.message);
+    }
+    return () => typeof unsub === 'function' && unsub();
   }, [activeRoom?.id]);
 
   useEffect(() => {
@@ -175,13 +184,18 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     initGlobalRoom();
 
     if (!currentUser?.id) return;
-    const unsub = FirestoreService.subscribeToCollection('rooms', (rooms) => {
-      setCustomRooms(rooms);
-    }, [
-      { field: 'type', operator: '==', value: 'group' },
-      { field: 'members', operator: 'array-contains', value: currentUser.id }
-    ]);
-    return () => unsub();
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToCollection('rooms', (rooms) => {
+        setCustomRooms(rooms);
+      }, [
+        { field: 'type', operator: '==', value: 'group' },
+        { field: 'members', operator: 'array-contains', value: currentUser.id }
+      ]);
+    } catch (err) {
+      console.warn('[MessengerTab] Rooms Firestore non disponible (mode DEV sans auth):', err.message);
+    }
+    return () => typeof unsub === 'function' && unsub();
   }, [currentUser?.id]);
 
   // Typing Indicator Logic (RTDB Optimized)

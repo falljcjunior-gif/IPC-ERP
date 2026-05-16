@@ -67,16 +67,21 @@ export default function FoundationCockpit() {
 
   useEffect(() => {
     if (!hasAccess) return;
-    const unsubs = [
-      FirestoreService.subscribeToCollection('foundation_donations',
-        docs => setData(d => ({ ...d, donations: docs })), { limit: 100 }),
-      FirestoreService.subscribeToCollection('foundation_programs',
-        docs => setData(d => ({ ...d, programs: docs })), { limit: 50 }),
-      FirestoreService.subscribeToCollection('foundation_beneficiaries',
-        docs => setData(d => ({ ...d, beneficiaries: docs })), { limit: 200 }),
-      FirestoreService.subscribeToCollection('foundation_campaigns',
-        docs => setData(d => ({ ...d, campaigns: docs })), { limit: 50 }),
-    ];
+    const unsubs = [];
+    try {
+      unsubs.push(
+        FirestoreService.subscribeToCollection('foundation_donations',
+          docs => setData(d => ({ ...d, donations: docs })), { limit: 100 }),
+        FirestoreService.subscribeToCollection('foundation_programs',
+          docs => setData(d => ({ ...d, programs: docs })), { limit: 50 }),
+        FirestoreService.subscribeToCollection('foundation_beneficiaries',
+          docs => setData(d => ({ ...d, beneficiaries: docs })), { limit: 200 }),
+        FirestoreService.subscribeToCollection('foundation_campaigns',
+          docs => setData(d => ({ ...d, campaigns: docs })), { limit: 50 }),
+      );
+    } catch (err) {
+      console.warn('[FoundationCockpit] Firestore non disponible (mode DEV sans auth):', err.message);
+    }
     const timer = setTimeout(() => setLoading(false), 600);
     return () => { unsubs.forEach(u => typeof u === 'function' && u()); clearTimeout(timer); };
   }, [hasAccess]);
@@ -188,7 +193,7 @@ export default function FoundationCockpit() {
       {/* ── Content ─────────────────────────────────────────────────────────── */}
       <div style={{ padding: '2rem 3rem' }}>
         {tab === 'dashboard'     && <ImpactDashboard kpis={kpis} loading={loading} />}
-        {tab === 'donations'     && <DonationsTab kpis={kpis} />}
+        {tab === 'donations'     && <DonationsTab kpis={kpis} donations={data.donations || []} />}
         {tab === 'programs'      && <ProgramsTab />}
         {tab === 'beneficiaries' && <BeneficiariesTab kpis={kpis} />}
         {tab === 'campaigns'     && <CampaignsTab />}
@@ -292,19 +297,24 @@ function ImpactDashboard({ kpis, loading }) {
 // Donations Tab
 // ════════════════════════════════════════════════════════════════════════════
 
-function DonationsTab({ kpis }) {
+function DonationsTab({ kpis, donations }) {
   const [form, setForm]           = useState({ donor: '', montant: '', type: 'Espèces', objet: '', date: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const mockDonations = [
-    { id: 1, donor: 'Fondation Orange CI', montant: 5_000_000,  type: 'Don corporate',  date: '14/05/2026', statut: 'Reçu' },
-    { id: 2, donor: 'M. Kouassi Jean',     montant: 250_000,    type: 'Don individuel',  date: '12/05/2026', statut: 'Reçu' },
-    { id: 3, donor: 'Programme PNUD',      montant: 18_000_000, type: 'Subvention',      date: '10/05/2026', statut: 'Reçu' },
-    { id: 4, donor: 'Banque Mondiale',     montant: 45_000_000, type: 'Financement',     date: '01/05/2026', statut: 'Reçu' },
-    { id: 5, donor: 'Entreprise Solvay',   montant: 8_000_000,  type: 'Don corporate',   date: '28/04/2026', statut: 'En attente' },
-  ];
-
   const typeColor = { 'Don corporate': C.blue, 'Don individuel': C.teal, 'Subvention': C.gold, 'Financement': C.accent };
+
+  const byType = (donations || []).reduce((acc, d) => {
+    const t = d.type || 'Autre';
+    acc[t] = (acc[t] || 0) + (d.montant || 0);
+    return acc;
+  }, {});
+  const totalByType = Object.values(byType).reduce((s, v) => s + v, 0) || 1;
+  const breakdown = Object.entries(byType).map(([label, value]) => ({
+    label,
+    value: `${(value / 1e6).toFixed(1)} M XOF`,
+    pct: Math.round((value / totalByType) * 1000) / 10,
+    color: { 'Don corporate': C.blue, 'Don individuel': C.teal, 'Subvention': C.gold, 'Financement': C.accent }[label] || C.muted,
+  }));
 
   const submit = async () => {
     if (!form.donor || !form.montant) return;
@@ -321,22 +331,19 @@ function DonationsTab({ kpis }) {
       <SectionHeader title="Gestion des Dons & Financements" subtitle={`Total collecté : ${fmtM(kpis.donationsTotal)} XOF`} />
 
       {/* Category breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14 }}>
-        {[
-          { label: 'Dons Corporates', value: '71 M XOF', pct: 50,   color: C.blue   },
-          { label: 'Subventions',     value: '45 M XOF', pct: 31.7, color: C.gold   },
-          { label: 'Financements',    value: '18 M XOF', pct: 12.7, color: C.accent },
-          { label: 'Dons Individus',  value: '8 M XOF',  pct: 5.6,  color: C.teal   },
-        ].map(c => (
-          <div key={c.label} className="bento-card" style={{ padding: '1rem 1.25rem' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: c.color }}>{c.value}</div>
-            <div style={{ height: 4, borderRadius: 4, background: C.track, margin: '8px 0' }}>
-              <div style={{ width: `${c.pct}%`, height: '100%', borderRadius: 4, background: c.color }} />
+      {breakdown.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px,1fr))', gap: 14 }}>
+          {breakdown.map(c => (
+            <div key={c.label} className="bento-card" style={{ padding: '1rem 1.25rem' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: c.color }}>{c.value}</div>
+              <div style={{ height: 4, borderRadius: 4, background: C.track, margin: '8px 0' }}>
+                <div style={{ width: `${c.pct}%`, height: '100%', borderRadius: 4, background: c.color }} />
+              </div>
+              <div style={{ fontSize: 11, color: C.muted }}>{c.label} — {c.pct}%</div>
             </div>
-            <div style={{ fontSize: 11, color: C.muted }}>{c.label} — {c.pct}%</div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* List */}
       <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -344,10 +351,14 @@ function DonationsTab({ kpis }) {
           padding: '0.85rem 1.25rem', borderBottom: `1px solid ${C.border}`,
           fontSize: 13, fontWeight: 700, color: C.text,
         }}>Historique des dons</div>
-        {mockDonations.map((d, i) => (
-          <div key={d.id} style={{
+        {donations.length === 0 ? (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: 13 }}>
+            Aucun don enregistré. Utilisez le formulaire ci-dessous pour saisir les premiers dons.
+          </div>
+        ) : donations.map((d, i) => (
+          <div key={d.id || i} style={{
             display: 'flex', alignItems: 'center', gap: 16, padding: '0.875rem 1.25rem',
-            borderBottom: i < mockDonations.length - 1 ? `1px solid ${C.border}` : 'none',
+            borderBottom: i < donations.length - 1 ? `1px solid ${C.border}` : 'none',
           }}>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{d.donor}</div>

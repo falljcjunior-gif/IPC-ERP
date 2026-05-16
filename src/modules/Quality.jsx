@@ -124,7 +124,7 @@ const Quality = ({ onOpenDetail }) => {
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <span style={{ padding: '4px 14px', borderRadius: '999px', background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontSize: '0.8rem', fontWeight: 700 }}>{n.status}</span>
-                    <button className="luxury-widget" style={{ padding: '0.6rem 1.25rem', background: '#f8fafc', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', color: '#475569', borderRadius: '0.75rem' }}>Plan d'Action</button>
+                    <button onClick={() => onOpenDetail && onOpenDetail(n, 'quality', 'nonConformities')} className="luxury-widget" style={{ padding: '0.6rem 1.25rem', background: '#f8fafc', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem', color: '#475569', borderRadius: '0.75rem' }}>Plan d'Action</button>
                   </div>
                 </motion.div>
               ))}

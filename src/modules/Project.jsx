@@ -61,19 +61,19 @@ const ProjectHub = ({ onOpenDetail }) => {
           if (taskBefore?.checklists) {
             mergedChanges.checklists = taskBefore.checklists.map(cl => ({...cl, items: cl.items?.map(i => ({...i, done: true})) }));
           }
-          actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : A validé toutes les checklists', author: 'Butler', date: new Date().toISOString() });
+          actionLogs.push({ id: `butler-${Date.now()}-${actionLogs.length}`, type: 'activity', text: 'Butler : A validé toutes les checklists', author: 'Butler', date: new Date().toISOString() });
         }
         if (rule.effect.type === 'add_green_label') {
           mergedChanges.labels = [...(taskBefore?.labels||[]), { color: '#10B981', text: 'Validé' }];
-          actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : A ajouté une étiquette verte', author: 'Butler', date: new Date().toISOString() });
+          actionLogs.push({ id: `butler-${Date.now()}-${actionLogs.length}`, type: 'activity', text: 'Butler : A ajouté une étiquette verte', author: 'Butler', date: new Date().toISOString() });
         }
         if (rule.effect.type === 'assign_me') {
           mergedChanges.membresId = [...new Set([...(taskBefore?.membresId||[]), currentUser?.nom || 'Moi'])];
-          actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : Vous a affecté à la carte', author: 'Butler', date: new Date().toISOString() });
+          actionLogs.push({ id: `butler-${Date.now()}-${actionLogs.length}`, type: 'activity', text: 'Butler : Vous a affecté à la carte', author: 'Butler', date: new Date().toISOString() });
         }
         if (rule.effect.type === 'notify_manager') {
           mergedChanges._notifyManagerRequested = true;
-          actionLogs.push({ id: Date.now().toString() + Math.random(), type: 'activity', text: 'Butler : A alerté le manager par push', author: 'Butler', date: new Date().toISOString() });
+          actionLogs.push({ id: `butler-${Date.now()}-${actionLogs.length}`, type: 'activity', text: 'Butler : A alerté le manager par push', author: 'Butler', date: new Date().toISOString() });
         }
       }
 
