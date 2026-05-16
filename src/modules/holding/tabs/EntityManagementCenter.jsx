@@ -16,6 +16,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
+  Building2, Heart, CheckCircle2, X,
+  Folder, Settings2, Package, Key, UserCheck, Eye,
+  Play, Pause, Edit3, Archive, Zap, Users,
+} from 'lucide-react';
+import {
   GROUP_ENTITIES, ENTITY_TYPES, getSubsidiaries, getFoundation,
   isHoldingRole,
 } from '../../../schemas/org.schema';
@@ -28,23 +33,32 @@ import { useStore } from '../../../store';
 
 // ── Design ────────────────────────────────────────────────────────────────────
 const T = {
-  bg: '#0a0c10', surface: '#0d1117', card: '#111318',
-  border: '#1f2937', accent: '#2ecc71', gold: '#f39c12',
-  blue: '#3498db', red: '#e74c3c', purple: '#8e44ad',
-  text: '#e5e7eb', muted: '#6b7280', dim: '#1f2937',
+  bg: '#FFFFFF', surface: '#F8FAFC', card: '#FFFFFF',
+  border: '#E2E8F0', accent: '#10B981', gold: '#F59E0B',
+  blue: '#3B82F6', red: '#EF4444', purple: '#8B5CF6',
+  text: '#0F172A', muted: '#64748B', dim: '#F1F5F9',
 };
 
 const fmt = (n) => new Intl.NumberFormat('fr-CI').format(n);
 
 // ── Wizard Steps ──────────────────────────────────────────────────────────────
 const WIZARD_STEPS = [
-  { id: 'type', label: 'Type', icon: '' },
-  { id: 'identity', label: 'Identité', icon: '' },
-  { id: 'modules', label: 'Modules', icon: '' },
-  { id: 'license', label: 'Licence', icon: '' },
-  { id: 'director', label: 'Directeur', icon: '' },
-  { id: 'review', label: 'Confirmation',icon: '' },
+  { id: 'type',     label: 'Type'        },
+  { id: 'identity', label: 'Identité'    },
+  { id: 'modules',  label: 'Modules'     },
+  { id: 'license',  label: 'Licence'     },
+  { id: 'director', label: 'Directeur'   },
+  { id: 'review',   label: 'Confirmation'},
 ];
+
+const WIZARD_ICONS = {
+  type:     Folder,
+  identity: Settings2,
+  modules:  Package,
+  license:  Key,
+  director: UserCheck,
+  review:   Eye,
+};
 
 const INDUSTRIES = [
   'Fabrication / Construction', 'Technologie & Communication', 'Commerce & Distribution',
@@ -56,9 +70,9 @@ const INDUSTRIES = [
 const COUNTRIES = ['Côte d\'Ivoire', 'Sénégal', 'Mali', 'Burkina Faso', 'Guinée', 'Cameroun', 'France', 'Autre'];
 const CURRENCIES = ['XOF', 'XAF', 'EUR', 'USD', 'GBP'];
 const AUTONOMY_LEVELS = [
-  { id: 'full', label: 'Pleine autonomie', desc: 'Le directeur gère tout sans validation Holding', icon: '' },
-  { id: 'supervised', label: 'Supervisée', desc: 'Décisions stratégiques validées par Holding', icon: '' },
-  { id: 'restricted', label: 'Restreinte', desc: 'Toutes les décisions importantes remontent', icon: '' },
+  { id: 'full',       label: 'Pleine autonomie', desc: 'Le directeur gère tout sans validation Holding' },
+  { id: 'supervised', label: 'Supervisée',        desc: 'Décisions stratégiques validées par Holding'   },
+  { id: 'restricted', label: 'Restreinte',        desc: 'Toutes les décisions importantes remontent'    },
 ];
 
 const MODULE_CATEGORIES = [...new Set(ALL_MODULES.map(m => m.category))];
@@ -276,27 +290,27 @@ export default function EntityManagementCenter() {
 
                 {/* Actions (expanded) */}
                 {isSelected && (
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 14, borderTop: `1px solid ${T.border}33` }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', paddingTop: 14, borderTop: `1px solid ${T.border}` }}>
                     {state !== ENTITY_STATES.ACTIVE && (
                       <ActionBtn color={T.accent} disabled={isLoading}
                         onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.ACTIVE); }}>
- Activer
- </ActionBtn>
+                        <Play size={11} strokeWidth={2.5} /> Activer
+                      </ActionBtn>
                     )}
                     {state === ENTITY_STATES.ACTIVE && (
                       <ActionBtn color={T.gold} disabled={isLoading}
                         onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.SUSPENDED); }}>
-                        ⏸ Suspendre
+                        <Pause size={11} strokeWidth={2.5} /> Suspendre
                       </ActionBtn>
                     )}
                     <ActionBtn color={T.blue} disabled={isLoading}
                       onClick={(e) => { e.stopPropagation(); }}>
- Éditer
- </ActionBtn>
+                      <Edit3 size={11} strokeWidth={2.5} /> Éditer
+                    </ActionBtn>
                     <ActionBtn color={T.muted} disabled={isLoading}
                       onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.ARCHIVED); }}>
- Archiver
- </ActionBtn>
+                      <Archive size={11} strokeWidth={2.5} /> Archiver
+                    </ActionBtn>
                   </div>
                 )}
               </div>
@@ -350,16 +364,18 @@ export default function EntityManagementCenter() {
             padding: '10px', borderRadius: 10,
             background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
             color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           }}>
- Gérer la licence
- </button>
+            <Key size={14} strokeWidth={2} /> Gérer la licence
+          </button>
           <button style={{
             padding: '10px', borderRadius: 10,
             background: `${T.blue}18`, border: `1px solid ${T.blue}33`,
             color: T.blue, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           }}>
- Voir les équipes
- </button>
+            <Users size={14} strokeWidth={2} /> Voir les équipes
+          </button>
         </div>
       )}
 
@@ -368,7 +384,7 @@ export default function EntityManagementCenter() {
           ════════════════════════════════════════════════════════════════════ */}
       {showWizard && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,.75)',
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 9999, padding: 20,
         }}>
@@ -377,7 +393,7 @@ export default function EntityManagementCenter() {
             border: `1px solid ${T.border}`,
             width: '100%', maxWidth: 760,
             maxHeight: '90vh', overflowY: 'auto',
-            boxShadow: '0 40px 120px rgba(0,0,0,.7)',
+            boxShadow: '0 24px 80px rgba(15, 23, 42, 0.15)',
           }}>
             {/* Wizard header */}
             <div style={{
@@ -389,8 +405,11 @@ export default function EntityManagementCenter() {
  Créer une entité groupe
  </div>
               <button onClick={() => { setShowWizard(false); setStep(0); }} style={{
-                background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 20,
-              }}></button>
+                background: 'none', border: 'none', color: T.muted, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 4,
+              }}>
+                <X size={18} strokeWidth={2} />
+              </button>
             </div>
 
             {/* Step indicators */}
@@ -401,19 +420,20 @@ export default function EntityManagementCenter() {
                     width: 28, height: 28, borderRadius: 50, flexShrink: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     background: i < step ? T.accent : i === step ? `${T.accent}30` : T.dim,
-                    border: `2px solid ${i <= step ? T.accent : T.dim}`,
-                    fontSize: i < step ? 14 : 11,
-                    color: i < step ? '#000' : i === step ? T.accent : T.muted,
+                    border: `2px solid ${i <= step ? T.accent : T.border}`,
+                    fontSize: 11,
+                    color: i < step ? '#fff' : i === step ? T.accent : T.muted,
                     fontWeight: 800,
                   }}>
-                    {i < step ? '' : i + 1}
+                    {i < step ? <CheckCircle2 size={14} strokeWidth={2.5} /> : i + 1}
                   </div>
                   <div style={{
                     fontSize: 11, color: i <= step ? T.text : T.muted,
                     fontWeight: i === step ? 700 : 400,
                     display: 'flex', alignItems: 'center', gap: 4,
                   }}>
-                    <span>{s.icon}</span><span>{s.label}</span>
+                    {(() => { const StepIcon = WIZARD_ICONS[s.id]; return <StepIcon size={11} strokeWidth={2} />; })()}
+                    <span>{s.label}</span>
                   </div>
                   {i < WIZARD_STEPS.length - 1 && (
                     <div style={{ flex: 1, height: 2, background: i < step ? T.accent : T.dim, borderRadius: 2 }} />
@@ -483,16 +503,16 @@ function StepType({ wizard, onChange }) {
         {[
           {
             type: ENTITY_TYPES.SUBSIDIARY,
-            icon: '', title: 'Filiale',
+            Icon: Building2, title: 'Filiale',
             desc: 'Société opérationnelle — CRM, Ventes, Production, Finance, RH...',
-            color: '#3498db',
+            color: '#3B82F6',
             examples: 'IPC Green Blocks, Nexus Academy, Hôtel Sana...',
           },
           {
             type: ENTITY_TYPES.FOUNDATION,
-            icon: '', title: 'Foundation',
+            Icon: Heart, title: 'Foundation',
             desc: 'Entité non-lucrative — Impact social, Dons, ESG, Programmes...',
-            color: '#27ae60',
+            color: '#8B5CF6',
             examples: 'IPC Foundation, IPC Social...',
           },
         ].map(opt => (
@@ -502,12 +522,19 @@ function StepType({ wizard, onChange }) {
             background: wizard.type === opt.type ? `${opt.color}10` : T.card,
             transition: 'all .15s',
           }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>{opt.icon}</div>
+            <div style={{
+              width: 56, height: 56, borderRadius: 16, marginBottom: 16,
+              background: `${opt.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <opt.Icon size={28} strokeWidth={1.75} style={{ color: opt.color }} />
+            </div>
             <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 8 }}>{opt.title}</div>
             <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.5, marginBottom: 10 }}>{opt.desc}</div>
             <div style={{ fontSize: 11, color: opt.color, fontStyle: 'italic' }}>ex: {opt.examples}</div>
             {wizard.type === opt.type && (
-              <div style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: opt.color }}> Sélectionné</div>
+              <div style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: opt.color, display: 'flex', alignItems: 'center', gap: 5 }}>
+                <CheckCircle2 size={13} strokeWidth={2.5} /> Sélectionné
+              </div>
             )}
           </div>
         ))}
@@ -590,7 +617,7 @@ function StepModules({ wizard, onToggle }) {
                       </div>
                       {!inPlan && <div style={{ fontSize: 10, color: T.muted }}>hors plan</div>}
                     </div>
-                    {enabled && <span style={{ color: T.accent, fontSize: 14 }}></span>}
+                    {enabled && <CheckCircle2 size={15} strokeWidth={2.5} style={{ color: T.accent, flexShrink: 0 }} />}
                   </div>
                 );
               })}
@@ -633,7 +660,11 @@ function StepLicense({ wizard, onChange }) {
                   <div key={item} style={{ fontSize: 11, color: T.muted }}>{item}</div>
                 ))}
               </div>
-              {selected && <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: plan.color }}> Sélectionné</div>}
+              {selected && (
+                <div style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: plan.color, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <CheckCircle2 size={13} strokeWidth={2.5} /> Sélectionné
+                </div>
+              )}
             </div>
           );
         })}
@@ -720,7 +751,7 @@ function StepReview({ wizard, provisioning, onProvision }) {
               background: isDone ? `${T.accent}20` : isLoading ? `${T.blue}20` : `${T.muted}20`,
               color: isDone ? T.accent : isLoading ? T.blue : T.muted,
             }}>
-              {isDone ? '' : isLoading ? '⋯' : i + 1}
+              {isDone ? <CheckCircle2 size={12} strokeWidth={2.5} /> : isLoading ? '⋯' : i + 1}
             </span>
             <span style={{ fontSize: 13, color: T.muted }}>{item}</span>
           </div>
@@ -732,11 +763,11 @@ function StepReview({ wizard, provisioning, onProvision }) {
         <button onClick={onProvision} style={{
           padding: '14px', borderRadius: 12,
           background: T.accent, border: 'none', cursor: 'pointer',
-          color: '#000', fontWeight: 800, fontSize: 15,
+          color: '#fff', fontWeight: 800, fontSize: 15,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
- Lancer le provisioning
- </button>
+          <Zap size={16} strokeWidth={2.5} /> Lancer le provisioning
+        </button>
       )}
       {isLoading && (
         <div style={{ padding: 14, borderRadius: 12, background: `${T.blue}15`,
@@ -746,9 +777,10 @@ function StepReview({ wizard, provisioning, onProvision }) {
       )}
       {isDone && (
         <div style={{ padding: 14, borderRadius: 12, background: `${T.accent}15`,
-          border: `1px solid ${T.accent}33`, textAlign: 'center', fontSize: 13, color: T.accent, fontWeight: 700 }}>
- Entité créée ! Invitation envoyée à {wizard.director.email}.
- </div>
+          border: `1px solid ${T.accent}33`, fontSize: 13, color: T.accent, fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <CheckCircle2 size={16} strokeWidth={2.5} /> Entité créée ! Invitation envoyée à {wizard.director.email}.
+        </div>
  )}
  {isError && (
  <div style={{ padding: 14, borderRadius: 12, background:`${T.red}15`,
@@ -813,6 +845,7 @@ function ActionBtn({ children, color, onClick, disabled }) {
       padding: '5px 12px', borderRadius: 8, border: 'none', cursor: disabled ? 'wait' : 'pointer',
       background: `${color}15`, color, fontWeight: 700, fontSize: 11,
       opacity: disabled ? 0.6 : 1,
+      display: 'inline-flex', alignItems: 'center', gap: 5,
     }}>
       {children}
     </button>
