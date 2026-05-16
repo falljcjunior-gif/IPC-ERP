@@ -1,74 +1,104 @@
 /**
- * HoldingShell.css — Shell overrides scoped to [data-space="HOLDING"]
- * Converts the shared PlatformShell sidebar + topbar to white executive surfaces
- * when the active space is HOLDING. Zero bleed into SUBSIDIARY or FOUNDATION spaces.
+ * HoldingShell.css — ANTIGRAVITY OS · Holding Space Shell Overrides
+ *
+ * Scoped to [data-space="HOLDING"] — zero bleed into SUBSIDIARY or FOUNDATION spaces.
+ * Converts the shared emerald-glass sidebar + shell into a white premium executive OS.
+ *
+ * Design: Emil Kowalski × Linear × Apple × Stripe
+ * Palette: pure white, no emerald, near-black accents
  */
+
+/* ── CSS token overrides scoped to HOLDING ───────────────────────────────── */
+[data-space="HOLDING"] {
+  --antigravity-primary:      #0F0F10;
+  --antigravity-primary-glow: rgba(0,0,0,0.06);
+  --antigravity-glass:        rgba(255,255,255,0.97);
+  --antigravity-border:       rgba(0,0,0,0.07);
+  --antigravity-card:         #FFFFFF;
+  --antigravity-bg:           #F9FAFB;
+  --antigravity-text:         #0F0F10;
+  --antigravity-text-muted:   #6B7280;
+}
 
 /* ── Sidebar — white executive surface ───────────────────────────────────── */
 [data-space="HOLDING"] .antigravity-floating-sidebar {
-  background: #FFFFFF !important;
-  border: 1px solid rgba(0,0,0,0.07) !important;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.06) !important;
+  background:      rgba(255,255,255,0.97) !important;
+  border:          1px solid rgba(0,0,0,0.07) !important;
+  box-shadow:      0 2px 24px rgba(0,0,0,0.05) !important;
+  backdrop-filter: blur(24px) !important;
 }
 
-/* Kill emerald gradient background on sidebar */
+/* Kill any emerald pseudo-elements on sidebar */
 [data-space="HOLDING"] .antigravity-floating-sidebar::before,
 [data-space="HOLDING"] .antigravity-floating-sidebar::after {
   display: none !important;
 }
 
-/* Sidebar nav items — default gray text */
-[data-space="HOLDING"] .antigravity-floating-sidebar * {
-  --sidebar-text: #6B7280;
+/* ── Sidebar logo cube — near-black instead of emerald ───────────────────── */
+[data-space="HOLDING"] .antigravity-glow {
+  background:  #0F0F10 !important;
+  box-shadow:  none !important;
 }
 
-/* Kill emerald active item accent bar */
+/* ── Sidebar "Antigravity OS" gradient text → plain gray ─────────────────── */
+[data-space="HOLDING"] .antigravity-gradient-text {
+  background:               none !important;
+  -webkit-background-clip:  unset !important;
+  background-clip:          unset !important;
+  -webkit-text-fill-color:  #9CA3AF !important;
+  color:                    #9CA3AF !important;
+}
+
+/* ── Sidebar nav items — kill emerald hover tint ─────────────────────────── */
 [data-space="HOLDING"] .antigravity-floating-sidebar [class*="active"]::before,
 [data-space="HOLDING"] .antigravity-floating-sidebar [class*="accent-bar"] {
   display: none !important;
 }
 
-/* Active nav item — dark text, subtle bg */
+/* Active nav item — dark on white */
 [data-space="HOLDING"] .antigravity-floating-sidebar [class*="active"],
 [data-space="HOLDING"] .antigravity-floating-sidebar [aria-current="page"] {
-  color: #0F0F10 !important;
+  color:      #0F0F10 !important;
   background: rgba(0,0,0,0.05) !important;
 }
 
-/* ── Space badge — minimal dark-on-white ──────────────────────────────────── */
+/* ── SpaceBadge — monochrome pill ────────────────────────────────────────── */
 [data-space="HOLDING"] [class*="SpaceBadge"],
-[data-space="HOLDING"] [class*="space-badge"] {
-  background: rgba(0,0,0,0.05) !important;
-  color: #0F0F10 !important;
-  border: 1px solid rgba(0,0,0,0.10) !important;
-  font-weight: 700 !important;
+[data-space="HOLDING"] [class*="space-badge"],
+[data-space="HOLDING"] [class*="space_badge"] {
+  background:   rgba(0,0,0,0.05) !important;
+  color:        #0F0F10 !important;
+  border:       1px solid rgba(0,0,0,0.10) !important;
+  font-weight:  700 !important;
   letter-spacing: 0.08em !important;
-  box-shadow: none !important;
+  box-shadow:   none !important;
 }
 
-/* ── Platform topbar (shared shell header) — frosted white ───────────────── */
-[data-space="HOLDING"] header,
-[data-space="HOLDING"] [class*="topbar"],
-[data-space="HOLDING"] [class*="platform-header"],
-[data-space="HOLDING"] [class*="header"] {
-  background: rgba(255,255,255,0.92) !important;
-  backdrop-filter: blur(24px) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  border-bottom: 1px solid rgba(0,0,0,0.07) !important;
-  box-shadow: none !important;
+/* ── Bento-card inside HOLDING — override global emerald accent bar ──────── */
+[data-space="HOLDING"] .bento-card {
+  background:    #FFFFFF !important;
+  border:        1px solid rgba(0,0,0,0.07) !important;
+  box-shadow:    0 1px 3px rgba(0,0,0,0.05) !important;
+}
+[data-space="HOLDING"] .bento-card:hover {
+  background:    #F9FAFB !important;
+  border-color:  rgba(0,0,0,0.12) !important;
+  transform:     none !important;
+  box-shadow:    0 4px 16px rgba(0,0,0,0.08) !important;
+}
+[data-space="HOLDING"] .bento-card::before,
+[data-space="HOLDING"] .bento-card:hover::before {
+  opacity: 0 !important;
 }
 
-/* Kill emerald antigravity glow button in sidebar header when in HOLDING */
-[data-space="HOLDING"] .antigravity-glow {
-  background: #0F0F10 !important;
-  box-shadow: none !important;
+/* ── antigravity-card in HOLDING → clean white card ─────────────────────── */
+[data-space="HOLDING"] .antigravity-card {
+  background:   #FFFFFF !important;
+  border:       1px solid rgba(0,0,0,0.07) !important;
+  box-shadow:   0 1px 3px rgba(0,0,0,0.05) !important;
 }
-
-/* Sidebar logo text — dark wordmark */
-[data-space="HOLDING"] .antigravity-floating-sidebar [class*="gradient-text"],
-[data-space="HOLDING"] .antigravity-floating-sidebar [class*="logo"] span {
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  -webkit-text-fill-color: #0F0F10 !important;
-  color: #0F0F10 !important;
+[data-space="HOLDING"] .antigravity-card:hover {
+  transform:    translateY(-2px) !important;
+  box-shadow:   0 6px 20px rgba(0,0,0,0.08) !important;
+  border-color: rgba(0,0,0,0.12) !important;
 }
