@@ -38,15 +38,19 @@ const CallInterface = ({
     if (!isOpen || !callId) return;
     
     // Listen for room ending from any side
-    const unsub = FirestoreService.subscribeToDocument('rooms', callId, (docData) => {
-      // Only hangup if the room specifically transitions to 'ended'
-      if (docData?.status === 'ended') {
-         webrtcService.hangup(callId, currentUser?.id);
-         if (onClose) onClose();
-      }
-    });
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToDocument('rooms', callId, (docData) => {
+        if (docData?.status === 'ended') {
+          webrtcService.hangup(callId, currentUser?.id);
+          if (onClose) onClose();
+        }
+      });
+    } catch (err) {
+      console.warn('[CallInterface] Firestore non disponible (mode DEV sans auth):', err.message);
+    }
 
-    return () => unsub();
+    return () => typeof unsub === 'function' && unsub();
   }, [isOpen, callId, currentUser?.id]);
 
   useEffect(() => {

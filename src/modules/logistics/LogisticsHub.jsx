@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Package, ShoppingBag, Briefcase, 
@@ -47,6 +47,14 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
   const totalProducts = data?.inventory?.products?.length || 0;
   const totalOrders   = data?.purchase?.orders?.length || 0;
 
+  // Real OTIF: On-Time In-Full from shipments
+  const otifPct = React.useMemo(() => {
+    const shipments = data?.inventory?.movements?.filter(m => m.type === 'Sortie' || m.type === 'Expédition') || [];
+    if (shipments.length === 0) return null;
+    const delivered = shipments.filter(s => s.statut === 'Livré' || s.statut === 'Confirmé').length;
+    return Math.round((delivered / shipments.length) * 100);
+  }, [data?.inventory?.movements]);
+
   return (
     <div className="luxury-dashboard-container" style={{ padding: '3rem', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       
@@ -81,7 +89,7 @@ const LogisticsHub = ({ onOpenDetail, accessLevel, appId }) => {
             <Activity size={24} color="#10B981" />
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>Performance OTIF</div>
-              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>94.2%</div>
+              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>{otifPct !== null ? `${otifPct}%` : '—'}</div>
             </div>
           </div>
 

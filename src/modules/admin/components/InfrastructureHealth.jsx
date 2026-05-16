@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, Database, Zap, ShieldCheck, 
@@ -11,42 +11,25 @@ import {
  * Integrated AIOps, Self-Healing Actions, and Topology Visualization.
  */
 const InfrastructureHealth = () => {
-  const [metrics, setMetrics] = useState({
-    cpu: 12,
-    ram: 45,
-    latency: 120,
+  const [metrics] = useState({
+    cpu: null,
+    ram: null,
+    latency: null,
     uptime: 99.98,
-    reqSec: 450,
-    prediction: 'No Failure Predicted'
+    reqSec: null,
+    prediction: 'Monitoring live non configuré'
   });
 
   const [isHealing, setIsHealing] = useState(null);
 
-  // Real-time metrics simulation with "Failure Prediction" logic
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setMetrics(prev => {
-        const nextCpu = Math.max(8, Math.min(98, prev.cpu + (Math.random() * 10 - 5)));
-        const nextPrediction = nextCpu > 80 ? 'Failure Predicted (8h)' : 'System Nominal (48h+)';
-        return {
-          ...prev,
-          cpu: nextCpu,
-          ram: Math.max(30, Math.min(85, prev.ram + (Math.random() * 2 - 1))),
-          latency: Math.max(40, Math.min(450, prev.latency + (Math.random() * 30 - 15))),
-          reqSec: Math.max(100, Math.min(2000, prev.reqSec + (Math.random() * 150 - 75))),
-          prediction: nextPrediction
-        };
-      });
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
-
   const systems = [
     { id: 'auth', label: 'Identity Bridge', status: 'Online', load: 12, icon: <ShieldCheck size={18} />, deps: ['db'] },
-    { id: 'db', label: 'Cloud Firestore', status: 'Online', load: metrics.ram, icon: <Database size={18} />, deps: [] },
-    { id: 'functions', label: 'Cloud Functions', status: metrics.cpu > 85 ? 'Warning' : 'Online', load: metrics.cpu, icon: <Zap size={18} />, deps: ['db', 'storage'] },
+    { id: 'db', label: 'Cloud Firestore', status: 'Online', load: metrics.ram ?? 0, icon: <Database size={18} />, deps: [] },
+    { id: 'functions', label: 'Cloud Functions', status: 'Online', load: metrics.cpu ?? 0, icon: <Zap size={18} />, deps: ['db', 'storage'] },
     { id: 'storage', label: 'Document Storage', status: 'Online', load: 28, icon: <HardDrive size={18} />, deps: [] },
   ];
+
+  const isLiveMetrics = metrics.cpu !== null;
 
   const handleSelfHeal = (action) => {
     setIsHealing(action);
@@ -66,17 +49,12 @@ const InfrastructureHealth = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.85rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem' }}>
             <Activity size={18} color="var(--primary)" /> AIOPS PREDICTION
           </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: metrics.cpu > 80 ? '#DC2626' : 'var(--primary)', marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
             {metrics.prediction}
           </div>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-            Baseline: <span style={{ color: 'var(--text)' }}>V-Cluster Optimal</span>
+            Baseline: <span style={{ color: 'var(--text)' }}>En attente de données live</span>
           </div>
-          {metrics.cpu > 80 && (
-            <motion.div animate={{ opacity: [1, 0.4, 1] }} transition={{ repeat: Infinity, duration: 1.5 }} style={{ position: 'absolute', top: '1rem', right: '1.5rem', padding: '0.4rem 0.75rem', background: 'rgba(220, 38, 38, 0.1)', color: '#DC2626', borderRadius: '999px', fontSize: '0.65rem', fontWeight: 900 }}>
-              CRITICAL TREND
-            </motion.div>
-          )}
         </div>
 
         <div style={{ 
@@ -93,10 +71,10 @@ const InfrastructureHealth = () => {
               { id: 'scale', label: 'Scale Up', icon: <ArrowUpCircle size={14} /> },
               { id: 'cache', label: 'Clear Cache', icon: <RefreshCw size={14} /> }
             ].map(act => (
-              <button 
-                key={act.id} 
+              <button
+                key={act.id}
                 onClick={() => handleSelfHeal(act.label)}
-                disabled={isHealing}
+                disabled={isHealing || !isLiveMetrics}
                 style={{ 
                   padding: '0.6rem', borderRadius: '1rem', border: '1px solid var(--border)', 
                   background: isHealing === act.label ? 'var(--primary)' : 'var(--bg-subtle)',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LifeBuoy, MessageSquare, Plus, Search, Filter, 
@@ -16,6 +16,29 @@ const SupportTab = ({ data, onOpenDetail, updateRecord }) => {
   const tickets = data?.helpdesk?.tickets || [];
   const stages = ['Nouveau', 'En cours', 'En attente', 'Résolu'];
 
+  // Compute real KPIs from tickets
+  const supportKPIs = React.useMemo(() => {
+    if (tickets.length === 0) return { avgResponseMin: null, fcrPct: null, satisfaction: null };
+    // Response time: minutes between createdAt and first status change away from 'Nouveau'
+    const responseTimes = tickets
+      .filter(t => t.firstResponseAt && t.createdAt)
+      .map(t => (new Date(t.firstResponseAt) - new Date(t.createdAt)) / 60000);
+    const avgResponseMin = responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+      : null;
+    // FCR: tickets resolved without re-opening (statut === 'Résolu' and reopenCount === 0)
+    const resolved = tickets.filter(t => t.statut === 'Résolu');
+    const fcr = resolved.length > 0
+      ? Math.round((resolved.filter(t => !t.reopenCount || t.reopenCount === 0).length / resolved.length) * 100)
+      : null;
+    // Satisfaction: average satisfaction score (0-5)
+    const rated = tickets.filter(t => t.satisfactionScore > 0);
+    const satisfaction = rated.length > 0
+      ? (rated.reduce((s, t) => s + t.satisfactionScore, 0) / rated.length).toFixed(1)
+      : null;
+    return { avgResponseMin, fcrPct: fcr, satisfaction };
+  }, [tickets]);
+
   const handleMoveTicket = (item, nextCol) => {
     if (updateRecord) updateRecord('helpdesk', 'tickets', item.id, { statut: nextCol });
   };
@@ -27,21 +50,21 @@ const SupportTab = ({ data, onOpenDetail, updateRecord }) => {
          <motion.div variants={item} className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <div style={{ background: '#0D948815', color: '#0D9488', padding: '12px', borderRadius: '1rem' }}><Zap size={24} /></div>
             <div>
-               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>18 min</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{supportKPIs.avgResponseMin !== null ? `${supportKPIs.avgResponseMin} min` : '—'}</div>
                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>Temps de réponse moyen</div>
             </div>
          </motion.div>
          <motion.div variants={item} className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <div style={{ background: '#6366F115', color: '#6366F1', padding: '12px', borderRadius: '1rem' }}><CheckCircle2 size={24} /></div>
             <div>
-               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>96%</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{supportKPIs.fcrPct !== null ? `${supportKPIs.fcrPct}%` : '—'}</div>
                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>Résolutions First-Contact</div>
             </div>
          </motion.div>
          <motion.div variants={item} className="glass" style={{ padding: '1.5rem', borderRadius: '1.5rem', border: '1px solid var(--border)', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <div style={{ background: '#F59E0B15', color: '#F59E0B', padding: '12px', borderRadius: '1rem' }}><Activity size={24} /></div>
             <div>
-               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>4.8/5</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{supportKPIs.satisfaction !== null ? `${supportKPIs.satisfaction}/5` : '—'}</div>
                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)' }}>Satisfaction Support</div>
             </div>
          </motion.div>

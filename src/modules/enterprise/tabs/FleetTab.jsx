@@ -18,9 +18,18 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
   const fleetStats = useMemo(() => {
     const totalKm = vehicles.reduce((s, v) => s + (v.odo || 0), 0);
     const inService = vehicles.filter(v => v.status === 'En service').length;
-    const maintenanceCosts = maintenance.reduce((s, m) => s + (m.cost || 0), 0);
-    const avgConsumption = 12.5; // Mock L/100km
-    return { totalKm, inService, maintenanceCosts, avgConsumption };
+    const maintenanceCosts = maintenance.reduce((s, m) => s + (Number(m.cost || m.montant || 0)), 0);
+    // Real avg consumption from vehicles with fuelConsumption field
+    const vWithFuel = vehicles.filter(v => v.fuelConsumption > 0);
+    const avgConsumption = vWithFuel.length > 0
+      ? Math.round((vWithFuel.reduce((s, v) => s + v.fuelConsumption, 0) / vWithFuel.length) * 10) / 10
+      : null;
+    // Real compliance: vehicles with valid technical control
+    const validControl = vehicles.filter(v => v.controlTechnique === 'Valide' || v.ct_valide === true).length;
+    const complianceRate = vehicles.length > 0 ? Math.round((validControl / vehicles.length) * 100) : null;
+    // Near-maintenance: vehicles approaching 100k km
+    const nearMaintenance = vehicles.filter(v => v.odo >= 90000 && v.odo < 100000);
+    return { totalKm, inService, maintenanceCosts, avgConsumption, complianceRate, nearMaintenance };
   }, [vehicles, maintenance]);
 
   return (
@@ -28,7 +37,7 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
       {/* Fleet Excellence KPIs */}
       <motion.div variants={item} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1.5rem' }}>
         <KpiCard title="Disponibilité Fleet" value={`${Math.round((fleetStats.inService / vehicles.length) * 100 || 0)}%`} trend={0} trendType="up" icon={<Activity size={22} />} color="#0D9488" sparklineData={[]} />
-        <KpiCard title="Consommation Moy." value={`${fleetStats.avgConsumption} L/100`} trend={0} trendType="down" icon={<Fuel size={22} />} color="#6366F1" sparklineData={[]} />
+        <KpiCard title="Consommation Moy." value={fleetStats.avgConsumption !== null ? `${fleetStats.avgConsumption} L/100` : '—'} trend={0} trendType="down" icon={<Fuel size={22} />} color="#6366F1" sparklineData={[]} />
         <KpiCard title="Kilométrage Total" value={`${(fleetStats.totalKm / 1000).toFixed(1)}k KM`} trend={0} trendType="up" icon={<Gauge size={22} />} color="#8B5CF6" sparklineData={[]} />
         <KpiCard title="Coût Maintenance YTD" value={formatCurrency(fleetStats.maintenanceCosts, true)} trend={0} trendType="up" icon={<Wrench size={22} />} color="#F59E0B" sparklineData={[]} />
       </motion.div>
@@ -138,7 +147,11 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
                   <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)' }}><CheckCircle2 size={18} color="#10B981" /></div>
                   <div>
                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Contrôle Technique Valide</div>
-                     <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>95% de la flotte est en conformité réglementaire.</p>
+                     <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>
+                       {fleetStats.complianceRate !== null
+                         ? `${fleetStats.complianceRate}% de la flotte est en conformité réglementaire.`
+                         : 'Données de contrôle technique non renseignées.'}
+                     </p>
                   </div>
                </div>
                
@@ -146,7 +159,11 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
                   <div style={{ padding: '10px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)' }}><Wrench size={18} color="#F59E0B" /></div>
                   <div>
                      <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>Maintenance Imminente</div>
-                     <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>2 Camions de livraison (CE-034/035) approchent de la révision des 100k KM.</p>
+                     <p style={{ margin: '4px 0 0 0', fontSize: '0.7rem', opacity: 0.6 }}>
+                       {fleetStats.nearMaintenance.length > 0
+                         ? `${fleetStats.nearMaintenance.length} véhicule(s) (${fleetStats.nearMaintenance.map(v => v.immatriculation || v.id).join(', ')}) approchent de la révision des 100k KM.`
+                         : 'Aucun véhicule en approche de révision 100k KM.'}
+                     </p>
                   </div>
                </div>
             </div>
@@ -154,7 +171,12 @@ const FleetTab = ({ data, formatCurrency, onOpenDetail }) => {
             <div style={{ marginTop: '2rem', padding: '1.5rem', borderRadius: '1.5rem', background: '#0D948820', border: '1px solid #0D948830' }}>
                <div style={{ fontSize: '0.65rem', fontWeight: 900, textTransform: 'uppercase', color: '#0D9488', marginBottom: '8px' }}>Efficacité Carburant</div>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>-12% <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Coût/KM</span></div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>
+                    {fleetStats.totalKm > 0 && fleetStats.maintenanceCosts > 0
+                      ? `${(fleetStats.maintenanceCosts / fleetStats.totalKm * 1000).toFixed(0)} XOF`
+                      : '—'}
+                    {' '}<span style={{ fontSize: '0.8rem', opacity: 0.6 }}>Coût/KM</span>
+                  </div>
                   <TrendingUp size={24} color="#10B981" />
                </div>
             </div>

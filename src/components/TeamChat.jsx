@@ -23,6 +23,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   const [newMessage, setNewMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isCalling, setIsCalling] = useState(null); // 'audio', 'video'
+  const [showCreateGroup, setShowCreateGroup] = useState(false);
   const scrollRef = useRef();
   const inputRef = useRef();
 
@@ -228,7 +229,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
                           <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{emp.nom}</div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{emp.poste}</div>
                         </div>
-                        <Circle size={8} fill={Math.random() > 0.5 ? '#10B981' : 'transparent'} color={Math.random() > 0.5 ? '#10B981' : 'var(--border)'} />
+                        <Circle size={8} fill={emp.isOnline === true ? '#10B981' : 'transparent'} color={emp.isOnline === true ? '#10B981' : 'var(--border)'} />
                       </div>
                     ))}
                   </div>
@@ -236,7 +237,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
                 
                 {activeTab === 'groups' && (
                   <div style={{ padding: '1rem' }}>
-                    <button style={{ width: '100%', padding: '0.75rem', borderRadius: '0.7rem', border: '1px dashed var(--accent)', color: 'var(--accent)', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    <button onClick={() => setShowCreateGroup(true)} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.7rem', border: '1px dashed var(--accent)', color: 'var(--accent)', background: 'transparent', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                       <Plus size={16} /> Créer un groupe
                     </button>
                     {/* List of existing groups could go here */}
@@ -341,6 +342,25 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
           <AnimatePresence>
             {isCalling && renderCallOverlay()}
           </AnimatePresence>
+
+          {showCreateGroup && (
+            <div
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}
+              onClick={() => setShowCreateGroup(false)}
+            >
+              <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: 400 }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 16 }}>Créer un groupe</div>
+                <input
+                  placeholder="Nom du groupe..."
+                  style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #E2E8F0', marginBottom: 12, fontSize: 14, boxSizing: 'border-box' }}
+                />
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                  <button onClick={() => setShowCreateGroup(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #E2E8F0', cursor: 'pointer', background: '#F8FAFC' }}>Annuler</button>
+                  <button onClick={() => setShowCreateGroup(false)} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#10B981', color: '#fff', fontWeight: 700, cursor: 'pointer' }}>Créer</button>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

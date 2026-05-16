@@ -54,8 +54,22 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
 
   const otifTrend = useMemo(() => {
     if (SHIPMENTS.length === 0) return [];
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul'];
-    return months.map(m => ({ mois: m, otif: 90 + Math.random() * 8, retards: Math.floor(Math.random() * 5) }));
+    // Grouper par mois depuis les shipments réels
+    const byMonth = {};
+    SHIPMENTS.forEach(s => {
+      const d = s.dateExpedition || s.createdAt;
+      if (!d) return;
+      const month = new Date(d).toLocaleString('fr', { month: 'short' });
+      if (!byMonth[month]) byMonth[month] = { livres: 0, total: 0, retards: 0 };
+      byMonth[month].total++;
+      if (s.statut === 'Livré') byMonth[month].livres++;
+      if (s.statut === 'Retardé') byMonth[month].retards++;
+    });
+    return Object.entries(byMonth).map(([mois, v]) => ({
+      mois,
+      otif: v.total > 0 ? Math.round((v.livres / v.total) * 1000) / 10 : 0,
+      retards: v.retards,
+    }));
   }, [SHIPMENTS]);
 
   const causeRetards = useMemo(() => {

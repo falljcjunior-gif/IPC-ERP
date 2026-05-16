@@ -22,7 +22,9 @@ export const generateCommercialDocument = (record, type) => {
 
   const isInvoice = type === 'invoices';
   const docTitle = isInvoice ? 'FACTURE' : 'DEVIS';
-  const docNumber = record.id ? record.id.substring(0, 8).toUpperCase() : `REF-${Math.floor(Math.random()*10000)}`;
+  const docNumber = record.id
+    ? record.id.substring(0, 8).toUpperCase()
+    : `REF-${Date.now().toString(36).toUpperCase()}`;
 
   // ════════ 1. HEADER (LUXURY STYLE) ════════
   
