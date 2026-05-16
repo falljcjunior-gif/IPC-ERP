@@ -99,7 +99,7 @@ const Analytics = () => {
   const pieData = Object.keys(oppStageCount).map(key => ({ name: key, value: oppStageCount[key] }));
 
   const kpis = [
-    { label: 'CA Brut Consolidé', value: caGenere, isAmount: true, color: '#10B981', tag: 'Revenue', icon: <DollarSign size={24} />, sub: '+12.4% vs LMT', subColor: '#10B981' },
+    { label: 'CA Brut Consolidé', value: caGenere, isAmount: true, color: '#10B981', tag: 'Revenue', icon: <DollarSign size={24} /> },
     { label: 'Pipeline Pondéré', value: pipelineValue, isAmount: true, color: '#3B82F6', tag: 'Sales', icon: <Target size={24} />, sub: `${opportunities.filter(o=>o.etape!=='Perdu').length} opps actives`, subColor: '#3B82F6' },
     { label: 'LTV Moyenne', value: ltv, isAmount: true, color: '#8B5CF6', tag: 'LTV', icon: <Users size={24} />, sub: `${totalClients} clients total`, subColor: '#8B5CF6' },
     { label: 'Masse Salariale', value: masseSalariale, isAmount: true, color: '#F59E0B', tag: 'Payroll', icon: <Briefcase size={24} />, sub: `${employees.length} Collaborateurs`, subColor: '#F59E0B' },
@@ -136,9 +136,11 @@ const Analytics = () => {
               <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1e293b', letterSpacing: '-1px' }}>
                 {k.isAmount ? formatCurrency(k.value) : <AnimatedCounter from={0} to={k.value} duration={1.5} />}
               </div>
-              <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 700, color: k.subColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <TrendingUp size={12} /> {k.sub}
-              </div>
+              {k.sub && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', fontWeight: 700, color: k.subColor, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <TrendingUp size={12} /> {k.sub}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -188,22 +190,21 @@ const Analytics = () => {
             <Zap size={20} color="#F59E0B" /> Flux d'Activité Live
           </h4>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem', overflowY: 'auto', maxHeight: '320px' }}>
-            {[
-              { user: 'Raphaël', action: 'Devis #942 approuvé', time: 'Il y a 2m', color: '#3B82F6' },
-              { user: 'Système', action: 'Backup IPC terminé', time: 'Il y a 15m', color: '#10B981' },
-              { user: 'Marie', action: 'Nouvel employé : Jean D.', time: 'Il y a 1h', color: '#8B5CF6' },
-              { user: 'Finance', action: 'Rapprochement effectué', time: 'Il y a 3h', color: '#F59E0B' },
-              { user: 'Logistique', action: 'Arrivage Stock A-12', time: 'Il y a 5h', color: '#EF4444' },
-              { user: 'Marketing', action: 'Campagne été lancée', time: 'Il y a 1j', color: '#10B981' },
-            ].map((log, i) => (
+            {(data.audit?.logs || []).length > 0
+              ? [...(data.audit?.logs || [])].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 6).map((log, i) => (
               <div key={i} style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem 1.25rem', borderRadius: '1rem', border: '1px solid #f1f5f9', background: '#fafafa' }}>
-                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: log.color, flexShrink: 0 }} />
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10B981', flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.action}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{log.user} · {log.time}</div>
+                  <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.action || log.details}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{log.userName} · {log.timestamp ? new Date(log.timestamp).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '—'}</div>
                 </div>
               </div>
-            ))}
+            ))
+            : (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.85rem', textAlign: 'center', padding: '2rem' }}>
+                Aucune activité récente.<br />Les actions système apparaîtront ici.
+              </div>
+            )}
           </div>
           <button onClick={() => useStore.getState().navigateTo('history')} style={{ width: '100%', padding: '0.875rem', borderRadius: '1rem', border: '2px dashed #e2e8f0', background: 'transparent', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
             Voir tout l'historique

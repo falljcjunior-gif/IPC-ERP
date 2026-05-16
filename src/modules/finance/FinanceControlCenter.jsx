@@ -72,7 +72,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
             <ShieldCheck size={24} color="#10B981" />
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>Indice Santé</div>
-              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>AAA</div>
+              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>—</div>
             </div>
           </div>
 

@@ -95,7 +95,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px', color: 'var(--nexus-primary)' }}><Landmark size={20} /></div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>+5.2%</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-text-muted)' }}>—</div>
         </div>
         <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Trésorerie Dispo.</div>
         <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(financialKPIs.cashOnHand, true)}</div>
@@ -104,7 +104,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px', color: 'var(--nexus-primary)' }}><TrendingUp size={20} /></div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>CIBLE ATTEINTE</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: financialKPIs.revenue > 0 ? 'var(--nexus-primary)' : 'var(--nexus-text-muted)' }}>{financialKPIs.revenue > 0 ? 'ACTIF' : '—'}</div>
         </div>
         <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Chiffre d'Affaires</div>
         <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{formatCurrency(financialKPIs.revenue, true)}</div>
@@ -113,7 +113,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '2rem', background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
           <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '10px', borderRadius: '12px', color: '#F59E0B' }}><Clock size={20} /></div>
-          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#F59E0B' }}>OPTIMAL</div>
+          <div style={{ fontSize: '0.75rem', fontWeight: 900, color: financialKPIs.dso === 0 ? 'var(--nexus-text-muted)' : financialKPIs.dso <= 30 ? 'var(--nexus-primary)' : financialKPIs.dso <= 60 ? '#F59E0B' : '#EF4444' }}>{financialKPIs.dso === 0 ? '—' : financialKPIs.dso <= 30 ? 'OPTIMAL' : financialKPIs.dso <= 60 ? 'CORRECT' : 'RISQUE'}</div>
         </div>
         <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>DSO Moyen</div>
         <div style={{ fontSize: '1.75rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{financialKPIs.dso} Jours</div>

@@ -21,7 +21,20 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
   const stats = useMemo(() => {
     const alerts = products.filter(p => (p.stock || 0) <= (p.alerte || 0)).length;
     const valuation = products.reduce((s, p) => s + (p.stock || 0) * (p.coutUnit || 0), 0);
-    return { alerts, valuation, rotation: 12.4 };
+    // Rotation (days) = (average stock value / daily consumption estimate)
+    // Proxy: total stock / total movements per day (last 30 days)
+    const movements = data?.inventory?.movements || [];
+    const recentMoves = movements.filter(m => {
+      const d = m.date || m.createdAt;
+      if (!d) return false;
+      return (Date.now() - new Date(d)) / (1000 * 60 * 60 * 24) <= 30;
+    });
+    const dailyQty = recentMoves.length > 0
+      ? recentMoves.reduce((s, m) => s + (Number(m.quantite || m.quantity || 0)), 0) / 30
+      : 0;
+    const totalStock = products.reduce((s, p) => s + (Number(p.stock || 0)), 0);
+    const rotation = dailyQty > 0 ? Math.round((totalStock / dailyQty) * 10) / 10 : null;
+    return { alerts, valuation, rotation };
   }, [products]);
 
   return (
@@ -50,19 +63,19 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
       <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-primary)' }}><RefreshCcw size={20} /></div>
-          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-primary)' }}>+2.1%</div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-text-muted)' }}>—</div>
         </div>
         <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Rotation (J)</div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{stats.rotation}</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{stats.rotation !== null ? stats.rotation : '—'}</div>
       </motion.div>
 
       <motion.div variants={item} className="nexus-card" style={{ gridColumn: 'span 3', padding: '1.5rem', background: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div style={{ background: 'rgba(15, 23, 42, 0.05)', padding: '8px', borderRadius: '10px', color: 'var(--nexus-secondary)' }}><Activity size={20} /></div>
-          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>98%</div>
+          <div style={{ fontSize: '0.65rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{warehouses.length > 0 ? 'ACTIF' : '—'}</div>
         </div>
-        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Fiabilité Inventaire</div>
-        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>Nexus Optimal</div>
+        <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Entrepôts Actifs</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{warehouses.length > 0 ? warehouses.length : '—'}</div>
       </motion.div>
       {/* Mid Section: Warehouses + Analytics */}
       <div style={{ gridColumn: 'span 8' }}>
@@ -135,9 +148,15 @@ const InventoryTab = ({ data, onOpenDetail, formatCurrency }) => {
          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <motion.div variants={item} className="nexus-card" style={{ padding: '1.5rem', background: 'var(--nexus-secondary)', color: 'white' }}>
                <div style={{ fontSize: '0.7rem', fontWeight: 900, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '1rem', opacity: 0.7 }}>Stock Prediction</div>
-               <div style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>Optimal (12 Jours)</div>
+               <div style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>
+                 {stats.rotation !== null
+                   ? `${stats.rotation <= 30 ? 'Optimal' : stats.rotation <= 60 ? 'Satisfaisant' : 'Attention'} (${stats.rotation} Jours)`
+                   : '—'}
+               </div>
                <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.6, fontWeight: 500, lineHeight: 1.5 }}>
-                 Les flux actuels garantissent une continuité opérationnelle sans rupture sur les SKU critiques.
+                 {stats.rotation !== null
+                   ? 'Les flux actuels garantissent une continuité opérationnelle sans rupture sur les SKU critiques.'
+                   : 'Aucune donnée de rotation disponible. Enregistrez des mouvements de stock pour activer la prédiction.'}
                </p>
             </motion.div>
 
