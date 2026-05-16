@@ -131,46 +131,14 @@ function Label({ children }) {
 }
 
 /* ── Entity logo marks ──────────────────────────────────────────────────────── */
-function HoldingMark({ size = 26 }) {
-  return (
-    <svg width={size} height={Math.round(size * 0.875)} viewBox="0 0 64 56" fill="none">
-      <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#0F0F10"/>
-      <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.42)"/>
-      <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.22)"/>
-      <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="#0F0F10"/>
-      <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.38)"/>
-      <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.18)"/>
-    </svg>
-  );
+function HoldingMark({ size = 56 }) {
+  return <img src="/logo-holding.png" alt="IPC Green Blocks Holding" style={{ height: size, width: 'auto', objectFit: 'contain' }} />;
 }
-function SubsidiaryMark({ size = 26 }) {
-  const c = '#0891B2';
-  return (
-    <svg width={size} height={Math.round(size * 0.875)} viewBox="0 0 64 56" fill="none">
-      <path d="M2 20 L18 11 L34 20 L18 29 Z" fill={c}/>
-      <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(8,145,178,0.52)"/>
-      <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(8,145,178,0.28)"/>
-      <path d="M30 8 L46 0 L62 8 L46 16 Z" fill={c}/>
-      <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(8,145,178,0.48)"/>
-      <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(8,145,178,0.22)"/>
-    </svg>
-  );
+function SubsidiaryMark({ size = 56 }) {
+  return <img src="/logo-filiale.png" alt="IPC Green Blocks Filiale" style={{ height: size, width: 'auto', objectFit: 'contain' }} />;
 }
-function FoundationMark({ size = 26 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="23" fill="#7EC8C8"/>
-      {/* left person — dark */}
-      <circle cx="14" cy="19" r="5" fill="#1C2B2B"/>
-      <path d="M4 40 Q14 30 24 40" fill="#1C2B2B"/>
-      {/* right person — sage green */}
-      <circle cx="34" cy="21" r="5" fill="#5A9E78"/>
-      <path d="M24 42 Q34 32 44 42" fill="#5A9E78"/>
-      {/* centre person — medium teal */}
-      <circle cx="24" cy="17" r="5.5" fill="#3D8C7A"/>
-      <path d="M13 44 Q24 33 35 44" fill="#3D8C7A"/>
-    </svg>
-  );
+function FoundationMark({ size = 56 }) {
+  return <img src="/logo-fondation.png" alt="Fondation IPC-Collect" style={{ height: size, width: 'auto', objectFit: 'contain' }} />;
 }
 
 /* ── Floating glass chip (on video panel) ───────────────────────────────────── */
@@ -303,34 +271,22 @@ const Login = ({ onLogin }) => {
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: '2.5rem' }}
         >
           {/* Holding */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
-            <HoldingMark size={26} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.16em', color: L.muted, textTransform: 'uppercase', lineHeight: 1.4 }}>I.P.C GREEN BLOCKS</div>
-              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.20em', color: L.text, textTransform: 'uppercase' }}>HOLDING</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <HoldingMark size={48} />
           </div>
 
-          <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 48, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
 
           {/* Subsidiary */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
-            <SubsidiaryMark size={26} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.16em', color: '#0891B2', textTransform: 'uppercase', lineHeight: 1.4 }}>I.P.C GREEN BLOCKS</div>
-              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.20em', color: '#0891B2', textTransform: 'uppercase' }}>FILIALE</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <SubsidiaryMark size={48} />
           </div>
 
-          <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 48, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
 
           {/* Foundation */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
-            <FoundationMark size={26} />
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.14em', color: '#0891B2', textTransform: 'uppercase', lineHeight: 1.4 }}>FONDATION</div>
-              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.16em', color: '#16A34A', textTransform: 'uppercase' }}>I.P.C – COLLECT</div>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
+            <FoundationMark size={48} />
           </div>
         </motion.div>
 
