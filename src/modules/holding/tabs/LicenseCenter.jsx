@@ -60,7 +60,7 @@ const UPGRADE_REQUESTS = [];
 export default function LicenseCenter() {
   const [tab, setTab] = useState('overview');
   const [selected, setSelected] = useState(null);
-  const [assignModal, setAssignModal] = useState(null); // entity to assign
+  const [assignModal, setAssignModal] = useState(null);
 
   const totalMonthlyCost = useMemo(() => {
     return ENTITY_LICENSES.reduce((sum, el) => {
@@ -106,7 +106,53 @@ export default function LicenseCenter() {
       {tab === 'quotas' && <LicQuotas licenses={ENTITY_LICENSES} />}
       {tab === 'billing' && <LicBilling licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
       {tab === 'requests' && <LicRequests requests={UPGRADE_REQUESTS} />}
-      {tab === 'insights' && <LicInsights licenses={ENTITY_LICENSES} />}
+      {tab === 'insights' && <LicInsights licenses={ENTITY_LICENSES} onNavigate={setTab} />}
+
+      {/* A-11: assignModal rendered */}
+      {assignModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 999,
+        }} onClick={() => setAssignModal(null)}>
+          <div style={{
+            background: T.card, borderRadius: 20, border: `1px solid ${T.border}`,
+            padding: 32, width: 480, maxWidth: '90vw', boxShadow: '0 24px 64px rgba(0,0,0,0.12)',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 6 }}>Changer le plan</div>
+            <div style={{ fontSize: 13, color: T.muted, marginBottom: 20 }}>
+              Entité : <strong>{GROUP_ENTITIES.find(e => e.id === assignModal)?.name || assignModal}</strong>
+            </div>
+            <div style={{ display: 'grid', gap: 10, marginBottom: 24 }}>
+              {[LICENSE_PLAN_IDS.STARTER, LICENSE_PLAN_IDS.BUSINESS, LICENSE_PLAN_IDS.ENTERPRISE,
+                LICENSE_PLAN_IDS.INDUSTRIAL, LICENSE_PLAN_IDS.ACADEMY, LICENSE_PLAN_IDS.FOUNDATION,
+              ].map(pid => {
+                const plan = LICENSE_PLANS[pid];
+                return (
+                  <button key={pid} style={{
+                    padding: '12px 16px', borderRadius: 12, border: `1px solid ${T.border}`,
+                    background: T.surface, display: 'flex', alignItems: 'center', gap: 12,
+                    cursor: 'pointer', textAlign: 'left',
+                  }}>
+                    <span style={{ fontSize: 20 }}>{plan.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: plan.color }}>{plan.name}</div>
+                      <div style={{ fontSize: 11, color: T.muted }}>
+                        {plan.maxUsers === -1 ? 'Utilisateurs illimités' : `Max ${plan.maxUsers} utilisateurs`}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setAssignModal(null)} style={{
+                padding: '8px 20px', borderRadius: 8, border: `1px solid ${T.border}`,
+                background: T.surface, color: T.muted, fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              }}>Fermer</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -306,6 +352,10 @@ function LicAssignment({ licenses, onAssign }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <SectionHdr title="Attribution des licences" sub="Gérez les plans assignés à chaque entité du groupe" />
+      {licenses.length === 0 && (
+        <EmptyState Icon={Settings} title="Aucune licence à attribuer"
+          subtitle="Créez des filiales via l'onglet Entités Groupe pour commencer à attribuer des plans." />
+      )}
       {licenses.map(l => {
         const plan = LICENSE_PLANS[l.planId];
         const stateMeta = ENTITY_STATE_META[l.state] || ENTITY_STATE_META[ENTITY_STATES.ACTIVE];
@@ -367,7 +417,11 @@ function LicQuotas({ licenses }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      {QUOTA_KEYS.map(qk => (
+      {licenses.length === 0 && (
+        <EmptyState Icon={Activity} title="Aucune consommation à afficher"
+          subtitle="Les quotas et usages apparaîtront une fois les filiales provisionnées et actives." />
+      )}
+      {licenses.length > 0 && QUOTA_KEYS.map(qk => (
         <div key={qk.key}>
           <SectionHdr title={qk.label} sub="Consommation vs quotas par entité" />
           <div style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, overflow: 'hidden' }}>
@@ -427,6 +481,13 @@ function LicQuotas({ licenses }) {
 // ════════════════════════════════════════════════════════════════════════════
 
 function LicBilling({ licenses, totalCost }) {
+  const [reportMsg, setReportMsg] = useState(null);
+
+  const handleGenerateReport = () => {
+    setReportMsg('Rapport en cours de génération…');
+    setTimeout(() => setReportMsg(null), 3000);
+  };
+
   const rows = licenses.map(l => {
     const plan = LICENSE_PLANS[l.planId];
     const users = {
@@ -446,6 +507,19 @@ function LicBilling({ licenses, totalCost }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {reportMsg && (
+        <div style={{
+          padding: '10px 18px', borderRadius: 10, background: `${T.accent}15`,
+          border: `1px solid ${T.accent}40`, color: T.accent, fontWeight: 600, fontSize: 13,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <FileText size={14} strokeWidth={2} /> {reportMsg}
+        </div>
+      )}
+      {licenses.length === 0 && (
+        <EmptyState Icon={CreditCard} title="Aucune facturation à afficher"
+          subtitle="La refacturation interne sera calculée automatiquement dès que des entités sont provisionnées avec un plan." />
+      )}
       {/* Total */}
       <div style={{
         background: `linear-gradient(135deg, ${T.card}, ${T.cardHi})`,
@@ -459,7 +533,7 @@ function LicBilling({ licenses, totalCost }) {
             Hors frais Firebase & hébergement · Refacturation interne groupe
           </div>
         </div>
-        <button style={{
+        <button onClick={handleGenerateReport} style={{
           padding: '10px 24px', borderRadius: 10,
           background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
           color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer',
@@ -549,6 +623,10 @@ function LicRequests({ requests }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SectionHdr title="File de demandes d'upgrade" sub={`${requests.length} demandes en attente`} />
+      {requests.length === 0 && (
+        <EmptyState Icon={ArrowUp} title="Aucune demande en attente"
+          subtitle="Les demandes d'upgrade soumises par les filiales apparaîtront ici pour approbation." />
+      )}
       {requests.map(req => {
         const status = processed[req.id] || req.status;
         const plan = req.requestedPlan ? LICENSE_PLANS[req.requestedPlan] : null;
@@ -626,89 +704,117 @@ function LicRequests({ requests }) {
 // IA Insights
 // ════════════════════════════════════════════════════════════════════════════
 
-function LicInsights({ licenses }) {
-  const insights = [
-    {
-      Icon: TrendingDown, type: 'Sous-utilisation', color: T.blue, priority: 'medium',
-      title: 'IPC Green Blocks — modules BI sous-utilisés',
-      body: 'Le module BI (Business Intelligence) est activé mais n\'a généré que 12 accès en 30 jours sur 134 utilisateurs. Considérez une formation ou la désactivation pour économiser 20 000 XOF/mois.',
-      action: 'Voir le rapport',
-    },
-    {
-      Icon: AlertCircle, type: 'Saturation imminente', color: T.gold, priority: 'high',
-      title: 'IPC Green Blocks — quota utilisateurs à 85%',
-      body: 'Avec 85 utilisateurs actifs sur un maximum de 100, le seuil d\'alerte est atteint. À ce rythme de recrutement, le quota sera dépassé dans ~18 jours.',
-      action: 'Gérer le quota',
-    },
-    {
-      Icon: Zap, type: 'Optimisation IA', color: T.purple, priority: 'low',
-      title: 'Nexus Academy — consommation IA optimale',
-      body: '68% des tokens IA utilisés ont généré des réponses à valeur ajoutée. Score d\'efficacité IA : 8.4/10. La filiale exploite bien les capacités Nexus Intelligence.',
-      action: null,
-    },
-    {
-      Icon: ShieldAlert, type: 'Risque conformité', color: T.red, priority: 'critical',
-      title: 'YSEE — licence suspendue depuis 8 jours',
-      body: 'L\'entité YSEE est suspendue. Les données restent accessibles en lecture seule, mais aucune opération n\'est possible. Risque de perte de données non sauvegardées si suspension > 30 jours.',
-      action: 'Réactiver',
-    },
-    {
-      Icon: ArrowUpCircle, type: 'Recommandation', color: T.accent, priority: 'medium',
-      title: 'Select — upgrade vers ENTERPRISE recommandé',
-      body: 'Select utilise 94% de son quota projets, 91% du stockage et demande régulièrement des accès API avancés. L\'upgrade vers ENTERPRISE générerait un surcoût de 45 000 XOF/mois mais éviterait 3 blocages opérationnels.',
-      action: 'Préparer upgrade',
-    },
-  ];
+function computeInsights(licenses) {
+  const result = [];
+  const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 
-  const priorityColors  = { critical: T.red, high: T.gold, medium: T.blue, low: T.muted };
-  const priorityIcons   = { critical: AlertCircle, high: AlertTriangle, medium: Info, low: CheckCircle2 };
+  licenses.forEach(l => {
+    const plan = LICENSE_PLANS[l.planId];
+    if (!plan) return;
+
+    if (l.state === ENTITY_STATES.SUSPENDED) {
+      result.push({
+        Icon: ShieldAlert, type: 'Risque conformité', color: T.red, priority: 'critical',
+        title: `${l.entity?.shortName || l.entity_id} — licence suspendue`,
+        body: 'Licence suspendue. Les données sont accessibles en lecture seule. Réactivez pour rétablir les opérations complètes.',
+        action: 'Réactiver', actionNav: null,
+      });
+    }
+
+    if (plan.maxUsers !== -1 && l.usage.userCount > 0) {
+      const pct = l.usage.userCount / plan.maxUsers;
+      if (pct > 0.75) {
+        result.push({
+          Icon: AlertCircle, type: 'Saturation imminente', color: T.gold, priority: 'high',
+          title: `${l.entity?.shortName || l.entity_id} — quota utilisateurs à ${Math.round(pct * 100)}%`,
+          body: `${l.usage.userCount} utilisateurs actifs sur ${plan.maxUsers} maximum. Anticipez un upgrade pour éviter tout blocage opérationnel.`,
+          action: 'Gérer le quota', actionNav: 'quotas',
+        });
+      } else if (pct < 0.3) {
+        result.push({
+          Icon: TrendingDown, type: 'Sous-utilisation', color: T.blue, priority: 'medium',
+          title: `${l.entity?.shortName || l.entity_id} — plan sous-exploité`,
+          body: `Seulement ${Math.round(pct * 100)}% du quota utilisateurs consommé. Un plan inférieur pourrait optimiser les coûts.`,
+          action: 'Voir le rapport', actionNav: 'billing',
+        });
+      }
+    }
+
+    if (plan.maxStorageMB !== -1 && l.usage.storageGB > 0) {
+      const storPct = (l.usage.storageGB * 1024) / plan.maxStorageMB;
+      if (storPct > 0.8) {
+        result.push({
+          Icon: ArrowUpCircle, type: 'Recommandation', color: T.accent, priority: 'medium',
+          title: `${l.entity?.shortName || l.entity_id} — stockage à ${Math.round(storPct * 100)}%`,
+          body: "L'espace de stockage sera saturé prochainement. Un upgrade de plan ou un archivage des données anciennes est recommandé.",
+          action: 'Préparer upgrade', actionNav: 'requests',
+        });
+      }
+    }
+  });
+
+  return result.sort((a, b) => (priorityOrder[a.priority] ?? 3) - (priorityOrder[b.priority] ?? 3));
+}
+
+function LicInsights({ licenses, onNavigate }) {
+  const insights = useMemo(() => computeInsights(licenses), [licenses]);
+
+  const priorityColors = { critical: T.red, high: T.gold, medium: T.blue, low: T.muted };
+  const priorityIcons  = { critical: AlertCircle, high: AlertTriangle, medium: Info, low: CheckCircle2 };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SectionHdr title="Nexus IA — Insights Licences" sub="Détection automatique d'anomalies, sous-utilisation et saturations" />
+      {insights.length === 0 && (
+        <EmptyState Icon={Zap} title="Aucun insight disponible"
+          subtitle={licenses.length === 0
+            ? "Les insights IA apparaîtront automatiquement dès que les filiales seront provisionnées et en activité."
+            : "Toutes les entités opèrent dans les seuils normaux. Aucune anomalie détectée."
+          } />
+      )}
       {insights.map((ins, i) => {
         const InsIcon = ins.Icon;
         const PrioIcon = priorityIcons[ins.priority] || Info;
         return (
-        <div key={i} style={{
-          background: T.card, borderRadius: 14,
-          border: `1px solid ${ins.color}33`,
-          padding: 20, display: 'flex', gap: 16,
-        }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-            background: `${ins.color}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          <div key={i} style={{
+            background: T.card, borderRadius: 14,
+            border: `1px solid ${ins.color}33`,
+            padding: 20, display: 'flex', gap: 16,
           }}>
-            <InsIcon size={20} strokeWidth={2} style={{ color: ins.color }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-              <span style={{
-                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                background: `${ins.color}20`, color: ins.color,
-              }}>{ins.type}</span>
-              <span style={{
-                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
-                background: `${priorityColors[ins.priority]}20`, color: priorityColors[ins.priority],
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-              }}>
-                <PrioIcon size={10} strokeWidth={2.5} /> {ins.priority}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{ins.title}</span>
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: T.muted, lineHeight: 1.6 }}>{ins.body}</p>
-          </div>
-          {ins.action && (
-            <button style={{
-              flexShrink: 0, padding: '8px 16px', borderRadius: 8, alignSelf: 'flex-start',
-              background: `${ins.color}18`, border: `1px solid ${ins.color}33`,
-              color: ins.color, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: `${ins.color}18`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              {ins.action}
-            </button>
-          )}
-        </div>
+              <InsIcon size={20} strokeWidth={2} style={{ color: ins.color }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                  background: `${ins.color}20`, color: ins.color,
+                }}>{ins.type}</span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
+                  background: `${priorityColors[ins.priority]}20`, color: priorityColors[ins.priority],
+                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                }}>
+                  <PrioIcon size={10} strokeWidth={2.5} /> {ins.priority}
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{ins.title}</span>
+              </div>
+              <p style={{ margin: 0, fontSize: 13, color: T.muted, lineHeight: 1.6 }}>{ins.body}</p>
+            </div>
+            {ins.action && (
+              <button onClick={() => ins.actionNav && onNavigate?.(ins.actionNav)} style={{
+                flexShrink: 0, padding: '8px 16px', borderRadius: 8, alignSelf: 'flex-start',
+                background: `${ins.color}18`, border: `1px solid ${ins.color}33`,
+                color: ins.color, fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              }}>
+                {ins.action}
+              </button>
+            )}
+          </div>
         );
       })}
     </div>
@@ -716,6 +822,27 @@ function LicInsights({ licenses }) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function EmptyState({ Icon, title, subtitle }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      justifyContent: 'center', padding: '3rem 2rem', textAlign: 'center',
+      background: T.surface, border: `1px dashed ${T.border}`,
+      borderRadius: 14, gap: 14,
+    }}>
+      <div style={{
+        width: 52, height: 52, borderRadius: 16, background: `${T.accent}10`,
+        border: `1px solid ${T.accent}25`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon size={22} strokeWidth={1.75} style={{ color: T.accent }} />
+      </div>
+      <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{title}</div>
+      <div style={{ fontSize: 13, color: T.muted, maxWidth: 400, lineHeight: 1.6 }}>{subtitle}</div>
+    </div>
+  );
+}
 
 function SectionHdr({ title, sub }) {
   return (

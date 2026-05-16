@@ -56,19 +56,20 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
   // Listen for messages in the active room
   useEffect(() => {
     if (!currentUser?.id || !activeRoom.id) return;
-    
-    // Using unified FirestoreService to handle listeners and security
-    const unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
-      setMessages(msgs);
-      // Auto scroll
-      setTimeout(() => {
-        if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-      }, 100);
-    }, [
-      { field: 'roomId', operator: '==', value: activeRoom.id }
-    ], { field: 'createdAt', direction: 'asc' }, 100);
-
-    return () => unsubscribe();
+    let unsubscribe;
+    try {
+      unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
+        setMessages(msgs);
+        setTimeout(() => {
+          if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }, 100);
+      }, [
+        { field: 'roomId', operator: '==', value: activeRoom.id }
+      ], { field: 'createdAt', direction: 'asc' }, 100);
+    } catch (err) {
+      console.warn('[TeamChat] Firestore non disponible (mode DEV sans auth):', err.message);
+    }
+    return () => typeof unsubscribe === 'function' && unsubscribe();
   }, [activeRoom.id, currentUser?.id]);
 
   const sendMessage = async (e) => {

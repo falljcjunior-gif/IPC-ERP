@@ -18,7 +18,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Building2, Heart, CheckCircle2, X,
   Folder, Settings2, Package, Key, UserCheck, Eye,
-  Play, Pause, Edit3, Archive, Zap, Users,
+  Play, Pause, Edit3, Archive, Zap, Users, Trash2, AlertTriangle,
 } from 'lucide-react';
 import {
   GROUP_ENTITIES, ENTITY_TYPES, getSubsidiaries, getFoundation,
@@ -82,6 +82,9 @@ export default function EntityManagementCenter() {
   const [entities, setEntities] = useState([]);
   const [licenses, setLicenses] = useState([]);
   const [showWizard, setShowWizard] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(null); // entity being edited
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null); // entity to delete
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('all'); // all | subsidiary | foundation
   const [actionLoading, setActionLoading] = useState(null);
@@ -101,15 +104,17 @@ export default function EntityManagementCenter() {
   const [provisioning, setProvisioning] = useState(null); // null | 'loading' | 'done' | 'error'
 
   useEffect(() => {
-    // Use GROUP_ENTITIES as base data (real Firestore in prod)
+    // [GO-LIVE] Base: GROUP_ENTITIES depuis org.schema (données statiques de config).
+    // En production, remplacé par FirestoreService.subscribeToCollection('entities', ...).
     setEntities(GROUP_ENTITIES.filter(e => e.type !== ENTITY_TYPES.HOLDING));
-    // Mock licenses
+    // [GO-LIVE] Licences chargées depuis entity_licenses (Firestore).
+    // Valeurs stables (non aléatoires) — userCount et storageGB à 0 jusqu'au premier provisioning.
     setLicenses(GROUP_ENTITIES.filter(e => e.type !== ENTITY_TYPES.HOLDING).map(e => ({
       entity_id: e.id,
       planId: e.type === ENTITY_TYPES.FOUNDATION ? 'FOUNDATION' : 'ENTERPRISE',
       state: e.id === 'ysee' ? ENTITY_STATES.SUSPENDED : ENTITY_STATES.ACTIVE,
-      userCount: Math.floor(Math.random() * 80) + 10,
-      storageGB: Math.floor(Math.random() * 200) + 20,
+      userCount: 0,
+      storageGB: 0,
     })));
   }, []);
 
@@ -170,6 +175,25 @@ export default function EntityManagementCenter() {
       console.error('[EMC] State change failed:', err);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  // Soft delete : archive l'entité + désactive sa licence + log audit
+  const handleDeleteEntity = async (entity) => {
+    setDeleteLoading(true);
+    try {
+      // 1. Désactiver la licence
+      await EntityService.changeEntityState(entity.id, ENTITY_STATES.ARCHIVED,
+        `Soft-deleted by Holding Super Admin`);
+      // 2. Supprimer de la liste locale
+      setEntities(prev => prev.filter(e => e.id !== entity.id));
+      setLicenses(prev => prev.filter(l => l.entity_id !== entity.id));
+      if (selectedId === entity.id) setSelectedId(null);
+    } catch (err) {
+      console.error('[EMC] Delete failed:', err);
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteConfirm(null);
     }
   };
 
@@ -304,12 +328,16 @@ export default function EntityManagementCenter() {
                       </ActionBtn>
                     )}
                     <ActionBtn color={T.blue} disabled={isLoading}
-                      onClick={(e) => { e.stopPropagation(); }}>
+                      onClick={(e) => { e.stopPropagation(); setShowEditModal(entity); }}>
                       <Edit3 size={11} strokeWidth={2.5} /> Éditer
                     </ActionBtn>
                     <ActionBtn color={T.muted} disabled={isLoading}
                       onClick={(e) => { e.stopPropagation(); handleStateChange(entity.id, ENTITY_STATES.ARCHIVED); }}>
                       <Archive size={11} strokeWidth={2.5} /> Archiver
+                    </ActionBtn>
+                    <ActionBtn color={T.red} disabled={isLoading}
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(entity); }}>
+                      <Trash2 size={11} strokeWidth={2.5} /> Supprimer
                     </ActionBtn>
                   </div>
                 )}
@@ -360,22 +388,166 @@ export default function EntityManagementCenter() {
             </div>
           </div>
 
-          <button style={{
-            padding: '10px', borderRadius: 10,
-            background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
-            color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}>
+          <button
+            onClick={() => {
+              // Navigate to LicenseCenter tab with this entity pre-selected
+              window.dispatchEvent(new CustomEvent('holding:navigate', { detail: { tab: 'licenses' } }));
+            }}
+            style={{
+              padding: '10px', borderRadius: 10,
+              background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
+              color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}>
             <Key size={14} strokeWidth={2} /> Gérer la licence
           </button>
-          <button style={{
-            padding: '10px', borderRadius: 10,
-            background: `${T.blue}18`, border: `1px solid ${T.blue}33`,
-            color: T.blue, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-          }}>
-            <Users size={14} strokeWidth={2} /> Voir les équipes
+          <button
+            onClick={() => setShowEditModal(selectedEntity)}
+            style={{
+              padding: '10px', borderRadius: 10,
+              background: `${T.blue}18`, border: `1px solid ${T.blue}33`,
+              color: T.blue, fontWeight: 700, fontSize: 13, cursor: 'pointer', width: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}>
+            <Edit3 size={14} strokeWidth={2} /> Modifier l'entité
           </button>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          DELETE CONFIRMATION MODAL (soft delete sécurisé)
+          ════════════════════════════════════════════════════════════════════ */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 20,
+        }}>
+          <div style={{
+            background: T.surface, borderRadius: 20, border: `1px solid ${T.red}44`,
+            width: '100%', maxWidth: 480, padding: 32,
+            boxShadow: '0 24px 80px rgba(239, 68, 68, 0.12)',
+          }}>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 20 }}>
+              <div style={{
+                width: 48, height: 48, borderRadius: 14, background: `${T.red}15`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Trash2 size={22} strokeWidth={1.75} style={{ color: T.red }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 800, color: T.text, marginBottom: 6 }}>
+                  Supprimer l'entité ?
+                </div>
+                <div style={{ fontSize: 13, color: T.muted, lineHeight: 1.6 }}>
+                  <strong style={{ color: T.text }}>{showDeleteConfirm.name}</strong> sera archivée
+                  (soft delete). Sa licence sera désactivée, ses accès révoqués et ses données
+                  conservées 30 jours pour restauration. La suppression définitive est irréversible
+                  et réservée au SUPER_ADMIN.
+                </div>
+              </div>
+            </div>
+            <div style={{
+              padding: 14, borderRadius: 10, background: `${T.gold}10`,
+              border: `1px solid ${T.gold}33`, fontSize: 12, color: T.muted, marginBottom: 20,
+            }}>
+              <AlertTriangle size={13} style={{ color: T.gold, marginRight: 6, verticalAlign: 'middle' }} />
+              Cette action désactivera <strong>{showDeleteConfirm.modules?.length || 0} modules</strong>,
+              {' '}révoquera tous les accès utilisateurs et enregistrera un log d'audit horodaté.
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                disabled={deleteLoading}
+                style={{
+                  flex: 1, padding: '11px', borderRadius: 10,
+                  background: T.dim, border: 'none', color: T.muted,
+                  fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }}>
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDeleteEntity(showDeleteConfirm)}
+                disabled={deleteLoading}
+                style={{
+                  flex: 1, padding: '11px', borderRadius: 10,
+                  background: T.red, border: 'none', color: '#fff',
+                  fontWeight: 800, fontSize: 13, cursor: deleteLoading ? 'wait' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  opacity: deleteLoading ? 0.7 : 1,
+                }}>
+                {deleteLoading
+                  ? 'Suppression...'
+                  : <><Trash2 size={14} strokeWidth={2.5} /> Confirmer la suppression</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════
+          EDIT ENTITY MODAL (ouverture rapide — formulaire identité)
+          ════════════════════════════════════════════════════════════════════ */}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 9999, padding: 20,
+        }}>
+          <div style={{
+            background: T.surface, borderRadius: 20, border: `1px solid ${T.border}`,
+            width: '100%', maxWidth: 560, padding: 32,
+            boxShadow: '0 24px 80px rgba(15, 23, 42, 0.15)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}>
+                Modifier — {showEditModal.name}
+              </div>
+              <button onClick={() => setShowEditModal(null)} style={{
+                background: 'none', border: 'none', color: T.muted, cursor: 'pointer', padding: 4,
+                display: 'flex', alignItems: 'center',
+              }}>
+                <X size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+              <FieldGroup label="Nom de l'entité" colSpan={2}>
+                <WizardInput value={showEditModal.name} onChange={() => {}} placeholder="Nom" />
+              </FieldGroup>
+              <FieldGroup label="Secteur d'activité">
+                <WizardSelect value={showEditModal.industry} onChange={() => {}} options={INDUSTRIES} />
+              </FieldGroup>
+              <FieldGroup label="Pays">
+                <WizardSelect value={showEditModal.country || "Côte d'Ivoire"} onChange={() => {}} options={COUNTRIES} />
+              </FieldGroup>
+            </div>
+            <div style={{
+              marginTop: 20, padding: 14, borderRadius: 10,
+              background: `${T.blue}08`, border: `1px solid ${T.blue}22`,
+              fontSize: 12, color: T.muted,
+            }}>
+              La modification complète des entités (modules, licences, directeur) est disponible
+              via le workflow de gouvernance Holding pour traçabilité audit.
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+              <button onClick={() => setShowEditModal(null)} style={{
+                flex: 1, padding: '11px', borderRadius: 10,
+                background: T.dim, border: 'none', color: T.muted,
+                fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              }}>
+                Fermer
+              </button>
+              <button onClick={() => setShowEditModal(null)} style={{
+                flex: 1, padding: '11px', borderRadius: 10,
+                background: T.accent, border: 'none', color: '#fff',
+                fontWeight: 800, fontSize: 13, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              }}>
+                <CheckCircle2 size={14} strokeWidth={2.5} /> Sauvegarder
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

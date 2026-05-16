@@ -56,21 +56,42 @@ const AuthObserver = () => {
   return null;
 };
 
+// [DEV-ONLY] Check for URL bypass before Firebase auth fires
+const _devBypass = import.meta.env.DEV
+  ? (() => {
+      const p = new URLSearchParams(window.location.search);
+      const role   = p.get('dev_role');
+      const entity = p.get('dev_entity') || 'HOLDING';
+      return role ? { role, entity } : null;
+    })()
+  : null;
+
 function App() {
-  const [view, setView] = useState('login');
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [view, setView] = useState(_devBypass ? 'dashboard' : 'login');
+  const [isInitializing, setIsInitializing] = useState(!_devBypass);
   const _hasHydrated = useStore(state => state._hasHydrated);
   const globalSettings = useStore(state => state.globalSettings);
 
   useEffect(() => {
     initRegistry();
   }, []);
-  
+
+  // [DEV-ONLY] Inject mock user when URL bypass is active
+  useEffect(() => {
+    if (!_devBypass) return;
+    useStore.getState().setCurrentUser({
+      id: 'dev-audit', email: 'audit@ipc.com', nom: 'Audit QA',
+      role: _devBypass.role, entity_type: _devBypass.entity,
+      permissions: { roles: [_devBypass.role], allowedModules: [], moduleAccess: {} },
+    });
+  }, []);
+
   const theme = 'light';
 
   useEffect(() => {
+    if (_devBypass) return; // skip Firebase auth when dev bypass is active
     const setUser = useStore.getState().setUser;
-    
+
     // Safety fallback: If Firebase doesn't respond in 5s, we force initialization
     const fallbackTimer = setTimeout(() => {
       if (isInitializing) {
@@ -85,7 +106,7 @@ function App() {
         try {
           const userProfile = await UserService.syncProfile(firebaseUser);
           setUser(userProfile);
-          
+
           // Initialize Realtime Presence
           import('./services/presence.service').then(({ PresenceService }) => {
             PresenceService.setPresence(firebaseUser.uid);
@@ -119,6 +140,7 @@ function App() {
       clearTimeout(fallbackTimer);
     };
   }, []);
+
   if (isInitializing || !_hasHydrated) {
     return <InitializingView label={isInitializing ? "Vérification de la session..." : "Chargement du profil..."} />;
   }
