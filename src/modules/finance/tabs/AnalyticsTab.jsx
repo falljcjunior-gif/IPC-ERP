@@ -42,7 +42,19 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
       revenue: rev,
       expenses: exp,
       cashOnHand: cash,
-      dso: 14, 
+      dso: (() => {
+        // DSO proxy: avg days between invoice issue date and payment
+        const allInvoices = finance.invoices || [];
+        const paidInvoices = allInvoices.filter(inv => inv.statut === 'Payée' || inv.status === 'Payé');
+        if (paidInvoices.length === 0) return 0;
+        const totalDays = paidInvoices.reduce((s, inv) => {
+          const created = new Date(inv.createdAt || inv.date || Date.now());
+          const paid = new Date(inv.paidAt || inv.updatedAt || Date.now());
+          const diff = Math.max(0, (paid - created) / (1000 * 60 * 60 * 24));
+          return s + diff;
+        }, 0);
+        return Math.round(totalDays / paidInvoices.length);
+      })(),
     };
   }, [ledgerLines]);
 
@@ -205,7 +217,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
                </div>
             </div>
          </div>
-         <button className="nexus-card" style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+         <button className="nexus-card" onClick={() => alert('Connexion bancaire : fonctionnalité disponible après configuration des APIs Open Banking dans les paramètres d\'administration.')} style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
             Connecter un nouveau compte
          </button>
       </motion.div>

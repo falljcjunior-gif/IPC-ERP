@@ -74,6 +74,23 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
 
   const currentBalance = balanceGenerale();
 
+  const handleExportBalance = () => {
+    const bal = balanceGenerale();
+    if (bal.lines.length === 0) { alert('Aucune écriture à exporter.'); return; }
+    const header_csv = ['Code', 'Libellé', 'Débit', 'Crédit', 'Solde Débit', 'Solde Crédit'].join(';');
+    const rows = bal.lines.map(l =>
+      [l.code, `"${l.label}"`, l.debit.toFixed(0), l.credit.toFixed(0), l.soldeDebit.toFixed(0), l.soldeCredit.toFixed(0)].join(';')
+    );
+    const csv = [header_csv, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `balance-generale-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Bilan (Balance Sheet) Logic
   const getBilan = () => {
     // Actif = Classes 2, 3 + Classes 4,5 (Solde Débiteur)
@@ -138,7 +155,7 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
 
         {view === 'ledger' && (
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <button className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>Exporter Balance</button>
+            <button className="glass" onClick={handleExportBalance} style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', border: '1px solid var(--border)' }}>Exporter Balance</button>
             <button className="btn-primary" onClick={() => setView('saisie')} style={{ padding: '0.6rem 1.5rem', borderRadius: '1rem', background: '#6366F1', borderColor: '#6366F1' }}>
                <Plus size={18} /> Saisie Directe
             </button>

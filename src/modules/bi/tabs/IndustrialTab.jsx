@@ -37,11 +37,22 @@ const IndustrialTab = ({ data }) => {
     const categories = {};
     products.forEach(p => {
        const cat = p.category || 'Général';
-       if (!categories[cat]) categories[cat] = { category: cat, stock: 0, rotation: 12 + Math.floor(Math.random() * 20) };
+       // Rotation = times per year stock turns over; estimated from workOrders consumption vs stock
+       if (!categories[cat]) categories[cat] = { category: cat, stock: 0, rotation: 0, _count: 0 };
+       categories[cat]._count += 1;
        categories[cat].stock += (parseFloat(p.stock || 0) * parseFloat(p.coutUnit || 0));
     });
-    return Object.values(categories).slice(0, 3);
-  }, [products]);
+    // Compute real rotation: workOrders consuming this category / avg stock
+    const ordersByCategory = {};
+    workOrders.forEach(w => {
+      const cat = w.category || w.productCategory || 'Général';
+      ordersByCategory[cat] = (ordersByCategory[cat] || 0) + 1;
+    });
+    return Object.values(categories).map(c => ({
+      ...c,
+      rotation: c.stock > 0 ? Math.round(((ordersByCategory[c.category] || 0) / Math.max(1, c._count)) * 12) : 0,
+    })).slice(0, 3);
+  }, [products, workOrders]);
 
   // 4. Performance Trend Data
   const perfData = useMemo(() => {

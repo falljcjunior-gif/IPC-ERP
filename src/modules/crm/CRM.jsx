@@ -31,7 +31,7 @@ const CRMCard = ({ deal, formatCurrency, onOpenDetail }) => {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
         <h4 style={{ margin: 0, fontWeight: 700, color: '#111827', fontSize: '0.95rem', lineHeight: 1.3 }}>{deal.titre || 'Opportunité sans nom'}</h4>
-        <button style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><MoreVertical size={16} /></button>
+        <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(deal, 'crm', 'deals'); }} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer' }}><MoreVertical size={16} /></button>
       </div>
 
       <div style={{ fontSize: '1.25rem', fontWeight: 300, color: '#111827', marginBottom: '1rem', letterSpacing: '-0.02em' }}>

@@ -79,10 +79,11 @@ const TrelloBoard = ({ project, tasks, updateProject, updateTask, addTask, onCar
     setAddingTask(null);
   };
 
-  // Helper to resolve User Avatar
+  // Helper to resolve User Avatar — match by id or name
   const getAvatar = (nameOrId) => {
-    const u = users.find(user => Math.random() > 0.5); // Placeholder to match real users eventually
-    return nameOrId?.[0]?.toUpperCase() || '?';
+    if (!nameOrId) return '?';
+    const u = users.find(user => user.id === nameOrId || user.nom === nameOrId || user.email === nameOrId);
+    return (u?.nom || u?.name || nameOrId)?.[0]?.toUpperCase() || '?';
   };
 
   return (

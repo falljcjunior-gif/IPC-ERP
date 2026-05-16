@@ -36,6 +36,21 @@ const Production = ({ onOpenDetail, appId }) => {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Compute real OEE from workOrders for header badge
+  const headerOEE = React.useMemo(() => {
+    const workOrders = data?.production?.workOrders || [];
+    if (workOrders.length === 0) return null;
+    const total = workOrders.length;
+    const completed = workOrders.filter(w => w.status === 'completed' || w.statut === 'Terminé').length;
+    const availability = (completed / total) * 100;
+    const perfSum = workOrders.reduce((s, w) => s + (Number(w.efficiency || w.performance || 0)), 0);
+    const performance = perfSum > 0 ? perfSum / total : availability;
+    const qualSum = workOrders.reduce((s, w) => s + (Number(w.qualityRate || w.quality || 0)), 0);
+    const quality = qualSum > 0 ? qualSum / total : (completed / total) * 100;
+    const oee = (availability / 100) * (performance / 100) * (quality / 100) * 100;
+    return Math.round(oee * 10) / 10;
+  }, [data?.production?.workOrders]);
+
   const handleScan = (code) => {
     setIsScannerOpen(false);
     alert(`Ordre de Fabrication Détecté : ${code}. Synchronisation avec l'atelier...`);
@@ -121,7 +136,7 @@ const Production = ({ onOpenDetail, appId }) => {
               <Activity size={24} color="var(--nexus-primary)" />
               <div style={{ textAlign: 'right' }}>
                  <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--nexus-text-muted)', textTransform: 'uppercase' }}>Rendement Usine</div>
-                 <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>98.2% OEE</div>
+                 <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--nexus-secondary)' }}>{headerOEE !== null ? `${headerOEE}% OEE` : '— OEE'}</div>
               </div>
            </div>
 

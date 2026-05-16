@@ -20,23 +20,47 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
   const orders = data?.production?.workOrders || [];
   
   const industrialKPIs = useMemo(() => {
-    if (orders.length === 0) return { oee: 0, trs: 0, quality: 0, downTime: '0h 0m' };
-    const completed = orders.filter(o => o.statut === 'Terminé').length;
-    const quality = completed > 0 ? 98.5 : 0;
-    return { oee: 88, trs: 92, quality, downTime: '12h 45m' };
+    if (orders.length === 0) return { oee: 0, trs: 0, quality: 0, downTime: '—' };
+    const total = orders.length;
+    const completed = orders.filter(o => o.statut === 'Terminé' || o.status === 'completed').length;
+    // OEE = Availability × Performance × Quality (all 0-100)
+    // Availability: completed / total * 100
+    const availability = total > 0 ? (completed / total) * 100 : 0;
+    // Performance: average efficiency field if available, else availability
+    const perfSum = orders.reduce((s, o) => s + (Number(o.efficiency || o.performance || 0)), 0);
+    const performance = perfSum > 0 ? perfSum / total : availability;
+    // Quality: average qualityRate if available, else completed ratio
+    const qualSum = orders.reduce((s, o) => s + (Number(o.qualityRate || o.quality || 0)), 0);
+    const quality = qualSum > 0 ? qualSum / total : (completed / total) * 100;
+    const oee = (availability / 100) * (performance / 100) * (quality / 100) * 100;
+    // Down time: sum of downTimeMinutes field if present
+    const downMinutes = orders.reduce((s, o) => s + (Number(o.downTimeMinutes || 0)), 0);
+    const downTime = downMinutes > 0
+      ? `${Math.floor(downMinutes / 60)}h ${downMinutes % 60}m`
+      : (completed > 0 ? '0h 0m' : '—');
+    return {
+      oee: Math.round(oee * 10) / 10,
+      trs: Math.round(availability * 10) / 10,
+      quality: Math.round(quality * 10) / 10,
+      downTime,
+    };
   }, [orders]);
 
   const performanceData = useMemo(() => {
     if (orders.length === 0) return [];
-    return [
-      { name: 'Lun', qty: 450 },
-      { name: 'Mar', qty: 520 },
-      { name: 'Mer', qty: 490 },
-      { name: 'Jeu', qty: 610 },
-      { name: 'Ven', qty: 580 },
-      { name: 'Sam', qty: 320 },
-      { name: 'Dim', qty: 0 },
-    ];
+    // Aggregate orders by day-of-week (last 7 days)
+    const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+    const byDay = {};
+    orders.forEach(o => {
+      const d = o.dateDebut || o.createdAt || o.date;
+      if (!d) return;
+      const day = DAY_LABELS[new Date(d).getDay()];
+      byDay[day] = (byDay[day] || 0) + (Number(o.quantite || o.quantity || 1));
+    });
+    return DAY_LABELS.slice(1).concat(DAY_LABELS[0]).map(name => ({
+      name,
+      qty: byDay[name] || 0,
+    }));
   }, [orders]);
 
   const qualityColors = ['#10B981', '#F59E0B', '#EF4444'];
