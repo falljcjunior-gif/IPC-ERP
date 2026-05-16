@@ -130,24 +130,46 @@ function Label({ children }) {
   );
 }
 
-/* ── Social pill button ─────────────────────────────────────────────────────── */
-function SocialBtn({ title, children }) {
+/* ── Entity logo marks ──────────────────────────────────────────────────────── */
+function HoldingMark({ size = 26 }) {
   return (
-    <motion.button
-      type="button"
-      title={title}
-      whileHover={{ y: -1, backgroundColor: '#EFEFED' }}
-      whileTap={{ scale: 0.97 }}
-      style={{
-        flex: 1, height: 44,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#FAFAF9', border: '1px solid rgba(0,0,0,0.09)',
-        borderRadius: 99, cursor: 'pointer', fontFamily: 'inherit',
-        transition: 'background 0.15s ease, transform 0.15s ease',
-      }}
-    >
-      {children}
-    </motion.button>
+    <svg width={size} height={Math.round(size * 0.875)} viewBox="0 0 64 56" fill="none">
+      <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#0F0F10"/>
+      <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.42)"/>
+      <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.22)"/>
+      <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="#0F0F10"/>
+      <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.38)"/>
+      <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.18)"/>
+    </svg>
+  );
+}
+function SubsidiaryMark({ size = 26 }) {
+  const c = '#0891B2';
+  return (
+    <svg width={size} height={Math.round(size * 0.875)} viewBox="0 0 64 56" fill="none">
+      <path d="M2 20 L18 11 L34 20 L18 29 Z" fill={c}/>
+      <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(8,145,178,0.52)"/>
+      <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(8,145,178,0.28)"/>
+      <path d="M30 8 L46 0 L62 8 L46 16 Z" fill={c}/>
+      <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(8,145,178,0.48)"/>
+      <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(8,145,178,0.22)"/>
+    </svg>
+  );
+}
+function FoundationMark({ size = 26 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="23" fill="#7EC8C8"/>
+      {/* left person — dark */}
+      <circle cx="14" cy="19" r="5" fill="#1C2B2B"/>
+      <path d="M4 40 Q14 30 24 40" fill="#1C2B2B"/>
+      {/* right person — sage green */}
+      <circle cx="34" cy="21" r="5" fill="#5A9E78"/>
+      <path d="M24 42 Q34 32 44 42" fill="#5A9E78"/>
+      {/* centre person — medium teal */}
+      <circle cx="24" cy="17" r="5.5" fill="#3D8C7A"/>
+      <path d="M13 44 Q24 33 35 44" fill="#3D8C7A"/>
+    </svg>
   );
 }
 
@@ -273,20 +295,41 @@ const Login = ({ onLogin }) => {
     >
       <div style={{ width: '100%', maxWidth: isMobile ? 420 : 360 }}>
 
-        {/* ── Brand ─────────────────────────────────────────────────────── */}
+        {/* ── Three entity logos ────────────────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.55, delay: 0.12, ease: EASE }}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: '2.5rem' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0, marginBottom: '2.5rem' }}
         >
-          <IPCLogo size={32} />
-          <div>
-            <div style={{ fontSize: '7.5px', fontWeight: 700, letterSpacing: '0.26em', color: L.muted, textTransform: 'uppercase', lineHeight: 1 }}>
-              I.P.C GREEN BLOCKS
+          {/* Holding */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
+            <HoldingMark size={26} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.16em', color: L.muted, textTransform: 'uppercase', lineHeight: 1.4 }}>I.P.C GREEN BLOCKS</div>
+              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.20em', color: L.text, textTransform: 'uppercase' }}>HOLDING</div>
             </div>
-            <div style={{ fontSize: '10.5px', fontWeight: 800, letterSpacing: '0.32em', color: L.text, textTransform: 'uppercase', lineHeight: 1.5 }}>
-              INTELLIGENCE
+          </div>
+
+          <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
+
+          {/* Subsidiary */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
+            <SubsidiaryMark size={26} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.16em', color: '#0891B2', textTransform: 'uppercase', lineHeight: 1.4 }}>I.P.C GREEN BLOCKS</div>
+              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.20em', color: '#0891B2', textTransform: 'uppercase' }}>FILIALE</div>
+            </div>
+          </div>
+
+          <div style={{ width: 1, height: 40, background: 'rgba(0,0,0,0.07)', flexShrink: 0 }} />
+
+          {/* Foundation */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flex: 1 }}>
+            <FoundationMark size={26} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '6px', fontWeight: 700, letterSpacing: '0.14em', color: '#0891B2', textTransform: 'uppercase', lineHeight: 1.4 }}>FONDATION</div>
+              <div style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.16em', color: '#16A34A', textTransform: 'uppercase' }}>I.P.C – COLLECT</div>
             </div>
           </div>
         </motion.div>
@@ -427,7 +470,7 @@ const Login = ({ onLogin }) => {
           </div>
           <div style={{ width: 1, height: 10, background: L.dim }} />
           <div style={{ fontSize: '0.6rem', fontWeight: 700, color: L.dim, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            ANTIGRAVITY OS v4
+            I.P.C OS v4
           </div>
         </motion.div>
 
@@ -472,10 +515,11 @@ const Login = ({ onLogin }) => {
         }}
       />
 
-      {/* Cinematic overlay */}
+      {/* Cinematic overlay — pointerEvents:all blocks YouTube controls from appearing */}
       <div style={{
         position: 'absolute', inset: 0, zIndex: 10,
         background: 'linear-gradient(140deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.02) 45%, rgba(0,0,0,0.32) 100%)',
+        pointerEvents: 'all', cursor: 'default',
       }} />
 
       {/* Floating chip — top left (brand) */}
