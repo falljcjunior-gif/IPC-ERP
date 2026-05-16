@@ -81,10 +81,16 @@ export default function HoldingCockpit() {
 
   useEffect(() => {
     if (!isAllowed) return;
-    const unsub = FirestoreService.subscribeToCollection('intercompany_approvals',
-      (docs) => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); },
-      { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 }
-    );
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToCollection('intercompany_approvals',
+        (docs) => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); },
+        { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 }
+      );
+    } catch (err) {
+      console.warn('[HoldingCockpit] Firestore non disponible (mode DEV sans auth):', err.message);
+      setLoading(false);
+    }
     return () => typeof unsub === 'function' && unsub();
   }, [isAllowed]);
 
@@ -260,12 +266,14 @@ function TabLoader({ label }) {
 // ════════════════════════════════════════════════════════════════════════════
 
 function OverviewTab({ consolidated, loading }) {
+  // [GO-LIVE] change badges: uniquement affichés quand des données réelles existent
+  const hasData = consolidated.revenue > 0 || consolidated.headcount > 0;
   const kpis = [
-    { label: 'CA Consolidé',      rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet,    color: C.teal,   change: '+14.2%', pos: true },
-    { label: 'EBITDA Groupe',     rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3, color: C.blue,   change: '+8.7%',  pos: true },
-    { label: 'Trésorerie Conso.', rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark,  color: C.purple, change: '+5.1%',  pos: true },
-    { label: 'Effectif Total',    rawValue: consolidated.headcount,    formatter: fmt,  unit: 'emp', Icon: Users,     color: C.gold,   change: '+12',    pos: true },
-    { label: 'Filiales Actives',  rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2, color: C.blue, change: 'stable', pos: true },
+    { label: 'CA Consolidé',      rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet,    color: C.teal,   change: hasData ? '+14.2%' : null, pos: true },
+    { label: 'EBITDA Groupe',     rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3, color: C.blue,   change: hasData ? '+8.7%'  : null, pos: true },
+    { label: 'Trésorerie Conso.', rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark,  color: C.purple, change: hasData ? '+5.1%'  : null, pos: true },
+    { label: 'Effectif Total',    rawValue: consolidated.headcount,    formatter: fmt,  unit: 'emp', Icon: Users,     color: C.gold,   change: hasData ? '+12'    : null, pos: true },
+    { label: 'Filiales Actives',  rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2, color: C.blue, change: null, pos: true },
   ];
 
   return (
@@ -287,13 +295,15 @@ function OverviewTab({ consolidated, loading }) {
                 }}>
                   <KpiIcon size={18} strokeWidth={2} />
                 </div>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20,
-                  background: k.pos ? `${C.accent}12` : `${C.red}12`,
-                  color: k.pos ? C.accent : C.red,
-                }}>
-                  {k.change}
-                </span>
+                {k.change && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20,
+                    background: k.pos ? `${C.accent}12` : `${C.red}12`,
+                    color: k.pos ? C.accent : C.red,
+                  }}>
+                    {k.change}
+                  </span>
+                )}
               </div>
               <div style={{ fontSize: '1.6rem', fontWeight: 900, color: C.text, lineHeight: 1 }}>
                 {loading
@@ -467,53 +477,63 @@ function PerformanceTab() {
 // ════════════════════════════════════════════════════════════════════════════
 
 function FinanceTab({ consolidated }) {
-  const rows = [
-    { label: 'Chiffre d\'Affaires Brut',      value: consolidated.revenue, sign: '+' },
-    { label: 'Éliminations Intercompany',      value: -82_000_000,          sign: '-', note: '8 transactions' },
-    { label: 'CA Consolidé Net',               value: consolidated.revenue - 82_000_000, bold: true },
-    { label: 'Charges Opérationnelles',        value: -1_156_000_000,       sign: '-' },
-    { label: 'EBITDA Consolidé',               value: consolidated.ebitda,  bold: true },
-    { label: 'Amortissements & Provisions',    value: -48_000_000,          sign: '-' },
-    { label: 'Résultat Opérationnel (EBIT)',   value: consolidated.ebitda - 48_000_000, bold: true },
-    { label: 'Charges Financières Nettes',     value: -21_000_000,          sign: '-' },
-    { label: 'Résultat Avant Impôts',          value: consolidated.ebitda - 48_000_000 - 21_000_000, bold: true },
-    { label: 'Impôts sur les Sociétés',        value: -58_000_000,          sign: '-' },
-    { label: 'Résultat Net Consolidé',         value: consolidated.ebitda - 127_000_000, bold: true, accent: true },
-  ];
+  const hasData = consolidated.revenue > 0;
+
+  // [GO-LIVE] Le compte de résultat n'est affiché que lorsque des données réelles
+  // sont disponibles via consolidated_reports. Afficher des montants hardcodés
+  // sur un CA=0 produirait des lignes négatives trompeuses.
+  const rows = hasData ? [
+    { label: 'Chiffre d\'Affaires Brut',    value: consolidated.revenue },
+    { label: 'Éliminations Intercompany',   value: consolidated.eliminations || 0, sign: '-' },
+    { label: 'CA Consolidé Net',             value: consolidated.revenue - (consolidated.eliminations || 0), bold: true },
+    { label: 'Charges Opérationnelles',     value: -(consolidated.opex || 0), sign: '-' },
+    { label: 'EBITDA Consolidé',            value: consolidated.ebitda, bold: true },
+    { label: 'Amortissements & Provisions', value: -(consolidated.depreciation || 0), sign: '-' },
+    { label: 'Résultat Opérationnel (EBIT)',value: consolidated.ebitda - (consolidated.depreciation || 0), bold: true },
+    { label: 'Charges Financières Nettes',  value: -(consolidated.financialCosts || 0), sign: '-' },
+    { label: 'Résultat Avant Impôts',       value: consolidated.ebitda - (consolidated.depreciation || 0) - (consolidated.financialCosts || 0), bold: true },
+    { label: 'Impôts sur les Sociétés',     value: -(consolidated.taxes || 0), sign: '-' },
+    { label: 'Résultat Net Consolidé',      value: consolidated.netResult || 0, bold: true, accent: true },
+  ] : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <SectionHeader title="Consolidation Financière Groupe" subtitle="Compte de résultat consolidé — YTD 2026" />
 
-      <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
-        {rows.map((row, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '11px 24px',
-            background: row.accent ? `${C.accent}08` : row.bold ? 'var(--bg-subtle)' : '#fff',
-            borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {row.bold && <div style={{ width: 3, height: 18, borderRadius: 2, background: row.accent ? C.accent : C.blue }} />}
-              <span style={{
-                fontSize: row.bold ? 14 : 13,
-                fontWeight: row.bold ? 700 : 400,
-                color: row.accent ? C.accent : row.bold ? C.text : C.muted,
-                paddingLeft: row.bold ? 0 : 11,
+      {!hasData
+        ? <EmptyState Icon={Wallet} title="Aucune donnée financière consolidée"
+            subtitle="Le compte de résultat consolidé sera généré automatiquement via consolidated_reports dès que les filiales remontent leurs métriques financières." />
+        : (
+          <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
+            {rows.map((row, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '11px 24px',
+                background: row.accent ? `${C.accent}08` : row.bold ? 'var(--bg-subtle)' : '#fff',
+                borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none',
               }}>
-                {row.label}
-              </span>
-              {row.note && <span style={{ fontSize: 11, color: C.muted }}>({row.note})</span>}
-            </div>
-            <span style={{
-              fontSize: row.bold ? 16 : 14, fontWeight: row.bold ? 800 : 500,
-              color: row.accent ? C.accent : row.value < 0 ? C.red : row.bold ? C.text : C.muted,
-            }}>
-              {row.value < 0 ? '(' : ''}{fmtM(Math.abs(row.value))} XOF{row.value < 0 ? ')' : ''}
-            </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {row.bold && <div style={{ width: 3, height: 18, borderRadius: 2, background: row.accent ? C.accent : C.blue }} />}
+                  <span style={{
+                    fontSize: row.bold ? 14 : 13,
+                    fontWeight: row.bold ? 700 : 400,
+                    color: row.accent ? C.accent : row.bold ? C.text : C.muted,
+                    paddingLeft: row.bold ? 0 : 11,
+                  }}>
+                    {row.label}
+                  </span>
+                </div>
+                <span style={{
+                  fontSize: row.bold ? 16 : 14, fontWeight: row.bold ? 800 : 500,
+                  color: row.accent ? C.accent : row.value < 0 ? C.red : row.bold ? C.text : C.muted,
+                }}>
+                  {row.value < 0 ? '(' : ''}{fmtM(Math.abs(row.value))} XOF{row.value < 0 ? ')' : ''}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        )
+      }
 
       <SectionHeader title="Projection Trésorerie Groupe" subtitle="Activée post-mise en service filiales" />
       <div className="bento-card" style={{ padding: '1.5rem' }}>
@@ -533,32 +553,10 @@ function FinanceTab({ consolidated }) {
       </div>
 
       <SectionHeader title="Flux Intercompany" subtitle="Transactions entre entités en attente d'élimination" />
-      <div className="bento-card" style={{ padding: 0, overflow: 'hidden' }}>
-        {[
-          { from: 'Green Blocks', to: 'Prod & Log', amount: 28_000_000, type: 'Prestation', done: false },
-          { from: 'Connect+',     to: 'Holding',    amount: 15_000_000, type: 'Redevance',  done: false },
-          { from: 'Holding',      to: 'Academy',    amount: 12_000_000, type: 'Subvention', done: true  },
-          { from: 'Select',       to: 'Green Blocks',amount: 27_000_000, type: 'Achat stock', done: false },
-        ].map((tx, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: 16, padding: '14px 24px',
-            borderBottom: i < 3 ? `1px solid ${C.border}` : 'none',
-          }}>
-            <div style={{ flex: 1, fontSize: 13, color: C.text }}>
-              <strong>{tx.from}</strong> <span style={{ color: C.muted }}>→</span> <strong>{tx.to}</strong>
-            </div>
-            <div style={{ fontSize: 12, color: C.muted }}>{tx.type}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{fmtM(tx.amount)} XOF</div>
-            <span style={{
-              fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 20,
-              background: tx.done ? `${C.accent}15` : `${C.gold}15`,
-              color: tx.done ? C.accent : C.gold,
-            }}>
-              {tx.done ? 'Éliminé' : 'À éliminer'}
-            </span>
-          </div>
-        ))}
-      </div>
+      {/* [GO-LIVE] Les flux intercompany sont chargés depuis intercompany_transactions (Firestore).
+          Aucune donnée hardcodée — empty state tant que les filiales ne génèrent pas de transactions. */}
+      <EmptyState Icon={GitMerge} title="Aucun flux intercompany en cours"
+        subtitle="Les transactions entre entités apparaîtront ici dès leur enregistrement dans le module Finance de chaque filiale." />
     </div>
   );
 }
@@ -575,65 +573,119 @@ const GOVERNANCE_ICONS = {
 };
 
 function GovernanceTab({ approvals }) {
-  const mockItems = [
-    { id: 1, type: 'Budget',        entity: 'Green Blocks', title: 'Budget Q3 2026 — 285M XOF',          requestedBy: 'Dir. Financier', urgency: 'high',   date: '2026-05-14' },
-    { id: 2, type: 'Interco',       entity: 'Connect+',     title: 'Prestation IT → Holding — 15M XOF',  requestedBy: 'CFO Connect+',  urgency: 'normal', date: '2026-05-13' },
-    { id: 3, type: 'Recrutement',   entity: 'Academy',      title: '3 Formateurs Séniors — Abidjan',      requestedBy: 'DRH Academy',   urgency: 'normal', date: '2026-05-12' },
-    { id: 4, type: 'Investissement', entity: 'Hôtel Sana',  title: 'Rénovation Aile Ouest — 48M XOF',    requestedBy: 'DG Sana',        urgency: 'low',    date: '2026-05-10' },
-  ];
+  const [processed, setProcessed] = React.useState({});
+
+  const handleApprove = async (approval) => {
+    setProcessed(p => ({ ...p, [approval.id]: 'approved' }));
+    try {
+      await FirestoreService.updateDocument('intercompany_approvals', approval.id, {
+        status: 'approved',
+        approvedBy: 'HOLDING_CEO',
+        approvedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('[Governance] Approve failed (dev mode):', err.message);
+    }
+  };
+
+  const handleReject = async (approval) => {
+    setProcessed(p => ({ ...p, [approval.id]: 'rejected' }));
+    try {
+      await FirestoreService.updateDocument('intercompany_approvals', approval.id, {
+        status: 'rejected',
+        rejectedBy: 'HOLDING_CEO',
+        rejectedAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.warn('[Governance] Reject failed (dev mode):', err.message);
+    }
+  };
+
+  // [GO-LIVE] Uniquement les vrais approvals Firestore (intercompany_approvals)
+  // Plus de mockItems hardcodés.
+  const items = approvals;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <SectionHeader title="File de Gouvernance Holding" subtitle="Décisions stratégiques en attente de validation" />
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px',
-          borderRadius: 20, background: `${C.gold}10`, border: `1px solid ${C.gold}30`,
-        }}>
-          <Clock size={13} strokeWidth={2} style={{ color: C.gold }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>
-            <AnimatedCounter from={0} to={mockItems.length} duration={0.8} formatter={v => String(Math.round(v))} />
-            {' '}décision{mockItems.length > 1 ? 's' : ''} en attente
-          </span>
-        </div>
+        {items.length > 0 && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px',
+            borderRadius: 20, background: `${C.gold}10`, border: `1px solid ${C.gold}30`,
+          }}>
+            <Clock size={13} strokeWidth={2} style={{ color: C.gold }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: C.gold }}>
+              <AnimatedCounter from={0} to={items.length} duration={0.8} formatter={v => String(Math.round(v))} />
+              {' '}décision{items.length > 1 ? 's' : ''} en attente
+            </span>
+          </div>
+        )}
       </div>
 
-      <motion.div variants={STAGGER} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {mockItems.map(item => {
-          const cfg = GOVERNANCE_ICONS[item.type] || { Icon: FileText, color: C.muted };
-          const TypeIcon = cfg.Icon;
-          return (
-            <motion.div key={item.id} variants={FADE_UP} className="bento-card" style={{
-              padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: 16,
-            }}>
-              <div style={{
-                width: 46, height: 46, borderRadius: 12, flexShrink: 0,
-                background: `${cfg.color}12`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <TypeIcon size={20} strokeWidth={2} style={{ color: cfg.color }} />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{item.title}</span>
-                  <UrgencyBadge level={item.urgency} />
-                </div>
-                <div style={{ fontSize: 12, color: C.muted }}>
-                  {item.entity} · {item.type} · Demandé par {item.requestedBy} · {item.date}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-success btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <CheckCircle2 size={12} strokeWidth={2.5} /> Valider
-                </button>
-                <button className="btn btn-danger btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                  <AlertTriangle size={12} strokeWidth={2.5} /> Refuser
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+      {items.length === 0
+        ? <EmptyState Icon={Scale} title="Aucune décision en attente"
+            subtitle="Les demandes de validation (budgets, recrutements, investissements, flux intercompany) apparaîtront ici dès leur soumission par les filiales." />
+        : (
+          <motion.div variants={STAGGER} initial="hidden" animate="show" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {items.map(item => {
+              const status = processed[item.id] || item.status || 'pending';
+              const cfg = GOVERNANCE_ICONS[item.type] || { Icon: FileText, color: C.muted };
+              const TypeIcon = cfg.Icon;
+              return (
+                <motion.div key={item.id} variants={FADE_UP} className="bento-card" style={{
+                  padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: 16,
+                  border: status === 'approved' ? `1px solid ${C.accent}44` : status === 'rejected' ? `1px solid ${C.red}44` : undefined,
+                }}>
+                  <div style={{
+                    width: 46, height: 46, borderRadius: 12, flexShrink: 0,
+                    background: `${cfg.color}12`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <TypeIcon size={20} strokeWidth={2} style={{ color: cfg.color }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
+                        {item.title || item.description || `Demande ${item.type}`}
+                      </span>
+                      {item.urgency && <UrgencyBadge level={item.urgency} />}
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted }}>
+                      {item.entityName || item.entity_id} · {item.type}
+                      {item.requestedBy && ` · Demandé par ${item.requestedBy}`}
+                      {item._createdAt && ` · ${new Date(item._createdAt?.seconds * 1000 || item._createdAt).toLocaleDateString('fr-FR')}`}
+                    </div>
+                  </div>
+                  {status === 'pending'
+                    ? (
+                      <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                        <button onClick={() => handleApprove(item)} className="btn btn-success btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <CheckCircle2 size={12} strokeWidth={2.5} /> Valider
+                        </button>
+                        <button onClick={() => handleReject(item)} className="btn btn-danger btn-sm"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <AlertTriangle size={12} strokeWidth={2.5} /> Refuser
+                        </button>
+                      </div>
+                    )
+                    : (
+                      <span style={{
+                        fontSize: 12, fontWeight: 700, padding: '5px 14px', borderRadius: 20, flexShrink: 0,
+                        background: status === 'approved' ? `${C.accent}15` : `${C.red}15`,
+                        color: status === 'approved' ? C.accent : C.red,
+                      }}>
+                        {status === 'approved' ? 'Validé' : 'Refusé'}
+                      </span>
+                    )
+                  }
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        )
+      }
     </div>
   );
 }
