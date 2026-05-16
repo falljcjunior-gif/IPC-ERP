@@ -31,10 +31,10 @@ import { GROUP_ENTITIES, ENTITY_TYPES } from '../../../schemas/org.schema';
 
 // ── Design ────────────────────────────────────────────────────────────────────
 const T = {
-  bg: '#FFFFFF', surface: '#F8FAFC', card: '#FFFFFF', cardHi: '#F1F5F9',
-  border: '#E2E8F0', accent: '#10B981', gold: '#F59E0B',
-  blue: '#3B82F6', red: '#EF4444', purple: '#8B5CF6',
-  text: '#0F172A', muted: '#64748B', dim: '#F1F5F9',
+  bg: '#09090B', surface: '#0F0F11', card: '#141416', cardHi: '#1A1A1D',
+  border: 'rgba(255,255,255,0.07)', accent: 'rgba(255,255,255,0.85)', gold: 'rgba(255,255,255,0.60)',
+  blue: 'rgba(255,255,255,0.70)', red: 'rgba(248,113,113,0.75)', purple: 'rgba(255,255,255,0.55)',
+  text: '#F4F4F5', muted: '#71717A', dim: 'rgba(255,255,255,0.04)',
 };
 
 const fmt = (n) => new Intl.NumberFormat('fr-CI').format(n);

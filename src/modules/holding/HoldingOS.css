@@ -1,0 +1,284 @@
+/**
+ * HoldingOS.css — ANTIGRAVITY OS · Holding Executive Design System
+ * Scoped to .holding-os — zero bleed into subsidiary ERP modules.
+ *
+ * Design language: Emil Kowalski × Linear × Apple × Bloomberg Terminal
+ * Palette: pure monochrome — black / graphite / charcoal / white
+ */
+
+/* ── Root scope ──────────────────────────────────────────────────────────── */
+.holding-os {
+  --os-bg:        #09090B;
+  --os-surface:   #0F0F11;
+  --os-card:      #141416;
+  --os-card-hi:   #1A1A1D;
+  --os-modal:     #1E1E21;
+
+  --os-border:    rgba(255,255,255,0.06);
+  --os-border-md: rgba(255,255,255,0.10);
+  --os-border-hi: rgba(255,255,255,0.18);
+  --os-track:     rgba(255,255,255,0.04);
+
+  --os-text:      #F4F4F5;
+  --os-sub:       #A1A1AA;
+  --os-muted:     #71717A;
+  --os-dim:       #3F3F46;
+  --os-white:     #FFFFFF;
+
+  background:   var(--os-bg);
+  color:        var(--os-text);
+  font-family:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height:   100vh;
+}
+
+/* ── Override global bento-card within holding scope ─────────────────────── */
+.holding-os .bento-card {
+  background:    var(--os-card) !important;
+  border:        1px solid var(--os-border) !important;
+  border-radius: 12px !important;
+  box-shadow:    none !important;
+}
+.holding-os .bento-card:hover {
+  background:    var(--os-card-hi) !important;
+  border-color:  var(--os-border-md) !important;
+  transform:     none !important;
+  box-shadow:    0 0 0 1px rgba(255,255,255,0.06), 0 20px 40px rgba(0,0,0,0.5) !important;
+}
+.holding-os .bento-card::before,
+.holding-os .bento-card:hover::before {
+  opacity: 0 !important; /* kill emerald accent bar */
+}
+
+/* ── OS card ─────────────────────────────────────────────────────────────── */
+.os-card {
+  background:    var(--os-card);
+  border:        1px solid var(--os-border);
+  border-radius: 12px;
+  transition:    border-color 0.18s ease, background 0.18s ease;
+}
+.os-card:hover {
+  background:   var(--os-card-hi);
+  border-color: var(--os-border-md);
+}
+
+/* ── Topbar ──────────────────────────────────────────────────────────────── */
+.os-topbar {
+  position:      sticky;
+  top:           0;
+  z-index:       200;
+  height:        60px;
+  background:    rgba(9,9,11,0.88);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border-bottom: 1px solid var(--os-border);
+  display:       flex;
+  align-items:   center;
+  padding:       0 2.5rem;
+  gap:           2.5rem;
+  flex-shrink:   0;
+}
+
+/* ── Tab nav ─────────────────────────────────────────────────────────────── */
+.os-tab-btn {
+  position:      relative;
+  display:       inline-flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       0 1rem;
+  height:        100%;
+  border:        none;
+  background:    none;
+  cursor:        pointer;
+  font-size:     0.8rem;
+  font-family:   inherit;
+  white-space:   nowrap;
+  transition:    color 0.15s ease;
+  letter-spacing: 0.01em;
+}
+.os-tab-btn:hover { color: var(--os-sub) !important; }
+
+/* ── OS Table ────────────────────────────────────────────────────────────── */
+.os-table {
+  width:           100%;
+  border-collapse: collapse;
+  font-size:       13px;
+}
+.os-table th {
+  padding:        10px 16px;
+  text-align:     left;
+  font-size:      0.62rem;
+  font-weight:    700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color:          #52525B;
+  border-bottom:  1px solid var(--os-border);
+}
+.os-table th:not(:first-child) { text-align: right; }
+.os-table td {
+  padding:       13px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  color:         var(--os-sub);
+  vertical-align: middle;
+}
+.os-table td:not(:first-child) { text-align: right; }
+.os-table tr:last-child td { border-bottom: none; }
+.os-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.os-btn {
+  padding:        6px 16px;
+  border-radius:  8px;
+  border:         1px solid var(--os-border-md);
+  background:     rgba(255,255,255,0.04);
+  color:          var(--os-sub);
+  font-size:      12px;
+  font-weight:    600;
+  font-family:    inherit;
+  cursor:         pointer;
+  transition:     all 0.15s ease;
+  display:        inline-flex;
+  align-items:    center;
+  gap:            6px;
+  letter-spacing: 0.01em;
+  line-height:    1;
+}
+.os-btn:hover {
+  background:   rgba(255,255,255,0.08);
+  color:        var(--os-text);
+  border-color: var(--os-border-hi);
+}
+.os-btn--primary {
+  background:   var(--os-text) !important;
+  color:        var(--os-bg) !important;
+  border-color: transparent !important;
+  font-weight:  700 !important;
+}
+.os-btn--primary:hover {
+  background: var(--os-white) !important;
+}
+.os-btn--danger {
+  border-color: rgba(239,68,68,0.25) !important;
+  color:        rgba(248,113,113,0.75) !important;
+}
+.os-btn--danger:hover {
+  background:   rgba(239,68,68,0.07) !important;
+  color:        rgba(248,113,113,1) !important;
+  border-color: rgba(239,68,68,0.4) !important;
+}
+.os-btn--ghost {
+  background:   transparent !important;
+  border-color: transparent !important;
+  color:        var(--os-muted) !important;
+}
+.os-btn--ghost:hover {
+  color:      var(--os-sub) !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+
+/* ── Badge ───────────────────────────────────────────────────────────────── */
+.os-badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            5px;
+  padding:        4px 10px;
+  border-radius:  99px;
+  font-size:      11px;
+  font-weight:    600;
+  font-family:    inherit;
+  background:     rgba(255,255,255,0.05);
+  color:          var(--os-muted);
+  border:         1px solid var(--os-border);
+  white-space:    nowrap;
+  letter-spacing: 0.01em;
+}
+.os-badge--active {
+  background: rgba(255,255,255,0.09);
+  color:      var(--os-text);
+  border-color: var(--os-border-md);
+}
+.os-badge--alert {
+  background:   rgba(239,68,68,0.07);
+  color:        rgba(248,113,113,0.85);
+  border-color: rgba(239,68,68,0.2);
+}
+
+/* ── Score badge ─────────────────────────────────────────────────────────── */
+.os-score {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           42px;
+  height:          22px;
+  border-radius:   99px;
+  font-size:       11px;
+  font-weight:     700;
+  background:      rgba(255,255,255,0.06);
+  color:           var(--os-sub);
+  border:          1px solid var(--os-border);
+}
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+@keyframes os-spin { to { transform: rotate(360deg); } }
+.os-spinner {
+  width:         20px;
+  height:        20px;
+  border:        1.5px solid rgba(255,255,255,0.07);
+  border-top-color: rgba(255,255,255,0.45);
+  border-radius: 50%;
+  animation:     os-spin 0.75s linear infinite;
+  flex-shrink:   0;
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────────────── */
+@keyframes os-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.os-skeleton {
+  background:      linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 800px 100%;
+  animation:       os-shimmer 1.5s ease infinite;
+  border-radius:   6px;
+}
+
+/* ── Section header ──────────────────────────────────────────────────────── */
+.os-section-title {
+  font-size:      0.65rem;
+  font-weight:    700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color:          #52525B;
+  margin:         0;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+.os-divider {
+  height:     1px;
+  background: var(--os-border);
+  border:     none;
+  margin:     0;
+}
+
+/* ── Content area ────────────────────────────────────────────────────────── */
+.os-content {
+  padding:    2.5rem;
+  max-width:  1400px;
+  margin:     0 auto;
+}
+
+/* ── Recharts overrides inside holding-os ────────────────────────────────── */
+.holding-os .recharts-cartesian-grid-horizontal line,
+.holding-os .recharts-cartesian-grid-vertical line {
+  stroke: rgba(255,255,255,0.04);
+}
+.holding-os .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background:  #1A1A1D !important;
+  border:      1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 10px !important;
+  box-shadow:  0 8px 24px rgba(0,0,0,0.5) !important;
+}

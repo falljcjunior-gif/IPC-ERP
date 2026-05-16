@@ -35,17 +35,17 @@ import { useStore } from '../../../store';
 
 // ── ERP design tokens (light theme, parité HoldingCockpit) ──────────────────
 const C = {
-  accent: '#10B981',
-  gold:   '#F59E0B',
-  blue:   '#3B82F6',
-  red:    '#EF4444',
-  purple: '#8B5CF6',
-  teal:   '#0D9488',
-  border: '#E2E8F0',
-  text:   '#0F172A',
-  muted:  '#64748B',
-  track:  '#F1F5F9',
-  bg:     '#F8FAFC',
+  accent: 'rgba(255,255,255,0.85)',
+  gold:   'rgba(255,255,255,0.60)',
+  blue:   'rgba(255,255,255,0.70)',
+  red:    'rgba(248,113,113,0.75)',
+  purple: 'rgba(255,255,255,0.55)',
+  teal:   'rgba(255,255,255,0.70)',
+  border: 'rgba(255,255,255,0.07)',
+  text:   '#F4F4F5',
+  muted:  '#71717A',
+  track:  'rgba(255,255,255,0.04)',
+  bg:     '#09090B',
 };
 
 const STATE_BADGE = {
@@ -116,10 +116,16 @@ export default function CountryManagementCenter() {
 
   // Live subscription to country_scopes
   useEffect(() => {
-    const unsub = FirestoreService.subscribeToCollection('country_scopes',
-      (docs) => { setScopes(docs); setLoading(false); },
-      { orderBy: [{ field: '_createdAt', direction: 'desc' }] }
-    );
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToCollection('country_scopes',
+        (docs) => { setScopes(docs); setLoading(false); },
+        { orderBy: [{ field: '_createdAt', direction: 'desc' }] }
+      );
+    } catch (err) {
+      console.warn('[CountryManagementCenter] Firestore non disponible (mode DEV sans auth):', err.message);
+      setLoading(false);
+    }
     return () => typeof unsub === 'function' && unsub();
   }, []);
 
