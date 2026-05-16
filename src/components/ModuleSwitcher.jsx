@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Users, ShoppingCart, Package, Briefcase, FileText, CreditCard,
-  Users2, Factory, Mail, HardDrive, Truck, Globe, ShoppingBag,
-  PenSquare, MessageSquare, Headphones, GraduationCap, UserPlus,
-  CalendarClock, ClipboardCheck, Workflow, Radio, PhoneCall,
+  Users2, Factory, Mail, HardDrive, Truck,
+  PenSquare, MessageSquare, UserPlus,
+  ClipboardCheck, Workflow,
   BookOpen, MessageCircle
 } from 'lucide-react';
 
@@ -13,10 +13,9 @@ const categories = [
     name: 'Finance',
     apps: [
       { id: 'accounting', name: 'Comptabilité', icon: <FileText />, color: '#14B8A6' },
-      { id: 'finance', name: 'Facturation & Finance', icon: <CreditCard />, color: '#EC4899' },
+      { id: 'finance', name: 'Finance & Facturation', icon: <CreditCard />, color: '#EC4899' },
       { id: 'expenses', name: 'Notes de frais', icon: <CreditCard />, color: '#F43F5E' },
-      { id: 'bi', name: 'Feuilles de calcul (BI)', icon: <Briefcase />, color: '#8B5CF6' },
-      { id: 'dms', name: 'Documents', icon: <BookOpen />, color: '#64748B' },
+      { id: 'bi', name: 'Business Intelligence', icon: <Briefcase />, color: '#8B5CF6' },
     ]
   },
   {
@@ -24,49 +23,42 @@ const categories = [
     apps: [
       { id: 'crm', name: 'CRM', icon: <Users />, color: '#3B82F6' },
       { id: 'sales', name: 'Ventes', icon: <ShoppingCart />, color: '#10B981' },
+      { id: 'marketing', name: 'Marketing Digital', icon: <Mail />, color: '#F59E0B' },
     ]
   },
   {
-    name: "Chaîne d'approvisionnement",
+    name: "Opérations & Supply Chain",
     apps: [
-      { id: 'inventory',  name: 'Inventaire',   icon: <Package />,  color: '#EF4444' },
-      { id: 'production', name: 'Fabrication',  icon: <Factory />,  color: '#06B6D4' },
-      { id: 'purchase',   name: 'Achats',       icon: <HardDrive />,color: '#64748B' },
-      { id: 'shipping',   name: 'Logistique',   icon: <Truck />,    color: '#3B82F6' },
-      { id: 'projects',   name: 'PLM / Projets',icon: <Briefcase />,color: '#8B5CF6' },
+      { id: 'inventory',  name: 'Stocks & Logistique', icon: <Package />,  color: '#EF4444' },
+      { id: 'production', name: 'Production',           icon: <Factory />,  color: '#06B6D4' },
+      { id: 'shipping',   name: 'Expéditions',          icon: <Truck />,    color: '#3B82F6' },
+      { id: 'quality',    name: 'Qualité & HSE',        icon: <HardDrive />,color: '#64748B' },
+      { id: 'fleet',      name: 'Flotte',               icon: <Truck />,    color: '#10B981' },
     ]
   },
   {
     name: 'Ressources Humaines',
     apps: [
-      { id: 'hr', name: 'Employés', icon: <Users2 />, color: '#F97316' },
-      { id: 'talent', name: 'Recrutement / Congés / Évaluations', icon: <UserPlus />, color: '#EC4899' },
+      { id: 'hr',      name: 'Employés',                            icon: <Users2 />,  color: '#F97316' },
+      { id: 'talent',  name: 'Recrutement / Congés / Évaluations',  icon: <UserPlus />,color: '#EC4899' },
+      { id: 'payroll', name: 'Paie & Social',                       icon: <CreditCard />, color: '#8B5CF6' },
     ]
   },
   {
-    name: 'Marketing',
+    name: 'Services & Projets',
     apps: [
-      { id: 'marketing', name: 'Marketing Social / Email / SMS', icon: <Mail />, color: '#F59E0B' },
-      { id: 'marketing', name: 'Événements / Automation / Sondages', icon: <PenSquare />, color: '#0EA5E9' },
-    ]
-  },
-  {
-    name: 'Services',
-    apps: [
-      { id: 'projects', name: 'Projet', icon: <Briefcase />, color: '#8B5CF6' },
-      { id: 'timesheets', name: 'Feuilles de temps', icon: <CalendarClock />, color: '#3B82F6' },
-      { id: 'shipping', name: 'Services sur site / Planification / RDV', icon: <Workflow />, color: '#10B981' },
-      { id: 'helpdesk', name: 'Assistance', icon: <MessageCircle />, color: '#F97316' },
+      { id: 'projects',   name: 'Projets',              icon: <Briefcase />,   color: '#8B5CF6' },
+      { id: 'helpdesk',   name: 'Support & Helpdesk',   icon: <MessageCircle />,color: '#F97316' },
+      { id: 'legal',      name: 'Juridique',            icon: <ClipboardCheck />,color: '#14B8A6' },
     ]
   },
   {
     name: 'Productivité',
     apps: [
-      { id: 'connect', name: 'Discussion', icon: <MessageSquare />, color: '#8B5CF6' },
-      { id: 'workflows', name: 'Validations', icon: <ClipboardCheck />, color: '#22C55E' },
-      { id: 'connect', name: 'Internet des Objets', icon: <Radio />, color: '#0EA5E9' },
-      { id: 'connect', name: 'VoIP / WhatsApp', icon: <PhoneCall />, color: '#F43F5E' },
-      { id: 'dms', name: 'Connaissances', icon: <BookOpen />, color: '#6366F1' },
+      { id: 'connect',    name: 'Connect Plus',    icon: <MessageSquare />, color: '#8B5CF6' },
+      { id: 'dms',        name: 'Documents Cloud', icon: <BookOpen />,      color: '#6366F1' },
+      { id: 'signature',  name: 'Signature',       icon: <PenSquare />,     color: '#0EA5E9' },
+      { id: 'workflows',  name: 'Workflows',       icon: <Workflow />,      color: '#22C55E' },
     ]
   }
 ];

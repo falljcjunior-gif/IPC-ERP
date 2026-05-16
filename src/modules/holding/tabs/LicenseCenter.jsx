@@ -15,6 +15,13 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
+  CheckCircle2, AlertCircle, AlertTriangle, Info,
+  TrendingDown, Zap, ShieldAlert, ArrowUpCircle,
+  Building2, Users, HardDrive, Cpu, Banknote, KeyRound,
+  Eye, Package, BarChart3, CreditCard, FileText, ArrowUp,
+  Activity, Settings,
+} from 'lucide-react';
+import {
   LICENSE_PLANS, LICENSE_PLAN_IDS, ALL_MODULES,
   ENTITY_STATES, ENTITY_STATE_META,
   calculateMonthlyBill, getQuotaStatus, QUOTA_THRESHOLDS,
@@ -24,23 +31,23 @@ import { GROUP_ENTITIES, ENTITY_TYPES } from '../../../schemas/org.schema';
 
 // ── Design ────────────────────────────────────────────────────────────────────
 const T = {
-  bg: '#0a0c10', surface: '#0d1117', card: '#111318', cardHi: '#141920',
-  border: '#1f2937', accent: '#2ecc71', gold: '#f39c12',
-  blue: '#3498db', red: '#e74c3c', purple: '#8e44ad',
-  text: '#e5e7eb', muted: '#6b7280', dim: '#1f2937',
+  bg: '#FFFFFF', surface: '#F8FAFC', card: '#FFFFFF', cardHi: '#F1F5F9',
+  border: '#E2E8F0', accent: '#10B981', gold: '#F59E0B',
+  blue: '#3B82F6', red: '#EF4444', purple: '#8B5CF6',
+  text: '#0F172A', muted: '#64748B', dim: '#F1F5F9',
 };
 
 const fmt = (n) => new Intl.NumberFormat('fr-CI').format(n);
 const fmtM = (n) => n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
 
 const LC_TABS = [
-  { id: 'overview', label: 'Vue d\'ensemble', icon: '' },
-  { id: 'plans', label: 'Plans & Features', icon: '' },
-  { id: 'assignment', label: 'Attribution', icon: '' },
-  { id: 'quotas', label: 'Quotas & Usage', icon: '' },
-  { id: 'billing', label: 'Facturation interne',icon: '' },
-  { id: 'requests', label: 'Demandes upgrade', icon: '' },
-  { id: 'insights', label: 'IA & Insights', icon: '' },
+  { id: 'overview',   label: 'Vue d\'ensemble',   Icon: BarChart3  },
+  { id: 'plans',      label: 'Plans & Features',  Icon: Package    },
+  { id: 'assignment', label: 'Attribution',        Icon: Settings   },
+  { id: 'quotas',     label: 'Quotas & Usage',    Icon: Activity   },
+  { id: 'billing',    label: 'Facturation interne',Icon: CreditCard },
+  { id: 'requests',   label: 'Demandes upgrade',  Icon: ArrowUp    },
+  { id: 'insights',   label: 'IA & Insights',     Icon: Zap        },
 ];
 
 // [GO-LIVE] Mocks supprimés — l'ERP démarre à vide.
@@ -77,17 +84,20 @@ export default function LicenseCenter() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Sub-tabs */}
       <div style={{ display: 'flex', gap: 4, overflowX: 'auto' }}>
-        {LC_TABS.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: tab === t.id ? `${T.accent}20` : T.dim,
-            color: tab === t.id ? T.accent : T.muted,
-            fontWeight: tab === t.id ? 700 : 500, fontSize: 12, whiteSpace: 'nowrap',
-          }}>
-            <span>{t.icon}</span>{t.label}
-          </button>
-        ))}
+        {LC_TABS.map(t => {
+          const TabIcon = t.Icon;
+          return (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '7px 14px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: tab === t.id ? `${T.accent}15` : T.dim,
+              color: tab === t.id ? T.accent : T.muted,
+              fontWeight: tab === t.id ? 700 : 500, fontSize: 12, whiteSpace: 'nowrap',
+            }}>
+              <TabIcon size={12} strokeWidth={2} />{t.label}
+            </button>
+          );
+        })}
       </div>
 
       {tab === 'overview' && <LicOverview licenses={ENTITY_LICENSES} totalCost={totalMonthlyCost} />}
@@ -112,26 +122,43 @@ function LicOverview({ licenses, totalCost }) {
   const suspended = licenses.filter(l => l.state === ENTITY_STATES.SUSPENDED).length;
 
   const kpis = [
-    { icon: '', label: 'Entités actives', value: licenses.length - suspended, sub: `${suspended} suspendue(s)`, color: T.accent },
-    { icon: '', label: 'Utilisateurs groupe', value: fmt(totalUsers), sub: 'tous niveaux confondus', color: T.blue },
-    { icon: '', label: 'Stockage total', value: `${totalStorage} Go`, sub: 'consommé groupe', color: T.purple },
-    { icon: '', label: 'Tokens IA (mois)', value: fmtM(totalAI), sub: 'Nexus Intelligence', color: T.gold },
-    { icon: '', label: 'Coût ERP / mois', value: `${fmtM(totalCost)} XOF`, sub: 'refacturation interne', color: T.red },
-    { icon: '', label: 'Licences actives', value: licenses.filter(l => l.state === ENTITY_STATES.ACTIVE).length, sub: 'plans assignés', color: T.accent },
+    { Icon: Building2,  label: 'Entités actives',    value: licenses.length - suspended, sub: `${suspended} suspendue(s)`, color: T.accent },
+    { Icon: Users,      label: 'Utilisateurs groupe', value: fmt(totalUsers),             sub: 'tous niveaux confondus',    color: T.blue   },
+    { Icon: HardDrive,  label: 'Stockage total',      value: `${totalStorage} Go`,        sub: 'consommé groupe',           color: T.purple },
+    { Icon: Cpu,        label: 'Tokens IA (mois)',    value: fmtM(totalAI),               sub: 'Nexus Intelligence',        color: T.gold   },
+    { Icon: Banknote,   label: 'Coût ERP / mois',    value: `${fmtM(totalCost)} XOF`,    sub: 'refacturation interne',     color: T.red    },
+    { Icon: KeyRound,   label: 'Licences actives',   value: licenses.filter(l => l.state === ENTITY_STATES.ACTIVE).length, sub: 'plans assignés', color: T.accent },
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 14 }}>
-        {kpis.map(k => (
-          <div key={k.label} style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, padding: 18 }}>
-            <div style={{ fontSize: 24, marginBottom: 8 }}>{k.icon}</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
-            <div style={{ fontSize: 12, color: T.text, fontWeight: 600, marginTop: 2 }}>{k.label}</div>
-            <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{k.sub}</div>
-          </div>
-        ))}
+        {kpis.map(k => {
+          const KIcon = k.Icon;
+          return (
+            <div key={k.label} style={{ background: T.card, borderRadius: 14, border: `1px solid ${T.border}`, padding: 18 }}>
+              <div style={{
+                width: 38, height: 38, borderRadius: 10, marginBottom: 12,
+                background: `${k.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <KIcon size={18} strokeWidth={2} style={{ color: k.color }} />
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: k.color }}>{k.value}</div>
+              <div style={{ fontSize: 12, color: T.text, fontWeight: 600, marginTop: 2 }}>{k.label}</div>
+              <div style={{ fontSize: 11, color: T.muted, marginTop: 2 }}>{k.sub}</div>
+            </div>
+          );
+        })}
       </div>
+
+      {licenses.length === 0 && (
+        <div style={{
+          padding: '2rem', textAlign: 'center', color: T.muted, fontSize: 13,
+          border: `1px dashed ${T.border}`, borderRadius: 12, background: T.surface,
+        }}>
+          Aucune entité provisionnée. Les licences apparaîtront après la création des filiales via l'onglet Entités Groupe.
+        </div>
+      )}
 
       {/* License heatmap */}
       <SectionHdr title="Heatmap Licences" sub="Plan attribué par entité + état de consommation" />
@@ -201,17 +228,17 @@ function LicPlans() {
   ].map(id => LICENSE_PLANS[id]);
 
   const featureRows = [
-    { key: 'maxUsers', label: 'Utilisateurs max', format: v => v === -1 ? '∞' : v },
-    { key: 'maxProjects', label: 'Projets max', format: v => v === -1 ? '∞' : v },
-    { key: 'maxStorageMB', label: 'Stockage', format: v => v === -1 ? '∞' : v >= 1048576 ? `${v/1048576} To` : v >= 1024 ? `${v/1024} Go` : `${v} Mo` },
-    { key: 'aiTokensMonthly', label: 'Tokens IA/mois', format: v => v === -1 ? '∞' : fmtM(v) },
-    { key: 'bi', label: 'BI & Analytics', feature: true, format: v => v ? '' : '—' },
-    { key: 'automations', label: 'Automatisations', feature: true, format: v => v ? '' : '—' },
-    { key: 'sso', label: 'SSO Entreprise', feature: true, format: v => v ? '' : '—' },
-    { key: 'apiAccess', label: 'Accès API', feature: true, format: v => v ? '' : '—' },
-    { key: 'multiCurrency', label: 'Multi-devises', feature: true, format: v => v ? '' : '—' },
-    { key: 'consolidation', label: 'Consolidation', feature: true, format: v => v ? '' : '—' },
-    { key: 'customReports', label: 'Rapports custom', feature: true, format: v => v ? '' : '—' },
+    { key: 'maxUsers',       label: 'Utilisateurs max',  format: v => v === -1 ? '∞' : v },
+    { key: 'maxProjects',    label: 'Projets max',        format: v => v === -1 ? '∞' : v },
+    { key: 'maxStorageMB',   label: 'Stockage',           format: v => v === -1 ? '∞' : v >= 1048576 ? `${v/1048576} To` : v >= 1024 ? `${v/1024} Go` : `${v} Mo` },
+    { key: 'aiTokensMonthly',label: 'Tokens IA/mois',    format: v => v === -1 ? '∞' : fmtM(v) },
+    { key: 'bi',             label: 'BI & Analytics',     feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'automations',    label: 'Automatisations',    feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'sso',            label: 'SSO Entreprise',     feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'apiAccess',      label: 'Accès API',          feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'multiCurrency',  label: 'Multi-devises',      feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'consolidation',  label: 'Consolidation',      feature: true, format: v => v ? 'CHECK' : 'DASH' },
+    { key: 'customReports',  label: 'Rapports custom',    feature: true, format: v => v ? 'CHECK' : 'DASH' },
   ];
 
   return (
@@ -244,17 +271,22 @@ function LicPlans() {
               {plans.map(plan => {
                 const raw = row.feature ? plan.features?.[row.key] : plan[row.key];
                 const val = row.format ? row.format(raw) : raw;
-                const isPos = val === '';
-                const isNeg = val === '—';
+                const isPos = val === 'CHECK';
+                const isNeg = val === 'DASH';
                 return (
                   <td key={plan.id} style={{
                     padding: '12px 16px', textAlign: 'center',
-                    color: isPos ? T.accent : isNeg ? T.dim : T.text,
+                    color: isPos ? T.accent : isNeg ? T.muted : T.text,
                     fontWeight: isPos ? 700 : 500,
-                    borderBottom: `1px solid ${T.border}22`,
-                    fontSize: isPos || isNeg ? 16 : 13,
+                    borderBottom: `1px solid ${T.border}`,
+                    fontSize: 13,
                   }}>
-                    {val}
+                    {isPos
+                      ? <CheckCircle2 size={16} strokeWidth={2.5} style={{ color: T.accent }} />
+                      : isNeg
+                      ? <span style={{ color: T.muted, fontSize: 16, lineHeight: 1 }}>—</span>
+                      : val
+                    }
                   </td>
                 );
               })}
@@ -378,8 +410,8 @@ function LicQuotas({ licenses }) {
                       {Math.round((pct || 0) * 100)}%
                     </span>
                   )}
-                  {status === 'exceeded' && <span title="Quota dépassé" style={{ color: T.red }}></span>}
-                  {status === 'critical' && <span title="Seuil critique" style={{ color: '#e67e22' }}></span>}
+                  {status === 'exceeded' && <AlertCircle  size={16} strokeWidth={2} title="Quota dépassé"   style={{ color: T.red,      flexShrink: 0 }} />}
+                  {status === 'critical' && <AlertTriangle size={16} strokeWidth={2} title="Seuil critique" style={{ color: '#e67e22', flexShrink: 0 }} />}
                 </div>
               );
             })}
@@ -431,9 +463,10 @@ function LicBilling({ licenses, totalCost }) {
           padding: '10px 24px', borderRadius: 10,
           background: `${T.accent}18`, border: `1px solid ${T.accent}33`,
           color: T.accent, fontWeight: 700, fontSize: 13, cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 6,
         }}>
- Générer rapport
- </button>
+          <FileText size={14} strokeWidth={2} /> Générer rapport
+        </button>
       </div>
 
       {/* Per-entity breakdown */}
@@ -550,7 +583,7 @@ function LicRequests({ requests }) {
                       Actuel: <strong>{req.currentValue}</strong> → Demandé: <strong style={{ color: T.accent }}>{req.requestedValue}</strong>
                     </div>
                   )}
-                  <div style={{ fontSize: 11, color: T.dim, marginTop: 4 }}>Demandé le {req.createdAt}</div>
+                  <div style={{ fontSize: 11, color: T.muted, marginTop: 4 }}>Demandé le {req.createdAt}</div>
                 </div>
               </div>
               {status === 'pending' ? (
@@ -559,12 +592,18 @@ function LicRequests({ requests }) {
                     padding: '8px 18px', borderRadius: 8,
                     background: `${T.accent}20`, border: `1px solid ${T.accent}44`,
                     color: T.accent, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                  }}> Approuver</button>
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                  }}>
+                    <CheckCircle2 size={12} strokeWidth={2.5} /> Approuver
+                  </button>
                   <button onClick={() => handleReject(req)} style={{
                     padding: '8px 18px', borderRadius: 8,
                     background: `${T.red}20`, border: `1px solid ${T.red}44`,
                     color: T.red, fontWeight: 700, fontSize: 12, cursor: 'pointer',
-                  }}> Refuser</button>
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                  }}>
+                    <AlertTriangle size={12} strokeWidth={2.5} /> Refuser
+                  </button>
                 </div>
               ) : (
                 <span style={{
@@ -590,43 +629,47 @@ function LicRequests({ requests }) {
 function LicInsights({ licenses }) {
   const insights = [
     {
-      icon: '', type: 'Sous-utilisation', color: T.blue, priority: 'medium',
+      Icon: TrendingDown, type: 'Sous-utilisation', color: T.blue, priority: 'medium',
       title: 'IPC Green Blocks — modules BI sous-utilisés',
       body: 'Le module BI (Business Intelligence) est activé mais n\'a généré que 12 accès en 30 jours sur 134 utilisateurs. Considérez une formation ou la désactivation pour économiser 20 000 XOF/mois.',
       action: 'Voir le rapport',
     },
     {
-      icon: '', type: 'Saturation imminente', color: T.gold, priority: 'high',
+      Icon: AlertCircle, type: 'Saturation imminente', color: T.gold, priority: 'high',
       title: 'IPC Green Blocks — quota utilisateurs à 85%',
       body: 'Avec 85 utilisateurs actifs sur un maximum de 100, le seuil d\'alerte est atteint. À ce rythme de recrutement, le quota sera dépassé dans ~18 jours.',
       action: 'Gérer le quota',
     },
     {
-      icon: '', type: 'Optimisation IA', color: T.purple, priority: 'low',
+      Icon: Zap, type: 'Optimisation IA', color: T.purple, priority: 'low',
       title: 'Nexus Academy — consommation IA optimale',
       body: '68% des tokens IA utilisés ont généré des réponses à valeur ajoutée. Score d\'efficacité IA : 8.4/10. La filiale exploite bien les capacités Nexus Intelligence.',
       action: null,
     },
     {
-      icon: '', type: 'Risque conformité', color: T.red, priority: 'critical',
+      Icon: ShieldAlert, type: 'Risque conformité', color: T.red, priority: 'critical',
       title: 'YSEE — licence suspendue depuis 8 jours',
       body: 'L\'entité YSEE est suspendue. Les données restent accessibles en lecture seule, mais aucune opération n\'est possible. Risque de perte de données non sauvegardées si suspension > 30 jours.',
       action: 'Réactiver',
     },
     {
-      icon: '', type: 'Recommandation', color: T.accent, priority: 'medium',
+      Icon: ArrowUpCircle, type: 'Recommandation', color: T.accent, priority: 'medium',
       title: 'Select — upgrade vers ENTERPRISE recommandé',
       body: 'Select utilise 94% de son quota projets, 91% du stockage et demande régulièrement des accès API avancés. L\'upgrade vers ENTERPRISE générerait un surcoût de 45 000 XOF/mois mais éviterait 3 blocages opérationnels.',
       action: 'Préparer upgrade',
     },
   ];
 
-  const priorityColors = { critical: T.red, high: T.gold, medium: T.blue, low: T.muted };
+  const priorityColors  = { critical: T.red, high: T.gold, medium: T.blue, low: T.muted };
+  const priorityIcons   = { critical: AlertCircle, high: AlertTriangle, medium: Info, low: CheckCircle2 };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <SectionHdr title="Nexus IA — Insights Licences" sub="Détection automatique d'anomalies, sous-utilisation et saturations" />
-      {insights.map((ins, i) => (
+      {insights.map((ins, i) => {
+        const InsIcon = ins.Icon;
+        const PrioIcon = priorityIcons[ins.priority] || Info;
+        return (
         <div key={i} style={{
           background: T.card, borderRadius: 14,
           border: `1px solid ${ins.color}33`,
@@ -635,8 +678,10 @@ function LicInsights({ licenses }) {
           <div style={{
             width: 44, height: 44, borderRadius: 12, flexShrink: 0,
             background: `${ins.color}18`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
-          }}>{ins.icon}</div>
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <InsIcon size={20} strokeWidth={2} style={{ color: ins.color }} />
+          </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
               <span style={{
@@ -646,8 +691,9 @@ function LicInsights({ licenses }) {
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20,
                 background: `${priorityColors[ins.priority]}20`, color: priorityColors[ins.priority],
+                display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
-                {ins.priority === 'critical' ? '' : ins.priority === 'high' ? '' : ins.priority === 'medium' ? '' : ''} {ins.priority}
+                <PrioIcon size={10} strokeWidth={2.5} /> {ins.priority}
               </span>
               <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{ins.title}</span>
             </div>
@@ -663,7 +709,8 @@ function LicInsights({ licenses }) {
             </button>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -681,7 +728,7 @@ function SectionHdr({ title, sub }) {
 
 function Td({ val }) {
   return (
-    <td style={{ padding: '12px 14px', textAlign: 'right', color: T.muted, fontSize: 12, borderBottom: `1px solid #1f293722` }}>
+    <td style={{ padding: '12px 14px', textAlign: 'right', color: T.muted, fontSize: 12, borderBottom: `1px solid ${T.border}` }}>
       {val} XOF
     </td>
   );

@@ -1,8 +1,8 @@
 import React, { lazy } from 'react';
 import { registry } from './services/Registry';
 import { 
-  Home, Users, ShoppingCart, Mail, Package, Truck, ShoppingBag, 
-  Factory, Layers, CreditCard, Landmark, Wallet, PiggyBank, 
+  Home, Users, ShoppingCart, Mail, Package, Truck,
+  Factory, Layers, CreditCard, Landmark, Wallet,
   FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
   Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
@@ -51,7 +51,6 @@ const HoldingCockpit    = lazy(() => import('./modules/holding/HoldingCockpit'))
 const FoundationCockpit = lazy(() => import('./modules/foundation/FoundationCockpit'));
 const SubsidiaryCockpit = lazy(() => import('./modules/subsidiary/SubsidiaryCockpit'));
 const MissionsHub    = lazy(() => import('./modules/missions/MissionsHub'));
-const SignatureModule = lazy(() => import('./modules/SignatureModule'));
 const OfficeAdmin = lazy(() => import('./modules/OfficeAdmin'));
 const ITModule = lazy(() => import('./modules/admin/ITModule'));
 const Manufacturing = lazy(() => import('./modules/Manufacturing'));
@@ -113,12 +112,6 @@ export const initRegistry = () => {
 
 
   registry.register({
-    id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
-    category: 'cockpit', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES', 'FINANCE'],
-    component: SignatureModule, priority: 5
-  });
-
-  registry.register({
     id: 'connect', label: 'Connect Plus', icon: <Zap size={18} />,
     category: 'cockpit', roles: ['ADMIN', 'SALES', 'HR', 'FINANCE', 'STAFF'],
     component: Connect, priority: 4
@@ -155,12 +148,6 @@ export const initRegistry = () => {
     id: 'shipping', label: 'Expéditions', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
     component: Shipping, priority: 21
-  });
-
-  registry.register({
-    id: 'purchase', label: 'Achats', icon: <ShoppingBag size={18} />,
-    category: 'operations', roles: ['ADMIN', 'FINANCE'],
-    component: LogisticsHub, priority: 22
   });
 
   registry.register({
@@ -204,12 +191,6 @@ export const initRegistry = () => {
     id: 'accounting', label: 'Comptabilité', icon: <LandmarkIcon size={18} />,
     category: 'finance', roles: ['ADMIN', 'FINANCE'],
     component: lazy(() => import('./modules/finance/AccountingCenter')), priority: 32
-  });
-
-  registry.register({
-    id: 'budget', label: 'Budget', icon: <PiggyBank size={18} />,
-    category: 'finance', roles: ['ADMIN', 'FINANCE'],
-    component: FinanceControlCenter, priority: 33
   });
 
   registry.register({

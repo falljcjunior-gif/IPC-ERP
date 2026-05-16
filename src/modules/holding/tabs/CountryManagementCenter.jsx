@@ -61,7 +61,7 @@ const SUBSIDIARY_PLANS = [
   { id: 'STARTER',    label: 'Starter',    desc: '10 users · 5 modules · 5 Go' },
   { id: 'BUSINESS',   label: 'Business',   desc: '50 users · 10 modules · 50 Go' },
   { id: 'ENTERPRISE', label: 'Enterprise', desc: '200 users · tous modules · 500 Go' },
-  { id: 'INDUSTRIAL', label: 'Industrial', desc: 'Production + GMAO · illimité' },
+  { id: 'INDUSTRIAL', label: 'Industrial', desc: 'Production avancée · Manufacturing illimité' },
   { id: 'ACADEMY',    label: 'Academy',    desc: 'Formation · LMS · 100 users' },
 ];
 
