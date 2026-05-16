@@ -33,19 +33,19 @@ import {
 } from '../../../schemas/country.schema';
 import { useStore } from '../../../store';
 
-// ── ERP design tokens (light theme, parité HoldingCockpit) ──────────────────
+// ── Design tokens (white premium, parité HoldingCockpit) ────────────────────
 const C = {
-  accent: 'rgba(255,255,255,0.85)',
-  gold:   'rgba(255,255,255,0.60)',
-  blue:   'rgba(255,255,255,0.70)',
-  red:    'rgba(248,113,113,0.75)',
-  purple: 'rgba(255,255,255,0.55)',
-  teal:   'rgba(255,255,255,0.70)',
-  border: 'rgba(255,255,255,0.07)',
-  text:   '#F4F4F5',
-  muted:  '#71717A',
-  track:  'rgba(255,255,255,0.04)',
-  bg:     '#09090B',
+  accent: '#0F0F10',
+  gold:   '#D97706',
+  blue:   '#2563EB',
+  red:    '#DC2626',
+  purple: '#7C3AED',
+  teal:   '#0D9488',
+  border: 'rgba(0,0,0,0.07)',
+  text:   '#0F0F10',
+  muted:  '#6B7280',
+  track:  'rgba(0,0,0,0.04)',
+  bg:     '#FFFFFF',
 };
 
 const STATE_BADGE = {

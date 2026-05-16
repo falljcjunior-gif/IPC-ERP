@@ -1,0 +1,74 @@
+/**
+ * HoldingShell.css — Shell overrides scoped to [data-space="HOLDING"]
+ * Converts the shared PlatformShell sidebar + topbar to white executive surfaces
+ * when the active space is HOLDING. Zero bleed into SUBSIDIARY or FOUNDATION spaces.
+ */
+
+/* ── Sidebar — white executive surface ───────────────────────────────────── */
+[data-space="HOLDING"] .antigravity-floating-sidebar {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0,0,0,0.07) !important;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06) !important;
+}
+
+/* Kill emerald gradient background on sidebar */
+[data-space="HOLDING"] .antigravity-floating-sidebar::before,
+[data-space="HOLDING"] .antigravity-floating-sidebar::after {
+  display: none !important;
+}
+
+/* Sidebar nav items — default gray text */
+[data-space="HOLDING"] .antigravity-floating-sidebar * {
+  --sidebar-text: #6B7280;
+}
+
+/* Kill emerald active item accent bar */
+[data-space="HOLDING"] .antigravity-floating-sidebar [class*="active"]::before,
+[data-space="HOLDING"] .antigravity-floating-sidebar [class*="accent-bar"] {
+  display: none !important;
+}
+
+/* Active nav item — dark text, subtle bg */
+[data-space="HOLDING"] .antigravity-floating-sidebar [class*="active"],
+[data-space="HOLDING"] .antigravity-floating-sidebar [aria-current="page"] {
+  color: #0F0F10 !important;
+  background: rgba(0,0,0,0.05) !important;
+}
+
+/* ── Space badge — minimal dark-on-white ──────────────────────────────────── */
+[data-space="HOLDING"] [class*="SpaceBadge"],
+[data-space="HOLDING"] [class*="space-badge"] {
+  background: rgba(0,0,0,0.05) !important;
+  color: #0F0F10 !important;
+  border: 1px solid rgba(0,0,0,0.10) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  box-shadow: none !important;
+}
+
+/* ── Platform topbar (shared shell header) — frosted white ───────────────── */
+[data-space="HOLDING"] header,
+[data-space="HOLDING"] [class*="topbar"],
+[data-space="HOLDING"] [class*="platform-header"],
+[data-space="HOLDING"] [class*="header"] {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.07) !important;
+  box-shadow: none !important;
+}
+
+/* Kill emerald antigravity glow button in sidebar header when in HOLDING */
+[data-space="HOLDING"] .antigravity-glow {
+  background: #0F0F10 !important;
+  box-shadow: none !important;
+}
+
+/* Sidebar logo text — dark wordmark */
+[data-space="HOLDING"] .antigravity-floating-sidebar [class*="gradient-text"],
+[data-space="HOLDING"] .antigravity-floating-sidebar [class*="logo"] span {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #0F0F10 !important;
+  color: #0F0F10 !important;
+}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
 import { AuthService } from '../services/auth.service';
+import { auth } from '../firebase/config';
 import { FirestoreService } from '../services/firestore.service';
 import { 
   Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
@@ -34,6 +35,7 @@ import MobileNavbar from './MobileNavbar';
 import BarcodeScanner from './BarcodeScanner';
 import PointageWidget from './PointageWidget';
 import AntigravitySearch from './NexusSearch';
+import './HoldingShell.css';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -161,8 +163,9 @@ const PlatformShell = ({ theme, setView }) => {
   // ── Connect Plus - Real-time Presence & Notifications ──
   useEffect(() => {
     if (!currentUser?.id) return;
+    // Skip presence in dev bypass mode (no Firebase auth token)
+    if (!auth.currentUser) return;
 
-    // Presence Management
     const updatePresence = (isOnline) => {
       FirestoreService.updateDocument('users', currentUser.id, {
         isOnline,
@@ -175,32 +178,34 @@ const PlatformShell = ({ theme, setView }) => {
     const handleVisibilityChange = () => {
       updatePresence(document.visibilityState === 'visible');
     };
-    
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // FCM Registration
+    let fcmTimer = null;
     if ("Notification" in window) {
       const registerFCM = async () => {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          const token = await AuthService.getFCMToken();
-          if (token) {
-            await FirestoreService.updateDocument('users', currentUser.id, { 
-              fcmToken: token,
-              lastTokenUpdate: new Date().toISOString()
-            });
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === "granted") {
+            const token = await AuthService.getFCMToken();
+            if (token) {
+              await FirestoreService.updateDocument('users', currentUser.id, {
+                fcmToken: token,
+                lastTokenUpdate: new Date().toISOString()
+              });
+            }
           }
+        } catch (err) {
+          console.warn('[FCM] Registration failed:', err.message);
         }
       };
-      
-      // Delay registration to avoid startup heavy load
-      const timer = setTimeout(registerFCM, 3000);
-      return () => clearTimeout(timer);
+      fcmTimer = setTimeout(registerFCM, 3000);
     }
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       updatePresence(false);
+      if (fcmTimer) clearTimeout(fcmTimer);
     };
   }, [currentUser?.id]);
 
@@ -305,11 +310,14 @@ const PlatformShell = ({ theme, setView }) => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', height: '100vh', background: 'var(--bg)',
-      '--primary': config?.theme?.primary || '#529990', '--accent': config?.theme?.accent || '#3d7870',
-      '--accent-hover': (config?.theme?.accent || '#3d7870') + 'dd', '--radius': config?.theme?.borderRadius || '1rem'
-    }}>
+    <div
+      data-space={activeSpace}
+      style={{
+        display: 'flex', height: '100vh', background: 'var(--bg)',
+        '--primary': config?.theme?.primary || '#529990', '--accent': config?.theme?.accent || '#3d7870',
+        '--accent-hover': (config?.theme?.accent || '#3d7870') + 'dd', '--radius': config?.theme?.borderRadius || '1rem'
+      }}
+    >
       
       {/* ── SIDEBAR (Nexus Floating Control) ── */}
       <motion.aside 
