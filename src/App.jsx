@@ -164,11 +164,47 @@ function App() {
 }
 
 const InitializingView = ({ label = "Initialisation du noyau..." }) => (
-  <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', color: 'var(--text)' }}>
-    <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid var(--bg-subtle)', borderTop: '4px solid var(--accent)', borderRadius: '50%', marginBottom: '1.5rem' }} />
-    <div style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '2px', opacity: 0.8 }}>IPC INTELLIGENCE</div>
-    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>{label}</div>
-    <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } .spinner { animation: spin 1s linear infinite; }`}</style>
+  <div style={{
+    height: '100vh', display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    background: '#FFFFFF', gap: 28,
+    fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif",
+  }}>
+    {/* IPC Green Blocks cube mark */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <svg width="34" height="30" viewBox="0 0 64 56" fill="none">
+        <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#0F0F10"/>
+        <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.28)"/>
+        <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.14)"/>
+        <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(0,0,0,0.75)"/>
+        <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.22)"/>
+        <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.11)"/>
+        <path d="M18 29 L34 20 L46 16 L46 32 L34 36 L18 45 Z" fill="rgba(0,0,0,0.07)"/>
+      </svg>
+      <div>
+        <div style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '0.24em', color: '#9CA3AF', textTransform: 'uppercase', lineHeight: 1 }}>
+          I.P.C GREEN BLOCKS
+        </div>
+        <div style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.32em', color: '#0F0F10', textTransform: 'uppercase', lineHeight: 1.4 }}>
+          INTELLIGENCE
+        </div>
+      </div>
+    </div>
+    {/* Thin scan line */}
+    <div style={{ width: 120, height: 1, background: 'rgba(0,0,0,0.08)', borderRadius: 1, overflow: 'hidden' }}>
+      <div style={{ height: '100%', background: '#0F0F10', animation: 'ipc-scan 1.6s ease-in-out infinite' }} />
+    </div>
+    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.22em', color: '#9CA3AF', textTransform: 'uppercase' }}>
+      {label}
+    </div>
+    <style>{`
+      @keyframes ipc-scan {
+        0%   { transform: scaleX(0); transform-origin: left; }
+        49%  { transform: scaleX(1); transform-origin: left; }
+        50%  { transform: scaleX(1); transform-origin: right; }
+        100% { transform: scaleX(0); transform-origin: right; }
+      }
+    `}</style>
   </div>
 );
 

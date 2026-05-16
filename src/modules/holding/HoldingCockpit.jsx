@@ -4,7 +4,7 @@
  * ════════════════════════════════════════════════════════════════════════════
  *
  * Design language : Emil Kowalski × Linear × Apple × Bloomberg Terminal
- * Palette         : pure monochrome — near-black / graphite / charcoal / white
+ * Palette         : white premium — pure white / warm pearl / soft grey / near-black
  * Access          : HOLDING_CEO, HOLDING_CFO, SUPER_ADMIN (+ all holding roles)
  * Branding        : IPC Green Blocks Holding
  */
@@ -33,31 +33,31 @@ const EntityManagementCenter = lazy(() => import('./tabs/EntityManagementCenter'
 const LicenseCenter          = lazy(() => import('./tabs/LicenseCenter'));
 const CountryManagementCenter = lazy(() => import('./tabs/CountryManagementCenter'));
 
-// ── Design tokens (monochrome dark) ──────────────────────────────────────
+// ── Design tokens (white premium) ────────────────────────────────────────
 const OS = {
-  bg:       '#09090B',
-  surface:  '#0F0F11',
-  card:     '#141416',
-  cardHi:   '#1A1A1D',
-  modal:    '#1E1E21',
-  border:   'rgba(255,255,255,0.06)',
-  borderMd: 'rgba(255,255,255,0.10)',
-  borderHi: 'rgba(255,255,255,0.18)',
-  track:    'rgba(255,255,255,0.04)',
-  text:     '#F4F4F5',
-  sub:      '#A1A1AA',
-  muted:    '#71717A',
-  dim:      '#3F3F46',
-  white:    '#FFFFFF',
-  overlay:  'rgba(0,0,0,0.75)',
+  bg:       '#FFFFFF',
+  surface:  '#F9FAFB',
+  card:     '#FFFFFF',
+  cardHi:   '#F5F5F5',
+  modal:    '#FFFFFF',
+  border:   'rgba(0,0,0,0.07)',
+  borderMd: 'rgba(0,0,0,0.12)',
+  borderHi: 'rgba(0,0,0,0.20)',
+  track:    'rgba(0,0,0,0.04)',
+  text:     '#0F0F10',
+  sub:      '#6B7280',
+  muted:    '#9CA3AF',
+  dim:      '#D1D5DB',
+  black:    '#000000',
+  overlay:  'rgba(0,0,0,0.40)',
 };
 
-// Chart palette — pure white opacity
+// Chart palette — dark on white
 const OS_CHART = {
-  stroke:  'rgba(255,255,255,0.55)',
-  fill:    'rgba(255,255,255,0.04)',
-  grid:    'rgba(255,255,255,0.04)',
-  tick:    '#3F3F46',
+  stroke:  'rgba(0,0,0,0.55)',
+  fill:    'rgba(0,0,0,0.04)',
+  grid:    'rgba(0,0,0,0.05)',
+  tick:    '#9CA3AF',
 };
 
 // ── Motion variants ──────────────────────────────────────────────────────
@@ -95,25 +95,25 @@ const TABS = [
 function IPCLogo() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 11, flexShrink: 0 }}>
-      {/* Isometric cube mark — white monochrome */}
+      {/* Isometric cube mark — dark on white */}
       <svg width="30" height="26" viewBox="0 0 64 56" fill="none" xmlns="http://www.w3.org/2000/svg">
         {/* Primary cube — large, center-left */}
-        <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="white"/>
-        <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(255,255,255,0.28)"/>
-        <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(255,255,255,0.14)"/>
+        <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#0F0F10"/>
+        <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.28)"/>
+        <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.14)"/>
         {/* Secondary cube — elevated, right */}
-        <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(255,255,255,0.85)"/>
-        <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(255,255,255,0.22)"/>
-        <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(255,255,255,0.11)"/>
+        <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(0,0,0,0.75)"/>
+        <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.22)"/>
+        <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.11)"/>
         {/* Connector block — bridging the two cubes */}
-        <path d="M18 29 L34 20 L46 16 L46 32 L34 36 L18 45 Z" fill="rgba(255,255,255,0.07)"/>
+        <path d="M18 29 L34 20 L46 16 L46 32 L34 36 L18 45 Z" fill="rgba(0,0,0,0.07)"/>
       </svg>
 
       {/* Wordmark */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <span style={{
           fontSize: '8.5px', fontWeight: 700,
-          letterSpacing: '0.24em', color: 'rgba(255,255,255,0.38)',
+          letterSpacing: '0.24em', color: '#9CA3AF',
           textTransform: 'uppercase', lineHeight: 1,
           fontFamily: 'Inter, sans-serif',
         }}>
@@ -121,7 +121,7 @@ function IPCLogo() {
         </span>
         <span style={{
           fontSize: '11px', fontWeight: 800,
-          letterSpacing: '0.32em', color: '#F4F4F5',
+          letterSpacing: '0.32em', color: '#0F0F10',
           textTransform: 'uppercase', lineHeight: 1,
           fontFamily: 'Inter, sans-serif',
         }}>
@@ -221,7 +221,7 @@ export default function HoldingCockpit() {
                 onClick={() => setTab(t.id)}
                 style={{
                   fontWeight: active ? 600 : 400,
-                  color: active ? OS.text : OS.dim,
+                  color: active ? OS.text : OS.muted,
                 }}
               >
                 <TabIcon size={12} strokeWidth={active ? 2 : 1.5} />
@@ -231,7 +231,7 @@ export default function HoldingCockpit() {
                     layoutId="os-tab-line"
                     style={{
                       position: 'absolute', bottom: 0, left: 8, right: 8,
-                      height: 1.5, background: OS.text, borderRadius: 2,
+                      height: 1.5, background: OS.black, borderRadius: 2,
                     }}
                     transition={{ type: 'spring', stiffness: 520, damping: 40 }}
                   />
@@ -337,7 +337,7 @@ function OverviewTab({ consolidated, loading }) {
               {/* Value */}
               <div style={{
                 fontSize: '2rem', fontWeight: 300,
-                letterSpacing: '-0.045em', color: OS.white,
+                letterSpacing: '-0.045em', color: OS.text,
                 lineHeight: 1, minHeight: 36,
               }}>
                 {loading
@@ -447,19 +447,19 @@ function PerformanceTab() {
               tick={{ fill: OS_CHART.tick, fontSize: 11 }} />
             <Tooltip
               contentStyle={{
-                background: OS.cardHi, border: `1px solid ${OS.borderMd}`,
+                background: '#FFFFFF', border: `1px solid rgba(0,0,0,0.10)`,
                 borderRadius: 10, color: OS.text, fontSize: 12,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
               }}
               cursor={{ fill: OS.track }}
             />
             <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={28}>
               {SUBSIDIARY_PERF.map((s, i) => (
                 <Cell key={i} fill={
-                  s.score >= 90 ? 'rgba(255,255,255,0.75)' :
-                  s.score >= 75 ? 'rgba(255,255,255,0.50)' :
-                  s.score >= 60 ? 'rgba(255,255,255,0.30)' :
-                                  'rgba(248,113,113,0.45)'
+                  s.score >= 90 ? 'rgba(0,0,0,0.80)' :
+                  s.score >= 75 ? 'rgba(0,0,0,0.55)' :
+                  s.score >= 60 ? 'rgba(0,0,0,0.35)' :
+                                  'rgba(220,38,38,0.55)'
                 } />
               ))}
             </Bar>
@@ -498,7 +498,7 @@ function PerformanceTab() {
                       </td>
                       <td>{entity?.industry}</td>
                       <td style={{ fontWeight: 600, color: OS.text }}>{fmtM(s.revenue)}</td>
-                      <td style={{ color: s.growth > 0 ? 'rgba(255,255,255,0.7)' : 'rgba(248,113,113,0.7)', fontWeight: 600 }}>
+                      <td style={{ color: s.growth > 0 ? OS.text : '#DC2626', fontWeight: 600 }}>
                         {s.growth > 0 ? '+' : ''}{s.growth}%
                       </td>
                       <td>{s.margin}%</td>
@@ -518,15 +518,15 @@ function PerformanceTab() {
       <div className="os-card" style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
           {[
-            { range: '90–100', label: 'Excellence',  opacity: 0.75 },
-            { range: '75–89',  label: 'Bon',         opacity: 0.50 },
-            { range: '60–74',  label: 'Acceptable',  opacity: 0.30 },
-            { range: '0–59',   label: 'Insuffisant', color: 'rgba(248,113,113,0.45)' },
+            { range: '90–100', label: 'Excellence',  opacity: 0.80 },
+            { range: '75–89',  label: 'Bon',         opacity: 0.55 },
+            { range: '60–74',  label: 'Acceptable',  opacity: 0.35 },
+            { range: '0–59',   label: 'Insuffisant', color: 'rgba(220,38,38,0.55)' },
           ].map(l => (
             <div key={l.range} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
                 width: 8, height: 8, borderRadius: 2, flexShrink: 0,
-                background: l.color || `rgba(255,255,255,${l.opacity})`,
+                background: l.color || `rgba(0,0,0,${l.opacity})`,
               }} />
               <span style={{ fontSize: 11, color: OS.muted }}>
                 <strong style={{ color: OS.sub }}>{l.range}</strong> — {l.label}
@@ -579,15 +579,16 @@ function FinanceTab({ consolidated }) {
                 justifyContent: 'space-between',
                 padding: '10px 24px',
                 background: row.accent
-                  ? 'rgba(255,255,255,0.04)'
-                  : row.bold ? 'rgba(255,255,255,0.025)' : 'transparent',
-                borderBottom: i < rows.length - 1 ? `1px solid rgba(255,255,255,0.03)` : 'none',
+                  ? 'rgba(0,0,0,0.03)'
+                  : row.bold ? 'rgba(0,0,0,0.015)' : 'transparent',
+                borderBottom: i < rows.length - 1 ? `1px solid rgba(0,0,0,0.05)` : 'none',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {row.bold && (
                     <div style={{
                       width: 2, height: 14, borderRadius: 2,
-                      background: row.accent ? OS.text : OS.dim, flexShrink: 0,
+                      background: row.accent ? OS.text : OS.dim,
+                    flexShrink: 0,
                     }} />
                   )}
                   <span style={{
@@ -602,7 +603,7 @@ function FinanceTab({ consolidated }) {
                 <span style={{
                   fontSize: row.bold ? 14 : 12,
                   fontWeight: row.bold ? 700 : 400,
-                  color: row.value < 0 ? 'rgba(248,113,113,0.65)' : row.bold ? OS.text : OS.muted,
+                  color: row.value < 0 ? '#DC2626' : row.bold ? OS.text : OS.muted,
                   fontVariantNumeric: 'tabular-nums',
                   letterSpacing: '-0.01em',
                 }}>
@@ -723,15 +724,15 @@ function GovernanceTab({ approvals }) {
                     padding: '1.125rem 1.5rem',
                     display: 'flex', alignItems: 'center', gap: 16,
                     border: status === 'approved'
-                      ? '1px solid rgba(255,255,255,0.12)'
+                      ? '1px solid rgba(0,0,0,0.10)'
                       : status === 'rejected'
-                      ? '1px solid rgba(248,113,113,0.15)'
+                      ? '1px solid rgba(220,38,38,0.15)'
                       : undefined,
                   }}>
                   {/* Icon */}
                   <div style={{
                     width: 38, height: 38, borderRadius: 9, flexShrink: 0,
-                    background: 'rgba(255,255,255,0.04)',
+                    background: 'rgba(0,0,0,0.04)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <TypeIcon size={16} strokeWidth={1.5} style={{ color: OS.muted }} />
@@ -774,11 +775,11 @@ function GovernanceTab({ approvals }) {
                   ) : (
                     <span className="os-badge" style={{
                       background: status === 'approved'
-                        ? 'rgba(255,255,255,0.07)' : 'rgba(248,113,113,0.07)',
+                        ? 'rgba(0,0,0,0.04)' : 'rgba(220,38,38,0.06)',
                       color: status === 'approved'
-                        ? OS.sub : 'rgba(248,113,113,0.8)',
+                        ? OS.sub : 'rgba(220,38,38,0.8)',
                       borderColor: status === 'approved'
-                        ? OS.border : 'rgba(248,113,113,0.2)',
+                        ? OS.border : 'rgba(220,38,38,0.2)',
                     }}>
                       {status === 'approved' ? 'Validé' : 'Refusé'}
                     </span>
@@ -810,9 +811,9 @@ function OSSectionHeader({ title, sub }) {
 
 function TrendBadge({ trend }) {
   if (trend === 'up')
-    return <TrendingUp   size={13} strokeWidth={1.5} style={{ color: 'rgba(255,255,255,0.55)', flexShrink: 0 }} />;
+    return <TrendingUp   size={13} strokeWidth={1.5} style={{ color: OS.sub, flexShrink: 0 }} />;
   if (trend === 'down')
-    return <TrendingDown size={13} strokeWidth={1.5} style={{ color: 'rgba(248,113,113,0.6)', flexShrink: 0 }} />;
+    return <TrendingDown size={13} strokeWidth={1.5} style={{ color: '#DC2626', flexShrink: 0 }} />;
   return <Minus size={13} strokeWidth={1.5} style={{ color: OS.dim, flexShrink: 0 }} />;
 }
 
@@ -826,11 +827,11 @@ function EmptyState({ Icon, title, subtitle }) {
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
         padding: '3.5rem 2rem', textAlign: 'center',
-        border: `1px dashed rgba(255,255,255,0.06)`,
+        border: `1px dashed rgba(0,0,0,0.10)`,
         borderRadius: 12, gap: 14,
       }}
     >
-      <Icon size={26} strokeWidth={1} style={{ color: 'rgba(255,255,255,0.10)' }} />
+      <Icon size={26} strokeWidth={1} style={{ color: 'rgba(0,0,0,0.15)' }} />
       <div style={{ fontSize: 13, fontWeight: 500, color: OS.sub }}>{title}</div>
       <div style={{ fontSize: 12, color: OS.muted, maxWidth: 380, lineHeight: 1.7 }}>{subtitle}</div>
     </motion.div>
