@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Scale, FileSignature, ShieldCheck, Gavel, 
@@ -17,6 +17,13 @@ import CorporateTab from './tabs/CorporateTab';
 const LegalHub = ({ onOpenDetail }) => {
   const { data, formatCurrency, userRole, currentUser } = useStore();
   const [activeTab, setActiveTab] = useState('clm');
+
+  const complianceIndex = useMemo(() => {
+    const contracts = data?.legal?.contracts || [];
+    if (contracts.length === 0) return null;
+    const signed = contracts.filter(c => c.statut === 'Signé' || c.statut === 'Actif').length;
+    return Math.round((signed / contracts.length) * 100);
+  }, [data?.legal?.contracts]);
 
   const tabs = [
     { id: 'clm', label: 'Engagements Contractuels (CLM)', icon: <FileSignature size={16} /> },
@@ -48,10 +55,10 @@ const LegalHub = ({ onOpenDetail }) => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid rgba(82, 153, 144, 0.3)' }}>
               <ShieldCheck size={16} color="var(--accent)" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>Compliance Index : 100%</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--accent)' }}>Compliance Index : {complianceIndex !== null ? `${complianceIndex}%` : '—'}</span>
            </div>
 
-           <button className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)' }}>
+           <button disabled title="Historique des actions — bientôt disponible" className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.5 }}>
              <History size={20} />
            </button>
           <button className="btn-primary" 

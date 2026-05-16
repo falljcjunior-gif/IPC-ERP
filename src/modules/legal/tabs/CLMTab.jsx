@@ -33,7 +33,7 @@ const CLMTab = ({ onOpenDetail }) => {
           />
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-           <button className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>Templates Partagés</button>
+           <button disabled title="Bibliothèque de templates — bientôt disponible" className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'not-allowed', opacity: 0.5 }}>Templates Partagés</button>
            <button className="btn-primary" onClick={() => onOpenDetail(null, 'legal', 'contracts')} style={{ padding: '0.6rem 1.5rem', borderRadius: '1rem', background: 'var(--accent)', borderColor: 'var(--accent)' }}>
               <Plus size={18} /> Nouveau Contrat
            </button>

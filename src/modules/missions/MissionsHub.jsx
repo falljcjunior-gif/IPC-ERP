@@ -293,10 +293,16 @@ function BoardGrid({ workspaceId, onSelectBoard, isAdmin }) {
 
   useEffect(() => {
     setLoading(true);
-    const unsub = MissionsFS.subscribeBoards(workspaceId, data => {
-      setBoards(data);
+    let unsub = () => {};
+    try {
+      unsub = MissionsFS.subscribeBoards(workspaceId, data => {
+        setBoards(data);
+        setLoading(false);
+      });
+    } catch (err) {
+      console.warn('[BoardGrid] subscribeBoards non disponible (mode DEV sans auth):', err.message);
       setLoading(false);
-    });
+    }
     return unsub;
   }, [workspaceId]);
 

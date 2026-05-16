@@ -26,7 +26,7 @@ const IPTab = ({ onOpenDetail }) => {
           />
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
-           <button className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem' }}>Dépôts INPI/OMPI</button>
+           <button disabled title="Portail INPI/OMPI — bientôt disponible" className="glass" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontWeight: 800, fontSize: '0.85rem', cursor: 'not-allowed', opacity: 0.5 }}>Dépôts INPI/OMPI</button>
            <button className="btn-primary" onClick={() => onOpenDetail(null, 'legal', 'ip')} style={{ padding: '0.6rem 1.5rem', borderRadius: '1rem', background: '#6366F1', borderColor: '#6366F1' }}>
               <Plus size={18} /> Nouveau Dépôt
            </button>
@@ -85,7 +85,7 @@ const IPTab = ({ onOpenDetail }) => {
             
             <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>N° Dépôt: <span style={{ color: 'var(--text)' }}>{asset.numeroDepot || 'En cours'}</span></div>
-               <button className="glass" style={{ padding: '5px 10px', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px' }}>
+               <button onClick={(e) => { e.stopPropagation(); onOpenDetail && onOpenDetail(asset, 'legal', 'ip'); }} className="glass" style={{ padding: '5px 10px', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
                  <RefreshCcw size={10} /> Renouveler
                </button>
             </div>

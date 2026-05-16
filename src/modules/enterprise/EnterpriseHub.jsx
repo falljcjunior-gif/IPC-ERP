@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Plus, Search, Users, Truck, LifeBuoy, 
@@ -24,6 +24,16 @@ const EnterpriseHub = ({ onOpenDetail, appId }) => {
     'people'
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const operationalStatus = useMemo(() => {
+    const vehicles = data?.fleet?.vehicles || [];
+    const tickets = data?.helpdesk?.tickets || [];
+    const criticalOpen = tickets.filter(t => t.priorite === 'Critique' && t.statut !== 'Résolu').length;
+    const outOfService = vehicles.filter(v => v.status !== 'En service').length;
+    if (criticalOpen > 0 || outOfService > Math.max(1, vehicles.length * 0.3)) return 'Alerte';
+    if (outOfService > 0) return 'Attention';
+    return vehicles.length === 0 && tickets.length === 0 ? null : 'Optimal';
+  }, [data?.fleet?.vehicles, data?.helpdesk?.tickets]);
 
   const tabs = [
     { id: 'people', label: 'Collaborateurs', icon: <Users size={16} /> },
@@ -62,7 +72,9 @@ const EnterpriseHub = ({ onOpenDetail, appId }) => {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
            <div className="glass" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0.6rem 1.25rem', borderRadius: '3rem', border: '1px solid #0D948830' }}>
               <Activity size={16} color="#0D9488" />
-              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#0D9488' }}>Statut Opérationnel : Optimal</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 800, color: operationalStatus === 'Alerte' ? '#EF4444' : operationalStatus === 'Attention' ? '#F59E0B' : '#0D9488' }}>
+                Statut Opérationnel : {operationalStatus ?? '—'}
+              </span>
            </div>
 
            <button disabled title="Historique — bientôt disponible" className="glass" style={{ padding: '0.8rem', borderRadius: '1rem', color: 'var(--text-muted)', cursor: 'not-allowed', opacity: 0.5 }}>
