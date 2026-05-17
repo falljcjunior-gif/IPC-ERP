@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'FileText',
-        content: `Tout au long du mois, les heures, absences, notes de frais sont collectées automatiquement (depuis Planning, RH, Notes de Frais). Quelques jours avant la clôture, vous ouvrez la « Préparation paie » : la liste des collaborateurs s\'affiche avec leurs éléments du mois. Vous ajoutez les éléments exceptionnels (prime, commission, avance). Vous validez collaborateur par collaborateur ou en lot.`,
+        content: `Tout au long du mois, les heures, absences, notes de frais sont collectées automatiquement (depuis Planning, RH, Notes de Frais). Quelques jours avant la clôture, vous ouvrez la « Préparation paie » : la liste des collaborateurs s'affiche avec leurs éléments du mois. Vous ajoutez les éléments exceptionnels (prime, commission, avance). Vous validez collaborateur par collaborateur ou en lot.`,
         bullets: [
           'Pré-remplissage automatique depuis les autres modules',
           'Ajout manuel des primes, commissions, avances',
@@ -26,7 +26,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Zap',
-        content: `Vous ne ressaisissez rien manuellement. Les heures viennent du pointage, les absences du module Congés, les frais de Notes de Frais. Le risque d\'erreur est divisé par 10.`,
+        content: `Vous ne ressaisissez rien manuellement. Les heures viennent du pointage, les absences du module Congés, les frais de Notes de Frais. Le risque d'erreur est divisé par 10.`,
       },
     },
     {
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Award',
-        content: `Faire la paie d\'une dizaine de personnes peut prendre une journée à la main. Avec ce module, c\'est l\'affaire de 2 heures, avec moins d\'erreurs. Vos collaborateurs reçoivent leur bulletin sans délai.`,
+        content: `Faire la paie d'une dizaine de personnes peut prendre une journée à la main. Avec ce module, c'est l'affaire de 2 heures, avec moins d'erreurs. Vos collaborateurs reçoivent leur bulletin sans délai.`,
       },
     },
     {
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Compass',
-        content: `La DSN doit être envoyée chaque mois. Si elle est oubliée ou erronée, c\'est l\'URSSAF qui rappelle (avec pénalités). Avec ce module, c\'est automatique, daté, archivé. Vous dormez tranquille.`,
+        content: `La DSN doit être envoyée chaque mois. Si elle est oubliée ou erronée, c'est l'URSSAF qui rappelle (avec pénalités). Avec ce module, c'est automatique, daté, archivé. Vous dormez tranquille.`,
       },
     },
   ],

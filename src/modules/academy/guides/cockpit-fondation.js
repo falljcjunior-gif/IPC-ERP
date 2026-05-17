@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Gift',
-        content: `Une zone « Dons » en haut affiche le total reçu ce mois, comparé au mois précédent et à l'objectif annuel. Une liste sous les chiffres montre les derniers dons (anonymisés si le donateur l\'a demandé), avec date et montant. Cliquez sur un don pour voir d'où il vient (entreprise, particulier, événement) et envoyer un reçu fiscal.`,
+        content: `Une zone « Dons » en haut affiche le total reçu ce mois, comparé au mois précédent et à l'objectif annuel. Une liste sous les chiffres montre les derniers dons (anonymisés si le donateur l'a demandé), avec date et montant. Cliquez sur un don pour voir d'où il vient (entreprise, particulier, événement) et envoyer un reçu fiscal.`,
         bullets: [
           'Total des dons du mois en cours',
           'Comparaison avec le mois précédent et l\'objectif annuel',
