@@ -8,7 +8,7 @@ import {
   Factory, Briefcase, ShoppingBag, Mail, ArrowRight, ShieldCheck,
   Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
   Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
-  Folder, Activity as ActivityIcon, Zap, Cpu, MessageCircle,
+  Folder, Activity as ActivityIcon, Zap, MessageCircle,
   Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe, Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -340,30 +340,41 @@ const PlatformShell = ({ theme, setView }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Sidebar Header / Logo */}
-        <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--nexus-border)' }}>
-          <motion.div 
-            whileHover={{ rotate: 180, scale: 1.1 }}
-            className="antigravity-glow"
-            style={{ 
-              minWidth: '40px', 
-              height: '40px', 
-              background: 'var(--antigravity-primary)', 
-              borderRadius: '12px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center'
-            }}
-          >
-            <Cpu size={24} color="white" />
-          </motion.div>
-          {shellView.sidebar && (
-            <div style={{ color: 'var(--antigravity-text)' }}>
-              <div style={{ fontWeight: 900, fontSize: '1.2rem', letterSpacing: '-0.02em', lineHeight: 1 }}>IPC</div>
-              <div className="antigravity-gradient-text" style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', marginTop: '4px' }}>Antigravity OS</div>
+        {/* Sidebar Header / Logo espace actif */}
+        {(() => {
+          const SIDEBAR_LOGOS = {
+            HOLDING:    '/logo-holding.png',
+            SUBSIDIARY: '/logo-filiale.png',
+            FOUNDATION: '/logo-fondation.png',
+          };
+          const logoSrc = SIDEBAR_LOGOS[activeSpace] || '/logo-holding.png';
+          return (
+            <div style={{
+              padding: shellView.sidebar ? '1.25rem 1.5rem' : '1rem 0',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderBottom: '1px solid var(--nexus-border)',
+              minHeight: 80,
+            }}>
+              {shellView.sidebar ? (
+                <img
+                  src={logoSrc}
+                  alt="Logo espace"
+                  style={{ height: 64, maxWidth: '100%', objectFit: 'contain', display: 'block' }}
+                />
+              ) : (
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10,
+                  background: '#FFFFFF',
+                  border: '1.5px solid var(--antigravity-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  overflow: 'hidden',
+                }}>
+                  <img src={logoSrc} alt="Logo espace" style={{ height: 24, objectFit: 'contain', padding: '0 4px' }} />
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         {/* [3-SPACE] Space Badge — indicateur visuel d'espace actif */}
         <SpaceBadge
