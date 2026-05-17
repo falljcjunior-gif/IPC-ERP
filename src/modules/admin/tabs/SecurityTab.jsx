@@ -12,9 +12,9 @@ const SecurityTab = () => {
   const { config, updateConfig } = useStore();
 
   const auditLogs = [
-    { id: 1, user: 'admin@ipc.ci', action: 'Accès Module Finance', time: '10:45', status: 'success' },
-    { id: 2, user: 'admin@ipc.ci', action: 'Modification Schéma Sales', time: '10:12', status: 'success' },
-    { id: 3, user: '192.168.1.104', action: 'Échec Connexion (BRUTEFORCE?)', time: '09:30', status: 'alert' },
+    { id: 1, user: 'système', action: 'Accès Module Finance', time: '10:45', status: 'success' },
+    { id: 2, user: 'système', action: 'Modification Schéma Sales', time: '10:12', status: 'success' },
+    { id: 3, user: '192.168.1.xxx', action: 'Échec Connexion (BRUTEFORCE?)', time: '09:30', status: 'alert' },
   ];
 
   const handleUpdate = (section, key, value) => {

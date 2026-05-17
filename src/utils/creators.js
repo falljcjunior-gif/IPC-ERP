@@ -1,11 +1,6 @@
-// Source de vérité unique pour les emails autorisés (auto-élévation de rôle).
-// Aligné avec functions/modules/admin.js.
-export const CREATOR_EMAILS = Object.freeze([
-  'ra.yoman@ipcgreenblocks.com',
-  'yomanraphael26@gmail.com',
-]);
+// Aucun email hardcodé — l'élévation SUPER_ADMIN passe exclusivement
+// par bootstrapSuperAdmin() (Cloud Function) qui vérifie que l'appelant
+// s'auto-bootstrap ET qu'aucun SUPER_ADMIN n'existe encore.
+export const CREATOR_EMAILS = Object.freeze([]);
 
-export const isCreatorEmail = (email) => {
-  if (!email) return false;
-  return CREATOR_EMAILS.includes(String(email).toLowerCase());
-};
+export const isCreatorEmail = (_email) => false;
