@@ -40,6 +40,10 @@ exports.nexusChat = nexus.nexusChat;
 const jarvisMonitor = require('./modules/jarvis_monitor');
 exports.jarvisMonitor = jarvisMonitor.jarvisMonitor;
 
+// 3e. JARVIS Stream — SSE streaming + mémoire long terme + multimodal
+const jarvisStreamModule = require('./modules/jarvis_stream');
+exports.jarvisStream = jarvisStreamModule.jarvisStream;
+
 // 3b. Le Commandant — Agent de Management Proactif (scan toutes les 4h)
 const commander = require('./modules/commander');
 exports.commanderScan = commander.commanderScan;
