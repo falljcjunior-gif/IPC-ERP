@@ -20,7 +20,11 @@ import {
   Scale, Landmark, CheckCircle, Award, Zap, BarChart2,
   Heart, Rocket, UserPlus, Gauge, Eye, Grid, FileText,
   Wifi, Globe, Shield, Lock, Kanban, TrendingUp, Factory,
-  Users, Database,
+  Users, Database, Sun, Gift, MessageSquare, Video,
+  ShoppingCart, Megaphone, Mail, Briefcase, MousePointerClick,
+  Package, Truck, ShieldCheck, Car,
+  Calculator, Receipt, Camera,
+  Wallet, Calendar, LifeBuoy,
 } from 'lucide-react';
 import { NEXUS_GUIDE_DATA, searchGuide } from './nexusGuideData';
 import '../../components/GlobalDashboard.css';
@@ -32,9 +36,14 @@ const ICON_MAP = {
   Kanban, TrendingUp, Factory, Users, Database,
   Cpu, Target, Layers, Building2, Compass,
   Activity, Fingerprint, Scale, Landmark,
-  CheckCircle, Award, Zap,
+  CheckCircle, Award, Zap, Sparkles,
   BarChart2, Heart, Rocket, UserPlus, Gauge, Eye,
   Grid, FileText, Wifi, Globe, Shield, Lock,
+  GraduationCap, Search, Sun, Gift, MessageSquare, Video,
+  ShoppingCart, Megaphone, Mail, Briefcase, MousePointerClick,
+  Package, Truck, ShieldCheck, Car,
+  Calculator, Receipt, Camera,
+  Wallet, Calendar, LifeBuoy,
 };
 
 function LucideIcon({ name, size = 16, color, style }) {
