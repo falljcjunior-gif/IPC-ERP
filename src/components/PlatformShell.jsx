@@ -550,7 +550,7 @@ const PlatformShell = ({ theme, setView }) => {
               </div>
 
               <button onClick={() => setShellView(p => ({ ...p, ai: true }))} className="antigravity-card" style={{ padding: '0.6rem 1.25rem', borderRadius: '1rem', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--antigravity-secondary)', color: 'white', cursor: 'pointer' }}>
-                 <Zap size={16} fill="var(--antigravity-primary)" stroke="none" /> Antigravity
+                 <Zap size={16} color="white" /> Antigravity
               </button>
            </div>
         </header>
