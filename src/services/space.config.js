@@ -101,9 +101,9 @@ export const SPACE_THEME = {
   [ENTITY_TYPES.HOLDING]: {
     label:        'Espace Holding',
     description:  'Gouvernance & supervision groupe',
-    accent:       '#0F172A',   // slate-900 — autorité, executive
-    accentSoft:   '#F1F5F9',
-    badgeBg:      '#0F172A',
+    accent:       '#0F0F10',   // noir pur — correspond au logo Holding
+    accentSoft:   '#F5F5F5',
+    badgeBg:      '#0F0F10',
     badgeFg:      '#FFFFFF',
   },
   [ENTITY_TYPES.SUBSIDIARY]: {
