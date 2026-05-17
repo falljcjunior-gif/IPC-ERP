@@ -32,9 +32,17 @@ exports.bootstrapSuperAdmin = rbac.bootstrapSuperAdmin;
 const recaptcha = require('./modules/recaptcha');
 exports.verifyRecaptcha = recaptcha.verifyRecaptcha;
 
-// 3. AI Copilot (Nexus)
+// 3. AI Copilot — JARVIS
 const nexus = require('./modules/nexus');
 exports.nexusChat = nexus.nexusChat;
+
+// 3d. JARVIS Proactive Monitor — Scan autonome toutes les 2h
+const jarvisMonitor = require('./modules/jarvis_monitor');
+exports.jarvisMonitor = jarvisMonitor.jarvisMonitor;
+
+// 3e. JARVIS Stream — SSE streaming + mémoire long terme + multimodal
+const jarvisStreamModule = require('./modules/jarvis_stream');
+exports.jarvisStream = jarvisStreamModule.jarvisStream;
 
 // 3b. Le Commandant — Agent de Management Proactif (scan toutes les 4h)
 const commander = require('./modules/commander');

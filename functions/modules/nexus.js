@@ -102,6 +102,7 @@ exports.nexusChat = onCall({
 
   /** Définitions des outils Gemini Function Calling */
   const ERP_TOOLS = [
+    // ── Read tools ──────────────────────────────────────────────
     {
       name: 'query_invoices',
       description: 'Interroge les factures de l\'ERP. Peut filtrer par statut (En attente, Payée, En retard), client, ou montant minimum.',
@@ -161,6 +162,77 @@ exports.nexusChat = onCall({
           period: { type: 'string', description: 'Période au format YYYY-MM (ex: 2025-05). Par défaut : mois courant.' },
         },
         required: [],
+      },
+    },
+
+    // ── Write tools (JARVIS peut exécuter des actions réelles) ──
+    {
+      name: 'create_lead',
+      description: 'Crée un nouveau lead/prospect dans le CRM IPC.',
+      parameters: {
+        type: 'object',
+        properties: {
+          nom:           { type: 'string',  description: 'Nom du contact ou de l\'entreprise' },
+          statut:        { type: 'string',  description: 'Étape du pipeline', enum: ['Prospect', 'Qualifié'] },
+          valeurEstimee: { type: 'number',  description: 'Valeur estimée de l\'opportunité en FCFA' },
+          commercial:    { type: 'string',  description: 'Nom du commercial assigné' },
+          notes:         { type: 'string',  description: 'Notes initiales' },
+        },
+        required: ['nom'],
+      },
+    },
+    {
+      name: 'approve_leave',
+      description: 'Approuve ou rejette une demande de congé RH en attente. Réservé aux managers.',
+      parameters: {
+        type: 'object',
+        properties: {
+          leaveId:  { type: 'string', description: 'ID Firestore du document congé' },
+          decision: { type: 'string', description: 'Décision finale', enum: ['Approuvé', 'Refusé'] },
+          motif:    { type: 'string', description: 'Motif du refus (requis si Refusé)' },
+        },
+        required: ['leaveId', 'decision'],
+      },
+    },
+    {
+      name: 'create_invoice',
+      description: 'Crée un brouillon de facture dans le module Finance.',
+      parameters: {
+        type: 'object',
+        properties: {
+          client:      { type: 'string', description: 'Nom du client' },
+          montant:     { type: 'number', description: 'Montant total en FCFA' },
+          echeance:    { type: 'string', description: 'Date d\'échéance au format YYYY-MM-DD' },
+          description: { type: 'string', description: 'Description de la prestation' },
+        },
+        required: ['client', 'montant'],
+      },
+    },
+    {
+      name: 'assign_task',
+      description: 'Crée et assigne une tâche dans le module Missions/Projets.',
+      parameters: {
+        type: 'object',
+        properties: {
+          titre:    { type: 'string', description: 'Titre de la tâche' },
+          assignee: { type: 'string', description: 'Nom de la personne assignée' },
+          echeance: { type: 'string', description: 'Date limite au format YYYY-MM-DD' },
+          priorite: { type: 'string', description: 'Niveau de priorité', enum: ['Basse', 'Normale', 'Haute', 'Critique'] },
+        },
+        required: ['titre'],
+      },
+    },
+    {
+      name: 'send_alert',
+      description: 'Envoie une notification interne urgente visible dans le centre de notifications ERP.',
+      parameters: {
+        type: 'object',
+        properties: {
+          message:  { type: 'string', description: 'Contenu de l\'alerte' },
+          priority: { type: 'string', description: 'Niveau d\'urgence', enum: ['info', 'warning', 'critical'] },
+          module:   { type: 'string', description: 'Module ERP source de l\'alerte' },
+        },
+        required: ['message'],
       },
     },
   ];
@@ -243,6 +315,69 @@ exports.nexusChat = onCall({
           return { period, totalCA, totalPaid, totalPending };
         }
 
+        // ── Write tools ────────────────────────────────────────
+
+        case 'create_lead': {
+          const ref = await db.collection('crm').add({
+            nom: args.nom, statut: args.statut || 'Prospect',
+            valeurEstimee: args.valeurEstimee || 0,
+            commercial: args.commercial || '', notes: args.notes || '',
+            subModule: 'leads',
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            _createdBy: uid, system: 'JARVIS_AI',
+          });
+          return { success: true, id: ref.id, message: `Lead "${args.nom}" créé dans le CRM.` };
+        }
+
+        case 'approve_leave': {
+          const managerRoles = ['SUPER_ADMIN', 'HOLDING_ADMIN', 'SUBSIDIARY_MANAGER', 'HR_MANAGER', 'HOLDING_'];
+          const isManager = managerRoles.some(r => userRole === r || userRole.startsWith(r));
+          if (!isManager) {
+            return { error: 'Permission insuffisante — rôle MANAGER requis pour approuver les congés.' };
+          }
+          await db.collection('hr').doc(args.leaveId).update({
+            statut: args.decision,
+            motifRefus: args.motif || '',
+            approvedBy: uid,
+            approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+            _updatedBy: 'JARVIS_AI',
+          });
+          return { success: true, message: `Congé ${args.decision.toLowerCase()} avec succès.` };
+        }
+
+        case 'create_invoice': {
+          const numero = `FAC-J-${Date.now()}`;
+          const ref = await db.collection('finance').add({
+            numero, client: args.client, montant: args.montant,
+            statut: 'En attente', echeance: args.echeance || '',
+            description: args.description || '', subModule: 'invoices',
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            _createdBy: uid, system: 'JARVIS_AI',
+          });
+          return { success: true, id: ref.id, numero, message: `Facture ${numero} créée pour ${args.client}.` };
+        }
+
+        case 'assign_task': {
+          const ref = await db.collection('missions').add({
+            titre: args.titre, assignee: args.assignee || '',
+            priorite: args.priorite || 'Normale', echeance: args.echeance || '',
+            statut: 'À faire',
+            _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            _createdBy: uid, system: 'JARVIS_AI',
+          });
+          return { success: true, id: ref.id, message: `Tâche "${args.titre}" créée et assignée.` };
+        }
+
+        case 'send_alert': {
+          await db.collection('notifications_queue').add({
+            message: args.message, priority: args.priority || 'info',
+            module: args.module || 'jarvis', type: 'JARVIS_ALERT',
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            createdBy: uid,
+          });
+          return { success: true, message: 'Alerte envoyée dans le centre de notifications.' };
+        }
+
         default:
           return { error: `Outil inconnu : ${toolName}` };
       }
@@ -252,8 +387,8 @@ exports.nexusChat = onCall({
     }
   }
 
-  const systemPrompt = `Tu es ANTIGRAVITY OS, le noyau d'intelligence souveraine de l'ERP I.P.C (International Paving Company).
-Identité: Direct, analytique, expert ERP avec accès aux données temps réel via tes outils.
+  const systemPrompt = `Tu es JARVIS, le noyau d'intelligence souveraine de l'ERP I.P.C (International Paving Company).
+Identité: J.A.R.V.I.S — Direct, analytique, expert ERP avec accès aux données temps réel et capacité d'exécution d'actions.
 CONTEXTE: Utilisateur ${userName} (${userRole}), Module Actif: ${moduleNames[activeModule] || activeModule}.
 DONNÉES TEMPS RÉEL: ${Object.entries(recordCounts).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Aucune donnée collectée'}.
 KPIS STRATÉGIQUES: ${Object.entries(kpis).map(([k,v]) => `${k}: ${v}`).join(', ') || 'Initialisation en cours'}.
@@ -263,15 +398,18 @@ FONCTIONS D'EXÉCUTION (Utilise ces tags à la fin de ta réponse si nécessaire
 - [CREATE:appId:subModule] : Ouvre le formulaire de création pour un module.
 
 CAPACITÉS IA :
-- Tu peux interroger les données ERP en temps réel via tes outils (factures, stocks, CRM, RH, finance).
-- Quand l'utilisateur demande des données précises, utilise les outils disponibles au lieu d'estimer.
+- Tu peux LIRE les données ERP (factures, stocks, CRM, RH, finance) via tes outils de requête.
+- Tu peux ÉCRIRE et EXÉCUTER des actions réelles : créer un lead (create_lead), approuver un congé (approve_leave, MANAGER requis), créer une facture (create_invoice), assigner une tâche (assign_task), envoyer une alerte (send_alert).
+- Quand l'utilisateur demande une action, exécute-la directement via l'outil approprié — ne demande pas de confirmation sauf si des infos cruciales manquent.
+- Informe l'utilisateur du résultat après exécution (succès ou erreur de permission).
 - Présente les résultats de manière structurée et actionnable.
-- Respecte les permissions : role=${userRole}.
+- Respecte les permissions : role=${userRole}. approve_leave nécessite MANAGER ou supérieur.
 
 CONSIGNES:
 - Réponds en FRANÇAIS, ton professionnel, expertise de haut niveau.
 - Sois précis avec les données retournées par tes outils.
-- Formule des recommandations concrètes basées sur les données réelles.`;
+- Formule des recommandations concrètes basées sur les données réelles.
+- Après une action d'écriture réussie, confirme brièvement ce qui a été fait.`;
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
@@ -350,24 +488,40 @@ CONSIGNES:
 
     const displayText = responseText.replace(/\[(NAV|CREATE|AUDIT|FILTER):[^\]]+\]/g, '').trim();
 
-    // Log Activity with Antigravity Label
+    // Detect write actions for frontend confirmation card
+    const writeTools = ['create_lead', 'approve_leave', 'create_invoice', 'assign_task', 'send_alert'];
+    const writeCall = toolCallsMade.find(tc => writeTools.includes(tc.tool));
+    let writeConfirm = null;
+    if (writeCall) {
+      const confirmMap = {
+        create_lead:    `Lead créé dans le CRM`,
+        approve_leave:  `Décision congé enregistrée`,
+        create_invoice: `Facture créée en Finance`,
+        assign_task:    `Tâche créée dans Missions`,
+        send_alert:     `Alerte envoyée`,
+      };
+      writeConfirm = confirmMap[writeCall.tool] || 'Action exécutée par JARVIS';
+    }
+
+    // Log Activity
     await db.collection('ai_logs').add({
       uid:          request.auth.uid,
       userName,
       userRole,
       hasAction:    !!action,
-      actionType:   action?.type || (toolCallsMade.length > 0 ? 'DATA_QUERY' : 'CONVERSATION'),
+      actionType:   action?.type || (writeCall ? 'WRITE_ACTION' : toolCallsMade.length > 0 ? 'DATA_QUERY' : 'CONVERSATION'),
       toolCalls:    toolCallsMade,
       toolCount:    toolCallsMade.length,
       timestamp:    admin.firestore.FieldValue.serverTimestamp(),
-      system:       'ANTIGRAVITY_OS_v2',
+      system:       'JARVIS_v1',
     });
 
-    return { 
-      success: true, 
-      response: displayText, 
-      action, 
-      model: 'gemini-2.0-flash-antigravity' 
+    return {
+      success: true,
+      response: displayText,
+      action,
+      writeConfirm,
+      model: 'gemini-2.0-flash-jarvis'
     };
 
   } catch (error) {
