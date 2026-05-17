@@ -5,7 +5,7 @@ export default {
   color: '#0891B2',
   tagline: 'Organiser plannings d\'équipe, rendez-vous, réunions et événements',
 
-  overview: `Le module Planning & Événements affiche un calendrier partagé pour votre équipe ou votre filiale. Vous voyez qui est où et qui fait quoi : permanences, déplacements, formations, réunions, événements. Plus de coordination par email du genre « tu peux jeudi à 14h ? ». Plus de double-réservation d\'une salle. Tout est centralisé et visible.`,
+  overview: `Le module Planning & Événements affiche un calendrier partagé pour votre équipe ou votre filiale. Vous voyez qui est où et qui fait quoi : permanences, déplacements, formations, réunions, événements. Plus de coordination par email du genre « tu peux jeudi à 14h ? ». Plus de double-réservation d'une salle. Tout est centralisé et visible.`,
 
   articles: [
     {
@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Calendar',
-        content: `Cliquez sur le créneau souhaité dans le calendrier. Donnez un titre, ajoutez les participants (avec recherche du nom). Le système indique en temps réel si tout le monde est disponible (vert) ou si certains sont déjà occupés (rouge). Choisissez la salle, le lien visio, ajoutez l\'ordre du jour. Validez : les invités reçoivent une invitation.`,
+        content: `Cliquez sur le créneau souhaité dans le calendrier. Donnez un titre, ajoutez les participants (avec recherche du nom). Le système indique en temps réel si tout le monde est disponible (vert) ou si certains sont déjà occupés (rouge). Choisissez la salle, le lien visio, ajoutez l'ordre du jour. Validez : les invités reçoivent une invitation.`,
         bullets: [
           'Clic sur un créneau → fenêtre de création',
           'Ajout des participants avec auto-complétion',
@@ -27,7 +27,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Zap',
-        content: `Trouver un créneau qui convient à 5 personnes prend 30 secondes au lieu d\'un échange d\'emails sur 2 jours. Plus de réunion oubliée, plus de salle réservée par 2 équipes en même temps.`,
+        content: `Trouver un créneau qui convient à 5 personnes prend 30 secondes au lieu d'un échange d'emails sur 2 jours. Plus de réunion oubliée, plus de salle réservée par 2 équipes en même temps.`,
       },
     },
     {
@@ -36,7 +36,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Users',
-        content: `Vue « Équipe » → tableau hebdomadaire ou mensuel avec une ligne par collaborateur. Vous voyez d\'un coup d\'œil : qui est présent, qui est en congé, qui est en déplacement, qui est en formation. Glissez-déposez une mission ou un créneau d\'une personne à l\'autre pour rééquilibrer. Les conflits (congé + mission planifiée) sont signalés en rouge.`,
+        content: `Vue « Équipe » → tableau hebdomadaire ou mensuel avec une ligne par collaborateur. Vous voyez d'un coup d'œil : qui est présent, qui est en congé, qui est en déplacement, qui est en formation. Glissez-déposez une mission ou un créneau d'une personne à l'autre pour rééquilibrer. Les conflits (congé + mission planifiée) sont signalés en rouge.`,
         bullets: [
           'Vue hebdo ou mensuelle de toute l\'équipe',
           'Une ligne = un collaborateur',
@@ -57,7 +57,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Sparkles',
-        content: `Bouton « Nouvel événement ». Type (séminaire, JPO, formation, soirée…), date, lieu, capacité. Créez un formulaire d\'inscription que vous partagez par email ou QR code. Les participants s\'inscrivent en un clic. Le jour J, vous pointez les présents avec votre téléphone (scan du QR). Après l\'événement, sondage de satisfaction automatique.`,
+        content: `Bouton « Nouvel événement ». Type (séminaire, JPO, formation, soirée…), date, lieu, capacité. Créez un formulaire d'inscription que vous partagez par email ou QR code. Les participants s'inscrivent en un clic. Le jour J, vous pointez les présents avec votre téléphone (scan du QR). Après l'événement, sondage de satisfaction automatique.`,
         bullets: [
           'Formulaire d\'inscription public ou interne',
           'Limite de capacité avec liste d\'attente',

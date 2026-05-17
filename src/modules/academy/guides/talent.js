@@ -5,7 +5,7 @@ export default {
   color: '#DB2777',
   tagline: 'Recruter, intégrer, faire grandir vos talents',
 
-  overview: `People & Culture est le module dédié au recrutement et au développement des collaborateurs. Vous y gérez les offres d\'emploi, les candidatures, l\'intégration des nouveaux, les compétences, les parcours d\'évolution. Il complète Ressources Humaines (qui couvre l\'administratif) sur les aspects humains et stratégiques.`,
+  overview: `People & Culture est le module dédié au recrutement et au développement des collaborateurs. Vous y gérez les offres d'emploi, les candidatures, l'intégration des nouveaux, les compétences, les parcours d'évolution. Il complète Ressources Humaines (qui couvre l'administratif) sur les aspects humains et stratégiques.`,
 
   articles: [
     {
@@ -35,7 +35,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'UserPlus',
-        content: `À l\'embauche, un parcours d\'onboarding démarre automatiquement : checklist matériel à fournir, comptes à créer, formations à suivre, personnes à rencontrer. Le nouveau a sa propre vue avec les étapes à valider. Le manager voit l\'avancement et reçoit une alerte si quelque chose stagne. Au bout de 3 mois, un point de fin de période d\'essai est planifié.`,
+        content: `À l'embauche, un parcours d'onboarding démarre automatiquement : checklist matériel à fournir, comptes à créer, formations à suivre, personnes à rencontrer. Le nouveau a sa propre vue avec les étapes à valider. Le manager voit l'avancement et reçoit une alerte si quelque chose stagne. Au bout de 3 mois, un point de fin de période d'essai est planifié.`,
         bullets: [
           'Checklist d\'onboarding personnalisable par poste',
           'Vue collaborateur : ses étapes à valider',
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Heart',
-        content: `Une intégration ratée coûte cher (turnover, démotivation). Un parcours structuré donne au nouveau l\'impression d\'être attendu, accompagné. Au bout de 3 mois, il est opérationnel et engagé — pas perdu et tenté par un autre poste ailleurs.`,
+        content: `Une intégration ratée coûte cher (turnover, démotivation). Un parcours structuré donne au nouveau l'impression d'être attendu, accompagné. Au bout de 3 mois, il est opérationnel et engagé — pas perdu et tenté par un autre poste ailleurs.`,
       },
     },
     {
@@ -56,7 +56,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'BarChart2',
-        content: `Onglet « Compétences » → chaque salarié peut documenter ses compétences (niveau auto-déclaré + validé par le manager). L\'entreprise peut visualiser les compétences disponibles, les manques, les départs à risque. Les souhaits d\'évolution sont collectés lors des entretiens annuels et apparaissent dans une vue « Mobilité interne ».`,
+        content: `Onglet « Compétences » → chaque salarié peut documenter ses compétences (niveau auto-déclaré + validé par le manager). L'entreprise peut visualiser les compétences disponibles, les manques, les départs à risque. Les souhaits d'évolution sont collectés lors des entretiens annuels et apparaissent dans une vue « Mobilité interne ».`,
         bullets: [
           'Cartographie des compétences par personne et par équipe',
           'Niveaux : débutant / autonome / expert / formateur',
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Target',
-        content: `Vous identifiez les talents en interne avant de recruter en externe (souvent moins cher et plus rapide). Vous voyez les compétences rares qui partent à la retraite et vous anticipez la transmission. Vos collaborateurs voient qu\'il y a un chemin d\'évolution chez vous.`,
+        content: `Vous identifiez les talents en interne avant de recruter en externe (souvent moins cher et plus rapide). Vous voyez les compétences rares qui partent à la retraite et vous anticipez la transmission. Vos collaborateurs voient qu'il y a un chemin d'évolution chez vous.`,
       },
     },
   ],

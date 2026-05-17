@@ -5,7 +5,7 @@ export default {
   color: '#0EA5E9',
   tagline: 'Demander de l\'aide en 2 clics et suivre la résolution',
 
-  overview: `Le module Support & Helpdesk permet à toute personne dans l\'entreprise de signaler un problème ou demander de l\'aide (IT, RH, logistique…). Chaque demande devient un « ticket » pris en charge par la bonne équipe. Vous suivez l\'avancement, vous êtes notifié à la résolution. Plus besoin d\'envoyer un mail à plusieurs personnes : tout est centralisé et tracé.`,
+  overview: `Le module Support & Helpdesk permet à toute personne dans l'entreprise de signaler un problème ou demander de l'aide (IT, RH, logistique…). Chaque demande devient un « ticket » pris en charge par la bonne équipe. Vous suivez l'avancement, vous êtes notifié à la résolution. Plus besoin d'envoyer un mail à plusieurs personnes : tout est centralisé et tracé.`,
 
   articles: [
     {
@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'MousePointerClick',
-        content: `Cliquez sur « Nouveau ticket » en haut. Choisissez la catégorie (IT, RH, Logistique, Finance…), la priorité, décrivez votre problème avec vos mots. Joignez une photo si utile (capture d\'écran d\'une erreur, photo d\'un matériel cassé). Validez : le ticket est envoyé automatiquement à l\'équipe concernée.`,
+        content: `Cliquez sur « Nouveau ticket » en haut. Choisissez la catégorie (IT, RH, Logistique, Finance…), la priorité, décrivez votre problème avec vos mots. Joignez une photo si utile (capture d'écran d'une erreur, photo d'un matériel cassé). Validez : le ticket est envoyé automatiquement à l'équipe concernée.`,
         bullets: [
           'Bouton « Nouveau ticket »',
           'Catégorie qui oriente vers la bonne équipe',
@@ -26,7 +26,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Heart',
-        content: `Plus besoin de courir après le bon interlocuteur. Le ticket arrive directement chez la personne qui peut résoudre. Vous gardez une trace écrite. Si l\'agent est absent, son remplaçant prend le relais — vous n\'êtes jamais bloqué.`,
+        content: `Plus besoin de courir après le bon interlocuteur. Le ticket arrive directement chez la personne qui peut résoudre. Vous gardez une trace écrite. Si l'agent est absent, son remplaçant prend le relais — vous n'êtes jamais bloqué.`,
       },
     },
     {
@@ -35,7 +35,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Eye',
-        content: `Onglet « Mes tickets ». La liste de toutes vos demandes en cours s\'affiche avec leur statut : ouvert, pris en charge, en attente d\'info, résolu, fermé. Cliquez sur un ticket pour voir l\'historique des échanges. Vous pouvez ajouter un commentaire à tout moment (« J\'ai testé, ça marche toujours pas »). Le support répond, vous êtes notifié.`,
+        content: `Onglet « Mes tickets ». La liste de toutes vos demandes en cours s'affiche avec leur statut : ouvert, pris en charge, en attente d'info, résolu, fermé. Cliquez sur un ticket pour voir l'historique des échanges. Vous pouvez ajouter un commentaire à tout moment (« J'ai testé, ça marche toujours pas »). Le support répond, vous êtes notifié.`,
         bullets: [
           'Liste de vos tickets en cours et fermés',
           'Statut visible en un coup d\'œil',
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Compass',
-        content: `Vous ne vous demandez plus si votre demande a été lue. Vous voyez exactement où elle en est. Si elle traîne, vous pouvez relancer poliment via un commentaire. Les délais s\'améliorent côté support quand chacun voit qui a quoi en charge.`,
+        content: `Vous ne vous demandez plus si votre demande a été lue. Vous voyez exactement où elle en est. Si elle traîne, vous pouvez relancer poliment via un commentaire. Les délais s'améliorent côté support quand chacun voit qui a quoi en charge.`,
       },
     },
     {
@@ -56,7 +56,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Lock',
-        content: `Certaines demandes sont sensibles : harcèlement, conflit, demande de mobilité interne, problème de paie. Choisissez la catégorie « Confidentiel RH ». Le ticket sera visible uniquement par les RH et vous, jamais par d\'autres managers ni l\'équipe support classique. Description anonymisable si vraiment nécessaire.`,
+        content: `Certaines demandes sont sensibles : harcèlement, conflit, demande de mobilité interne, problème de paie. Choisissez la catégorie « Confidentiel RH ». Le ticket sera visible uniquement par les RH et vous, jamais par d'autres managers ni l'équipe support classique. Description anonymisable si vraiment nécessaire.`,
         bullets: [
           'Catégorie « Confidentiel RH » pour les sujets sensibles',
           'Visibilité réduite : RH + vous, c\'est tout',
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Shield',
-        content: `Vous avez un canal sécurisé pour les sujets délicats que vous n\'osez pas mettre par email. Vos données restent confidentielles, et l\'entreprise a une trace officielle de votre demande (utile en cas de procédure ultérieure).`,
+        content: `Vous avez un canal sécurisé pour les sujets délicats que vous n'osez pas mettre par email. Vos données restent confidentielles, et l'entreprise a une trace officielle de votre demande (utile en cas de procédure ultérieure).`,
       },
     },
   ],

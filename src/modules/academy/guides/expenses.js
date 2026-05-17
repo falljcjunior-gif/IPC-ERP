@@ -5,7 +5,7 @@ export default {
   color: '#D97706',
   tagline: 'Déclarer ses frais avec une photo, se faire rembourser en quelques jours',
 
-  overview: `Le module Notes de Frais simplifie la vie des collaborateurs et du service compta. Vous photographiez vos tickets et factures, le système reconnaît automatiquement le montant et la date. Votre manager valide en un clic. Le remboursement part avec la paie suivante. Plus d\'enveloppes pleines de tickets froissés, plus de tableurs Excel à rendre en retard.`,
+  overview: `Le module Notes de Frais simplifie la vie des collaborateurs et du service compta. Vous photographiez vos tickets et factures, le système reconnaît automatiquement le montant et la date. Votre manager valide en un clic. Le remboursement part avec la paie suivante. Plus d'enveloppes pleines de tickets froissés, plus de tableurs Excel à rendre en retard.`,
 
   articles: [
     {
@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Camera',
-        content: `Depuis l\'app mobile, bouton « + Note de frais ». Prenez en photo le ticket ou la facture. Le système lit automatiquement le montant, la TVA, la date et le nom du commerçant. Vérifiez, choisissez la catégorie (repas, transport, hébergement…), ajoutez un commentaire si besoin (« Déjeuner client X »), validez. La note part en validation chez votre manager.`,
+        content: `Depuis l'app mobile, bouton « + Note de frais ». Prenez en photo le ticket ou la facture. Le système lit automatiquement le montant, la TVA, la date et le nom du commerçant. Vérifiez, choisissez la catégorie (repas, transport, hébergement…), ajoutez un commentaire si besoin (« Déjeuner client X »), validez. La note part en validation chez votre manager.`,
         bullets: [
           'Photo du ticket avec l\'app mobile',
           'Reconnaissance automatique montant + date + commerçant',
@@ -26,7 +26,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Zap',
-        content: `Plus de tickets accumulés au fond du portefeuille qui partent à la machine à laver. Plus de notes de frais bouclées le dimanche soir. Vous saisissez en sortant du resto, c\'est fait.`,
+        content: `Plus de tickets accumulés au fond du portefeuille qui partent à la machine à laver. Plus de notes de frais bouclées le dimanche soir. Vous saisissez en sortant du resto, c'est fait.`,
       },
     },
     {
@@ -35,7 +35,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'CheckCircle',
-        content: `En tant que manager, vous recevez une notification dès qu\'un collaborateur soumet une note. Onglet « À valider ». Cliquez sur la note → vérifiez la photo, la catégorie, le montant. Si tout est OK, bouton « Valider ». Si quelque chose cloche (justificatif illisible, dépense hors politique), bouton « Refuser » avec motif. Le collaborateur reçoit la décision immédiatement.`,
+        content: `En tant que manager, vous recevez une notification dès qu'un collaborateur soumet une note. Onglet « À valider ». Cliquez sur la note → vérifiez la photo, la catégorie, le montant. Si tout est OK, bouton « Valider ». Si quelque chose cloche (justificatif illisible, dépense hors politique), bouton « Refuser » avec motif. Le collaborateur reçoit la décision immédiatement.`,
         bullets: [
           'Notification dès qu\'une note arrive en validation',
           'Vérification de la photo en plein écran',
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Heart',
-        content: `Vous validez en 30 secondes par note, depuis n\'importe où. Plus de pile de notes à signer en bas de votre bureau. Vos collaborateurs sont remboursés plus vite, ils sont contents.`,
+        content: `Vous validez en 30 secondes par note, depuis n'importe où. Plus de pile de notes à signer en bas de votre bureau. Vos collaborateurs sont remboursés plus vite, ils sont contents.`,
       },
     },
     {

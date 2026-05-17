@@ -14,7 +14,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'UserPlus',
-        content: `Bouton « Nouvelle embauche ». Saisissez les informations d\'identité, contact, poste. Précisez le type de contrat (CDI, CDD, alternance…), la date d\'entrée, le salaire. Téléversez les pièces : carte d\'identité, RIB, attestation Sécu, diplômes. Le système crée son compte d\'accès à la plateforme et envoie un email d\'accueil avec ses identifiants.`,
+        content: `Bouton « Nouvelle embauche ». Saisissez les informations d'identité, contact, poste. Précisez le type de contrat (CDI, CDD, alternance…), la date d'entrée, le salaire. Téléversez les pièces : carte d'identité, RIB, attestation Sécu, diplômes. Le système crée son compte d'accès à la plateforme et envoie un email d'accueil avec ses identifiants.`,
         bullets: [
           'Identité, contact, poste, type de contrat, salaire',
           'Pièces justificatives téléversées (PDF ou photo)',
@@ -35,7 +35,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Sun',
-        content: `Le collaborateur ouvre l\'onglet « Mes congés », clique sur « Demander un congé », choisit dates et type (congés payés, RTT, sans solde…). Sa demande part chez son manager qui valide en 1 clic. Le solde de congés se met à jour automatiquement. L\'équipe voit les absences à venir dans le planning collectif.`,
+        content: `Le collaborateur ouvre l'onglet « Mes congés », clique sur « Demander un congé », choisit dates et type (congés payés, RTT, sans solde…). Sa demande part chez son manager qui valide en 1 clic. Le solde de congés se met à jour automatiquement. L'équipe voit les absences à venir dans le planning collectif.`,
         bullets: [
           'Demande en 30 secondes côté collaborateur',
           'Validation en 1 clic côté manager',
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Compass',
-        content: `Plus d\'emails de demande de congé qui se perdent. Plus de calcul de solde sur Excel. Le manager voit les absences à venir et peut anticiper la charge. Tout le monde gagne du temps.`,
+        content: `Plus d'emails de demande de congé qui se perdent. Plus de calcul de solde sur Excel. Le manager voit les absences à venir et peut anticiper la charge. Tout le monde gagne du temps.`,
       },
     },
     {
@@ -56,7 +56,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'MessageSquare',
-        content: `Onglet « Entretiens » → « Planifier ». Choisir le collaborateur, la date. Le système envoie une convocation et un questionnaire de préparation. Pendant l\'entretien, manager et salarié remplissent ensemble la trame (réalisations, difficultés, objectifs, formation, évolution). Le compte-rendu est signé électroniquement par les deux. Archivé dans le dossier RH.`,
+        content: `Onglet « Entretiens » → « Planifier ». Choisir le collaborateur, la date. Le système envoie une convocation et un questionnaire de préparation. Pendant l'entretien, manager et salarié remplissent ensemble la trame (réalisations, difficultés, objectifs, formation, évolution). Le compte-rendu est signé électroniquement par les deux. Archivé dans le dossier RH.`,
         bullets: [
           'Convocation et préparation envoyées automatiquement',
           'Trame structurée pour ne rien oublier',
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Award',
-        content: `Un entretien annuel bien mené est un puissant outil de motivation et de progression. Avec une trame structurée et un suivi d\'année en année, vous capitalisez sur les engagements pris et vous donnez du sens à l\'évolution professionnelle.`,
+        content: `Un entretien annuel bien mené est un puissant outil de motivation et de progression. Avec une trame structurée et un suivi d'année en année, vous capitalisez sur les engagements pris et vous donnez du sens à l'évolution professionnelle.`,
       },
     },
   ],

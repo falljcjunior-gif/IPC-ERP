@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Award',
-        content: `La TVA est l\'une des taxes les plus chronophages quand on la fait à la main. Ici, c\'est l\'affaire de 15 minutes par mois. Plus de stress des 15 du mois, plus d\'erreurs qui finissent en rappel fiscal avec pénalités.`,
+        content: `La TVA est l'une des taxes les plus chronophages quand on la fait à la main. Ici, c'est l'affaire de 15 minutes par mois. Plus de stress des 15 du mois, plus d'erreurs qui finissent en rappel fiscal avec pénalités.`,
       },
     },
     {
@@ -56,7 +56,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'CheckCircle',
-        content: `En fin d\'année, lancez la procédure de clôture. Le module vérifie : toutes les factures saisies, tous les paiements rapprochés, tous les inventaires validés. Liste des points à corriger affichée. Une fois tout vert, vous générez les états financiers (bilan, compte de résultat, annexes). Export pour votre expert-comptable. Une fois validé, l\'exercice est figé.`,
+        content: `En fin d'année, lancez la procédure de clôture. Le module vérifie : toutes les factures saisies, tous les paiements rapprochés, tous les inventaires validés. Liste des points à corriger affichée. Une fois tout vert, vous générez les états financiers (bilan, compte de résultat, annexes). Export pour votre expert-comptable. Une fois validé, l'exercice est figé.`,
         bullets: [
           'Liste de contrôle avant clôture (todo list)',
           'Génération bilan + compte de résultat + annexes',
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Compass',
-        content: `La clôture annuelle se prépare tout au long de l\'année. Avec ce module, elle prend des jours au lieu de semaines. Et votre expert-comptable apprécie : tout est déjà au format qu\'il attend.`,
+        content: `La clôture annuelle se prépare tout au long de l'année. Avec ce module, elle prend des jours au lieu de semaines. Et votre expert-comptable apprécie : tout est déjà au format qu'il attend.`,
       },
     },
   ],

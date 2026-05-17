@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Eye',
-        content: `Vous savez à tout moment où en est chaque commande sans avoir à descendre sur le terrain. Quand un client demande « ma commande, c\'est pour quand ? », vous avez la réponse précise immédiatement.`,
+        content: `Vous savez à tout moment où en est chaque commande sans avoir à descendre sur le terrain. Quand un client demande « ma commande, c'est pour quand ? », vous avez la réponse précise immédiatement.`,
       },
     },
     {

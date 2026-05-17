@@ -5,7 +5,7 @@ export default {
   color: '#4338CA',
   tagline: 'Garder le contrôle sur contrats, échéances et obligations légales',
 
-  overview: `Le module Juridique centralise tous vos documents légaux : contrats clients et fournisseurs, statuts, baux, assurances, NDA. Vous savez quand chaque contrat se renouvelle, quand chaque obligation arrive à échéance, et vous gardez la trace de toutes les signatures. C\'est l\'outil du juriste, mais aussi du DG d\'une PME qui veut éviter de réveiller son avocat à 22h.`,
+  overview: `Le module Juridique centralise tous vos documents légaux : contrats clients et fournisseurs, statuts, baux, assurances, NDA. Vous savez quand chaque contrat se renouvelle, quand chaque obligation arrive à échéance, et vous gardez la trace de toutes les signatures. C'est l'outil du juriste, mais aussi du DG d'une PME qui veut éviter de réveiller son avocat à 22h.`,
 
   articles: [
     {
@@ -35,7 +35,7 @@ export default {
       logic: {
         heading: 'Comment faire au quotidien',
         icon: 'Activity',
-        content: `Onglet « Échéances ». La liste des contrats qui arrivent à terme ou se renouvellent dans les 90 jours s\'affiche, triée par urgence. Vous décidez pour chacun : renouveler, renégocier, résilier. Le système envoie des rappels automatiques 60 et 30 jours avant la date de tacite reconduction (très utile pour ne pas se retrouver coincé un an de plus).`,
+        content: `Onglet « Échéances ». La liste des contrats qui arrivent à terme ou se renouvellent dans les 90 jours s'affiche, triée par urgence. Vous décidez pour chacun : renouveler, renégocier, résilier. Le système envoie des rappels automatiques 60 et 30 jours avant la date de tacite reconduction (très utile pour ne pas se retrouver coincé un an de plus).`,
         bullets: [
           'Liste triée par date d\'échéance',
           'Rappels automatiques à 60 et 30 jours',
@@ -47,7 +47,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Heart',
-        content: `Plus de contrat qui se reconduit tacitement parce que personne n\'a regardé la date. Plus de bail commercial oublié qui pose problème au mauvais moment. Vous gardez la main sur tous vos engagements.`,
+        content: `Plus de contrat qui se reconduit tacitement parce que personne n'a regardé la date. Plus de bail commercial oublié qui pose problème au mauvais moment. Vous gardez la main sur tous vos engagements.`,
       },
     },
     {
@@ -68,7 +68,7 @@ export default {
       finality: {
         heading: 'À quoi ça vous sert',
         icon: 'Zap',
-        content: `Plus de contrat à imprimer, signer, scanner, envoyer, attendre le retour du client, scanner sa version… Tout se fait en quelques heures au lieu de plusieurs semaines. Et la signature électronique a la même valeur juridique qu\'une signature manuscrite.`,
+        content: `Plus de contrat à imprimer, signer, scanner, envoyer, attendre le retour du client, scanner sa version… Tout se fait en quelques heures au lieu de plusieurs semaines. Et la signature électronique a la même valeur juridique qu'une signature manuscrite.`,
       },
     },
   ],
