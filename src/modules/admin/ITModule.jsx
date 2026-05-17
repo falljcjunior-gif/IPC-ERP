@@ -277,7 +277,7 @@ const ITModule = () => {
                       <div>
                         <div style={{ fontSize: '1rem', fontWeight: 800 }}>Permission Change: Module HR</div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                          User: <span style={{ color: 'var(--primary)' }}>ra.yoman@ipcgreenblocks.com</span> • 2m ago
+                          User: <span style={{ color: 'var(--primary)' }}>admin@entreprise.com</span> • 2m ago
                         </div>
                       </div>
                     </div>
