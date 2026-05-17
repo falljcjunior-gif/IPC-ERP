@@ -31,6 +31,12 @@ export const UserService = {
       let tokenResult = await fbUser.getIdTokenResult(false);
       let claimedRole = tokenResult.claims?.role || null;
 
+      // Force refresh si aucun claim dans le token (claims posés après l'émission du token courant)
+      if (!claimedRole) {
+        tokenResult = await fbUser.getIdTokenResult(true);
+        claimedRole = tokenResult.claims?.role || null;
+      }
+
       const profile = await FirestoreService.getDocument('users', fbUser.uid);
 
       // Si le claim ne correspond pas au rôle Firestore (ex: claim posé via admin SDK
