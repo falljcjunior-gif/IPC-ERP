@@ -3,10 +3,98 @@ import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth, firebaseConfig, db as firestoreDb, app } from '../../firebase/config';
 import { FirestoreService, serverTimestamp } from '../../services/firestore.service';
+import {
+  ACTIONS, hasAction as rbacHasAction,
+  getAccessLevelFromPermissions, getDefaultPermissionsForRole,
+} from '../../schemas/permissions.schema';
 
 import { registry } from '../../services/Registry';
 
 export const createAdminSlice = (set, get) => ({
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ENTITY CONTEXT RESET
+  // Vide toutes les données métier du store quand le contexte d'entité change.
+  // Appelé par BusinessContext après setTenantContext().
+  // ─────────────────────────────────────────────────────────────────────────
+  resetEntityData: () => {
+    set(state => ({
+      data: {
+        ...state.data,
+        // Collections métier — vidées pour forcer le rechargement depuis Firestore
+        employees: [],
+        hr:         { employees: [], candidates: [], leaves: [], timesheets: [] },
+        finance:    { invoices: [], transactions: [], budgets: [] },
+        accounting: { entries: [], accounts: [] },
+        sales:      { quotes: [], orders: [], invoices: [] },
+        crm:        { contacts: [], deals: [], activities: [] },
+        inventory:  { products: [], movements: [], warehouses: [] },
+        production: { orders: [], bom: [] },
+        projects:   { projects: [], tasks: [] },
+        fleet:      { vehicles: [], trips: [] },
+        payroll:    { runs: [], bulletins: [] },
+        // KPIs & dashboards consolidés
+        kpis:       {},
+        dashboards: {},
+        // Notifications — rechargées avec entity_id correct
+        notifications: [],
+      },
+      // Vider le cache de permissions chargé pour cette entité
+      permissions: {},
+    }));
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // hasAction — Vérification d'action granulaire (9 types)
+  // ─────────────────────────────────────────────────────────────────────────
+  /**
+   * Vérifie si l'utilisateur courant peut effectuer une action précise sur un module.
+   * Exemple : hasAction('hr', ACTIONS.DELETE) → false pour un Manager
+   *
+   * @param {string} moduleId
+   * @param {string} action   — ACTIONS.VIEW | ACTIONS.CREATE | ACTIONS.EDIT | ...
+   * @returns {boolean}
+   */
+  hasAction: (moduleId, action) => {
+    const { user, userRole, permissions } = get();
+    if (!moduleId || !action) return false;
+
+    // Super Admin — accès absolu
+    if (userRole === 'SUPER_ADMIN') return true;
+
+    // [3-SPACE ISOLATION] vérifier compatibilité module / entity_type
+    try {
+      const mod = registry?.getModule?.(moduleId);
+      if (mod?.entityTypes?.length > 0) {
+        const userEntityType = user?.entity_type || 'SUBSIDIARY';
+        if (!mod.entityTypes.includes(userEntityType)) return false;
+      }
+    } catch { /* registry pas prêt */ }
+
+    const userPerms = permissions[user?.id];
+
+    // 1. Nouveau schéma permissions.schema.js
+    if (userPerms?.modules?.[moduleId]) {
+      return rbacHasAction(userPerms, moduleId, action);
+    }
+
+    // 2. Fallback : dériver depuis le niveau legacy read/write
+    const legacyAccess = _legacyGetAccess(get, user?.id, moduleId);
+    if (legacyAccess === 'none') return false;
+    if (legacyAccess === 'read') {
+      return action === ACTIONS.VIEW || action === ACTIONS.EXPORT;
+    }
+    if (legacyAccess === 'write') {
+      // write = tous sauf APPROVE / ADMIN (réservés aux Directeurs)
+      const hierarchyLevel = userPerms?.hierarchy_level || 'Employee';
+      const restrictedForEmployee = [ACTIONS.APPROVE, ACTIONS.ADMIN, ACTIONS.SUPERVISE];
+      if (hierarchyLevel === 'Employee' && restrictedForEmployee.includes(action)) return false;
+      return true;
+    }
+    return false;
+  },
+
+
   updateUserPermissions: async (userId, permissions, role) => {
     try {
       const functions = getFunctions(app, 'europe-west1');
@@ -96,93 +184,7 @@ export const createAdminSlice = (set, get) => ({
   },
 
   getModuleAccess: (userId, moduleId) => {
-    const { user, userRole, permissions } = get();
-    // SUPER_ADMIN (creator) has absolute bypass
-    if (userRole === 'SUPER_ADMIN') return 'write';
-
-    // Always allow access to Personal Space
-    if (moduleId === 'home') return 'write';
-
-    // [3-SPACE ISOLATION] Vérifier que le module est compatible avec l'espace
-    // de l'utilisateur. Si le module déclare `entityTypes: ['HOLDING']` et que
-    // user.entity_type !== 'HOLDING', refuser l'accès quel que soit le rôle.
-    // `registry` est importé statiquement ligne 7 — pas de cycle.
-    try {
-      const mod = registry?.getModule?.(moduleId);
-      if (mod?.entityTypes && mod.entityTypes.length > 0) {
-        const userEntityType = user?.entity_type || 'SUBSIDIARY';
-        if (!mod.entityTypes.includes(userEntityType)) return 'none';
-      }
-    } catch { /* registry pas prêt — fallback */ }
-
-    const userPerms = permissions[userId];
-
-    // 1. Check New Nested Structure (modules[id].access)
-    if (userPerms?.modules && userPerms.modules[moduleId]) {
-      return userPerms.modules[moduleId].access || 'none';
-    }
-
-    // 2. Fallback to Legacy Flat Structure (moduleAccess[id])
-    if (userPerms?.moduleAccess && userPerms.moduleAccess[moduleId]) {
-      return userPerms.moduleAccess[moduleId];
-    }
-
-    // 3. Fallback to Legacy List (allowedModules)
-    if (Array.isArray(userPerms?.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
-      return 'write';
-    }
-
-    // 4. Role-based default fallback (when permissions doc is empty/sparse but role is set).
-    // Évite que les nouveaux comptes "Directeur"/"HR_MANAGER" ne voient que Home parce que
-    // le wizard n'a pas câblé `allowedModules`.
-    const roleFromState = userRole || user?.role;
-    const rolesArr = Array.isArray(userPerms?.roles) ? userPerms.roles : [];
-    const effectiveRoles = new Set([roleFromState, ...rolesArr].filter(Boolean));
-
-    const ROLE_MODULE_DEFAULTS = {
-      // ── Holding (Niveau 1 — Gouvernance groupe) ──────────────────────────────
-      // Accès total à tous les modules : le Holding supervise l'ensemble du groupe
-      HOLDING_CEO:      { all: 'write' },
-      HOLDING_CFO:      { all: 'write' },
-      HOLDING_CSO:      { all: 'write' },
-      HOLDING_CHRO:     { all: 'write' },
-      HOLDING_CTO:      { all: 'write' },
-      HOLDING_AUDITOR:  { all: 'read' },
-      HOLDING_LEGAL:    { legal: 'write', signature: 'write', dms: 'write', finance: 'read', audit_hub: 'read' },
-      GROUP_AUDITOR:    { all: 'read' },
-      // ── Roles génériques ─────────────────────────────────────────────────────
-      ADMIN:        { all: 'write' },
-      MANAGER:      { all: 'write' },
-      DIRECTOR:     { all: 'write' },
-      HR_MANAGER:   { hr: 'write', talent: 'write', payroll: 'write', signature: 'write', dms: 'write' },
-      HR:           { hr: 'write', talent: 'read', payroll: 'read' },
-      FINANCE:      { finance: 'write', accounting: 'write', budget: 'write', sales: 'read' },
-      SALES:        { crm: 'write', sales: 'write', commerce: 'write', marketing: 'read' },
-      CRM:          { crm: 'write', sales: 'read' },
-      PRODUCTION:   { production: 'write', inventory: 'write', planning: 'read' },
-      LOGISTICS:    { inventory: 'write', logistics: 'write', purchase: 'write', projects: 'read' },
-      LEGAL:        { legal: 'write', signature: 'write', dms: 'write' },
-      STAFF:        { connect: 'read', dms: 'read' },
-      GUEST:        {},
-      // ── Country roles (v3.0) ─────────────────────────────────────────
-      // Admin local complet de la filiale pays
-      COUNTRY_DIRECTOR_SUBSIDIARY: { all: 'write' },
-      // Admin local complet de la foundation pays
-      COUNTRY_DIRECTOR_FOUNDATION: { all: 'write' },
-      // Spécialisés country-scoped
-      COUNTRY_HR:         { hr: 'write', talent: 'write', payroll: 'write', dms: 'write', connect: 'read' },
-      COUNTRY_FINANCE:    { finance: 'write', accounting: 'write', budget: 'write', sales: 'read' },
-      COUNTRY_OPERATIONS: { production: 'write', logistics: 'write', inventory: 'write', projects: 'write' },
-      COUNTRY_AUDITOR:    { all: 'read' },
-    };
-    for (const role of effectiveRoles) {
-      const map = ROLE_MODULE_DEFAULTS[role];
-      if (!map) continue;
-      if (map.all) return map.all;
-      if (map[moduleId]) return map[moduleId];
-    }
-
-    return 'none';
+    return _legacyGetAccess(get, userId, moduleId);
   },
 
   /** 
@@ -376,13 +378,69 @@ export const createAdminSlice = (set, get) => ({
     } catch (err) {
       console.error("Erreur Synchronisation:", err);
       get().addHint({ 
-        title: "Échec de Synchronisation", 
-        message: err.message || "Une erreur est survenue lors de la synchronisation des comptes.", 
-        type: 'danger' 
+        title: "Échec de Synchronisation",
+        message: err.message || "Une erreur est survenue lors de la synchronisation des comptes.",
+        type: 'danger'
       });
       throw err;
     }
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INTERNAL HELPER — résolution d'accès multi-schéma
+// Supporte le nouveau schéma permissions.schema.js ET les 3 formats legacy.
+// Appelé par getModuleAccess() et hasAction().
+// ─────────────────────────────────────────────────────────────────────────────
+function _legacyGetAccess(get, userId, moduleId) {
+  const { user, userRole, permissions } = get();
+
+  if (userRole === 'SUPER_ADMIN') return 'write';
+  if (moduleId === 'home') return 'write';
+
+  try {
+    const mod = registry?.getModule?.(moduleId);
+    if (mod?.entityTypes?.length > 0) {
+      const userEntityType = user?.entity_type || 'SUBSIDIARY';
+      if (!mod.entityTypes.includes(userEntityType)) return 'none';
+    }
+  } catch { /* registry pas prêt */ }
+
+  const userPerms = permissions[userId];
+
+  // ── 1. Nouveau schéma enterprise (permissions.schema.js) ────────────────
+  if (userPerms?.modules?.[moduleId]) {
+    return getAccessLevelFromPermissions(userPerms, moduleId);
+  }
+
+  // ── 2. Schéma intermédiaire (modules[id].access string) ─────────────────
+  if (userPerms?.modules?.[moduleId]?.access) {
+    return userPerms.modules[moduleId].access;
+  }
+
+  // ── 3. Legacy flat (moduleAccess[id]) ───────────────────────────────────
+  if (userPerms?.moduleAccess?.[moduleId]) {
+    return userPerms.moduleAccess[moduleId];
+  }
+
+  // ── 4. Legacy list (allowedModules[]) ───────────────────────────────────
+  if (Array.isArray(userPerms?.allowedModules) && userPerms.allowedModules.includes(moduleId)) {
+    return 'write';
+  }
+
+  // ── 5. Fallback rôle → permissions par défaut du schéma enterprise ───────
+  const roleFromState = userRole || user?.role;
+  const rolesArr = Array.isArray(userPerms?.roles) ? userPerms.roles : [];
+  const effectiveRoles = new Set([roleFromState, ...rolesArr].filter(Boolean));
+
+  for (const role of effectiveRoles) {
+    const defaults = getDefaultPermissionsForRole(role);
+    if (defaults?.modules?.[moduleId]) {
+      return getAccessLevelFromPermissions(defaults, moduleId);
+    }
+  }
+
+  return 'none';
+}
 
 
