@@ -380,7 +380,13 @@ export const BusinessProvider = ({ children }) => {
           // et l'injecte dans chaque document Firestore créé.
           // ══════════════════════════════════════════════════════════
           const tenantId   = userProfile.tenant_id   || 'ipc_group';
-          const entityType = userProfile.entity_type  || 'SUBSIDIARY';
+          // SUPER_ADMIN et rôles Holding → toujours espace HOLDING, même si entity_type absent du profil
+          const role = userProfile.role || '';
+          const defaultEntityType =
+            (role === 'SUPER_ADMIN' || role === 'GROUP_AUDITOR' || role.startsWith('HOLDING_'))
+              ? 'HOLDING'
+              : 'SUBSIDIARY';
+          const entityType = userProfile.entity_type || defaultEntityType;
           const entityId   = userProfile.entity_id    || userProfile.company_id || 'ipc_green_blocks';
           const entityName = userProfile.entity_name  || userProfile.company_id || 'IPC Group';
           const companyId  = userProfile.company_id   || entityId;
