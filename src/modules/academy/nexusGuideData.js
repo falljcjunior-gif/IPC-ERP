@@ -52,6 +52,15 @@ import payroll         from './guides/payroll';
 import planning        from './guides/planning';
 import helpdesk        from './guides/helpdesk';
 
+// ── Lot 6 — Outils & Conf ─────────────────────────────────────────
+import dms             from './guides/dms';
+import signature       from './guides/signature';
+import officeAdmin     from './guides/office-admin';
+import admin           from './guides/admin';
+import it              from './guides/it';
+import mobile          from './guides/mobile';
+import analytics       from './guides/analytics';
+
 export const NEXUS_GUIDE_DATA = [
   cockpitGroupe,
   cockpitFiliale,
@@ -78,6 +87,13 @@ export const NEXUS_GUIDE_DATA = [
   payroll,
   planning,
   helpdesk,
+  dms,
+  signature,
+  officeAdmin,
+  admin,
+  it,
+  mobile,
+  analytics,
 ];
 
 /**

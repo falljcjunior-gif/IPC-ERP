@@ -25,6 +25,13 @@ import {
   Package, Truck, ShieldCheck, Car,
   Calculator, Receipt, Camera,
   Wallet, Calendar, LifeBuoy,
+  FolderOpen, Upload, Share2, Clock,
+  PenTool, Send, Download,
+  MapPin, ClipboardList, ClipboardCheck,
+  Settings, ToggleLeft, Sliders,
+  Server, Monitor, AlertTriangle,
+  Smartphone, WifiOff,
+  LayoutDashboard, PlusCircle,
 } from 'lucide-react';
 import { NEXUS_GUIDE_DATA, searchGuide } from './nexusGuideData';
 import '../../components/GlobalDashboard.css';
@@ -44,6 +51,13 @@ const ICON_MAP = {
   Package, Truck, ShieldCheck, Car,
   Calculator, Receipt, Camera,
   Wallet, Calendar, LifeBuoy,
+  FolderOpen, Upload, Share2, Clock,
+  PenTool, Send, Download,
+  MapPin, ClipboardList, ClipboardCheck,
+  Settings, ToggleLeft, Sliders,
+  Server, Monitor, AlertTriangle,
+  Smartphone, WifiOff,
+  LayoutDashboard, PlusCircle,
 };
 
 function LucideIcon({ name, size = 16, color, style }) {
