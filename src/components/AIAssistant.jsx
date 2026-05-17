@@ -1,19 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Cpu, Send, X, Zap, MessageSquare,
   HelpCircle, Mic, TrendingUp, Activity, BarChart3, Target,
-  AlertCircle, CheckCircle2, Sparkles, Loader2, Settings, ShieldAlert
+  AlertCircle, CheckCircle2, Sparkles, Loader2, Settings, ShieldAlert,
+  Volume2, VolumeX, CheckCircle, Bot
 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '../firebase/config';
 import { useStore } from '../store';
 
-// Bind to the same Firebase app instance to ensure auth token is transmitted
 const functions = getFunctions(app);
-const antigravityChatFn = httpsCallable(functions, 'nexusChat'); // Backend still named nexusChat for stability, but UI is Antigravity
+const antigravityChatFn = httpsCallable(functions, 'nexusChat');
 
-// ══ Typing animation component ═══════════════════════════════
+// ══ Typing animation ═════════════════════════════════════════
 const TypingDots = () => (
   <div style={{ display: 'flex', gap: '6px', padding: '6px 0' }}>
     {[0, 1, 2].map(i => (
@@ -21,6 +21,19 @@ const TypingDots = () => (
         animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4] }}
         transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
         style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--antigravity-primary)' }}
+      />
+    ))}
+  </div>
+);
+
+// ══ Speaking wave animation ═══════════════════════════════════
+const SpeakingWave = () => (
+  <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+    {[0, 1, 2, 3].map(i => (
+      <motion.div key={i}
+        animate={{ height: [4, 16, 4] }}
+        transition={{ duration: 0.6, delay: i * 0.15, repeat: Infinity }}
+        style={{ width: 3, background: 'white', borderRadius: 2, opacity: 0.85 }}
       />
     ))}
   </div>
@@ -58,7 +71,7 @@ const MessageBubble = ({ m, onExecuteAction }) => (
       {m.content}
     </div>
 
-    {/* Action card */}
+    {/* Action card — navigation / creation */}
     {m.action && (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -72,7 +85,7 @@ const MessageBubble = ({ m, onExecuteAction }) => (
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', fontWeight: 800, color: 'var(--antigravity-primary)', marginBottom: '0.8rem', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-          <Zap size={14} fill="var(--antigravity-primary)" stroke="none" /> Antigravity Exec Protocol
+          <Zap size={14} color="var(--antigravity-primary)" /> JARVIS Exec Protocol
         </div>
         <button
           onClick={() => onExecuteAction(m.action)}
@@ -95,6 +108,26 @@ const MessageBubble = ({ m, onExecuteAction }) => (
       </motion.div>
     )}
 
+    {/* Write action confirmation card */}
+    {m.writeConfirm && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        style={{
+          padding: '1rem 1.25rem',
+          background: 'rgba(16, 185, 129, 0.06)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: '1.25rem',
+          display: 'flex', alignItems: 'center', gap: '0.75rem',
+        }}
+      >
+        <CheckCircle size={18} color="#10B981" />
+        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#065F46' }}>
+          {m.writeConfirm}
+        </span>
+      </motion.div>
+    )}
+
     {/* Error badge */}
     {m.error && (
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#ef4444', fontWeight: 700, paddingLeft: '0.5rem' }}>
@@ -112,10 +145,12 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [apiConfigured, setApiConfigured] = useState(true);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const [messages, setMessages] = useState([{
     role: 'assistant',
-    content: `Système Antigravity Intelligence opérationnel.\n\nPrêt pour analyse multisectorielle, automatisation de workflows ou génération d'intelligence stratégique. Que souhaitez-vous accomplir ?`
+    content: `JARVIS opérationnel — Intelligence Souveraine IPC.\n\nPrêt pour analyse multisectorielle, automatisation de workflows, exécution d'actions ERP et génération d'intelligence stratégique. Que souhaitez-vous accomplir ?`
   }]);
 
   const inputRef = useRef(null);
@@ -137,7 +172,39 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
     return () => window.removeEventListener('keydown', handleKey);
   }, [setSpotlightOpen]);
 
-  // Build live ERP context to send to AI
+  // Stop speaking when chat closes
+  useEffect(() => {
+    if (!isOpen && window.speechSynthesis) window.speechSynthesis.cancel();
+  }, [isOpen]);
+
+  // ── TTS voice output ─────────────────────────────────────────
+  const speak = useCallback((text) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'fr-FR';
+    utt.rate = 1.05;
+    utt.pitch = 0.9;
+    utt.onstart = () => setIsSpeaking(true);
+    utt.onend = () => setIsSpeaking(false);
+    utt.onerror = () => setIsSpeaking(false);
+    // Prefer a French voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const frVoice = voices.find(v => v.lang === 'fr-FR' && v.name.toLowerCase().includes('male'))
+                 || voices.find(v => v.lang === 'fr-FR')
+                 || voices.find(v => v.lang.startsWith('fr'))
+                 || voices[0];
+    if (frVoice) utt.voice = frVoice;
+    window.speechSynthesis.speak(utt);
+  }, [voiceEnabled]);
+
+  const toggleVoice = useCallback(() => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setVoiceEnabled(v => !v);
+  }, []);
+
+  // Build live ERP context
   const buildERPContext = useCallback(() => {
     const counts = {};
     if (data?.crm?.leads) counts['Leads CRM'] = data.crm.leads.length;
@@ -147,7 +214,6 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
         if (Array.isArray(val) && val.length > 0) counts[key] = val.length;
       });
     }
-
     return {
       activeModule: activeModule || 'dashboard',
       userRole: userRole || currentUser?.role || 'STAFF',
@@ -165,7 +231,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
 
     setMessages(prev => [...prev, { role: 'user', content: userInput }]);
 
-    // Optimistic shortcuts
+    // Optimistic navigation shortcuts
     const lowInput = userInput.toLowerCase();
     const NAV_MAP = {
       'crm': 'crm', 'rh': 'hr', 'hr': 'hr', 'finance': 'finance',
@@ -176,7 +242,9 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
     const navKey = Object.keys(NAV_MAP).find(k => lowInput.startsWith('va vers ' + k) || lowInput === k || lowInput === 'ouvre ' + k);
     if (navKey) {
       navigateTo(NAV_MAP[navKey]);
-      setMessages(prev => [...prev, { role: 'assistant', content: `Navigation vers le module ${navKey.toUpperCase()} effectuée par Antigravity.` }]);
+      const navMsg = `Navigation vers le module ${navKey.toUpperCase()} effectuée par JARVIS.`;
+      setMessages(prev => [...prev, { role: 'assistant', content: navMsg }]);
+      speak(navMsg);
       setSpotlightOpen(false);
       setIsOpen(false);
       setIsProcessing(false);
@@ -191,29 +259,34 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
         erpContext: buildERPContext()
       });
 
-      const { response, action, success } = result.data;
+      const { response, action, success, writeConfirm } = result.data;
+      const responseText = response || 'JARVIS : Aucune réponse exploitable reçue.';
 
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response || 'Antigravity : Aucune réponse exploitable reçue.',
+        content: responseText,
         action: action || null,
+        writeConfirm: writeConfirm || null,
         error: !success ? 'Protocole partiel' : null
       }]);
 
+      speak(responseText);
+
     } catch (err) {
-      console.error('Antigravity AI call failed:', err);
+      console.error('JARVIS AI call failed:', err);
       const errorMsg = err.code === 'functions/unauthenticated'
-        ? 'Session expirée. Reconnectez-vous pour réactiver Antigravity.'
+        ? 'Session expirée. Reconnectez-vous pour réactiver JARVIS.'
         : err.code === 'functions/failed-precondition'
-        ? 'Système Antigravity non initialisé sur ce serveur.'
-        : 'Interruption du canal de communication Antigravity.';
+        ? 'Système JARVIS non initialisé sur ce serveur.'
+        : 'Interruption du canal de communication JARVIS.';
 
       if (err.code === 'functions/failed-precondition') setApiConfigured(false);
       setMessages(prev => [...prev, { role: 'assistant', content: errorMsg, error: err.code }]);
+      speak(errorMsg);
     }
 
     setIsProcessing(false);
-  }, [isProcessing, messages, buildERPContext, navigateTo, setSpotlightOpen]);
+  }, [isProcessing, messages, buildERPContext, navigateTo, setSpotlightOpen, speak]);
 
   const executeAction = useCallback((action) => {
     if (action.type === 'NAVIGATE') {
@@ -234,6 +307,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
     rec.lang = 'fr-FR';
     rec.onstart = () => setIsRecording(true);
     rec.onend = () => setIsRecording(false);
+    rec.onerror = () => setIsRecording(false);
     rec.onresult = (e) => {
       const t = e.results[0][0].transcript;
       setQuery(t);
@@ -274,26 +348,40 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
           >
             {/* Header */}
             <div style={{
-              padding: '1.75rem 2.5rem',
+              padding: '1.75rem 2rem',
               background: 'var(--antigravity-secondary)',
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               flexShrink: 0,
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <div className="antigravity-glow" style={{ background: 'var(--antigravity-primary)', padding: '10px', borderRadius: '14px', display: 'flex' }}>
-                  <Cpu size={22} color="white" />
+                  <Bot size={22} color="white" />
                 </div>
                 <div>
-                  <div style={{ fontWeight: 950, fontSize: '1.2rem', color: '#fff', letterSpacing: '-0.03em' }}>Antigravity</div>
-                  <div style={{ fontSize: '0.65rem', opacity: 0.9, fontWeight: 900, color: 'var(--antigravity-primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                    Secteur: {contextLabel}
+                  <div style={{ fontWeight: 950, fontSize: '1.2rem', color: '#fff', letterSpacing: '-0.03em' }}>JARVIS</div>
+                  <div style={{ fontSize: '0.6rem', opacity: 0.9, fontWeight: 900, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+                    {isSpeaking ? <SpeakingWave /> : `Secteur: ${contextLabel}`}
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)}
-                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', width: 36, height: 36, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}>
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {/* Voice toggle */}
+                <button
+                  onClick={toggleVoice}
+                  title={voiceEnabled ? 'Couper la voix JARVIS' : 'Activer la voix JARVIS'}
+                  style={{
+                    background: voiceEnabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                    border: voiceEnabled ? '1px solid rgba(255,255,255,0.4)' : '1px solid rgba(255,255,255,0.1)',
+                    color: 'white', cursor: 'pointer', width: 36, height: 36,
+                    borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s',
+                  }}>
+                  {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                </button>
+                <button onClick={() => setIsOpen(false)}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', width: 36, height: 36, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}>
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
             {/* Chat messages */}
@@ -316,7 +404,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processMessage(query); } }}
-                  placeholder="Instruire Antigravity..."
+                  placeholder="Instruire JARVIS..."
                   disabled={isProcessing}
                   style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--antigravity-text)', padding: '0.6rem 1rem', fontSize: '0.95rem', fontWeight: 600 }}
                 />
@@ -332,7 +420,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
                 </button>
               </div>
               <div style={{ textAlign: 'center', fontSize: '0.6rem', color: 'var(--antigravity-text-muted)', marginTop: '1rem', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '1.5px', opacity: 0.7 }}>
-                Antigravity Strategy Core — IPC 2026
+                J.A.R.V.I.S — Intelligence Souveraine IPC 2026
               </div>
             </div>
           </motion.div>
@@ -366,7 +454,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
     </div>
   );
 
-  // ── Spotlight (Antigravity Command Palette) ──────────────────────────
+  // ── Spotlight (JARVIS Command Palette) ──────────────────────
   const renderSpotlight = () => (
     <AnimatePresence>
       {spotlightOpen && (
@@ -390,19 +478,19 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
             {/* Search bar */}
             <div style={{ padding: '2.5rem 3rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--antigravity-border)', gap: '2rem' }}>
               <div style={{ position: 'relative' }}>
-                <motion.div 
-                  animate={{ scale: [1, 1.6, 1], opacity: [0.1, 0.4, 0.1] }} 
+                <motion.div
+                  animate={{ scale: [1, 1.6, 1], opacity: [0.1, 0.4, 0.1] }}
                   transition={{ repeat: Infinity, duration: 3 }}
-                  style={{ position: 'absolute', inset: -20, background: 'var(--antigravity-primary)', borderRadius: '50%', filter: 'blur(25px)' }} 
+                  style={{ position: 'absolute', inset: -20, background: 'var(--antigravity-primary)', borderRadius: '50%', filter: 'blur(25px)' }}
                 />
-                <Cpu size={36} color="var(--antigravity-primary)" style={{ position: 'relative' }} />
+                <Bot size={36} color="var(--antigravity-primary)" style={{ position: 'relative' }} />
               </div>
               <input
                 ref={inputRef}
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && query.trim()) { processMessage(query); setSpotlightOpen(false); setIsOpen(true); } }}
-                placeholder="Antigravity Command... Instruisez l'IA"
+                placeholder="JARVIS Command... Instruisez l'IA"
                 style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--antigravity-secondary)', fontSize: '1.8rem', fontWeight: 950, letterSpacing: '-0.04em' }}
               />
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -414,7 +502,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
             {/* Quick Suggestions */}
             <div style={{ padding: '2.5rem 3rem' }}>
               <div style={{ fontSize: '0.8rem', fontWeight: 950, color: 'var(--antigravity-primary)', textTransform: 'uppercase', marginBottom: '2rem', letterSpacing: '4px' }}>
-                Antigravity Protocol Core
+                JARVIS Protocol Core
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
                 {[
@@ -439,10 +527,10 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
             <div style={{ padding: '1.25rem 3rem', background: 'var(--antigravity-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: '2.5rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><HelpCircle size={16} /> Aide Protocole</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Zap size={16} fill="var(--antigravity-primary)" stroke="none" /> Intelligence Contextuelle</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Zap size={16} color="white" /> Intelligence Contextuelle</span>
               </div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 950, color: 'var(--antigravity-primary)', letterSpacing: '3px' }}>
-                ANTIGRAVITY OS v6.0
+              <div style={{ fontSize: '0.8rem', fontWeight: 950, color: 'white', letterSpacing: '3px', opacity: 0.85 }}>
+                J.A.R.V.I.S v1.0
               </div>
             </div>
           </motion.div>
