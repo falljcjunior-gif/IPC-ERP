@@ -1,30 +1,22 @@
 /**
  * ════════════════════════════════════════════════════════════════════════════
- * SPACE BADGE — Indicateur visuel "Dans quel espace suis-je ?"
+ * SPACE BADGE — Indicateur textuel "Dans quel espace suis-je ?"
  * ════════════════════════════════════════════════════════════════════════════
  *
- * Affiché en haut de sidebar (PlatformShell). Permet à l'utilisateur de savoir
- * immédiatement dans quel espace (Holding / Filiale / Foundation) il se trouve.
+ * Affiché en haut de sidebar (PlatformShell), sous le logo de l'espace.
+ * Montre le label de l'espace et le nom de l'entité active.
  *
  * Props:
  *   entityType  — HOLDING | SUBSIDIARY | FOUNDATION (from TenantContext)
  *   entityName  — nom lisible (ex: "IPC Filiale Sénégal")
- *   collapsed   — si true, n'affiche que l'icône
+ *   collapsed   — si true, n'affiche que l'initiale
  */
 
 import React from 'react';
 import { getSpaceTheme } from '../services/space.config';
-import { ENTITY_TYPES } from '../schemas/org.schema';
-
-const SPACE_LOGOS = {
-  [ENTITY_TYPES.HOLDING]:    '/logo-holding.png',
-  [ENTITY_TYPES.SUBSIDIARY]: '/logo-filiale.png',
-  [ENTITY_TYPES.FOUNDATION]: '/logo-fondation.png',
-};
 
 export default function SpaceBadge({ entityType, entityName, collapsed = false }) {
   const theme = getSpaceTheme(entityType);
-  const logoSrc = SPACE_LOGOS[entityType] || SPACE_LOGOS[ENTITY_TYPES.HOLDING];
 
   if (collapsed) {
     return (
@@ -32,47 +24,40 @@ export default function SpaceBadge({ entityType, entityName, collapsed = false }
         title={`${theme.label} · ${entityName || ''}`}
         style={{
           width: 40, height: 40, borderRadius: 10,
-          background: '#FFFFFF',
-          border: `1.5px solid ${theme.accent}33`,
-          boxShadow: `0 1px 6px ${theme.accent}18`,
+          background: theme.accentSoft,
+          border: `1.5px solid ${theme.accent}44`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '12px auto', flexShrink: 0, overflow: 'hidden',
+          margin: '8px auto', flexShrink: 0,
         }}
       >
-        <img
-          src={logoSrc}
-          alt={theme.label}
-          style={{ height: 22, width: '100%', objectFit: 'contain', padding: '0 4px' }}
-        />
+        <span style={{ fontSize: 13, fontWeight: 900, color: theme.accent, letterSpacing: '-0.02em' }}>
+          {theme.label.charAt(0)}
+        </span>
       </div>
     );
   }
 
   return (
     <div style={{
-      margin: '12px',
-      background: '#FFFFFF',
+      margin: '8px 12px',
+      padding: '8px 12px',
+      background: theme.accentSoft,
       border: `1px solid ${theme.accent}22`,
-      borderRadius: 12,
-      boxShadow: `0 2px 8px ${theme.accent}18`,
-      padding: '10px 14px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
+      borderRadius: 10,
+      display: 'flex', flexDirection: 'column', gap: 2,
     }}>
-      <img
-        src={logoSrc}
-        alt={theme.label}
-        style={{ height: 36, objectFit: 'contain', maxWidth: '100%' }}
-      />
-      {entityName && (
-        <div style={{
-          fontSize: 10, color: theme.accent, fontWeight: 700,
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          maxWidth: '100%',
-        }}>
-          {entityName}
-        </div>
-      )}
+      <div style={{
+        fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+        textTransform: 'uppercase', color: theme.accent, opacity: 0.7,
+      }}>
+        {theme.label}
+      </div>
+      <div style={{
+        fontSize: 12, fontWeight: 700, color: theme.accent,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>
+        {entityName || '—'}
+      </div>
     </div>
   );
 }

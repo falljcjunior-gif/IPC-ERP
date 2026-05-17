@@ -361,7 +361,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
         />
         {isProcessing
           ? <Loader2 size={34} className="spinner" style={{ position: 'relative', zIndex: 1 }} />
-          : <Zap size={34} fill="var(--antigravity-primary)" stroke="none" style={{ position: 'relative', zIndex: 1 }} />}
+          : <Zap size={34} color="white" style={{ position: 'relative', zIndex: 1 }} />}
       </motion.button>
     </div>
   );
