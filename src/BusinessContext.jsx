@@ -389,6 +389,14 @@ export const BusinessProvider = ({ children }) => {
           // for COUNTRY_* roles. This enables ABAC isolation at the write layer.
           const countryId  = userProfile.country_id   || null;
 
+          // [MULTI-TENANT RESET] Vider toutes les données métier du store avant
+          // de charger le nouveau contexte d'entité. Évite toute fuite cross-entité
+          // entre sessions ou lors d'une ré-authentification sur une entité différente.
+          const prevEntityId = window.__IPC_ENTITY_ID__;
+          if (prevEntityId && prevEntityId !== entityId) {
+            useStore.getState().resetEntityData?.();
+          }
+
           setTenantContext({
             tenant_id:   tenantId,
             entity_type: entityType,
@@ -400,10 +408,11 @@ export const BusinessProvider = ({ children }) => {
             role:        userProfile.role,   // [3-SPACE] permet isHoldingSession bypass
           });
 
-          // [3-SPACE] Global window flag pour fallback bypass dans firestore.service
-          // (utilisé par subscribeToCollection() defense-in-depth)
+          // [3-SPACE] Global flags pour fallback bypass dans firestore.service
           if (typeof window !== 'undefined') {
-            window.__IPC_USER_ROLE__ = userProfile.role;
+            window.__IPC_USER_ROLE__   = userProfile.role;
+            window.__IPC_ENTITY_ID__   = entityId;
+            window.__IPC_ENTITY_TYPE__ = entityType;
           }
 
         } catch (err) {

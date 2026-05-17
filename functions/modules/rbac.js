@@ -6,9 +6,27 @@ const { checkCallRate } = require('./rate_limiter');
 
 const db = admin.firestore();
 
+// ── Rôles enterprise — liste exhaustive ──────────────────────────────────────
+const ENTERPRISE_ROLES = [
+  'SUPER_ADMIN', 'GROUP_AUDITOR',
+  'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO', 'HOLDING_CHRO', 'HOLDING_CTO',
+  'HOLDING_AUDITOR', 'HOLDING_LEGAL',
+  'SUBSIDIARY_DG', 'SUBSIDIARY_CFO', 'SUBSIDIARY_RH', 'SUBSIDIARY_MANAGER', 'SUBSIDIARY_STAFF',
+  'FOUNDATION_DG', 'FOUNDATION_MANAGER', 'FOUNDATION_STAFF', 'FOUNDATION_AUDITOR',
+  'COUNTRY_DIRECTOR_SUBSIDIARY', 'COUNTRY_DIRECTOR_FOUNDATION',
+  'COUNTRY_HR', 'COUNTRY_FINANCE', 'COUNTRY_OPERATIONS', 'COUNTRY_AUDITOR',
+  'ADMIN', 'DIRECTOR', 'MANAGER', 'HR_MANAGER', 'HR',
+  'FINANCE', 'SALES', 'CRM', 'PRODUCTION', 'LOGISTICS', 'LEGAL', 'AUDIT',
+  'STAFF', 'GUEST',
+];
+
 const SetRoleSchema = z.object({
-  uid: z.string().min(20).max(128),
-  role: z.enum(['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'FINANCE', 'SALES', 'HR', 'PRODUCTION', 'LOGISTICS', 'LEGAL', 'STAFF', 'GUEST']),
+  uid:         z.string().min(20).max(128),
+  role:        z.enum(ENTERPRISE_ROLES),
+  // Contexte d'entité — optionnel, mis à jour dans les Custom Claims si fourni
+  entity_id:   z.string().max(128).optional(),
+  entity_type: z.enum(['HOLDING', 'SUBSIDIARY', 'FOUNDATION']).optional(),
+  country_id:  z.string().max(10).optional(),
 });
 
 /**
@@ -49,7 +67,7 @@ exports.setUserRole = onCall({
     throw new HttpsError('invalid-argument', validation.error.message);
   }
 
-  const { uid, role } = validation.data;
+  const { uid, role, entity_id, entity_type, country_id } = validation.data;
 
   // 4. Empêcher l'auto-modification (un admin ne peut pas se rétrograder)
   if (uid === request.auth.uid && role !== 'SUPER_ADMIN') {
@@ -57,15 +75,28 @@ exports.setUserRole = onCall({
   }
 
   try {
-    // 5. Écrire le Custom Claim (source de vérité immuable côté client)
-    await admin.auth().setCustomUserClaims(uid, { role });
+    // 5. Écrire les Custom Claims (source de vérité immuable côté client)
+    // Inclut entity_id + entity_type + country_id si fournis — enforce isolation multi-tenant
+    const existingClaims = (await admin.auth().getUser(uid)).customClaims || {};
+    const newClaims = {
+      ...existingClaims,
+      role,
+      ...(entity_id   && { entity_id }),
+      ...(entity_type && { entity_type }),
+      ...(country_id  && { country_id }),
+    };
+    await admin.auth().setCustomUserClaims(uid, newClaims);
 
     // 6. Synchroniser aussi dans Firestore pour l'affichage UI
-    await db.collection('users').doc(uid).update({
+    const firestoreUpdate = {
       role,
       _roleUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
       _roleUpdatedBy: request.auth.uid,
-    });
+      ...(entity_id   && { entity_id }),
+      ...(entity_type && { entity_type }),
+      ...(country_id  && { country_id }),
+    };
+    await db.collection('users').doc(uid).update(firestoreUpdate);
 
     // 7. Forcer l'invalidation du token actuel (le user devra se re-connecter)
     await admin.auth().revokeRefreshTokens(uid);

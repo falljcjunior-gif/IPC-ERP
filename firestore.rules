@@ -726,6 +726,59 @@ service cloud.firestore {
              docCountryId == getCountryId();
     }
 
+    // ── ENTERPRISE RBAC HELPERS ───────────────────────────────────────────────
+
+    /**
+     * Vérifie qu'un utilisateur a une action précise sur un module
+     * via le nouveau schéma permissions.schema.js stocké dans Firestore.
+     * Utilisé comme défense en profondeur (côté DB) en complément des règles par rôle.
+     *
+     * @param moduleId  string — id du module (ex: 'hr', 'finance')
+     * @param action    string — 'view'|'create'|'edit'|'delete'|'export'|'validate'|'approve'|'supervise'|'admin'
+     */
+    function hasModuleAction(moduleId, action) {
+      let userData = getUserData();
+      let mods = userData.get('permissions', {}).get('modules', {});
+      let modPerms = mods.get(moduleId, null);
+      if (modPerms == null) return false;
+      if (!modPerms.get('enabled', false)) return false;
+      return modPerms.get('actions', {}).get(action, false) == true;
+    }
+
+    /**
+     * Vérifie qu'un utilisateur peut au moins voir (VIEW) un module.
+     * Intègre les fallbacks rôles pour la backward compat.
+     */
+    function canViewModule(moduleId) {
+      return isSuperAdmin() || isHoldingLevel() ||
+             hasModuleAction(moduleId, 'view');
+    }
+
+    /**
+     * Vérifie qu'un utilisateur peut modifier (EDIT ou CREATE) dans un module.
+     */
+    function canWriteModule(moduleId) {
+      return isSuperAdmin() || isHoldingLevel() ||
+             hasModuleAction(moduleId, 'edit') ||
+             hasModuleAction(moduleId, 'create');
+    }
+
+    /**
+     * Vérifie qu'un utilisateur peut supprimer dans un module.
+     */
+    function canDeleteModule(moduleId) {
+      return isSuperAdmin() || hasModuleAction(moduleId, 'delete');
+    }
+
+    /**
+     * Vérifie qu'un utilisateur peut approuver/valider dans un module.
+     */
+    function canApproveModule(moduleId) {
+      return isSuperAdmin() || isHoldingLevel() ||
+             hasModuleAction(moduleId, 'approve') ||
+             hasModuleAction(moduleId, 'validate');
+    }
+
     // Holding roles: full group visibility
     function isHoldingLevel() {
       return isAuthenticated() && (
