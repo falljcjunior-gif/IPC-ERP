@@ -58,8 +58,14 @@ service cloud.firestore {
 
     // ── Users & HR (Unified Model 2.0) ──────────────────────────────────────
     match /users/{userId} {
-      // Profile is public for authenticated users (Directory/Annuaire)
-      allow read: if isAuthenticated();
+      // [3-SPACE ISOLATION] Lecture scopée à l'entité courante.
+      // Exceptions : propre profil, Holding (vue groupe), Super Admin.
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isSuperAdmin() ||
+        isHoldingLevel() ||
+        canReadOwnEntity(resource.data.get('entity_id', null))
+      );
       allow create: if isAuthenticated() && (isAdmin() || isCreatorEmail());
 
       // Self-update: only allow writes on explicitly "personal" fields.

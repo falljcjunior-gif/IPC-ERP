@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { onSnapshot, doc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { onSnapshot, doc, collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { db } from '../../firebase/config';
+import { getCurrentEntityId } from '../../services/TenantContext';
 import { useStore } from '../../store';
 import { TrendingUp, TrendingDown, Minus, Award, Zap, Users, Activity } from 'lucide-react';
 
@@ -118,9 +119,11 @@ function Leaderboard({ dept, weekId, myUid }) {
 
   useEffect(() => {
     if (!dept || !weekId) return;
-    // Query evaluations for same dept + week, take top 5
+    // Query evaluations for same dept + week, scoped to current entity
+    const entityId = getCurrentEntityId();
     const q = query(
       collection(db, 'evaluations'),
+      where('entity_id', '==', entityId),
       orderBy('nexusScore', 'desc'),
       limit(10)
     );

@@ -11,7 +11,7 @@ import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
 import { logger } from './utils/logger';
 import { isCreatorEmail } from './utils/creators';
-import { setTenantContext, clearTenantContext } from './services/TenantContext';
+import { setTenantContext, clearTenantContext, getCurrentEntityId } from './services/TenantContext';
 import ConnectPublisher from './services/ConnectPublisher';
 
 /**
@@ -294,14 +294,16 @@ export const BusinessProvider = ({ children }) => {
         descending: true,
         limitTo: 100,
         skipEntityFilter: true, // Notifications are user-targeted, not entity-scoped
-        filters: isManager ? [] : [['targetUserId', '==', user.id]]
+        filters: isManager
+          ? [['entity_id', '==', getCurrentEntityId()]]
+          : [['targetUserId', '==', user.id]]
       },
       (ns) => useStore.getState().setNotifications(ns)
     );
 
-    // D. User Permissions & Global Employee List (users = global directory — pas de filtre entity)
+    // D. User Permissions & Employee List (entity-scoped — Holding voit tout via auto-filter)
     let _lastSelfPermsHash = null;
-    const unsubUsers = FirestoreService.subscribeToCollection('users', { skipEntityFilter: true }, (users) => {
+    const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
       // 1. Map all permissions for Admin/HR modules
       const permissionsMap = {};
       users.forEach(u => {
