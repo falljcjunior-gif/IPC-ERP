@@ -278,7 +278,7 @@ CONSIGNES:
 
     // ── Function Calling : modèle configuré avec les outils ERP ──
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.0-flash-001',
       systemInstruction: systemPrompt,
       tools: [{ functionDeclarations: ERP_TOOLS }],
       toolConfig: { functionCallingConfig: { mode: 'AUTO' } }, // L'IA décide quand appeler les outils
