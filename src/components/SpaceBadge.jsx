@@ -13,19 +13,18 @@
  */
 
 import React from 'react';
-import { Landmark, Building2, Sprout } from 'lucide-react';
 import { getSpaceTheme } from '../services/space.config';
 import { ENTITY_TYPES } from '../schemas/org.schema';
 
-const SPACE_ICONS = {
-  [ENTITY_TYPES.HOLDING]:    Landmark,
-  [ENTITY_TYPES.SUBSIDIARY]: Building2,
-  [ENTITY_TYPES.FOUNDATION]: Sprout,
+const SPACE_LOGOS = {
+  [ENTITY_TYPES.HOLDING]:    '/logo-holding.png',
+  [ENTITY_TYPES.SUBSIDIARY]: '/logo-filiale.png',
+  [ENTITY_TYPES.FOUNDATION]: '/logo-fondation.png',
 };
 
 export default function SpaceBadge({ entityType, entityName, collapsed = false }) {
   const theme = getSpaceTheme(entityType);
-  const Icon = SPACE_ICONS[entityType] || Building2;
+  const logoSrc = SPACE_LOGOS[entityType] || SPACE_LOGOS[ENTITY_TYPES.HOLDING];
 
   if (collapsed) {
     return (
@@ -33,55 +32,47 @@ export default function SpaceBadge({ entityType, entityName, collapsed = false }
         title={`${theme.label} · ${entityName || ''}`}
         style={{
           width: 40, height: 40, borderRadius: 10,
-          background: theme.badgeBg, color: theme.badgeFg,
+          background: '#FFFFFF',
+          border: `1.5px solid ${theme.accent}33`,
+          boxShadow: `0 1px 6px ${theme.accent}18`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '12px auto', flexShrink: 0,
+          margin: '12px auto', flexShrink: 0, overflow: 'hidden',
         }}
       >
-        <Icon size={18} strokeWidth={2} />
+        <img
+          src={logoSrc}
+          alt={theme.label}
+          style={{ height: 22, width: '100%', objectFit: 'contain', padding: '0 4px' }}
+        />
       </div>
     );
   }
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '10px 12px',
       margin: '12px',
-      background: theme.badgeBg,
-      color: theme.badgeFg,
+      background: '#FFFFFF',
+      border: `1px solid ${theme.accent}22`,
       borderRadius: 12,
-      boxShadow: `0 2px 8px ${theme.badgeBg}33`,
+      boxShadow: `0 2px 8px ${theme.accent}18`,
+      padding: '10px 14px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5,
     }}>
-      <div style={{
-        width: 32, height: 32, borderRadius: 8,
-        background: 'rgba(255,255,255,0.18)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0,
-      }}>
-        <Icon size={16} strokeWidth={2.2} />
-      </div>
-      <div style={{ minWidth: 0, flex: 1 }}>
+      <img
+        src={logoSrc}
+        alt={theme.label}
+        style={{ height: 36, objectFit: 'contain', maxWidth: '100%' }}
+      />
+      {entityName && (
         <div style={{
-          fontSize: 9,
-          textTransform: 'uppercase',
-          letterSpacing: '0.12em',
-          fontWeight: 700,
-          opacity: 0.7,
-          marginBottom: 2,
+          fontSize: 10, color: theme.accent, fontWeight: 700,
+          letterSpacing: '0.08em', textTransform: 'uppercase',
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          maxWidth: '100%',
         }}>
-          {theme.label}
+          {entityName}
         </div>
-        <div style={{
-          fontSize: 12,
-          fontWeight: 700,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
-          {entityName || '—'}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

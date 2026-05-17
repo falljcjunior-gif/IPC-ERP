@@ -252,7 +252,7 @@ const Login = ({ onLogin }) => {
       style={{
         flex: isMobile ? '0 0 auto' : '0 0 460px',
         width: isMobile ? '100%' : undefined,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         padding: isMobile ? '2rem 1.75rem 2.25rem' : '2.5rem 3rem',
         background: L.panel,
         borderLeft:   isMobile ? 'none' : undefined,
