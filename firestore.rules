@@ -164,15 +164,19 @@ service cloud.firestore {
     }
 
     // ── Notifications ─────────────────────────────────────────────────────────
+    // [3-SPACE ISOLATION P3] Double protection : filtre par targetUserId ET par entity_id.
+    // Si entity_id absent du doc (legacy), backward compat via canReadOwnEntity(null).
     match /notifications/{notifId} {
-      allow read: if isAuthenticated() && (
+      allow read: if isAuthenticated() &&
+                  canReadOwnEntity(resource.data.get('entity_id', null)) && (
         !('targetUserId' in resource.data) ||
         resource.data.targetUserId == null ||
         resource.data.targetUserId == request.auth.uid ||
         isAdmin()
       );
       allow create: if isAuthenticated(); // Workflow engine crée des notifs
-      allow update: if isAuthenticated() && (
+      allow update: if isAuthenticated() &&
+                    canReadOwnEntity(resource.data.get('entity_id', null)) && (
         resource.data.targetUserId == request.auth.uid ||
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']) ||
         isAdmin()
@@ -195,20 +199,25 @@ service cloud.firestore {
     // ── HR Logic consolidated in /users/{userId} ─────────────────────────────
 
 
+    // [3-SPACE ISOLATION] Helpdesk scopé par entity_id (P1 — audit isolation).
+    // Chaque filiale gère ses propres tickets. HOLDING voit tout (supervision groupe).
+    // Le demandeur reste toujours autorisé sur ses propres tickets, et la règle
+    // categorie == 'Confidentiel RH' est conservée pour la confidentialité RH.
     match /helpdesk/{docId} {
-      allow read: if isAuthenticated() && (
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.get('entity_id', null)) && (
         (resource.data.categorie == 'Confidentiel RH' && (
            resource.data.demandeurId == request.auth.uid || hasRole('HR_MANAGER') || hasRole('HR')
-        )) || 
+        )) ||
         (resource.data.categorie != 'Confidentiel RH' && (
            resource.data.demandeurId == request.auth.uid || isSuperAdmin() || isManager() || hasRole('SUPPORT')
         ))
       );
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (
+      allow create: if isAuthenticated()
+                    && request.resource.data.entity_id == getEntityId();
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.get('entity_id', null)) && (
         (resource.data.categorie == 'Confidentiel RH' && (
            resource.data.demandeurId == request.auth.uid || hasRole('HR_MANAGER') || hasRole('HR')
-        )) || 
+        )) ||
         (resource.data.categorie != 'Confidentiel RH' && (
            isSuperAdmin() || isManager() || hasRole('SUPPORT') || resource.data.demandeurId == request.auth.uid
         ))
@@ -304,6 +313,11 @@ service cloud.firestore {
       allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
+    // [GLOBAL MASTER DATA] Collection volontairement non scopée par entity_id (P4 — audit).
+    // base/contacts et base/catalog sont partagés entre Holding, Filiales et Fondations
+    // (annuaire groupe, catalogue produits commun). Ne PAS y stocker de données
+    // sensibles par-entité (salaires, contrats, dossiers RH, etc.) — utiliser les
+    // collections dédiées qui appliquent canReadOwnEntity / canWriteOwnEntity.
     match /base/{docId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
@@ -507,9 +521,13 @@ service cloud.firestore {
     }
 
     function isMissionsWsMember(wsId) {
+      // [3-SPACE ISOLATION P2] Le membership ne suffit pas : on exige aussi que
+      // l'utilisateur appartienne à la même entité que le workspace (sauf HOLDING).
+      // .get('entity_id', null) tolère les workspaces legacy créés sans entity_id.
       return isSuperAdmin() ||
              (isAuthenticated() &&
-              request.auth.uid in get(missionsWsRef(wsId)).data.memberRoles);
+              request.auth.uid in get(missionsWsRef(wsId)).data.memberRoles &&
+              canReadOwnEntity(get(missionsWsRef(wsId)).data.get('entity_id', null)));
     }
 
     function missionsWsRole(wsId) {
@@ -526,15 +544,18 @@ service cloud.firestore {
 
     // ── Missions (Kanban ERP) ────────────────────────────────────────────────
 
+    // [3-SPACE ISOLATION P2] Missions scopées par entity_id en plus de l'isolation
+    // par memberRoles. Empêche la collaboration cross-filiales via workspaces partagés.
+    // HOLDING peut voir tous les workspaces (supervision groupe).
     match /missions_workspaces/{wsId} {
-      // Any authenticated user can see the workspace list (workspace picker UI)
       allow read: if isAuthenticated() &&
+                     canReadOwnEntity(resource.data.get('entity_id', null)) &&
                      (isSuperAdmin() ||
                       request.auth.uid in resource.data.memberRoles);
-      // Any authenticated user can create a new workspace
-      allow create: if isAuthenticated();
-      // Only ADMIN members can update workspace metadata
+      allow create: if isAuthenticated() &&
+                       request.resource.data.entity_id == getEntityId();
       allow update: if isAuthenticated() &&
+                       canWriteOwnEntity(resource.data.get('entity_id', null)) &&
                        (isSuperAdmin() ||
                         resource.data.memberRoles.get(request.auth.uid, 'NONE') == 'ADMIN');
       allow delete: if isSuperAdmin();

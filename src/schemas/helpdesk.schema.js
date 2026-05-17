@@ -9,6 +9,7 @@ export const helpdeskSchema = {
       icon: 'Tag',
       fields: [
         { id: 'num', label: 'N° Ticket', type: 'text', required: true, primary: true },
+        { id: 'entity_id', label: 'Entité', type: 'text', required: true, system: true },
         { id: 'titre', label: 'Sujet', type: 'text', required: true },
         { id: 'description', label: 'Description', type: 'textarea' },
         { id: 'demandeur', label: 'Demandeur', type: 'text' },

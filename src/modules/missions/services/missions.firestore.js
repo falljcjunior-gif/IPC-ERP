@@ -14,6 +14,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebas
 import { db, storage } from '../../../firebase/config';
 import { nanoid } from 'nanoid';
 import { rankAfter, rankBetween, rebalance, needsRebalancing, sortByRank } from './lexorank';
+import { getCurrentEntityId } from '../../../services/TenantContext';
 
 // ── Noms des collections top-level ──────────────────────────────
 const COL = {
@@ -66,6 +67,7 @@ export const MissionsFS = {
     await setDoc(doc(db, COL.workspaces, id), {
       ...data,
       id,
+      entity_id:   getCurrentEntityId(),  // [3-SPACE ISOLATION P2]
       members:     [{ uid, role: 'ADMIN' }],
       memberRoles: { [uid]: 'ADMIN' },   // flat map for O(1) rule lookups
       boardCount:  0,
