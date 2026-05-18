@@ -118,9 +118,10 @@ export default function CountryManagementCenter() {
   useEffect(() => {
     let unsub;
     try {
-      unsub = FirestoreService.subscribeToCollection('country_scopes',
-        (docs) => { setScopes(docs); setLoading(false); },
-        { orderBy: [{ field: '_createdAt', direction: 'desc' }] }
+      unsub = FirestoreService.subscribeToCollection(
+        'country_scopes',
+        { skipEntityFilter: true, orderByField: '_createdAt', descending: true },
+        (docs) => { setScopes(docs); setLoading(false); }
       );
     } catch (err) {
       console.warn('[CountryManagementCenter] Firestore non disponible (mode DEV sans auth):', err.message);
@@ -339,10 +340,23 @@ function EmptyState({ onCreate }) {
 // WIZARD — 6 ÉTAPES
 // ═══════════════════════════════════════════════════════════════════════════
 
+const PROVISION_STEPS = [
+  { id: 'scope',       label: 'Création Country Scope',        icon: '🌍' },
+  { id: 'subsidiary',  label: 'Provisioning Filiale',          icon: '🏢' },
+  { id: 'foundation',  label: 'Provisioning Foundation',       icon: '🌱' },
+  { id: 'licenses',    label: 'Attribution licences',          icon: '📋' },
+  { id: 'dir_sub',     label: 'Directeur Filiale — accès',     icon: '👤' },
+  { id: 'dir_fdn',     label: 'Directeur Foundation — accès',  icon: '👤' },
+  { id: 'emails',      label: 'Envoi emails d\'invitation',    icon: '📧' },
+  { id: 'activation',  label: 'Activation finale',             icon: '✅' },
+];
+
 function CountryWizard({ existingCountryIds, onClose }) {
   const addHint = useStore(s => s.addHint);
   const [step, setStep]             = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [provisioningStep, setProvisioningStep] = useState(-1);
+  const [provisioningDone, setProvisioningDone] = useState(null); // null | { success, result, error }
   const [form, setForm]             = useState({
     country_code: '',
     licenses: { subsidiary_plan: 'BUSINESS', foundation_plan: 'FOUNDATION' },
@@ -385,9 +399,19 @@ function CountryWizard({ existingCountryIds, onClose }) {
   const submit = async () => {
     if (!country) return;
     setSubmitting(true);
+    setProvisioningStep(0);
+    setProvisioningDone(null);
+
+    // Animate steps while Cloud Function runs
+    let stepIdx = 0;
+    const stepTimer = setInterval(() => {
+      stepIdx = Math.min(stepIdx + 1, PROVISION_STEPS.length - 2); // stop before last
+      setProvisioningStep(stepIdx);
+    }, 1200);
+
     try {
       const functions = getFunctions(app, 'europe-west1');
-      const provFn    = httpsCallable(functions, 'provisionCountryScope');
+      const provFn    = httpsCallable(functions, 'provisionCountryScope', { timeout: 120000 });
       const result    = await provFn({
         country_code: form.country_code,
         country_name: country.name,
@@ -399,19 +423,25 @@ function CountryWizard({ existingCountryIds, onClose }) {
         foundation:   form.foundation,
       });
 
-      addHint?.({
-        title:   'Pays provisionné',
-        message: `${country.name} créé · ${result.data.subsidiary_id} + ${result.data.foundation_id}`,
-        type:    'success',
-      });
-      onClose();
+      clearInterval(stepTimer);
+      setProvisioningStep(PROVISION_STEPS.length - 1); // activation step
+
+      const data = result.data;
+      const hasErrors = data.errors?.length > 0;
+
+      setProvisioningDone({ success: true, result: data, hasErrors });
+
+      if (!hasErrors) {
+        addHint?.({
+          title:   `${country.flag || '🌍'} ${country.name} provisionné`,
+          message: `Filiale + Foundation créées · emails envoyés aux directeurs`,
+          type:    'success',
+        });
+      }
     } catch (err) {
+      clearInterval(stepTimer);
       console.error('[CountryWizard] submit:', err);
-      addHint?.({
-        title:   'Provisioning échoué',
-        message: err.message || 'Erreur inconnue',
-        type:    'danger',
-      });
+      setProvisioningDone({ success: false, error: err.message || 'Erreur inconnue' });
     } finally {
       setSubmitting(false);
     }
@@ -458,7 +488,92 @@ function CountryWizard({ existingCountryIds, onClose }) {
         </div>
 
         {/* Wizard body */}
-        <div style={{ padding: '24px 28px', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, position: 'relative' }}>
+          {/* ── Provisioning Progress Overlay ─────────────────────────── */}
+          {submitting && (
+            <div style={{
+              position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.97)',
+              borderRadius: 12, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 20, zIndex: 10, padding: 32,
+            }}>
+              {!provisioningDone ? (
+                <>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: C.text }}>
+                    Provisioning en cours…
+                  </div>
+                  <div style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {PROVISION_STEPS.map((s, i) => {
+                      const done    = i < provisioningStep;
+                      const active  = i === provisioningStep;
+                      const pending = i > provisioningStep;
+                      return (
+                        <div key={s.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          padding: '10px 14px', borderRadius: 10,
+                          background: done ? `${C.accent}12` : active ? `${C.text}08` : 'transparent',
+                          border: `1px solid ${done ? C.accent + '30' : active ? C.text + '20' : C.border}`,
+                          opacity: pending ? 0.4 : 1,
+                          transition: 'all 0.35s',
+                        }}>
+                          <div style={{ fontSize: 16, width: 24, textAlign: 'center' }}>
+                            {done ? '✅' : active ? '⏳' : s.icon}
+                          </div>
+                          <div style={{ fontSize: 13, fontWeight: active ? 700 : done ? 600 : 400, color: done ? C.accent : C.text }}>
+                            {s.label}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              ) : provisioningDone.success ? (
+                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+                  <div style={{ fontSize: 48 }}>🎉</div>
+                  <div style={{ fontSize: 22, fontWeight: 900, color: C.accent }}>
+                    {country?.name} provisionné !
+                  </div>
+                  {provisioningDone.hasErrors ? (
+                    <div style={{ padding: '10px 16px', background: '#FFF3CD', borderRadius: 10, fontSize: 12, color: '#856404', maxWidth: 360 }}>
+                      ⚠️ Provisioning partiel — {provisioningDone.result.errors?.length} erreur(s).
+                      Vérifiez les emails des directeurs.
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: 13, color: C.muted, maxWidth: 360 }}>
+                      Filiale &amp; Foundation créées · directeurs provisionnés · emails d'invitation envoyés.
+                    </div>
+                  )}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, width: '100%', maxWidth: 360 }}>
+                    {[
+                      { label: 'Filiale', val: provisioningDone.result.subsidiary_id },
+                      { label: 'Foundation', val: provisioningDone.result.foundation_id },
+                    ].map(({ label, val }) => (
+                      <div key={label} style={{ padding: '10px 12px', background: C.bg, borderRadius: 10, border: `1px solid ${C.border}`, textAlign: 'left' }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: 'uppercase' }}>{label}</div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: C.text, marginTop: 2 }}>{val || '—'}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <button onClick={onClose} style={{
+                    padding: '12px 28px', borderRadius: 12, background: C.accent,
+                    color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  }}>Fermer</button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center' }}>
+                  <div style={{ fontSize: 48 }}>❌</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#DC2626' }}>Provisioning échoué</div>
+                  <div style={{ padding: '12px 16px', background: '#FEF2F2', borderRadius: 10, fontSize: 12, color: '#991B1B', maxWidth: 400 }}>
+                    {provisioningDone.error}
+                  </div>
+                  <button onClick={() => { setSubmitting(false); setProvisioningStep(-1); setProvisioningDone(null); }} style={{
+                    padding: '10px 22px', borderRadius: 10, background: C.text,
+                    color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                  }}>Réessayer</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {step === 0 && <StepCountry form={form} setForm={setForm} existingCountryIds={existingCountryIds} />}
           {step === 1 && <StepSubsidiary form={form} setForm={setForm} country={country} />}
           {step === 2 && <StepFoundation form={form} setForm={setForm} country={country} />}

@@ -327,35 +327,47 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
     const docSnap = await userRef.get();
     const now = admin.firestore.FieldValue.serverTimestamp();
 
+    // If the auth user already has meaningful claims (set by provisioning script
+    // or bootstrapSuperAdmin before this trigger fires), never overwrite them.
+    const existingClaims = user.customClaims || {};
+    const hasProvisionedClaims = existingClaims.role && existingClaims.role !== 'GUEST';
+
     if (!docSnap.exists) {
       const userData = buildUnifiedUserPayload(user, now);
-      
-      // Auto-role logic — Holding CEO + SUPER_ADMIN bootstrap
-      if (email === 'ra.yoman@ipcgreenblocks.com') {
-        userData.role = 'HOLDING_CEO';
-        userData.permissions.roles = ['HOLDING_CEO'];
-        userData.entity_type = 'HOLDING';
-        userData.entity_id   = 'ipc_holding';
-      } else if (email === 'yomanraphael26@gmail.com') {
-        userData.role = 'SUPER_ADMIN';
-        userData.permissions.roles = ['SUPER_ADMIN'];
+
+      // If provisioned claims exist (set via bootstrapSuperAdmin or provisioning script
+      // before this trigger fires), honour them instead of defaulting to GUEST.
+      // No hardcoded emails — role elevation goes through bootstrapSuperAdmin exclusively.
+      if (hasProvisionedClaims) {
+        userData.role        = existingClaims.role;
+        userData.entity_type = existingClaims.entity_type || userData.entity_type;
+        userData.entity_id   = existingClaims.entity_id   || userData.entity_id;
+        if (userData.permissions) userData.permissions.roles = [existingClaims.role];
       }
 
       await userRef.set(userData);
 
-      // SET CUSTOM CLAIMS
-      await admin.auth().setCustomUserClaims(uid, {
-        role:        userData.role,
-        entity_type: userData.entity_type || 'SUBSIDIARY',
-        entity_id:   userData.entity_id   || 'ipc_default',
-      });
+      // Only write default GUEST claims when no provisioned claims are present.
+      if (!hasProvisionedClaims) {
+        await admin.auth().setCustomUserClaims(uid, {
+          role:        userData.role,
+          entity_type: userData.entity_type || 'SUBSIDIARY',
+          entity_id:   userData.entity_id   || 'ipc_default',
+        });
+      }
 
       logger.info(`Mirrored user ${uid} (Unified) and set role ${userData.role}`);
     } else {
-      // Ensure claims are synced
+      // Sync claims from Firestore — merge to preserve all claim fields, never downgrade.
       const data = docSnap.data();
-      if (data.role) {
-        await admin.auth().setCustomUserClaims(uid, { role: data.role });
+      if (data.role && !hasProvisionedClaims) {
+        const mergedClaims = {
+          ...existingClaims,
+          role:        data.role,
+          entity_type: data.entity_type || existingClaims.entity_type || 'SUBSIDIARY',
+          entity_id:   data.entity_id   || existingClaims.entity_id   || 'ipc_default',
+        };
+        await admin.auth().setCustomUserClaims(uid, mergedClaims);
       }
     }
   } catch (error) {

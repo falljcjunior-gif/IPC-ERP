@@ -13,7 +13,7 @@ const db = admin.firestore();
  * Scanne la file d'attente (sync_queue) toutes les 5 minutes 
  * pour relancer les synchronisations IPC Green Block en échec ou en attente.
  */
-exports.processOutboxQueue = onSchedule("every 5 minutes", async (event) => {
+exports.processOutboxQueue = onSchedule({ schedule: "every 5 minutes", secrets: ["RESEND_API_KEY"] }, async (event) => {
   logger.info("[Outbox Worker] Démarrage du traitement de la file de synchronisation...");
 
   try {

@@ -111,6 +111,7 @@ export default function EntityManagementCenter() {
     customQuotas: {},
   });
   const [provisioning, setProvisioning] = useState(null); // null | 'loading' | 'done' | 'error'
+  const [provisioningError, setProvisioningError] = useState(null);
 
   useEffect(() => {
     // [GO-LIVE] Base: GROUP_ENTITIES depuis org.schema (données statiques de config).
@@ -168,6 +169,7 @@ export default function EntityManagementCenter() {
       }, 3000);
     } catch (err) {
       console.error('[EMC] Provisioning failed:', err);
+      setProvisioningError(err?.message || 'Erreur inconnue');
       setProvisioning('error');
     }
   };
@@ -635,6 +637,7 @@ export default function EntityManagementCenter() {
                 <StepReview
                   wizard={wizard}
                   provisioning={provisioning}
+                  provisioningError={provisioningError}
                   onProvision={handleProvisioning}
                 />
               )}
@@ -879,7 +882,7 @@ function StepDirector({ wizard, onChange }) {
   );
 }
 
-function StepReview({ wizard, provisioning, onProvision }) {
+function StepReview({ wizard, provisioning, provisioningError, onProvision }) {
   const plan = LICENSE_PLANS[wizard.licensePlanId];
   const isLoading = provisioning === 'loading';
   const isDone = provisioning === 'done';
@@ -963,11 +966,15 @@ function StepReview({ wizard, provisioning, onProvision }) {
           <CheckCircle2 size={16} strokeWidth={2.5} /> Entité créée ! Invitation envoyée à {wizard.director.email}.
         </div>
  )}
- {isError && (
- <div style={{ padding: 14, borderRadius: 12, background:`${T.red}15`,
-          border: `1px solid ${T.red}33`, textAlign: 'center', fontSize: 13, color: T.red, fontWeight: 700 }}>
- Erreur de provisioning. Vérifiez les données et réessayez.
- </div>
+      {isError && (
+        <div style={{ padding: 14, borderRadius: 12, background: `${T.red}15`,
+          border: `1px solid ${T.red}33`, fontSize: 13, color: T.red, fontWeight: 700,
+          display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span>Erreur de provisioning. Vérifiez les données et réessayez.</span>
+          {provisioningError && (
+            <span style={{ fontWeight: 400, fontSize: 12, opacity: 0.85 }}>{provisioningError}</span>
+          )}
+        </div>
       )}
     </div>
   );
