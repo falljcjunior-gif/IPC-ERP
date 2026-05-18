@@ -56,12 +56,41 @@ const ExecutiveTab = ({ data, formatCurrency }) => {
   const totalBills = bills.reduce((acc, b) => acc + parseFloat(b.montant || 0), 0);
   const ebitdaMargin = totalCA > 0 ? ((totalCA - totalBills) / totalCA) * 100 : 0;
 
+  // Engagement: % of positive pulse surveys (Épanoui/Excellent/Bien)
+  const engagementScore = useMemo(() => {
+    const surveys = data.talent?.surveys || [];
+    if (surveys.length === 0) return 0;
+    const positive = surveys.filter(s => ['Épanoui', 'Excellent', 'Bien'].includes(s.sentiment)).length;
+    return Math.round((positive / surveys.length) * 100);
+  }, [data.talent?.surveys]);
+
+  // Talent Pipe: candidates vs 10% of workforce (healthy pipeline benchmark)
+  const talentPipeScore = useMemo(() => {
+    const candidates = data.talent?.candidates || [];
+    if (employees.length === 0) return candidates.length > 0 ? 100 : 0;
+    return Math.min(100, Math.round((candidates.length / Math.max(1, employees.length * 0.1)) * 100));
+  }, [data.talent?.candidates, employees]);
+
+  // Efficacité: work order completion rate
+  const efficaciteScore = useMemo(() => {
+    const orders = data.production?.workOrders || [];
+    if (orders.length === 0) return 0;
+    return Math.round((orders.filter(o => o.statut === 'Terminé').length / orders.length) * 100);
+  }, [data.production?.workOrders]);
+
+  // Diversité: number of distinct departments as a proxy (> 5 depts = 100%)
+  const diversiteScore = useMemo(() => {
+    if (employees.length === 0) return 0;
+    const depts = new Set(employees.map(e => e.departement).filter(Boolean)).size;
+    return Math.min(100, Math.round((depts / 5) * 100));
+  }, [employees]);
+
   const orgHealth = [
-    { subject: 'Rétention', val: healthScore, full: 100 },
-    { subject: 'Engagement', val: 78, full: 100 },
-    { subject: 'Talent Pipe', val: 82, full: 100 },
-    { subject: 'Efficacité', val: 74, full: 100 },
-    { subject: 'Diversité', val: 65, full: 100 },
+    { subject: 'Rétention',    val: healthScore,      full: 100 },
+    { subject: 'Engagement',   val: engagementScore,  full: 100 },
+    { subject: 'Talent Pipe',  val: talentPipeScore,  full: 100 },
+    { subject: 'Efficacité',   val: efficaciteScore,  full: 100 },
+    { subject: 'Diversité',    val: diversiteScore,   full: 100 },
   ];
 
   return (

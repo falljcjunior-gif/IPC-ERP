@@ -189,7 +189,7 @@ const WallTab = ({ data, currentUser }) => {
             <p style={{ margin: '0.25rem 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Célébrez les succès et restez informé.</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            {['yomanraphael26@gmail.com', 'ra.yoman@ipcgreenblocks.com'].includes(currentUser?.email) && (
+            {['SUPER_ADMIN', 'HOLDING_CEO', 'HOLDING_CTO'].includes(currentUser?.role) && (
               <button onClick={fixInvisibleData} className="btn" style={{ padding: '0.75rem 1rem', borderRadius: '1rem', background: '#333', color: 'white', border: 'none', fontSize: '0.75rem' }}>
                 Réparer les données
               </button>

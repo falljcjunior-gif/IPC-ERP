@@ -41,10 +41,10 @@ const GrowthTab = ({ data, formatCurrency }) => {
     const dealAvg = opportunities.length > 0 ? opportunities.reduce((acc, o) => acc + parseFloat(o.montant || 0), 0) / opportunities.length : 0;
     return Object.keys(sources).map(key => ({
       name: key,
-      // ROI proxy: (expected revenue from leads) / (cost-per-lead × count)
-      roi: dealAvg > 0
-        ? ((sources[key] * dealAvg * 0.3) / (sources[key] * 50000)).toFixed(1)
-        : (sources[key] * 2.5).toFixed(1)
+      // ROI proxy: (expected revenue from converted leads) / (cost proxy = 1% of avg deal × count)
+      roi: dealAvg > 0 && sources[key] > 0
+        ? Math.round((sources[key] * dealAvg * 0.3) / (sources[key] * dealAvg * 0.01) * 10) / 10
+        : 0
     })).sort((a,b) => b.roi - a.roi);
   }, [leads, opportunities]);
 
@@ -84,7 +84,9 @@ const GrowthTab = ({ data, formatCurrency }) => {
  <div style={{ flex: 1 }}>
  <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900 }}>Analyse Prédictive Nexus AI</h3>
  <p style={{ margin: '8px 0 0 0', opacity: 0.9, fontWeight: 500, lineHeight: 1.4 }}>
- "Basé sur la vélocité actuelle du Q2, nous prévoyons une augmentation de <strong>18% du CA</strong> d'ici fin Juin. Recommandation : Optimiser le stock de matières premières dans le module Production pour éviter les ruptures."
+ {leads.length === 0
+   ? "Aucune donnée de leads disponible. Alimentez le module CRM pour activer l'analyse prédictive."
+   : `${leads.length} lead${leads.length > 1 ? 's' : ''} actif${leads.length > 1 ? 's' : ''} · Taux de conversion actuel : ${conversionRate.toFixed(1)}%. Continuez à alimenter le pipeline pour débloquer les prévisions Q3.`}
  </p>
  </div>
  <SmartButton variant="outline" style={{ borderColor: 'white', color: 'white', padding: '0.8rem 1.5rem' }}>Voir Détails IA</SmartButton>

@@ -113,6 +113,17 @@ export const EntityService = {
    * @returns {Promise<{ entityId: string, provisioningJobId: string }>}
    */
   async createEntity(entityData) {
+    // Guard: never use the current user's own email as the director
+    const currentEmail = auth.currentUser?.email;
+    if (currentEmail && entityData.director?.email?.toLowerCase() === currentEmail.toLowerCase()) {
+      throw new Error('Vous ne pouvez pas vous désigner vous-même comme directeur. Utilisez l\'email du directeur de l\'entité.');
+    }
+
+    // Force token refresh so the callable includes fresh custom claims
+    if (auth.currentUser) {
+      await auth.currentUser.getIdToken(true);
+    }
+
     const fn = httpsCallable(_functions(), 'createGroupEntity');
     const result = await fn(entityData);
     return result.data;

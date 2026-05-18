@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FirestoreService } from '../services/firestore.service';
 import { motion } from 'framer-motion';
 import { 
   FileSignature, Plus, TrendingUp, RefreshCcw, AlertTriangle,
@@ -13,13 +14,50 @@ import '../components/GlobalDashboard.css';
 
 const Contracts = () => {
   const { data } = useStore();
-  const contractsData = [];
-  const mrrData       = [];
+  const [contractsData, setContractsData] = useState([]);
+
+  useEffect(() => {
+    const unsub = FirestoreService.subscribeToCollection(
+      'contracts',
+      { orderByField: '_createdAt', descending: true, limit: 200 },
+      (docs) => setContractsData(docs)
+    );
+    return () => typeof unsub === 'function' && unsub();
+  }, []);
+
+  const { mrr, churnRate, slaRate, mrrData } = useMemo(() => {
+    const active   = contractsData.filter(c => c.status === 'Actif');
+    const expired  = contractsData.filter(c => c.status === 'Expiré' || c.status === 'Résilié');
+    const mrr      = active.filter(c => c.type === 'Récurrent' || c.recurrent)
+                           .reduce((s, c) => s + (Number(c.amount) || Number(c.montant) || 0), 0);
+    const total    = contractsData.length;
+    const churnRate = total > 0 ? Math.round((expired.length / total) * 100) : 0;
+    const slaBreaches = contractsData.filter(c => c.slaBreached).length;
+    const slaRate   = total > 0 ? Math.round(((total - slaBreaches) / total) * 100) : 100;
+
+    // MRR grouped by month (last 6 months)
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ name: d.toLocaleString('fr-FR', { month: 'short' }), value: 0 });
+    }
+    contractsData.forEach(c => {
+      const d = new Date(c._createdAt?.toDate?.() || c._createdAt || c.createdAt || Date.now());
+      const key = d.toLocaleString('fr-FR', { month: 'short' });
+      const bucket = months.find(m => m.name === key);
+      if (bucket && (c.type === 'Récurrent' || c.recurrent)) {
+        bucket.value += Number(c.amount) || Number(c.montant) || 0;
+      }
+    });
+
+    return { mrr, churnRate, slaRate, mrrData: months };
+  }, [contractsData]);
 
   const kpis = [
-    { label: 'MRR (Revenu Récurrent)',  value: '0',     unit: 'FCFA', color: '#10B981', tag: 'Revenue', sub: '0% ce mois',           icon: <TrendingUp size={24} /> },
-    { label: 'Taux de Churn',           value: '0',     unit: '%',    color: '#F59E0B', tag: 'Risk',    sub: 'Stable vs mois dernier', icon: <AlertTriangle size={24} /> },
-    { label: 'Conformité SLA',          value: '0',     unit: '%',    color: '#10B981', tag: 'Quality', sub: 'Obj: 99.9%',             icon: <CheckCircle2 size={24} /> },
+    { label: 'MRR (Revenu Récurrent)',  value: mrr.toLocaleString('fr-FR'), unit: 'FCFA', color: '#10B981', tag: 'Revenue', sub: `${contractsData.filter(c => c.status === 'Actif').length} contrat(s) actif(s)`, icon: <TrendingUp size={24} /> },
+    { label: 'Taux de Churn',           value: String(churnRate),           unit: '%',    color: '#F59E0B', tag: 'Risk',    sub: 'Contrats résiliés / total',        icon: <AlertTriangle size={24} /> },
+    { label: 'Conformité SLA',          value: String(slaRate),             unit: '%',    color: '#10B981', tag: 'Quality', sub: 'Obj: 99.9%',                       icon: <CheckCircle2 size={24} /> },
   ];
 
   return (

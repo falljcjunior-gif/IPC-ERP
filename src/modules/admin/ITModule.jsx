@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { FirestoreService } from '../../services/firestore.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Ticket, 
@@ -26,6 +27,24 @@ const ITModule = () => {
   const [criticalMode, setCriticalMode] = useState(false);
   const [showDoubleAuth, setShowDoubleAuth] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [itAssets, setItAssets] = useState([]);
+  const [itInterventions, setItInterventions] = useState([]);
+  const [itTickets, setItTickets] = useState([]);
+
+  useEffect(() => {
+    const unsubs = [
+      FirestoreService.subscribeToCollection('it_assets',
+        { orderByField: '_createdAt', descending: true, limit: 200 },
+        (docs) => setItAssets(docs)),
+      FirestoreService.subscribeToCollection('it_interventions',
+        { orderByField: '_createdAt', descending: true, limit: 100 },
+        (docs) => setItInterventions(docs)),
+      FirestoreService.subscribeToCollection('it_tickets',
+        { orderByField: '_createdAt', descending: true, limit: 200 },
+        (docs) => setItTickets(docs)),
+    ];
+    return () => unsubs.forEach(u => typeof u === 'function' && u());
+  }, []);
 
   const tabs = useMemo(() => {
     const allTabs = [
@@ -155,40 +174,109 @@ const ITModule = () => {
           {activeTab === 'security' && <SecurityThreatMap />}
           
           {activeTab === 'inventory' && (
-            <div style={{ 
-              padding: '2.5rem', borderRadius: '2.5rem', background: 'white', 
+            <div style={{
+              padding: '2.5rem', borderRadius: '2.5rem', background: 'white',
               border: '1px solid var(--border)', boxShadow: 'var(--shadow-premium)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
-                <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }}>Asset Health Scoring</h3>
-                <button style={{ padding: '0.75rem 1.5rem', borderRadius: '1rem', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
-                  Exporter Inventaire
-                </button>
-              </div>
-              {/* [GO-LIVE] Liste réelle chargée depuis `it_assets` (collection Firestore).
-                  Vide tant qu'aucun actif IT n'est inventorié. */}
-              <div style={{
-                padding: '3rem 1.5rem', borderRadius: '1.5rem',
-                border: '1px dashed var(--border)', background: 'var(--bg-subtle)',
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)' }}>
-                  Aucun actif IT inventorié
+                <div>
+                  <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.5rem' }}>Asset Health Scoring</h3>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {itAssets.length} actif{itAssets.length !== 1 ? 's' : ''} inventorié{itAssets.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
-                <div style={{ fontSize: '0.78rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontWeight: 600, maxWidth: 440, margin: '0.5rem auto 0' }}>
-                  Importez votre flotte via le bouton "Exporter Inventaire" ou ajoutez vos premiers postes/serveurs depuis le module IT Ops.
-                </div>
+                <SmartButton
+                  variant="primary"
+                  icon={Terminal}
+                  style={{ borderRadius: '1rem' }}
+                  onClick={async () => {
+                    const nom = window.prompt('Nom de l\'actif (ex: MacBook Pro #12)');
+                    if (!nom?.trim()) return;
+                    const type = window.prompt('Type (Laptop / Serveur / Switch / Imprimante / Autre)', 'Laptop');
+                    const assignedTo = window.prompt('Assigné à (nom ou email, optionnel)', '') || '';
+                    await FirestoreService.addDocument('it_assets', {
+                      nom: nom.trim(),
+                      type: type?.trim() || 'Autre',
+                      assignedTo: assignedTo.trim(),
+                      status: 'Actif',
+                      healthScore: 100,
+                    });
+                    useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
+                  }}
+                >
+                  Nouvel Actif
+                </SmartButton>
               </div>
+
+              {itAssets.length === 0 ? (
+                <div style={{
+                  padding: '3rem 1.5rem', borderRadius: '1.5rem',
+                  border: '1px dashed var(--border)', background: 'var(--bg-subtle)',
+                  textAlign: 'center',
+                }}>
+                  <Monitor size={40} style={{ opacity: 0.2, margin: '0 auto 1rem', display: 'block' }} />
+                  <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text)' }}>Aucun actif IT inventorié</div>
+                  <div style={{ fontSize: '0.78rem', marginTop: '0.5rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    Cliquez sur "Nouvel Actif" pour enregistrer votre premier poste ou serveur.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {itAssets.map(asset => {
+                    const health = Number(asset.healthScore ?? 100);
+                    const healthColor = health >= 80 ? '#10B981' : health >= 50 ? '#F59E0B' : '#EF4444';
+                    return (
+                      <div key={asset.id} style={{ padding: '1.25rem 1.5rem', borderRadius: '1.25rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <div style={{ width: 40, height: 40, borderRadius: '10px', background: 'white', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
+                            {asset.type === 'Serveur' ? <HardDrive size={18} /> : asset.type === 'Smartphone' ? <Smartphone size={18} /> : <Monitor size={18} />}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{asset.nom}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{asset.type} · {asset.assignedTo || 'Non assigné'}</div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 3 }}>Health</div>
+                            <div style={{ fontSize: '1rem', fontWeight: 900, color: healthColor }}>{health}%</div>
+                          </div>
+                          <span style={{ padding: '3px 10px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 800,
+                            background: asset.status === 'Actif' ? '#10B98115' : '#EF444415',
+                            color: asset.status === 'Actif' ? '#10B981' : '#EF4444' }}>
+                            {asset.status || 'Actif'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
-          {activeTab === 'tickets' && (
+          {activeTab === 'tickets' && (() => {
+            const openTickets   = itTickets.filter(t => !t.resolvedAt && t.status !== 'Résolu' && t.status !== 'Fermé');
+            const resolvedTickets = itTickets.filter(t => t.resolvedAt || t.status === 'Résolu');
+            const slaBreaches   = itTickets.filter(t => t.slaBreached).length;
+            const p1p2Tickets   = openTickets.filter(t => t.priority === 'P1' || t.priority === 'P2');
+            const avgResolutionH = (() => {
+              if (resolvedTickets.length === 0) return '—';
+              const totalMs = resolvedTickets.reduce((s, t) => {
+                const created  = new Date(t._createdAt?.toDate?.() || t._createdAt || t.createdAt || Date.now());
+                const resolved = new Date(t.resolvedAt?.toDate?.() || t.resolvedAt || Date.now());
+                return s + Math.max(0, resolved - created);
+              }, 0);
+              const avgH = totalMs / resolvedTickets.length / 3600000;
+              return `${avgH.toFixed(1)}h`;
+            })();
+            return (
              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
                   {[
-                    { label: 'Avg Resolution Time', val: '4.2h', trend: '-12%' },
-                    { label: 'SLA Breaches', val: '2', trend: '+100%', critical: true },
-                    { label: 'Active P1/P2', val: criticalMode ? '1' : '0', trend: 'Stable' }
+                    { label: 'Avg Resolution Time', val: avgResolutionH, trend: resolvedTickets.length > 0 ? `${resolvedTickets.length} résolus` : 'Aucun résolu' },
+                    { label: 'SLA Breaches', val: String(slaBreaches), trend: slaBreaches > 0 ? 'Action requise' : 'OK', critical: slaBreaches > 0 },
+                    { label: 'Active P1/P2', val: String(p1p2Tickets.length), trend: p1p2Tickets.length > 0 ? 'Critique' : 'Stable' }
                   ].map(kpi => (
                     <div key={kpi.label} style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'white', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
                       <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{kpi.label}</div>
@@ -197,20 +285,40 @@ const ITModule = () => {
                   ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem' }}>
-                  {['To Do', 'In Progress', 'Resolved'].map(col => (
-                    <div key={col} style={{ padding: '2rem', borderRadius: '2rem', minHeight: '400px', background: 'white', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
-                      <div style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--primary)', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        {col}
-                        <div style={{ width: 24, height: 24, borderRadius: '6px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>0</div>
+                  {[
+                    { col: 'To Do',       statuses: ['Nouveau', 'Ouvert', 'To Do'] },
+                    { col: 'In Progress', statuses: ['En cours', 'In Progress', 'Assigné'] },
+                    { col: 'Resolved',    statuses: ['Résolu', 'Fermé', 'Resolved'] },
+                  ].map(({ col, statuses }) => {
+                    const colTickets = itTickets.filter(t => statuses.some(s => t.status === s) ||
+                      (col === 'To Do' && !t.status));
+                    return (
+                      <div key={col} style={{ padding: '2rem', borderRadius: '2rem', minHeight: '400px', background: 'white', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+                        <div style={{ fontWeight: 900, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--primary)', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          {col}
+                          <div style={{ width: 24, height: 24, borderRadius: '6px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>{colTickets.length}</div>
+                        </div>
+                        {colTickets.length === 0 ? (
+                          <div style={{ border: '1.5px dashed var(--border)', padding: '3rem 1.5rem', borderRadius: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                            Aucun ticket
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {colTickets.map(t => (
+                              <div key={t.id} style={{ padding: '1rem', borderRadius: '1rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.85rem', marginBottom: 4 }}>{t.titre || t.title || '(sans titre)'}</div>
+                                {t.priority && <span style={{ fontSize: '0.65rem', padding: '1px 7px', borderRadius: 999, fontWeight: 800, background: (t.priority === 'P1' || t.priority === 'P2') ? '#EF444415' : '#F59E0B15', color: (t.priority === 'P1' || t.priority === 'P2') ? '#EF4444' : '#F59E0B' }}>{t.priority}</span>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div style={{ border: '1.5px dashed var(--border)', padding: '3rem 1.5rem', borderRadius: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                        Aucun ticket {col.toLowerCase()}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
              </div>
-          )}
+            );
+          })()}
 
           {activeTab === 'maintenance' && (
              <div style={{ padding: '2.5rem', borderRadius: '2.5rem', background: 'white', border: '1px solid var(--border)', boxShadow: 'var(--shadow-premium)' }}>
@@ -231,21 +339,27 @@ const ITModule = () => {
                    </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                   {[
-                     { type: 'Corrective', asset: 'Server #02', tech: 'Raphael', date: '2024-05-01', desc: 'Replacement of faulty SSD cluster.' },
-                     { type: 'Préventive', asset: 'Network Switch 04', tech: 'Admin', date: '2024-04-28', desc: 'Firmware update to v4.2.1-stable.' }
-                   ].map((log, i) => (
-                     <div key={i} style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                           <div style={{ fontWeight: 800, color: 'var(--text)' }}>{log.type}: {log.asset}</div>
-                           <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{log.desc}</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                           <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{log.tech}</div>
-                           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{log.date}</div>
-                        </div>
+                   {itInterventions.length === 0 ? (
+                     <div style={{ padding: '3rem', borderRadius: '1.5rem', border: '1px dashed var(--border)', background: 'var(--bg-subtle)', textAlign: 'center' }}>
+                       <Wrench size={36} style={{ opacity: 0.2, margin: '0 auto 1rem', display: 'block' }} />
+                       <div style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Aucune intervention enregistrée</div>
+                       <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>Les interventions créées ici apparaîtront dans l'historique.</div>
                      </div>
-                   ))}
+                   ) : itInterventions.map(log => {
+                     const d = log._createdAt?.toDate?.() || new Date(log._createdAt || log.date || Date.now());
+                     return (
+                       <div key={log.id} style={{ padding: '1.5rem', borderRadius: '1.5rem', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                             <div style={{ fontWeight: 800, color: 'var(--text)' }}>{log.type || 'Intervention'}: {log.asset || log.actif || '—'}</div>
+                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{log.description || log.desc || '—'}</div>
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                             <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>{log.technicien || log.tech || '—'}</div>
+                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{d.toLocaleDateString('fr-FR')}</div>
+                          </div>
+                       </div>
+                     );
+                   })}
                 </div>
              </div>
           )}
@@ -268,24 +382,13 @@ const ITModule = () => {
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} style={{ padding: '1.25rem 2rem', background: 'white', borderRadius: '1.25rem', border: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                      <div style={{ width: 44, height: 44, borderRadius: '12px', background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                        <Lock size={18} />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '1rem', fontWeight: 800 }}>Permission Change: Module HR</div>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                          User: <span style={{ color: 'var(--primary)' }}>admin@entreprise.com</span> • 2m ago
-                        </div>
-                      </div>
-                    </div>
-                    <button style={{ padding: '0.5rem 1rem', borderRadius: '0.75rem', background: 'var(--bg-subtle)', border: 'none', color: 'var(--primary)', fontWeight: 800, fontSize: '0.75rem', cursor: 'pointer' }}>
-                      Détails
-                    </button>
+                <div style={{ padding: '2.5rem', borderRadius: '1.5rem', border: '1px dashed var(--border)', background: 'var(--bg-subtle)', textAlign: 'center' }}>
+                  <Shield size={36} style={{ opacity: 0.2, margin: '0 auto 1rem', display: 'block' }} />
+                  <div style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.9rem' }}>Audit Pipeline sécurisé</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.4rem', maxWidth: 400, margin: '0.4rem auto 0' }}>
+                    Les événements de sécurité (changements de permissions, connexions, exports) sont automatiquement tracés ici par le module d'audit global.
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           )}
