@@ -302,11 +302,17 @@ export const BusinessProvider = ({ children }) => {
     );
 
     // D. User Permissions & Employee List (entity-scoped — Holding voit tout via auto-filter)
+    // NOTE: includeDeleted:true car Firestore n'indexe pas les valeurs null —
+    // where('_deletedAt','==',null) retournerait 0 résultats même si le champ est null.
+    // On filtre côté client pour exclure les soft-deleted (ceux avec un Timestamp non-null).
     let _lastSelfPermsHash = null;
-    const unsubUsers = FirestoreService.subscribeToCollection('users', {}, (users) => {
+    const unsubUsers = FirestoreService.subscribeToCollection('users', { includeDeleted: true }, (users) => {
+      // Exclure les utilisateurs réellement supprimés (soft-delete = _deletedAt est un Timestamp)
+      const activeUsers = users.filter(u => !u._deletedAt || u._deletedAt === null);
+
       // 1. Map all permissions for Admin/HR modules
       const permissionsMap = {};
-      users.forEach(u => {
+      activeUsers.forEach(u => {
         if (u.permissions) permissionsMap[u.id] = u.permissions;
       });
       useStore.getState().setPermissions(permissionsMap);
@@ -315,7 +321,7 @@ export const BusinessProvider = ({ children }) => {
       // forcer un refresh du token pour que les Custom Claims côté client soient à jour
       // et que les règles Firestore voient le nouveau rôle.
       const selfPerms = permissionsMap[userId];
-      const selfRole = users.find(u => u.id === userId)?.role || null;
+      const selfRole = activeUsers.find(u => u.id === userId)?.role || null;
       const hash = JSON.stringify({ p: selfPerms, r: selfRole });
       if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
         UserService.forceClaimRefresh(auth.currentUser).catch(() => {});
@@ -323,18 +329,18 @@ export const BusinessProvider = ({ children }) => {
       _lastSelfPermsHash = hash;
 
       // 2. Sync to data.employees for unified access (Flattened for easier UI consumption)
-      const flattenedUsers = users.map(u => ({
+      const flattenedUsers = activeUsers.map(u => ({
         ...u,
         ...(u.profile || {})
       }));
-      useStore.getState().setData(prev => ({ 
-        ...prev, 
+      useStore.getState().setData(prev => ({
+        ...prev,
         employees: flattenedUsers,
         hr: { ...prev.hr, employees: flattenedUsers }
       }));
       
       // 3. Current User Identity Bridge
-      const rawUser = users.find(u => u.id === userId);
+      const rawUser = users.find(u => u.id === userId); // Inclut le user courant même si soft-deleted
       if (rawUser) {
         const currentUserProfile = { ...rawUser, ...(rawUser.profile || {}) };
         // --- IDENTITY BRIDGE (STABLE OVERRIDE) ---
