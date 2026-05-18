@@ -1,0 +1,66 @@
+{"users": [
+{
+  "localId": "1lcz5pum9WRrOr1y15Y3x518rd22",
+  "email": "holding@ipc.test",
+  "emailVerified": true,
+  "passwordHash": "yU+HMJwEKjC1oSZhmwUHY/XNPIOlgRWLvN6H2y5SL3qfHOuw7FmcCvGePkRitNnNsfybC6ehlu3LQARjdvXPgw==",
+  "salt": "NyUjPfSeJ6MoMQ==",
+  "displayName": "DG Holding (Test)",
+  "lastSignedInAt": "1779054442562",
+  "createdAt": "1778852373951",
+  "disabled": false,
+  "customAttributes": "{\"role\":\"HOLDING_CEO\",\"entity_type\":\"HOLDING\",\"entity_id\":\"ipc_holding\",\"hierarchy_level\":1}",
+  "providerUserInfo": []
+},
+{
+  "localId": "7bAf1sKd81S5wIB2a8SE5uplTsn2",
+  "email": "ra.yoman@ipcgreenblocks.com",
+  "emailVerified": false,
+  "passwordHash": "QNwzsygrCrhRyJGlCqH1x6g+AHrKbUDoJ1jZoCfMQwh4wRLqkJvRz4iqoRur0/kAhE8OSXBiG3dW5otQNMcPHw==",
+  "salt": "QRN+EbGRnD+hlQ==",
+  "displayName": "Yoman raphael",
+  "lastSignedInAt": "1779046780880",
+  "createdAt": "1778516430183",
+  "disabled": false,
+  "customAttributes": "{\"role\":\"STAFF\"}",
+  "providerUserInfo": []
+},
+{
+  "localId": "N9hhm0mNTteRCfOTUikDzcW0kA72",
+  "email": "admin@ipc.com",
+  "emailVerified": true,
+  "passwordHash": "0N+hursqNcNF8oebCpiHeFaqAJMRmbnngnSCriXMBe96i25Jk1+qZMx9OmNtB4htdiv9n5CkwOm52fr2vZYVYA==",
+  "salt": "A9MTRmecXVqYWg==",
+  "displayName": "IPC System Admin",
+  "lastSignedInAt": "1778540620371",
+  "createdAt": "1778540603328",
+  "disabled": false,
+  "customAttributes": "{\"role\":\"SuperAdmin\"}",
+  "providerUserInfo": []
+},
+{
+  "localId": "Wm9ReNbWDhTTBFTaCrNgLJxBsVa2",
+  "email": "filiale@ipc.test",
+  "emailVerified": true,
+  "passwordHash": "BCYmtSVwfwcvDVzC63ug1zxFU5OLqsgL7Zp/ecTOzBCE0XzBbVBIX+SgVIdwk7VATaGHXHaM+SLjbYfa4IKr9Q==",
+  "salt": "2GgpXKEcqHayWg==",
+  "displayName": "Directeur Filiale Sénégal (Test)",
+  "lastSignedInAt": "1779053984936",
+  "createdAt": "1778852377863",
+  "disabled": false,
+  "customAttributes": "{\"role\":\"COUNTRY_DIRECTOR_SUBSIDIARY\",\"entity_type\":\"SUBSIDIARY\",\"entity_id\":\"ipc_subsidiary_ci\",\"country_id\":\"CI\",\"hierarchy_level\":2}",
+  "providerUserInfo": []
+},
+{
+  "localId": "burN3hJW1EYhu2h6bZXTTagGYRs2",
+  "email": "foundation@ipc.test",
+  "emailVerified": true,
+  "passwordHash": "22o2mIZ36LfiS2/fD7G5o7LlgUcbEnBO+ej064pqD/CzbYOFpmj8BUIW+iTm1nT6/oTn7u+aThjNBNYfy8s/vg==",
+  "salt": "E0O/fQ1SNzVjJA==",
+  "displayName": "Directeur Foundation Sénégal (Test)",
+  "lastSignedInAt": "1779052906505",
+  "createdAt": "1778852379670",
+  "disabled": false,
+  "customAttributes": "{\"role\":\"COUNTRY_DIRECTOR_FOUNDATION\",\"entity_type\":\"FOUNDATION\",\"entity_id\":\"ipc_foundation_sn\",\"country_id\":\"SN\",\"hierarchy_level\":2}",
+  "providerUserInfo": []
+}]}

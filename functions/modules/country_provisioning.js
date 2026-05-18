@@ -141,6 +141,70 @@ async function auditLog(action, actorUid, countryId, details = {}) {
 
 // ── Provision Auth user + Firestore profile pour un directeur pays ─────────
 
+// ── Send invitation email via mail_outbox ─────────────────────────────────
+async function sendDirectorInvitation({ directorUid, director, role, entity_name, entity_type, country_name, country_code, resetLink }) {
+  const roleLabel = entity_type === 'FOUNDATION' ? 'Directeur Foundation' : 'Directeur Filiale';
+  const entityLabel = entity_type === 'FOUNDATION' ? 'Foundation' : 'Filiale';
+
+  const htmlBody = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:580px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+    <div style="background:#0F0F10;padding:28px 32px;text-align:center;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:0.24em;color:#6B7280;text-transform:uppercase;margin-bottom:4px;">I.P.C GREEN BLOCKS</div>
+      <div style="font-size:18px;font-weight:900;letter-spacing:0.18em;color:#fff;text-transform:uppercase;">INTELLIGENCE</div>
+    </div>
+    <div style="padding:36px 32px;">
+      <div style="font-size:13px;color:#6B7280;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.08em;font-weight:600;">${roleLabel} — ${country_name}</div>
+      <h1 style="margin:0 0 20px;font-size:24px;font-weight:300;color:#0F0F10;">Bonjour <strong style="font-weight:800;">${director.prenom || ''} ${director.nom}</strong>,</h1>
+      <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 20px;">
+        Vous avez été désigné(e) <strong>${roleLabel}</strong> de la <strong>${entityLabel} ${entity_name}</strong>
+        au sein du groupe IPC Green Blocks — pays : <strong>${country_name}</strong>.
+      </p>
+      <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 28px;">
+        Votre compte a été créé sur la plateforme IPC Intelligence. Cliquez sur le bouton
+        ci-dessous pour définir votre mot de passe et accéder à votre espace.
+      </p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${resetLink}" style="display:inline-block;background:#0F0F10;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:700;letter-spacing:0.04em;">
+          Activer mon compte →
+        </a>
+      </div>
+      <div style="background:#f8fafc;border-radius:10px;padding:16px 20px;margin:24px 0 0;">
+        <div style="font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Vos informations d'accès</div>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="font-size:12px;color:#6B7280;padding:4px 0;width:40%;">Email</td><td style="font-size:12px;color:#0F0F10;font-weight:600;">${director.email}</td></tr>
+          <tr><td style="font-size:12px;color:#6B7280;padding:4px 0;">Rôle</td><td style="font-size:12px;color:#0F0F10;font-weight:600;">${role}</td></tr>
+          <tr><td style="font-size:12px;color:#6B7280;padding:4px 0;">Entité</td><td style="font-size:12px;color:#0F0F10;font-weight:600;">${entity_name}</td></tr>
+          <tr><td style="font-size:12px;color:#6B7280;padding:4px 0;">Pays</td><td style="font-size:12px;color:#0F0F10;font-weight:600;">${country_name} (${country_code})</td></tr>
+        </table>
+      </div>
+      <p style="font-size:11px;color:#9CA3AF;margin:24px 0 0;line-height:1.6;">
+        Ce lien d'activation expire dans 24 heures. Si vous n'êtes pas à l'origine de cette invitation, ignorez cet email.
+      </p>
+    </div>
+    <div style="padding:20px 32px;border-top:1px solid #F3F4F6;text-align:center;">
+      <div style="font-size:11px;color:#9CA3AF;">IPC Green Blocks Intelligence Platform · Confidentiel</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+  await db().collection('mail_outbox').add({
+    status:    'PENDING',
+    to:        director.email,
+    subject:   `Invitation IPC — ${roleLabel}, ${entity_name} (${country_name})`,
+    html:      htmlBody,
+    type:      'DIRECTOR_INVITATION',
+    userId:    directorUid,
+    entity_id: entity_id,
+    metadata:  { role, entity_name, country_name, country_code },
+    _createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
 async function provisionCountryDirector({
   director,
   role,
@@ -148,11 +212,13 @@ async function provisionCountryDirector({
   entity_type,
   entity_name,
   country_id,
+  country_name,
   modules,
   actorUid,
 }) {
   // 1) Auth user (créé ou récupéré)
   let directorUid = null;
+  let isNewUser   = false;
   try {
     const existing = await auth().getUserByEmail(director.email);
     directorUid = existing.uid;
@@ -164,6 +230,7 @@ async function provisionCountryDirector({
       disabled:      false,
     });
     directorUid = created.uid;
+    isNewUser   = true;
   }
 
   // 2) Custom claims (rôle + entity + country pour ABAC/rules)
@@ -191,10 +258,25 @@ async function provisionCountryDirector({
       allowedModules: modules,
       moduleAccess,
     },
-    _createdAt: db.FieldValue.serverTimestamp(),
+    _createdAt: admin.firestore.FieldValue.serverTimestamp(),
     _createdBy: actorUid,
     _subModule: 'users',
   }, { merge: true });
+
+  // 4) Generate password reset link + send invitation email
+  try {
+    const resetLink = await auth().generatePasswordResetLink(director.email, {
+      url: `https://ipc-erp.web.app/?entity=${entity_id}&country=${country_id}`,
+    });
+    await sendDirectorInvitation({
+      directorUid, director, role, entity_name, entity_type,
+      country_name, country_code: country_id, resetLink,
+    });
+    logger.info(`[provisionCountryDirector] Invitation email queued for ${director.email}`);
+  } catch (emailErr) {
+    // Non-blocking — account exists even if email queuing fails
+    logger.warn(`[provisionCountryDirector] Email queuing failed for ${director.email}:`, emailErr.message);
+  }
 
   return directorUid;
 }
@@ -398,13 +480,14 @@ exports.provisionCountryScope = onCall(
 
     try {
       subsidiary_director_uid = await provisionCountryDirector({
-        director:    subsidiary.director,
-        role:        'COUNTRY_DIRECTOR_SUBSIDIARY',
-        entity_id:   subsidiary_id,
-        entity_type: 'SUBSIDIARY',
-        entity_name: subsidiary_name,
+        director:     subsidiary.director,
+        role:         'COUNTRY_DIRECTOR_SUBSIDIARY',
+        entity_id:    subsidiary_id,
+        entity_type:  'SUBSIDIARY',
+        entity_name:  subsidiary_name,
         country_id,
-        modules:     subsidiary_modules,
+        country_name,
+        modules:      subsidiary_modules,
         actorUid,
       });
     } catch (err) {
@@ -414,13 +497,14 @@ exports.provisionCountryScope = onCall(
 
     try {
       foundation_director_uid = await provisionCountryDirector({
-        director:    foundation.director,
-        role:        'COUNTRY_DIRECTOR_FOUNDATION',
-        entity_id:   foundation_id,
-        entity_type: 'FOUNDATION',
-        entity_name: foundation_name,
+        director:     foundation.director,
+        role:         'COUNTRY_DIRECTOR_FOUNDATION',
+        entity_id:    foundation_id,
+        entity_type:  'FOUNDATION',
+        entity_name:  foundation_name,
         country_id,
-        modules:     foundation_modules,
+        country_name,
+        modules:      foundation_modules,
         actorUid,
       });
     } catch (err) {

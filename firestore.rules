@@ -737,12 +737,10 @@ service cloud.firestore {
      * @param action    string — 'view'|'create'|'edit'|'delete'|'export'|'validate'|'approve'|'supervise'|'admin'
      */
     function hasModuleAction(moduleId, action) {
-      let userData = getUserData();
-      let mods = userData.get('permissions', {}).get('modules', {});
-      let modPerms = mods.get(moduleId, null);
-      if (modPerms == null) return false;
-      if (!modPerms.get('enabled', false)) return false;
-      return modPerms.get('actions', {}).get(action, false) == true;
+      let mods = getUserData().get('permissions', {}).get('modules', {});
+      let modPerms = mods.get(moduleId, {});
+      return modPerms.size() > 0
+        && modPerms.get('actions', {}).get(action, false) == true;
     }
 
     /**
