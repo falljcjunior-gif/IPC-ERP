@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { FirestoreService } from '../../services/firestore.service';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, UserPlus, Star, Award, Heart, BookOpen, BarChart3,
@@ -61,7 +62,7 @@ const TabNav = ({ tabs, active, onChange }) => (
 /* ══════════════════════════════════════
    TAB 1 — Dashboard Culturel
 ══════════════════════════════════════ */
-const DashboardTab = ({ data, onSentiment }) => {
+const DashboardTab = ({ data, onSentiment, computedMoods }) => {
   const employees = data.employees || data.hr?.employees || [];
   const leaves = data.hr?.leaves || [];
   const candidates = data.talent?.candidates || [];
@@ -84,9 +85,9 @@ const DashboardTab = ({ data, onSentiment }) => {
   const masseSal = employees.reduce((s, e) => s + (parseFloat(e.salaire) || 0), 0);
 
   const moods = [
-    { icon: <Smile size={28} color="#10B981" />, label: 'Épanoui', pct: 62 },
-    { icon: <Meh size={28} color="#F59E0B" />, label: 'Neutre', pct: 28 },
-    { icon: <Frown size={28} color="#EF4444" />, label: 'Stressé', pct: 10 },
+    { icon: <Smile size={28} color="#10B981" />, label: 'Épanoui', pct: computedMoods?.epanoui ?? 0 },
+    { icon: <Meh size={28} color="#F59E0B" />, label: 'Neutre', pct: computedMoods?.neutre ?? 0 },
+    { icon: <Frown size={28} color="#EF4444" />, label: 'Stressé', pct: computedMoods?.stresse ?? 0 },
   ];
 
   return (
@@ -610,9 +611,36 @@ const OrgaTab = ({ data }) => {
 const PeopleAndCulture = () => {
   const data = useStore(state => state.data);
   const userRole = useStore(state => state.userRole);
-  // [GO-LIVE] seedDemoData retiré — l'ERP démarre vide en production.
   const addRecord = useStore(state => state.addRecord);
   const [tab, setTab] = useState('dashboard');
+  const [pulses, setPulses] = useState([]);
+
+  useEffect(() => {
+    const unsub = FirestoreService.subscribeToCollection(
+      'employee_pulses',
+      { orderByField: '_createdAt', descending: true, limit: 500 },
+      (docs) => setPulses(docs)
+    );
+    return () => typeof unsub === 'function' && unsub();
+  }, []);
+
+  const computedMoods = useMemo(() => {
+    if (pulses.length === 0) return null;
+    const map = { epanoui: 0, neutre: 0, stresse: 0 };
+    pulses.forEach(p => {
+      const s = p.sentiment || '';
+      if (['Épanoui', 'Excellent', 'Bien'].includes(s)) map.epanoui++;
+      else if (['Neutre', 'Moyen'].includes(s)) map.neutre++;
+      else if (['Stressé', 'Bas'].includes(s)) map.stresse++;
+    });
+    const total = map.epanoui + map.neutre + map.stresse;
+    if (total === 0) return null;
+    return {
+      epanoui: Math.round((map.epanoui / total) * 100),
+      neutre:  Math.round((map.neutre  / total) * 100),
+      stresse: Math.round((map.stresse / total) * 100),
+    };
+  }, [pulses]);
 
   const canSee = useCanSeeSubTab();
 
@@ -630,6 +658,10 @@ const PeopleAndCulture = () => {
   }, [canSee]);
 
   const handleSentiment = (mood) => {
+    FirestoreService.addDocument('employee_pulses', {
+      sentiment: mood,
+      date: new Date().toISOString(),
+    }).catch(err => console.warn('[TalentHub] pulse save failed:', err.message));
     addRecord('talent', 'surveys', { type: 'Pulse', sentiment: mood, date: new Date().toISOString() });
     alert(`Merci ! Votre sentiment "${mood}" a été enregistré.`);
   };
@@ -679,7 +711,7 @@ const PeopleAndCulture = () => {
       {/* Content */}
       <AnimatePresence mode="wait">
         <motion.div key={tab} initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }} animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }} transition={{ duration: 0.28 }}>
-          {tab === 'dashboard'    && <DashboardTab data={data} onSentiment={handleSentiment} />}
+          {tab === 'dashboard'    && <DashboardTab data={data} onSentiment={handleSentiment} computedMoods={computedMoods} />}
           {tab === 'recrutement' && <RecrutementTab />}
           {tab === 'evaluations' && <EvaluationsTab />}
           {tab === 'formations'  && <FormationsTab />}
