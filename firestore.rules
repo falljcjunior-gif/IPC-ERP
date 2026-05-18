@@ -145,12 +145,17 @@ service cloud.firestore {
       allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id);
       allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
 
-      // Sous-collections room
+      // Sous-collections room — héritent du scoping entity_id de la room parente
+      // [3-SPACE ISOLATION A.1.a] Empêche le hijacking cross-entity si un UID room est connu.
       match /participants/{uid} {
-        allow read, write: if isAuthenticated();
+        allow read, write: if isAuthenticated() && canReadOwnEntity(
+          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
+        );
       }
       match /signals/{sigId} {
-        allow read, write: if isAuthenticated();
+        allow read, write: if isAuthenticated() && canReadOwnEntity(
+          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
+        );
       }
     }
 
@@ -173,12 +178,13 @@ service cloud.firestore {
     // [3-SPACE ISOLATION P3] Double protection : filtre par targetUserId ET par entity_id.
     // Si entity_id absent du doc (legacy), backward compat via canReadOwnEntity(null).
     match /notifications/{notifId} {
-      allow read: if isAuthenticated() &&
-                  canReadOwnEntity(resource.data.get('entity_id', null)) && (
-        !('targetUserId' in resource.data) ||
-        resource.data.targetUserId == null ||
-        resource.data.targetUserId == request.auth.uid ||
-        isAdmin()
+      // [3-SPACE ISOLATION A.3.a] Read requires EITHER addressed to me, OR same entity AND admin.
+      // Anonymous/system-wide notifs (no targetUserId AND no entity_id) sont rejetées (legacy ne fuite plus).
+      allow read: if isAuthenticated() && (
+        isAdmin() ||
+        resource.data.get('targetUserId', '') == request.auth.uid ||
+        (resource.data.get('entity_id', null) != null &&
+         canReadOwnEntity(resource.data.entity_id))
       );
       allow create: if isAuthenticated(); // Workflow engine crée des notifs
       allow update: if isAuthenticated() &&
@@ -388,13 +394,10 @@ service cloud.firestore {
         isSuperAdmin() ||
         // HOLDING HR voit tous les dossiers du groupe (consolidation RH)
         isHoldingLevel() ||
-        // HR local voit uniquement les dossiers de son entité (entity_id dans le doc ou pas encore migré)
-        (
-          (hasRole('HR_MANAGER') || hasRole('DIRECTOR')) && (
-            !('entity_id' in resource.data) ||
-            resource.data.entity_id == getEntityId()
-          )
-        )
+        // [3-SPACE ISOLATION A.1.b] HR local doit avoir un entity_id correspondant.
+        // Les docs legacy sans entity_id sont REJETÉS (migration via Cloud Function backfillHrPrivateEntityId).
+        ((hasRole('HR_MANAGER') || hasRole('DIRECTOR')) &&
+          resource.data.entity_id == getEntityId())
       );
       allow write: if false; // Géré par la sub-collection rule ci-dessus
     }
@@ -411,24 +414,31 @@ service cloud.firestore {
     }
 
     // ── Services Généraux / Administration ────────────────────────────────────
+    // [3-SPACE ISOLATION A.3.c] Services généraux scopés par entity_id.
+    // Legacy docs sans entity_id : tolérés en lecture (backward compat) mais
+    // toute nouvelle écriture doit injecter entity_id.
     match /mail_logs/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.get('entity_id', null));
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.get('entity_id', null));
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.get('entity_id', null));
       allow delete: if isAdmin();
     }
     match /office_supplies/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.get('entity_id', null));
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.get('entity_id', null));
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.get('entity_id', null));
       allow delete: if isAdmin();
     }
     match /visitors_log/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.get('entity_id', null));
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.get('entity_id', null));
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.get('entity_id', null));
       allow delete: if isAdmin();
     }
     match /facilities_tickets/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.get('entity_id', null));
+      allow create: if isAuthenticated() && canWriteOwnEntity(request.resource.data.get('entity_id', null));
+      allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.get('entity_id', null));
       allow delete: if isAdmin();
     }
 

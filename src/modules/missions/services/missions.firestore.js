@@ -186,6 +186,7 @@ export const MissionsFS = {
       ...data,
       id: boardId,
       workspaceId,
+      entity_id:   getCurrentEntityId(),    // [3-SPACE ISOLATION A.1.c] defense in depth
       visibility:  'workspace',             // 'workspace' | 'private'
       members:     [{ uid, role: 'ADMIN' }],
       memberRoles: { [uid]: 'ADMIN' },
@@ -243,6 +244,7 @@ export const MissionsFS = {
       id,
       boardId,
       workspaceId,
+      entity_id: getCurrentEntityId(),    // [3-SPACE ISOLATION A.1.c]
       name,
       rank: rankAfter(lastRank),
       wipLimit: null,
@@ -288,6 +290,7 @@ export const MissionsFS = {
       listId,
       boardId,
       workspaceId,
+      entity_id: getCurrentEntityId(),    // [3-SPACE ISOLATION A.1.c]
       title,
       description: '',
       rank,

@@ -1204,11 +1204,18 @@ export const createOperationsSlice = (set, get) => ({
 
 
   resetAllData: async () => {
+    // [A.2] Préserver le SUPER_ADMIN qui invoque la purge (et lui seul) plutôt que
+    // des emails hardcodés. Si pas de current user, la purge est annulée.
+    const callerEmail = (get().user?.email || '').toLowerCase();
+    if (!callerEmail) {
+      get().addHint({ title: 'Purge annulée', message: 'Utilisateur courant introuvable.', type: 'danger' });
+      return;
+    }
     get().addHint({ title: "Purge en cours", message: "Nettoyage complet du système...", type: "warning" });
     try {
       const business_collections = [
-        "crm", "finance", "inventory", "sales", "purchase", "production", 
-        "legal", "signature", "activities", "notifications", "connect", "website", 
+        "crm", "finance", "inventory", "sales", "purchase", "production",
+        "legal", "signature", "activities", "notifications", "connect", "website",
         "shipping", "commerce", "dms", "helpdesk", "marketing", "messages", "workflows"
       ];
       
@@ -1223,11 +1230,11 @@ export const createOperationsSlice = (set, get) => ({
         }
       }
 
-      // --- SPECIAL HR PURGE (SKIP OWNER) ---
+      // --- SPECIAL HR PURGE (SKIP CALLER) ---
       const hrDocs = await FirestoreService.listDocuments('hr');
       const hrToDelete = hrDocs.filter(d => {
         const email = (d.email || d.profile?.email || "").toLowerCase();
-        return !['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email);
+        return email !== callerEmail;
       });
       if (hrToDelete.length > 0) {
         const hrChunks = [];
@@ -1238,11 +1245,11 @@ export const createOperationsSlice = (set, get) => ({
         }
       }
 
-      // --- SPECIAL USER PURGE (SKIP OWNER) ---
+      // --- SPECIAL USER PURGE (SKIP CALLER) ---
       const allUsers = await FirestoreService.listDocuments('users');
       const usersToDelete = allUsers.filter(u => {
         const email = (u.email || u.profile?.email || "").toLowerCase();
-        return !['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'].includes(email);
+        return email !== callerEmail;
       });
 
       if (usersToDelete.length > 0) {
