@@ -49,297 +49,11 @@
       ]
     },
     {
-      "collectionGroup": "hr",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "hr",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "crm",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "sales",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "inventory",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "production",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "purchase",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "accounting",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "finance",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "base",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "activities",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "legal",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "legal",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "signature",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "documents",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "documents",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "workflows",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "targetUserId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notifications",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "employees",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "comments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "audit",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "cockpit",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "payroll",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "payroll",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "projects",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "budget",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "connect",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "marketing",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "dms",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "dms",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "sync_queue",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "attempts", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "planning",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "talent",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "_deletedAt", "order": "ASCENDING" },
-        { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -466,6 +180,424 @@
       "fields": [
         { "fieldPath": "active",     "order": "ASCENDING" },
         { "fieldPath": "updatedAt",  "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "hr",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "hr",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "hr_private",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "hr_private",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "finance",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "finance",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "projects",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "projects",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "budget",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "budget",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "legal",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "legal",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "talent",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "talent",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "production",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "production",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "dms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "dms",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "documents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "documents",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crm",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "crm",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "accounting",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "accounting",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "inventory",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "workflows",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "planning",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "planning",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id",    "order": "ASCENDING" },
+        { "fieldPath": "targetUserId", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt",   "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "audit",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "audit",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketing",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "marketing",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "purchase",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "purchase",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "signature",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "signature",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sales",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payroll",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "payroll",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "base",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "activities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cockpit",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "connect",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "employees",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
     }
   ],
