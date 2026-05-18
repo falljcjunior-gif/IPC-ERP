@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { FirestoreService } from '../../../services/firestore.service';
+import { useToastStore } from '../../../store/useToastStore';
 import KpiCard from '../../../components/KpiCard';
 import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
 
@@ -253,31 +254,40 @@ const SalairesTab = () => {
     if (!editTarget) return;
     const prev = editTarget.salaire_base;
     const next = parseFloat(form.salaire_base) || 0;
+    const docId = editTarget.employee_id || editTarget.id;
     try {
-      await FirestoreService.updateDocument('salaries', editTarget.id, {
+      // ── [FIX] Use setDocument (merge=true) instead of updateDocument ──────
+      // updateDocument fails with "No document to update" for employees created
+      // before the salary system existed. setDocument(merge=true) creates OR updates.
+      await FirestoreService.setDocument('salaries', docId, {
+        employee_id: docId,
+        employee_nom: editTarget.employee_nom || '',
         ...form,
         salaire_base: next,
         prime_transport: parseFloat(form.prime_transport) || 0,
         prime_logement: parseFloat(form.prime_logement) || 0,
         prime_performance: parseFloat(form.prime_performance) || 0,
         prime_anciennete: parseFloat(form.prime_anciennete) || 0,
-        _updatedAt: new Date().toISOString(),
-      });
+      }, true);
+
       // Write compensation history if salary changed
-      if (next !== prev && editTarget.id) {
+      if (next !== prev) {
         await FirestoreService.addDocument('compensation_history', {
-          employeeId: editTarget.employee_id || editTarget.id,
+          employeeId: docId,
           employee_nom: editTarget.employee_nom,
           date_effet: new Date().toISOString().split('T')[0],
           ancien_salaire: prev,
           nouveau_salaire: next,
           motif: form.motif_modification || 'Révision',
           approuve_par: 'RH',
-          _createdAt: new Date().toISOString(),
         });
       }
+
+      useToastStore.getState().addToast('Rémunération enregistrée avec succès.', 'success');
+      setEditTarget(null);
     } catch (err) {
       console.error('[SalairesTab] save error:', err);
+      useToastStore.getState().addToast(`Erreur lors de la sauvegarde : ${err.message}`, 'error');
     }
   };
 

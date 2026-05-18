@@ -589,12 +589,36 @@ export const createOperationsSlice = (set, get) => ({
  }
  } else if (get().user) {
  // [UNIFIED 2.0] HR Data Isolation
- let targetCollection = appId;
- if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
- const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
- targetCollection =`users/${targetUid}/hr_private`;
-            }
-            FirestoreService.setDocument(targetCollection, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ if (appId === 'hr' && subModule === 'employees') {
+   // ── [EMPLOYEE PROFILE FIX] ─────────────────────────────────────────────
+   // Employees live in 'users' collection with nested 'profile' + 'hr' sub-objects.
+   // Writing to 'hr/{id}' would be ignored by BusinessContext (which subscribes to 'users').
+   // Solution: dot-notation update to 'users/{id}' to safely merge nested fields.
+   const PROFILE_FIELDS = ['nom', 'prenom', 'poste', 'dept', 'departement', 'email', 'active', 'avatar', 'telephone', 'adresse'];
+   const HR_FIELDS = ['contratType', 'date_entree', 'performance_score', 'burnout_risk', 'retention_score', 'engagement_level', 'hierarchy_level'];
+   const dotUpdate = {};
+   Object.keys(newData).forEach(key => {
+     if (PROFILE_FIELDS.includes(key)) dotUpdate[`profile.${key}`] = newData[key];
+     else if (HR_FIELDS.includes(key)) dotUpdate[`hr.${key}`] = newData[key];
+     else if (!['id', 'subModule', 'updatedAt', '_createdAt', '_updatedAt', '_deletedAt'].includes(key)) {
+       // Store other HR fields directly on the user doc
+       dotUpdate[key] = newData[key];
+     }
+   });
+   // Map dept → profile.dept alias
+   if (newData.departement && !newData.dept) dotUpdate['profile.dept'] = newData.departement;
+   if (dotUpdate['profile.dept'] === undefined && newData.dept) dotUpdate['profile.dept'] = newData.dept;
+   if (Object.keys(dotUpdate).length > 0) {
+     FirestoreService.updateDocument('users', id, dotUpdate).catch(err =>
+       console.error('[updateRecord hr/employees] users write failed:', err.message)
+     );
+   }
+ } else if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+   const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
+   FirestoreService.setDocument(`users/${targetUid}/hr_private`, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ } else {
+   FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ }
          }
       }, 0);
       
