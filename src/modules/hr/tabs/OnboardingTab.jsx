@@ -1,15 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../../store';
-import { 
-  UserPlus, Mail, Lock, Briefcase, 
+import {
+  UserPlus, Mail, Lock, Briefcase,
   Shield, Check, Calendar, Loader,
   Search, Edit3, Save, ChevronRight,
   AlertTriangle, User,
-  FileSignature, ChevronLeft, Building2, Wallet, Target
+  FileSignature, ChevronLeft, Building2, Wallet, Target,
+  Banknote, CreditCard, LockKeyhole
 } from 'lucide-react';
 import { PermissionMatrix } from '../components/PermissionMatrix';
 import { debugInteraction } from '../../../utils/InteractionAuditor';
+import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
 
 // ─────────────────────────────────────────────────────────────────
 // WIZARD STEPS
@@ -126,6 +128,126 @@ const StepContract = ({ formData, handleInputChange }) => (
   </motion.div>
 );
 
+const StepSalaire = ({ formData, handleInputChange }) => (
+  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card">
+    <div style={{ marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+        <h3 style={{ margin: 0, fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Banknote size={24} color="#F59E0B" /> Structure Salariale
+        </h3>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '3px 10px', borderRadius: '999px', background: '#F59E0B15', color: '#F59E0B', fontSize: '0.7rem', fontWeight: 800, border: '1px solid #F59E0B30' }}>
+          <LockKeyhole size={12} /> Données Confidentielles
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Rémunération, primes et modalités de paiement (accès restreint RH).</p>
+    </div>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div className="input-group">
+        <label>Salaire de Base Mensuel Brut *</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input required type="number" name="salaire_base" value={formData.salaire_base} onChange={handleInputChange} placeholder="0.00" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Devise</label>
+        <div className="input-wrapper">
+          <Banknote size={18} />
+          <select name="devise" value={formData.devise} onChange={handleInputChange}>
+            {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Type de Rémunération</label>
+        <div className="input-wrapper">
+          <Target size={18} />
+          <select name="type_remuneration" value={formData.type_remuneration} onChange={handleInputChange}>
+            {Object.values(SALARY_TYPES).map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Périodicité</label>
+        <div className="input-wrapper">
+          <Calendar size={18} />
+          <select name="periodicite" value={formData.periodicite} onChange={handleInputChange}>
+            <option value="Mensuel">Mensuel</option>
+            <option value="Bimensuel">Bimensuel</option>
+            <option value="Hebdomadaire">Hebdomadaire</option>
+            <option value="Journalier">Journalier</option>
+          </select>
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Prime de Transport (XOF)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="prime_transport" value={formData.prime_transport} onChange={handleInputChange} placeholder="0" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Prime de Logement (XOF)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="prime_logement" value={formData.prime_logement} onChange={handleInputChange} placeholder="0" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Prime de Performance (XOF)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="prime_performance" value={formData.prime_performance} onChange={handleInputChange} placeholder="0" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Prime d&apos;Ancienneté (XOF)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="prime_anciennete" value={formData.prime_anciennete} onChange={handleInputChange} placeholder="0" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Indemnité de Représentation (XOF)</label>
+        <div className="input-wrapper">
+          <Wallet size={18} />
+          <input type="number" name="indemnite_representation" value={formData.indemnite_representation} onChange={handleInputChange} placeholder="0" min="0" />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Mode de Paiement</label>
+        <div className="input-wrapper">
+          <CreditCard size={18} />
+          <select name="mode_paiement" value={formData.mode_paiement} onChange={handleInputChange}>
+            {PAYMENT_MODES.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Banque</label>
+        <div className="input-wrapper">
+          <Building2 size={18} />
+          <input type="text" name="banque" value={formData.banque} onChange={handleInputChange} placeholder="Ex: BICICI, UBA, SGBCI..." />
+        </div>
+      </div>
+      <div className="input-group">
+        <label>Numéro de Compte Bancaire</label>
+        <div className="input-wrapper">
+          <CreditCard size={18} />
+          <input type="text" name="compte_bancaire" value={formData.compte_bancaire} onChange={handleInputChange} placeholder="Ex: CI012..." />
+        </div>
+      </div>
+      <div className="input-group" style={{ gridColumn: 'span 2' }}>
+        <label>Date d&apos;Effet du Salaire</label>
+        <div className="input-wrapper">
+          <Calendar size={18} />
+          <input type="date" name="date_effet_salaire" value={formData.date_effet_salaire} onChange={handleInputChange} />
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
 const StepPermissions = ({ localPermissions, setLocalPermissions }) => (
   <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="glass-card">
      <div style={{ marginBottom: '2rem' }}>
@@ -227,10 +349,24 @@ const OnboardingTab = ({ accessLevel }) => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [formData, setFormData] = useState({
-    nom: '', email: '', password: '', 
-    poste: '', dept: 'Production', contratType: 'CDI', 
-    date_entree: new Date().toISOString().split('T')[0], 
-    salaire: '', hierarchy_level: 'Employee'
+    nom: '', email: '', password: '',
+    poste: '', dept: 'Production', contratType: 'CDI',
+    date_entree: new Date().toISOString().split('T')[0],
+    salaire: '', hierarchy_level: 'Employee',
+    // Salary structure fields
+    salaire_base: '',
+    devise: 'XOF',
+    type_remuneration: 'Mensuel',
+    periodicite: 'Mensuel',
+    prime_transport: '',
+    prime_logement: '',
+    prime_performance: '',
+    prime_anciennete: '',
+    indemnite_representation: '',
+    mode_paiement: 'Virement Bancaire',
+    banque: '',
+    compte_bancaire: '',
+    date_effet_salaire: new Date().toISOString().split('T')[0],
   });
 
   const [localPermissions, setLocalPermissions] = useState({
@@ -262,22 +398,42 @@ const OnboardingTab = ({ accessLevel }) => {
       return;
     }
 
-    const finalData = { 
-      ...formData, 
-      salaire: parseFloat(formData.salaire) || 0,
+    const finalData = {
+      ...formData,
+      salaire: parseFloat(formData.salaire_base) || parseFloat(formData.salaire) || 0,
+      salaire_base: parseFloat(formData.salaire_base) || 0,
+      devise: formData.devise || 'XOF',
+      type_remuneration: formData.type_remuneration || 'Mensuel',
+      periodicite: formData.periodicite || 'Mensuel',
+      prime_transport: parseFloat(formData.prime_transport) || 0,
+      prime_logement: parseFloat(formData.prime_logement) || 0,
+      prime_performance: parseFloat(formData.prime_performance) || 0,
+      prime_anciennete: parseFloat(formData.prime_anciennete) || 0,
+      indemnite_representation: parseFloat(formData.indemnite_representation) || 0,
+      mode_paiement: formData.mode_paiement || 'Virement Bancaire',
+      banque: formData.banque || '',
+      compte_bancaire: formData.compte_bancaire || '',
+      date_effet_salaire: formData.date_effet_salaire || new Date().toISOString().split('T')[0],
       role: formData.hierarchy_level === 'Employee' ? 'STAFF' : (formData.hierarchy_level === 'Executive' ? 'ADMIN' : 'STAFF'),
-      permissions: localPermissions 
+      permissions: localPermissions
     };
     try {
       await createFullUser(finalData);
       setSuccess(true);
       debugInteraction('hr_provision_success', { email: formData.email, role: finalData.role });
       // On laisse l'utilisateur profiter du message de succès avant de reset
-      setTimeout(() => { 
-        setSuccess(false); 
-        setStep(1); 
-        setMode('edit'); 
-        setFormData({ nom: '', prenom: '', email: '', password: '', dept: 'Production', poste: '', contratType: 'CDI', date_entree: '', salaire: '' });
+      setTimeout(() => {
+        setSuccess(false);
+        setStep(1);
+        setMode('edit');
+        setFormData({
+          nom: '', email: '', password: '', dept: 'Production', poste: '', contratType: 'CDI',
+          date_entree: '', salaire: '', hierarchy_level: 'Employee',
+          salaire_base: '', devise: 'XOF', type_remuneration: 'Mensuel', periodicite: 'Mensuel',
+          prime_transport: '', prime_logement: '', prime_performance: '', prime_anciennete: '',
+          indemnite_representation: '', mode_paiement: 'Virement Bancaire', banque: '', compte_bancaire: '',
+          date_effet_salaire: new Date().toISOString().split('T')[0],
+        });
       }, 5000);
     } catch (err) {
       console.error('[Onboarding] Provisioning failed:', err);
@@ -303,11 +459,19 @@ const OnboardingTab = ({ accessLevel }) => {
       <AnimatePresence mode="wait">
         {mode === 'create' ? (
           <motion.div key="wizard">
-             {/* Wizard Progress Bar */}
-             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} style={{ flex: 1, height: '6px', borderRadius: '3px', background: step >= i ? 'var(--accent)' : 'var(--border)', transition: '0.3s' }} />
-                ))}
+             {/* Wizard Progress Bar (4 steps) */}
+             <div style={{ marginBottom: '2rem' }}>
+               <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
+                 {[1, 2, 3, 4].map(i => (
+                   <div key={i} style={{ flex: 1, height: '6px', borderRadius: '3px', background: step >= i ? 'var(--accent)' : 'var(--border)', transition: '0.3s' }} />
+                 ))}
+               </div>
+               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                 <span style={{ color: step >= 1 ? 'var(--accent)' : 'var(--text-muted)' }}>Identité</span>
+                 <span style={{ color: step >= 2 ? 'var(--accent)' : 'var(--text-muted)' }}>Contrat</span>
+                 <span style={{ color: step >= 3 ? '#F59E0B' : 'var(--text-muted)' }}>Salaire</span>
+                 <span style={{ color: step >= 4 ? '#8B5CF6' : 'var(--text-muted)' }}>Accès</span>
+               </div>
              </div>
 
              {success ? (
@@ -322,13 +486,14 @@ const OnboardingTab = ({ accessLevel }) => {
                <>
                  {step === 1 && <StepIdentity formData={formData} handleInputChange={handleInputChange} />}
                  {step === 2 && <StepContract formData={formData} handleInputChange={handleInputChange} />}
-                 {step === 3 && <StepPermissions localPermissions={localPermissions} setLocalPermissions={setLocalPermissions} />}
+                 {step === 3 && <StepSalaire formData={formData} handleInputChange={handleInputChange} />}
+                 {step === 4 && <StepPermissions localPermissions={localPermissions} setLocalPermissions={setLocalPermissions} />}
 
                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
                     <button disabled={step === 1 || loading} onClick={() => setStep(s => s - 1)} className="glass" style={{ padding: '0.8rem 1.5rem', borderRadius: '1rem', border: '1px solid var(--border)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <ChevronLeft size={18} /> Retour
                     </button>
-                    {step < 3 ? (
+                    {step < 4 ? (
                       <button onClick={() => setStep(s => s + 1)} className="btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '1rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         Suivant <ChevronRight size={18} />
                       </button>

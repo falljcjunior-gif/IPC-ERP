@@ -117,6 +117,87 @@ exports.provisionUser = onCall({
 
       await batch.commit();
       logger.info(`Firestore documents created for ${uid} (Profile + Vault)`);
+
+      // 3. Create Salary Structure, Payroll Profile and Contract documents
+      const displayName = userRecord.displayName || extraData.nom || email?.split('@')[0] || 'Utilisateur';
+      const salaryRef = db.collection('salaries').doc(uid);
+      const payrollProfileRef = db.collection('payroll_profiles').doc(uid);
+      const contractRef = db.collection('contracts').doc(uid);
+
+      const salaryData = {
+        employee_id: uid,
+        employee_nom: displayName,
+        poste: extraData.poste || 'À définir',
+        dept: extraData.dept || 'Production',
+        salaire_base: extraData.salaire || 0,
+        devise: extraData.devise || 'XOF',
+        type_remuneration: extraData.type_remuneration || 'Mensuel',
+        periodicite: extraData.periodicite || 'Mensuel',
+        prime_transport: extraData.prime_transport || 0,
+        prime_logement: extraData.prime_logement || 0,
+        prime_performance: extraData.prime_performance || 0,
+        prime_anciennete: extraData.prime_anciennete || 0,
+        indemnite_representation: extraData.indemnite_representation || 0,
+        mode_paiement: extraData.mode_paiement || 'Virement Bancaire',
+        banque: extraData.banque || null,
+        compte_bancaire: extraData.compte_bancaire || null,
+        date_effet: extraData.date_effet_salaire || new Date().toISOString().split('T')[0],
+        payroll_status: 'Actif',
+        entity_id: extraData.entity_id || 'ipc_green_blocks',
+        entity_type: extraData.entity_type || 'SUBSIDIARY',
+        tenant_id: 'ipc_group',
+        _createdAt: now,
+        _updatedAt: now,
+        _deletedAt: null,
+      };
+
+      const payrollProfileData = {
+        employee_id: uid,
+        employee_nom: displayName,
+        salary_structure_id: uid,
+        payroll_group: extraData.dept || 'Production',
+        regime_fiscal: 'Droit Commun',
+        cotisation_cnps: true,
+        cotisation_its: true,
+        bank_account: extraData.compte_bancaire || null,
+        statut_paie: 'Actif',
+        entity_id: extraData.entity_id || 'ipc_green_blocks',
+        entity_type: extraData.entity_type || 'SUBSIDIARY',
+        tenant_id: 'ipc_group',
+        _createdAt: now,
+        _updatedAt: now,
+        _deletedAt: null,
+      };
+
+      const contractData = {
+        employee_id: uid,
+        employee_nom: displayName,
+        type: extraData.contratType || 'CDI',
+        date_debut: extraData.date_entree || new Date().toISOString().split('T')[0],
+        date_fin: null,
+        poste: extraData.poste || 'À définir',
+        salaire_base: extraData.salaire || 0,
+        devise: extraData.devise || 'XOF',
+        statut: 'Actif',
+        entity_id: extraData.entity_id || 'ipc_green_blocks',
+        entity_type: extraData.entity_type || 'SUBSIDIARY',
+        tenant_id: 'ipc_group',
+        _createdAt: now,
+        _updatedAt: now,
+        _deletedAt: null,
+      };
+
+      try {
+        const batch2 = db.batch();
+        batch2.set(salaryRef, salaryData);
+        batch2.set(payrollProfileRef, payrollProfileData);
+        batch2.set(contractRef, contractData);
+        await batch2.commit();
+        logger.info(`Salary/Payroll/Contract documents created for ${uid}`);
+      } catch (batch2Error) {
+        logger.error(`Salary batch write failed for ${uid} (non-fatal):`, batch2Error);
+        // Non-fatal: user account still created successfully
+      }
     } catch (fsError) {
       logger.error(`Firestore batch write failed for ${uid}:`, fsError);
       throw fsError;

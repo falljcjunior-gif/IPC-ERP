@@ -6,7 +6,8 @@ import {
   TrendingUp, Target, Trophy, Smile, Frown, Meh, ChevronRight,
   Plus, X, Check, Search, Filter, Clock, CalendarDays,
   GraduationCap, Briefcase, Building2, Sparkles, Flame,
-  MessageSquare, ThumbsUp, CheckCircle2, AlertCircle, GitBranch
+  MessageSquare, ThumbsUp, CheckCircle2, AlertCircle, GitBranch,
+  Banknote
 } from 'lucide-react';
 
 import { useStore } from '../../store';
@@ -16,6 +17,7 @@ import RecordModal from '../../components/RecordModal';
 import SmartButton from '../../components/SmartButton';
 import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
+import SalairesTab from './tabs/SalairesTab';
 
 /* ─── Helpers ─── */
 const fade = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -651,10 +653,14 @@ const PeopleAndCulture = () => {
     { id: 'formations', label: 'Formations', icon: <GraduationCap size={15} /> },
     { id: 'bienetre', label: 'Bien-être', icon: <Heart size={15} /> },
     { id: 'orga', label: 'Organigramme', icon: <GitBranch size={15} /> },
+    { id: 'salaires', label: 'Rémunérations', icon: <Banknote size={15} /> },
   ];
 
   const tabs = useMemo(() => {
-    return allTabs.filter(t => canSee('talent', t.id));
+    return allTabs.filter(t => {
+      if (t.id === 'salaires') return canSee('hr', 'salaires');
+      return canSee('talent', t.id);
+    });
   }, [canSee]);
 
   const handleSentiment = (mood) => {
@@ -717,6 +723,7 @@ const PeopleAndCulture = () => {
           {tab === 'formations'  && <FormationsTab />}
           {tab === 'bienetre'    && <BienEtreTab onSentiment={handleSentiment} />}
           {tab === 'orga'        && <OrgaTab data={data} />}
+          {tab === 'salaires'    && <SalairesTab />}
         </motion.div>
       </AnimatePresence>
     </div>
