@@ -142,7 +142,7 @@ async function auditLog(action, actorUid, countryId, details = {}) {
 // ── Provision Auth user + Firestore profile pour un directeur pays ─────────
 
 // ── Send invitation email via mail_outbox ─────────────────────────────────
-async function sendDirectorInvitation({ directorUid, director, role, entity_name, entity_type, country_name, country_code, resetLink }) {
+async function sendDirectorInvitation({ directorUid, director, role, entity_id, entity_name, entity_type, country_name, country_code, resetLink }) {
   const roleLabel = entity_type === 'FOUNDATION' ? 'Directeur Foundation' : 'Directeur Filiale';
   const entityLabel = entity_type === 'FOUNDATION' ? 'Foundation' : 'Filiale';
 
@@ -218,7 +218,6 @@ async function provisionCountryDirector({
 }) {
   // 1) Auth user (créé ou récupéré)
   let directorUid = null;
-  let isNewUser   = false;
   try {
     const existing = await auth().getUserByEmail(director.email);
     directorUid = existing.uid;
@@ -230,7 +229,6 @@ async function provisionCountryDirector({
       disabled:      false,
     });
     directorUid = created.uid;
-    isNewUser   = true;
   }
 
   // 2) Custom claims (rôle + entity + country pour ABAC/rules)
@@ -269,7 +267,7 @@ async function provisionCountryDirector({
       url: `https://ipc-erp.web.app/?entity=${entity_id}&country=${country_id}`,
     });
     await sendDirectorInvitation({
-      directorUid, director, role, entity_name, entity_type,
+      directorUid, director, role, entity_id, entity_name, entity_type,
       country_name, country_code: country_id, resetLink,
     });
     logger.info(`[provisionCountryDirector] Invitation email queued for ${director.email}`);
