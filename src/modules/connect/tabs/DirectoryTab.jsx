@@ -27,9 +27,11 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
   useEffect(() => {
     let unsub;
     try {
-      unsub = FirestoreService.subscribeToCollection('users', {}, (users) => {
+      unsub = FirestoreService.subscribeToCollection('users', { includeDeleted: true }, (users) => {
         const pMap = {};
-        users.forEach(u => { pMap[u.id] = u; });
+        // Exclure les soft-deleted (Timestamp non-null) — voir note BusinessContext
+        users.filter(u => !u._deletedAt || u._deletedAt === null)
+             .forEach(u => { pMap[u.id] = u; });
         setPresenceData(pMap);
       });
     } catch (err) {
