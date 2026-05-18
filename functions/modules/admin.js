@@ -27,7 +27,11 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
     email: email,
     role: role,
     hierarchy_level: extraData.hierarchy_level || 'Employee',
-    
+    // Multi-tenant routing fields — MUST be present for App.jsx space detection
+    entity_type: extraData.entity_type || 'SUBSIDIARY',
+    entity_id:   extraData.entity_id   || 'ipc_green_blocks',
+    tenant_id:   extraData.tenant_id   || 'ipc_group',
+
     // Public profile (visible to all for Directory)
     profile: {
       id: uid,
@@ -204,10 +208,15 @@ exports.provisionUser = onCall({
       throw fsError;
     }
 
-    // 3. Set Custom Claims
+    // 3. Set Custom Claims (include entity_type + entity_id for App.jsx space routing)
     try {
-      await admin.auth().setCustomUserClaims(uid, { role: payload.role });
-      logger.info(`Custom claims set for ${uid}: ${payload.role}`);
+      await admin.auth().setCustomUserClaims(uid, {
+        role:        payload.role,
+        entity_type: payload.entity_type,
+        entity_id:   payload.entity_id,
+        tenant_id:   payload.tenant_id,
+      });
+      logger.info(`Custom claims set for ${uid}: ${payload.role} / ${payload.entity_type}`);
     } catch (claimError) {
       logger.error(`Custom claims failed for ${uid}:`, claimError);
       throw claimError;

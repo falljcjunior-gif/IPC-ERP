@@ -12,6 +12,7 @@ import {
 import { PermissionMatrix } from '../components/PermissionMatrix';
 import { debugInteraction } from '../../../utils/InteractionAuditor';
 import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
+import { getTenantContext } from '../../../services/TenantContext';
 
 // ─────────────────────────────────────────────────────────────────
 // WIZARD STEPS
@@ -398,6 +399,9 @@ const OnboardingTab = ({ accessLevel }) => {
       return;
     }
 
+    // Inject current tenant context so the new employee lands in the right space
+    const tenantCtx = getTenantContext();
+
     const finalData = {
       ...formData,
       salaire: parseFloat(formData.salaire_base) || parseFloat(formData.salaire) || 0,
@@ -415,7 +419,13 @@ const OnboardingTab = ({ accessLevel }) => {
       compte_bancaire: formData.compte_bancaire || '',
       date_effet_salaire: formData.date_effet_salaire || new Date().toISOString().split('T')[0],
       role: formData.hierarchy_level === 'Employee' ? 'STAFF' : (formData.hierarchy_level === 'Executive' ? 'ADMIN' : 'STAFF'),
-      permissions: localPermissions
+      permissions: localPermissions,
+      // [MULTI-TENANT] Pass the space where the employee is created
+      // so their users/{uid} document gets the right entity_type/entity_id
+      // and App.jsx routes them to the correct space on login.
+      entity_type: tenantCtx?.entity_type || 'SUBSIDIARY',
+      entity_id:   tenantCtx?.entity_id   || 'ipc_green_blocks',
+      tenant_id:   tenantCtx?.tenant_id   || 'ipc_group',
     };
     try {
       await createFullUser(finalData);
