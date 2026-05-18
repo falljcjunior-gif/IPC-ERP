@@ -10,6 +10,7 @@ import { ToastProvider, useToast } from './components/ToastProvider';
 import { useStore } from './store';
 import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
+import { setTenantContext } from './services/TenantContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import './index.css';
 
@@ -84,6 +85,28 @@ function App() {
       if (firebaseUser) {
         try {
           const userProfile = await UserService.syncProfile(firebaseUser);
+
+          // [TENANT CONTEXT — MUST be set BEFORE setUser]
+          // WHY: setUser(userProfile) triggers userId change → BusinessContext
+          // useEffect([userId]) runs → subscriptions created. At that moment
+          // TenantContext must already reflect the correct entity_id/role so
+          // FirestoreService doesn't inject the wrong entity_id filter.
+          const role = userProfile.role || '';
+          const defaultEntityType =
+            (role === 'SUPER_ADMIN' || role === 'GROUP_AUDITOR' || role.startsWith('HOLDING_'))
+              ? 'HOLDING'
+              : (userProfile.entity_type || 'SUBSIDIARY');
+          setTenantContext({
+            tenant_id:   userProfile.tenant_id   || 'ipc_group',
+            entity_type: userProfile.entity_type || defaultEntityType,
+            entity_id:   userProfile.entity_id   || 'ipc_green_blocks',
+            entity_name: userProfile.entity_name || 'IPC Group',
+            company_id:  userProfile.company_id  || userProfile.entity_id || null,
+            branch_id:   userProfile.branch_id   || null,
+            country_id:  userProfile.country_id  || null,
+            role:        role,
+          });
+
           setUser(userProfile);
 
           // Initialize Realtime Presence
