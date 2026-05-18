@@ -125,6 +125,13 @@ exports.createGroupEntity = onCall(
       throw new HttpsError('invalid-argument', 'Les informations du directeur (email, nom) sont requises.');
     }
 
+    // Guard: the caller cannot assign themselves as director (would overwrite their own claims)
+    const callerEmail = token.email || '';
+    if (callerEmail && director.email.toLowerCase() === callerEmail.toLowerCase()) {
+      throw new HttpsError('invalid-argument',
+        'Vous ne pouvez pas vous désigner vous-même comme directeur. Utilisez l\'email du directeur de l\'entité.');
+    }
+
     const entityId = `${slugify(name)}_${Date.now().toString(36)}`;
     const batch = db().batch();
 
@@ -192,7 +199,12 @@ exports.createGroupEntity = onCall(
       _createdAt:  db.FieldValue.serverTimestamp(),
     });
 
-    await batch.commit();
+    try {
+      await batch.commit();
+    } catch (batchErr) {
+      throw new HttpsError('internal',
+        `Échec de la création des documents Firestore: ${batchErr.message}`);
+    }
 
     // ── 5. Create director Firebase Auth account ─────────────────────────────
     let directorUid = null;
