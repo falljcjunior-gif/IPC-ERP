@@ -129,7 +129,8 @@ exports.provisionUser = onCall({
         employee_nom: displayName,
         poste: extraData.poste || 'À définir',
         dept: extraData.dept || 'Production',
-        salaire_base: extraData.salaire || 0,
+        // Prefer salaire_base (from Step 3 wizard) over salaire (Step 2 quick entry)
+        salaire_base: extraData.salaire_base || extraData.salaire || 0,
         devise: extraData.devise || 'XOF',
         type_remuneration: extraData.type_remuneration || 'Mensuel',
         periodicite: extraData.periodicite || 'Mensuel',
@@ -176,7 +177,7 @@ exports.provisionUser = onCall({
         date_debut: extraData.date_entree || new Date().toISOString().split('T')[0],
         date_fin: null,
         poste: extraData.poste || 'À définir',
-        salaire_base: extraData.salaire || 0,
+        salaire_base: extraData.salaire_base || extraData.salaire || 0,
         devise: extraData.devise || 'XOF',
         statut: 'Actif',
         entity_id: extraData.entity_id || 'ipc_green_blocks',
