@@ -30,6 +30,7 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
     // Multi-tenant routing fields — MUST be present for App.jsx space detection
     entity_type: extraData.entity_type || 'SUBSIDIARY',
     entity_id:   extraData.entity_id   || 'ipc_green_blocks',
+    entity_name: extraData.entity_name || extraData.entity_id || 'IPC Group',
     tenant_id:   extraData.tenant_id   || 'ipc_group',
 
     // Public profile (visible to all for Directory)
