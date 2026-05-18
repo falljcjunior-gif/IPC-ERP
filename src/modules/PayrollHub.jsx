@@ -137,9 +137,14 @@ const PayrollHub = () => {
   }, []);
 
   // Build a map of employeeId -> salary structure
+  // Index by BOTH employee_id field AND document ID (doc ID = employee UID by convention)
+  // so lookups work regardless of which field was populated at creation time.
   const salaryMap = useMemo(() => {
     const map = {};
-    salaryStructures.forEach(s => { map[s.employee_id] = s; });
+    salaryStructures.forEach(s => {
+      if (s.employee_id) map[s.employee_id] = s;
+      if (s.id)          map[s.id]          = s; // fallback: doc ID = employee UID
+    });
     return map;
   }, [salaryStructures]);
 
@@ -164,14 +169,20 @@ const PayrollHub = () => {
     useToastStore.getState().addToast(`Lancement du cycle de paie : ${periode}`, 'info');
 
     let count = 0;
+    const skipped = [];
     const cycleSlips = [];
 
     for (const emp of employees) {
-      // Use real salary structure if available, fallback to employee data
-      const salStruct = salaryMap[emp.id] || { salaire_base: Number(emp.salaire) || 0 };
+      // Salary lookup: try employee_id field first, then doc ID, then flat emp.salaire
+      const salStruct = salaryMap[emp.id] || {
+        salaire_base: Number(emp.salaire_base) || Number(emp.salaire) || Number(emp.hr?.salaire_base) || 0,
+      };
       const { brut, cnps_sal, its, net, brut_imposable } = calculateNetPay(salStruct);
 
-      if (brut <= 0) continue;
+      if (brut <= 0) {
+        skipped.push(emp.nom || emp.prenom || emp.id);
+        continue;
+      }
 
       // Apply variables
       const empVars = variables.filter(v => v.employeeId === emp.id && !v.processed);
@@ -209,7 +220,19 @@ const PayrollHub = () => {
 
     setTimeout(() => {
       setIsProcessing(false);
-      useToastStore.getState().addToast(`${count} bulletin${count > 1 ? 's' : ''} générés avec succès (moteur SYSCOHADA).`, 'success');
+      if (count > 0) {
+        useToastStore.getState().addToast(`${count} bulletin${count > 1 ? 's' : ''} générés avec succès (moteur SYSCOHADA).`, 'success');
+      }
+      if (skipped.length > 0) {
+        useToastStore.getState().addToast(
+          `⚠️ ${skipped.length} employé${skipped.length > 1 ? 's' : ''} ignoré${skipped.length > 1 ? 's' : ''} car aucun salaire n'est configuré (${skipped.join(', ')}). Allez dans RH → Salaires pour définir les salaires.`,
+          'warning',
+          8000
+        );
+      }
+      if (count === 0 && skipped.length === 0) {
+        useToastStore.getState().addToast('Aucun employé actif trouvé pour ce cycle.', 'warning');
+      }
     }, 1500);
   };
 
