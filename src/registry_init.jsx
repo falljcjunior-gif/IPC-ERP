@@ -257,7 +257,8 @@ export const initRegistry = () => {
   registry.register({
     id: 'signature', label: 'Signature Électronique', icon: <FileSignature size={18} />,
     category: 'hr', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER'],
-    component: SignatureHub, priority: 45
+    component: SignatureHub, priority: 45,
+    hidden: true, // [GO-LIVE blocker] Mock OTP + IP in RequestsTab — ready for re-enable post integration
   });
 
   registry.register({

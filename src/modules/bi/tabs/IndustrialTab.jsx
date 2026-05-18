@@ -89,9 +89,9 @@ const IndustrialTab = ({ data }) => {
            title="Produits Actifs" value={products.length} 
            icon={<Package size={20}/>} color="#F59E0B" 
          />
-         <KpiCard 
-           title="Capacité de Production" value={workOrders.length > 0 ? "85%" : "0%"} 
-           icon={<Zap size={20}/>} color="#8B5CF6" 
+         <KpiCard
+           title="Capacité de Production" value={`${efficiency}%`}
+           icon={<Zap size={20}/>} color="#8B5CF6"
          />
       </div>
 
@@ -149,13 +149,26 @@ const IndustrialTab = ({ data }) => {
                     </div>
                  </div>
                ))}
-               <div style={{ marginTop: 'auto', padding: '1.25rem', borderRadius: '1.5rem', background: '#F59E0B15', border: '1px solid #F59E0B30', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <AlertTriangle size={24} color="#F59E0B" />
-                  <div>
-                     <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#F59E0B' }}>Alerte Rupture Immimente</div>
-                     <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#F59E0B' }}>Composant C-702 : Moins de 48h de production.</div>
-                  </div>
-               </div>
+               {(() => {
+                 const criticalStock = products.filter(p =>
+                   Number(p.stock_reel ?? p.stock ?? 0) < Number(p.stock_min ?? p.stockMin ?? 0)
+                 );
+                 if (criticalStock.length === 0) return null;
+                 const first = criticalStock[0];
+                 return (
+                   <div style={{ marginTop: 'auto', padding: '1.25rem', borderRadius: '1.5rem', background: '#F59E0B15', border: '1px solid #F59E0B30', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                     <AlertTriangle size={24} color="#F59E0B" />
+                     <div>
+                       <div style={{ fontSize: '0.8rem', fontWeight: 900, color: '#F59E0B' }}>
+                         Alerte Rupture — {criticalStock.length} produit{criticalStock.length > 1 ? 's' : ''} en stock critique
+                       </div>
+                       <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#F59E0B' }}>
+                         {first.nom || first.name || first.reference} : stock réel {first.stock_reel ?? first.stock ?? 0} (min: {first.stock_min ?? first.stockMin ?? 0})
+                       </div>
+                     </div>
+                   </div>
+                 );
+               })()}
             </div>
          </div>
       </div>

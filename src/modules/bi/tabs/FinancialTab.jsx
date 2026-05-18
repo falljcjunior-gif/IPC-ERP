@@ -42,13 +42,29 @@ const FinancialTab = ({ data, formatCurrency }) => {
     }));
   }, [invoices, bills, expenses]);
 
-  // 2. Cash Flow Structure
-  const cashFlow = [
-    { name: 'Disponible (Banque)', val: totalCA * 0.4, color: '#10B981' },
-    { name: 'Créances Clients', val: totalCA * 0.3, color: '#6366F1' },
-    { name: 'Dettes Fournisseurs', val: totalExpenses * 0.5, color: '#EF4444' },
-    { name: 'Provisions', val: totalCA * 0.1, color: '#F59E0B' }
-  ];
+  // 2. Cash Flow Structure — computed from real collections
+  const cashFlow = useMemo(() => {
+    // Créances clients = unpaid invoices
+    const unpaidInvoices = invoices.filter(i => i.statut !== 'Payée' && i.statut !== 'Payé' && i.status !== 'paid');
+    const creances = unpaidInvoices.reduce((s, i) => s + parseFloat(i.montant || 0), 0);
+    // Dettes fournisseurs = unpaid bills
+    const unpaidBills = bills.filter(b => b.statut !== 'Payée' && b.statut !== 'Payé');
+    const dettes = unpaidBills.reduce((s, b) => s + parseFloat(b.montant || 0), 0);
+    // Trésorerie disponible = paid CA - paid bills
+    const paidCA = invoices.filter(i => i.statut === 'Payée' || i.statut === 'Payé' || i.status === 'paid')
+                           .reduce((s, i) => s + parseFloat(i.montant || 0), 0);
+    const paidBills = bills.filter(b => b.statut === 'Payée' || b.statut === 'Payé')
+                           .reduce((s, b) => s + parseFloat(b.montant || 0), 0);
+    const disponible = Math.max(0, paidCA - paidBills);
+    // Provisions = 10% of paid CA (reserve estimation) — only shown when CA exists
+    const provisions = paidCA * 0.1;
+    return [
+      { name: 'Disponible (Banque)', val: disponible, color: '#10B981' },
+      { name: 'Créances Clients',    val: creances,   color: '#6366F1' },
+      { name: 'Dettes Fournisseurs', val: dettes,     color: '#EF4444' },
+      { name: 'Provisions (10%)',    val: provisions, color: '#F59E0B' },
+    ];
+  }, [invoices, bills]);
 
   const ebitdaMargin = totalCA > 0 ? ((totalCA - totalExpenses) / totalCA) * 100 : 0;
 
