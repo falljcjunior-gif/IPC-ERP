@@ -335,7 +335,13 @@ exports.deleteUserAccount = onCall({
   const DELETION_ROLES = new Set([
     'SUPER_ADMIN', 'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO',
   ]);
-  const AUTHORIZED_EMAILS = ['ra.yoman@ipcgreenblocks.com', 'yomanraphael26@gmail.com'];
+  // AUTHORIZED_EMAILS: project owners / super-admins identified by email
+  // as a fallback when custom claims haven't been set yet.
+  const AUTHORIZED_EMAILS = [
+    'ra.yoman@ipcgreenblocks.com',
+    'yomanraphael26@gmail.com',
+    'fall.jcjunior@gmail.com',
+  ];
 
   const canDelete = DELETION_ROLES.has(callerRole) || AUTHORIZED_EMAILS.includes(callerEmail);
 
