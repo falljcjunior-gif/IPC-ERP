@@ -1246,7 +1246,7 @@ export const createOperationsSlice = (set, get) => ({
       }
 
       // --- SPECIAL USER PURGE (SKIP CALLER) ---
-      const allUsers = await FirestoreService.listDocuments('users');
+      const allUsers = await FirestoreService.listDocuments('users', { includeDeleted: true });
       const usersToDelete = allUsers.filter(u => {
         const email = (u.email || u.profile?.email || "").toLowerCase();
         return email !== callerEmail;

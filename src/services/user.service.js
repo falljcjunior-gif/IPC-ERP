@@ -151,6 +151,7 @@ export const UserService = {
    */
   async listUsers() {
     return FirestoreService.listDocuments('users', {
+      includeDeleted: true, // Firestore ne filtre pas les valeurs null — filtre client
       filters: [['profile.active', '==', true]],
     });
   }

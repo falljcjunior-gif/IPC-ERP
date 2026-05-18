@@ -279,10 +279,14 @@ export const FirestoreService = {
       let q = collection(db, collectionName);
       const constraints = [];
 
-      // [SOFT-DELETE FILTER] Par défaut, on ne montre pas les supprimés
-      if (!includeDeleted) {
-        constraints.push(where('_deletedAt', '==', null));
-      }
+      // [SOFT-DELETE FILTER — CLIENT-SIDE]
+      // IMPORTANT: Firestore n'indexe pas les valeurs null de façon fiable pour les
+      // collection queries — where('_deletedAt','==',null) peut retourner 0 résultats
+      // même si des documents ont explicitement _deletedAt:null.
+      // Solution : on n'ajoute PLUS le filtre Firestore, on filtre côté client après
+      // réception des documents. Seuls les docs avec _deletedAt Timestamp (valeur non-null/non-false)
+      // sont considérés comme supprimés.
+      // Le flag includeDeleted:true passe outre ce filtre client (utile pour l'admin).
 
       // [3-SPACE ISOLATION] Defense-in-depth côté client — ACTIVÉ.
       // Les Firestore Rules garantissent l'isolation côté serveur (canReadOwnEntity).
@@ -311,15 +315,20 @@ export const FirestoreService = {
           constraints.push(where(field, operator, value));
         }
       }
-      
+
       if (orderByField) constraints.push(orderBy(orderByField, descending ? 'desc' : 'asc'));
       if (limitTo) constraints.push(limit(limitTo));
-      
+
       return onSnapshot(
         query(q, ...constraints),
         (snap) => {
           if (typeof onData === 'function') {
-            onData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            // Filtre client : exclure les soft-deleted (timestamp non-null)
+            if (!includeDeleted) {
+              docs = docs.filter(d => !d._deletedAt || d._deletedAt === null);
+            }
+            onData(docs);
           }
         },
         (err) => {
@@ -346,21 +355,24 @@ export const FirestoreService = {
       let q = collectionGroup(db, collectionGroupId);
       const constraints = [];
       
-      if (!includeDeleted) constraints.push(where('_deletedAt', '==', null));
-
+      // Pas de filtre Firestore _deletedAt — voir note subscribeToCollection ci-dessus
       for (const filter of filters) {
         const [field, op, value] = Array.isArray(filter) ? filter : [filter.field, filter.operator, filter.value];
         constraints.push(where(field, op, value));
       }
-      
+
       if (orderByField) constraints.push(orderBy(orderByField, descending ? 'desc' : 'asc'));
       if (limitTo) constraints.push(limit(limitTo));
-      
+
       return onSnapshot(
         query(q, ...constraints),
         (snap) => {
           if (typeof onData === 'function') {
-            onData(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            if (!includeDeleted) {
+              docs = docs.filter(d => !d._deletedAt || d._deletedAt === null);
+            }
+            onData(docs);
           }
         },
         (err) => {
