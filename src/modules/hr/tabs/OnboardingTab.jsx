@@ -335,6 +335,35 @@ const EditAccessPanel = ({ employee, onClose }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────
+// ENTITY BADGE — affiche l'entité active en haut du wizard
+// ─────────────────────────────────────────────────────────────────
+const SPACE_CONFIG = {
+  HOLDING:    { label: 'Holding Groupe', color: '#059669', bg: '#ECFDF5', border: '#10B98130', icon: '🏛️' },
+  SUBSIDIARY: { label: 'Filiale',        color: '#3B82F6', bg: '#EFF6FF', border: '#3B82F630', icon: '🏢' },
+  FOUNDATION: { label: 'Fondation',      color: '#F59E0B', bg: '#FFFBEB', border: '#F59E0B30', icon: '🤝' },
+};
+
+const EntityBadge = ({ ctx }) => {
+  const type = ctx?.entity_type || 'SUBSIDIARY';
+  const cfg  = SPACE_CONFIG[type] || SPACE_CONFIG.SUBSIDIARY;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.9rem 1.25rem', borderRadius: '1rem', background: cfg.bg, border: `1px solid ${cfg.border}`, marginBottom: '1.75rem' }}>
+      <span style={{ fontSize: '1.2rem' }}>{cfg.icon}</span>
+      <div>
+        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: cfg.color, textTransform: 'uppercase', letterSpacing: '1px' }}>{cfg.label}</div>
+        <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#1e293b' }}>
+          {ctx?.entity_name || ctx?.entity_id || '—'}
+          <span style={{ marginLeft: '0.5rem', fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>· ID: {ctx?.entity_id || '—'}</span>
+        </div>
+      </div>
+      <div style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: 700, padding: '3px 10px', borderRadius: 999, background: cfg.color + '20', color: cfg.color }}>
+        Affectation automatique
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────────────────────────
 // MAIN COMPONENT (HR 2.0 ONBOARDING)
 // ─────────────────────────────────────────────────────────────────
 const OnboardingTab = ({ accessLevel }) => {
@@ -342,6 +371,7 @@ const OnboardingTab = ({ accessLevel }) => {
   const data = useStore(state => state.data);
   const permissions = useStore(state => state.permissions);
   const [step, setStep] = useState(1);
+  const currentTenant = getTenantContext();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -400,7 +430,7 @@ const OnboardingTab = ({ accessLevel }) => {
     }
 
     // Inject current tenant context so the new employee lands in the right space
-    const tenantCtx = getTenantContext();
+    const tenantCtx = currentTenant || getTenantContext();
 
     const finalData = {
       ...formData,
@@ -425,6 +455,7 @@ const OnboardingTab = ({ accessLevel }) => {
       // and App.jsx routes them to the correct space on login.
       entity_type: tenantCtx?.entity_type || 'SUBSIDIARY',
       entity_id:   tenantCtx?.entity_id   || 'ipc_green_blocks',
+      entity_name: tenantCtx?.entity_name || tenantCtx?.entity_id || 'IPC Group',
       tenant_id:   tenantCtx?.tenant_id   || 'ipc_group',
     };
     try {
@@ -469,6 +500,9 @@ const OnboardingTab = ({ accessLevel }) => {
       <AnimatePresence mode="wait">
         {mode === 'create' ? (
           <motion.div key="wizard">
+             {/* Entity badge — auto-affectation de l'espace actif */}
+             <EntityBadge ctx={currentTenant} />
+
              {/* Wizard Progress Bar (4 steps) */}
              <div style={{ marginBottom: '2rem' }}>
                <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.5rem' }}>
