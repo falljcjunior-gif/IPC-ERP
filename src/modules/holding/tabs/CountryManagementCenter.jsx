@@ -118,9 +118,10 @@ export default function CountryManagementCenter() {
   useEffect(() => {
     let unsub;
     try {
-      unsub = FirestoreService.subscribeToCollection('country_scopes',
-        (docs) => { setScopes(docs); setLoading(false); },
-        { skipEntityFilter: true, orderBy: [{ field: '_createdAt', direction: 'desc' }] }
+      unsub = FirestoreService.subscribeToCollection(
+        'country_scopes',
+        { skipEntityFilter: true, orderByField: '_createdAt', descending: true },
+        (docs) => { setScopes(docs); setLoading(false); }
       );
     } catch (err) {
       console.warn('[CountryManagementCenter] Firestore non disponible (mode DEV sans auth):', err.message);

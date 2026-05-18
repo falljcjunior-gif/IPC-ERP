@@ -538,7 +538,18 @@ exports.provisionCountryScope = onCall(
         _updatedAt:  now,
       });
     }
-    await finalBatch.commit();
+    try {
+      await finalBatch.commit();
+    } catch (finalErr) {
+      logger.error('[CountryProvisioning] finalBatch.commit() failed:', finalErr.message);
+      return {
+        success: false,
+        partial: true,
+        error: `Finalisation échouée: ${finalErr.message}. Directeurs créés: ${subsidiary_director_uid || 'n/a'}, ${foundation_director_uid || 'n/a'}`,
+        subsidiary_id,
+        foundation_id,
+      };
+    }
 
     // ── 7. Notifications + audit (non bloquant) ───────────────────────────
     db().collection('notifications').add({
