@@ -60,7 +60,8 @@ exports.devisRelanceAutomatic = onSchedule({
           if (lastRelance > cooldown) continue;
         }
 
-        // Enregistrer la notification de relance
+        // [AUDIT FIX] Added entity_id + entity_type + tenant_id to prevent multi-tenant leak.
+        // Previously these notifications had no entity scoping → all entities could see them.
         const notifRef = db.collection('notifications_queue').doc();
         batch.set(notifRef, {
           type: 'DEVIS_RELANCE',
@@ -76,6 +77,11 @@ exports.devisRelanceAutomatic = onSchedule({
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           status: 'pending',
           channel: ['in_app', 'push'],
+          // [MULTI-TENANT] Scope notification to the opportunity's entity
+          entity_id:   opp.entity_id   || null,
+          entity_type: opp.entity_type || null,
+          tenant_id:   opp.tenant_id   || 'ipc_group',
+          targetUserId: opp.responsableId || null,
         });
 
         // Mettre à jour la priorité de l'opportunité
@@ -173,6 +179,7 @@ exports.stockReorderAlert = onDocumentUpdated('inventory_products/{productId}', 
     });
 
     // 2. Créer la notification pour l'acheteur
+    // [AUDIT FIX] Added entity_id + tenant_id to prevent cross-entity notification leak.
     const notifRef = db.collection('notifications_queue').doc();
     batch.set(notifRef, {
       type: 'STOCK_REORDER',
@@ -186,6 +193,9 @@ exports.stockReorderAlert = onDocumentUpdated('inventory_products/{productId}', 
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: 'pending',
       channel: ['in_app', 'push'],
+      entity_id:   newData.entity_id   || null,
+      entity_type: newData.entity_type || null,
+      tenant_id:   newData.tenant_id   || 'ipc_group',
     });
 
     // 3. Marquer le produit pour éviter les doublons

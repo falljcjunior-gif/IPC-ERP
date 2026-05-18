@@ -19,6 +19,7 @@
  */
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
 const db  = admin.firestore;
@@ -70,8 +71,10 @@ async function auditLog(action, actorUid, entityId, details = {}) {
       _subModule: 'entity_provisioning',
       _createdAt: db.FieldValue.serverTimestamp(),
     });
-  } catch {
+  } catch (auditErr) {
     // Non-blocking — audit failure should never break provisioning
+    // [AUDIT FIX] Log the failure so it's visible in Cloud Functions logs
+    logger.warn('[EntityProvisioning] Audit log write failed (non-fatal):', auditErr?.message || auditErr);
   }
 }
 
@@ -280,7 +283,7 @@ exports.createGroupEntity = onCall(
       _createdAt: db.FieldValue.serverTimestamp(),
       _subModule: 'notifications',
     };
-    db().collection('notifications').add(notif).catch(() => {});
+    db().collection('notifications').add(notif).catch((e) => logger.warn('[EntityProvisioning] Non-fatal error:', e?.message || e));
 
     // ── 7. Audit log ─────────────────────────────────────────────────────────
     await auditLog('CREATE_ENTITY', uid, entityId, {
@@ -387,13 +390,13 @@ exports.changeEntityState = onCall(
     if (newState === 'SUSPENDED') {
       const directorUid = orgDoc.data().directorUid;
       if (directorUid) {
-        auth().updateUser(directorUid, { disabled: true }).catch(() => {});
+        auth().updateUser(directorUid, { disabled: true }).catch((e) => logger.warn('[EntityProvisioning] Non-fatal error:', e?.message || e));
       }
     }
     if (newState === 'ACTIVE' && currentState === 'SUSPENDED') {
       const directorUid = orgDoc.data().directorUid;
       if (directorUid) {
-        auth().updateUser(directorUid, { disabled: false }).catch(() => {});
+        auth().updateUser(directorUid, { disabled: false }).catch((e) => logger.warn('[EntityProvisioning] Non-fatal error:', e?.message || e));
       }
     }
 
@@ -480,7 +483,7 @@ exports.approveEntityUpgrade = onCall(
       body:      `Votre demande de mise à niveau vers le plan ${newPlanId} a été approuvée par la Holding.`,
       _createdAt: db.FieldValue.serverTimestamp(),
       _subModule: 'notifications',
-    }).catch(() => {});
+    }).catch((e) => logger.warn('[EntityProvisioning] Non-fatal error:', e?.message || e));
 
     await auditLog('APPROVE_UPGRADE', uid, entityId, { requestId, newPlanId });
     return { success: true, entityId, newPlanId };

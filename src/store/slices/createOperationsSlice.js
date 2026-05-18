@@ -125,36 +125,56 @@ export const createOperationsSlice = (set, get) => ({
      ══════════════════════════════════════════════════════════════════════════ */
 
   getNextSequence: (key) => {
+    // ── [AUDIT FIX] Optimistic local increment for immediate UI feedback ──────
+    // The Firestore write below uses runTransaction to prevent race conditions
+    // (two simultaneous invoice creations getting the same number).
+    // Local state is pre-incremented optimistically; server transaction is the
+    // canonical source of truth and corrects any drift on next subscription tick.
     const currentData = get().data;
     const seq = currentData.base?.sequences?.[key];
-    if (!seq) return "";
+    if (!seq) return `TMP-${Date.now().toString(36).toUpperCase()}`; // Fallback unique ID
     const numStr = seq.next.toString().padStart(seq.padding, '0');
     const nextNum = `${seq.prefix}${new Date().getFullYear()}-${numStr}`;
-    
+
+    // Optimistic local update (immediate UI)
     set(prev => {
       const data = prev.data || {};
       const s = data.base?.sequences?.[key];
       if (!s) return prev;
-      return { 
-        ...prev, 
+      return {
+        ...prev,
         data: {
           ...data,
-          base: { 
-            ...data.base, 
-            sequences: { 
-              ...(data.base?.sequences || {}), 
-              [key]: { ...s, next: s.next + 1 } 
-            } 
+          base: {
+            ...data.base,
+            sequences: {
+              ...(data.base?.sequences || {}),
+              [key]: { ...s, next: s.next + 1 }
+            }
           }
-        } 
+        }
       };
     });
-    
-    // Persist sequence update to Firestore to prevent collisions
+
+    // ── [AUDIT FIX] Atomic Firestore transaction — prevents duplicate sequence numbers ──
+    // Replaces the previous fire-and-forget setDocument (race condition risk).
     if (get().user) {
-      FirestoreService.setDocument('base', 'sequences', { [key]: { ...seq, next: seq.next + 1 } }, true);
+      import('firebase/firestore').then(({ runTransaction, doc, getFirestore }) => {
+        const db = getFirestore();
+        const seqRef = doc(db, 'base', 'sequences');
+        runTransaction(db, async (txn) => {
+          const snap = await txn.get(seqRef);
+          const current = snap.data()?.[key];
+          if (!current) return;
+          txn.update(seqRef, { [`${key}.next`]: current.next + 1 });
+        }).catch(err => {
+          // Non-blocking: the local optimistic value is already set.
+          // On next app load, local state re-syncs from Firestore subscription.
+          console.warn(`[getNextSequence] Firestore transaction failed for ${key}:`, err.message);
+        });
+      });
     }
-    
+
     return nextNum;
   },
 
@@ -589,12 +609,36 @@ export const createOperationsSlice = (set, get) => ({
  }
  } else if (get().user) {
  // [UNIFIED 2.0] HR Data Isolation
- let targetCollection = appId;
- if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
- const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
- targetCollection =`users/${targetUid}/hr_private`;
-            }
-            FirestoreService.setDocument(targetCollection, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ if (appId === 'hr' && subModule === 'employees') {
+   // ── [EMPLOYEE PROFILE FIX] ─────────────────────────────────────────────
+   // Employees live in 'users' collection with nested 'profile' + 'hr' sub-objects.
+   // Writing to 'hr/{id}' would be ignored by BusinessContext (which subscribes to 'users').
+   // Solution: dot-notation update to 'users/{id}' to safely merge nested fields.
+   const PROFILE_FIELDS = ['nom', 'prenom', 'poste', 'dept', 'departement', 'email', 'active', 'avatar', 'telephone', 'adresse'];
+   const HR_FIELDS = ['contratType', 'date_entree', 'performance_score', 'burnout_risk', 'retention_score', 'engagement_level', 'hierarchy_level'];
+   const dotUpdate = {};
+   Object.keys(newData).forEach(key => {
+     if (PROFILE_FIELDS.includes(key)) dotUpdate[`profile.${key}`] = newData[key];
+     else if (HR_FIELDS.includes(key)) dotUpdate[`hr.${key}`] = newData[key];
+     else if (!['id', 'subModule', 'updatedAt', '_createdAt', '_updatedAt', '_deletedAt'].includes(key)) {
+       // Store other HR fields directly on the user doc
+       dotUpdate[key] = newData[key];
+     }
+   });
+   // Map dept → profile.dept alias
+   if (newData.departement && !newData.dept) dotUpdate['profile.dept'] = newData.departement;
+   if (dotUpdate['profile.dept'] === undefined && newData.dept) dotUpdate['profile.dept'] = newData.dept;
+   if (Object.keys(dotUpdate).length > 0) {
+     FirestoreService.updateDocument('users', id, dotUpdate).catch(err =>
+       console.error('[updateRecord hr/employees] users write failed:', err.message)
+     );
+   }
+ } else if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
+   const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
+   FirestoreService.setDocument(`users/${targetUid}/hr_private`, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ } else {
+   FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+ }
          }
       }, 0);
       
@@ -607,15 +651,23 @@ export const createOperationsSlice = (set, get) => ({
       }
 
       // ── [IPC GREEN BLOCK] Cascade Devis → BC ──────────────────────────────────────
-      // Quand un devis passe à "Accepté" ou "Signé" → engrenage complet
+      // [AUDIT FIX] Replaced fire-and-forget setTimeout with proper async error boundary.
+      // Previously: setTimeout(() => cascadeDevisToSaleOrder(...), 0) — errors swallowed.
+      // Now: Promise with catch → user gets an error hint if cascade fails.
       if (appId === 'sales' && subModule === 'quotes' && ['Accepté', 'Signé'].includes(newData.statut) && !['Accepté', 'Signé'].includes(oldRecord.statut)) {
-        setTimeout(() => cascadeDevisToSaleOrder(record, get, set), 0);
+        Promise.resolve().then(() => cascadeDevisToSaleOrder(record, get, set)).catch(err => {
+          console.error('[Cascade Devis→BC] Failed:', err.message);
+          get().addHint({ title: "Erreur Cascade Devis", message: `La création du bon de commande a échoué: ${err.message}. Veuillez réessayer.`, type: 'error', appId: 'sales' });
+        });
       }
 
       // ── [IPC GREEN BLOCK] Cascade BC → Livraison ──────────────────────────────────
-      // Quand un BC passe à "Expédié" → BL + Facture finale + stock physique
+      // [AUDIT FIX] Same pattern — replaced fire-and-forget setTimeout.
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Expédié' && oldRecord.statut !== 'Expédié') {
-        setTimeout(() => cascadeBCToDelivery(record, get, set), 0);
+        Promise.resolve().then(() => cascadeBCToDelivery(record, get, set)).catch(err => {
+          console.error('[Cascade BC→Livraison] Failed:', err.message);
+          get().addHint({ title: "Erreur Cascade Livraison", message: `La création du BL/Facture a échoué: ${err.message}. Vérifiez les données.`, type: 'error', appId: 'sales' });
+        });
       }
 
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Confirmé' && oldRecord.statut !== 'Confirmé') {

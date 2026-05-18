@@ -599,7 +599,27 @@
         { "fieldPath": "entity_id", "order": "ASCENDING" },
         { "fieldPath": "_createdAt", "order": "DESCENDING" }
       ]
-    }
+    },
+    { "collectionGroup": "salaries",            "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "salaries",            "queryScope": "COLLECTION", "fields": [{ "fieldPath": "employee_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "payroll_profiles",    "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "contracts",           "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "contracts",           "queryScope": "COLLECTION", "fields": [{ "fieldPath": "employee_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "compensation_history","queryScope": "COLLECTION", "fields": [{ "fieldPath": "employeeId",  "order": "ASCENDING" }, { "fieldPath": "date_effet",   "order": "DESCENDING" }] },
+    { "collectionGroup": "compensation_history","queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "employee_benefits",   "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "employee_benefits",   "queryScope": "COLLECTION", "fields": [{ "fieldPath": "employee_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "payroll_cycles",      "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "payroll_cycles",      "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "statut",      "order": "ASCENDING"  }] },
+    { "collectionGroup": "logistics",           "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "office_supplies",     "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "mail_logs",           "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "visitors_log",        "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "facilities_tickets",  "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "posts",               "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "counters",            "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "accounting",          "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    { "collectionGroup": "financial_periods",   "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] }
   ],
   "fieldOverrides": [
     {

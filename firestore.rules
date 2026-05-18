@@ -330,9 +330,13 @@ service cloud.firestore {
     // (annuaire groupe, catalogue produits commun). Ne PAS y stocker de données
     // sensibles par-entité (salaires, contrats, dossiers RH, etc.) — utiliser les
     // collections dédiées qui appliquent canReadOwnEntity / canWriteOwnEntity.
+    // [AUDIT FIX] base was fully open (read+write) to all authenticated users.
+    // Sequences doc is global (needed by all), catalog/config docs are entity-scoped.
     match /base/{docId} {
+      // 'sequences' doc: global counters, readable by all authenticated users (needed for numbering)
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated();
+      // Writes restricted to admin + managers to prevent sequence tampering
+      allow write: if isAuthenticated() && (isAdmin() || isManager());
       allow delete: if isAdmin();
     }
 
@@ -443,8 +447,14 @@ service cloud.firestore {
     }
 
     // ── Paramètres Globaux (Hub de Configuration) ──────────────────────────────
+    // [AUDIT FIX] settings was readable by ALL authenticated users (multi-tenant leak).
+    // Per-entity config should be scoped. Global config (docId='global') is OK for all.
     match /settings/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (
+        docId == 'global' ||          // Global config: readable by all
+        isAdmin() ||                  // Admins see all
+        isHoldingLevel()              // Holding sees all
+      );
       allow write: if isSuperAdmin(); // Uniquement pour le Super Admin
     }
 
@@ -1030,6 +1040,100 @@ service cloud.firestore {
         (getEntityId() == entityId && (isManager() || isSubsidiaryLevel()))
       );
       allow delete: if isSuperAdmin();
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ── PAYROLL & COMPENSATION — Bank-Grade Security ──────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════
+    // [AUDIT FIX] These 6 collections were missing rules entirely → default DENY-ALL.
+    // The entire payroll system was broken in production. Fixed 2026-05-18.
+
+    // Salary structures — confidential, HR + Finance read, HR write only
+    match /salaries/{docId} {
+      allow read: if isAuthenticated()
+                  && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR') || hasRole('FINANCE')
+                      || resource.data.employee_id == request.auth.uid);
+      allow create, update: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow delete: if false; // Soft-delete only via _deletedAt
+    }
+
+    // Payroll profiles — HR config per employee (CNPS, ITS, bank)
+    match /payroll_profiles/{docId} {
+      allow read: if isAuthenticated()
+                  && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR') || hasRole('FINANCE'));
+      allow create, update: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow delete: if false;
+    }
+
+    // Employment contracts — employee can read own contract
+    match /contracts/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.employee_id == request.auth.uid ||
+        (canReadOwnEntity(resource.data.entity_id)
+         && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR')))
+      );
+      allow create, update: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow delete: if false;
+    }
+
+    // Compensation history — immutable audit trail (no update/delete)
+    match /compensation_history/{docId} {
+      allow read: if isAuthenticated()
+                  && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR') || hasRole('FINANCE'));
+      allow create: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow update, delete: if false; // Immutable audit trail
+    }
+
+    // Employee benefits — employee can read own benefits
+    match /employee_benefits/{docId} {
+      allow read: if isAuthenticated() && (
+        resource.data.employee_id == request.auth.uid ||
+        (canReadOwnEntity(resource.data.entity_id)
+         && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR')))
+      );
+      allow create, update: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow delete: if false;
+    }
+
+    // Payroll cycles — monthly cycle status tracking
+    match /payroll_cycles/{docId} {
+      allow read: if isAuthenticated()
+                  && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR') || hasRole('FINANCE'));
+      allow create: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR'));
+      allow update: if isAuthenticated()
+                  && canWriteOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('HR_MANAGER') || hasRole('HR') || hasRole('FINANCE'));
+      allow delete: if false;
+    }
+
+    // ── Posts (Connect module) ────────────────────────────────────────────────
+    // [AUDIT FIX] Index existed but no rule → default DENY-ALL. Fixed 2026-05-18.
+    match /posts/{docId} {
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id);
+      allow create: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id)
+                  && request.resource.data.authorId == request.auth.uid;
+      allow update: if isAuthenticated()
+                  && (resource.data.authorId == request.auth.uid || isAdmin())
+                  && canWriteOwnEntity(resource.data.entity_id);
+      allow delete: if isAuthenticated()
+                  && (resource.data.authorId == request.auth.uid || isAdmin());
     }
 
     // ── Refus par défaut (sécurité) ────────────────────────────────────────

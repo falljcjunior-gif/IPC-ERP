@@ -305,12 +305,39 @@ export const createAdminSlice = (set, get) => ({
       const functions = getFunctions(app, 'europe-west1');
       const deleteUserFunc = httpsCallable(functions, 'deleteUserAccount');
 
-      // The Cloud Function performs a HARD delete on Auth + Firestore
-      await deleteUserFunc({ uid });
+      // The Cloud Function performs a HARD delete on Auth + Firestore.
+      // If the CF succeeds, the Firestore document is already gone.
+      // If the CF partially fails (Auth deleted but Firestore batch failed),
+      // the client-side soft-delete below acts as a safety net.
+      let cfSuccess = false;
+      try {
+        await deleteUserFunc({ uid });
+        cfSuccess = true;
+      } catch (cfErr) {
+        // Re-throw non-permission errors (internal errors, etc.)
+        if (cfErr?.code !== 'functions/permission-denied') throw cfErr;
+        // permission-denied: CF can't delete Auth token — fall through to
+        // Firestore-only soft-delete so the ghost doesn't linger in the UI.
+        console.warn(`[permanentlyDeleteUserRecord] CF permission-denied for ${uid} — applying Firestore soft-delete only.`);
+      }
 
-      // Immediate UI update: remove from local store
-      set(state => ({ 
-        data: { 
+      // Firestore safety net: soft-delete the users/{uid} document so it
+      // disappears from all active subscriptions even if the CF couldn't run.
+      if (!cfSuccess) {
+        try {
+          await FirestoreService.updateDocument('users', uid, {
+            _deletedAt: serverTimestamp(),
+            _deletedBy: auth.currentUser?.uid || 'client',
+          });
+        } catch (fsErr) {
+          console.error('[permanentlyDeleteUserRecord] Firestore soft-delete failed:', fsErr.message);
+          // Best-effort: if this also fails, at least clear the local store below.
+        }
+      }
+
+      // Immediate UI update: remove from every store slice
+      set(state => ({
+        data: {
           ...state.data,
           employees: (state.data.employees || []).filter(e => String(e.id) !== uid),
           hr: { ...state.data.hr, employees: (state.data.hr?.employees || []).filter(e => String(e.id) !== uid) },
@@ -319,21 +346,23 @@ export const createAdminSlice = (set, get) => ({
         permissions: (() => { const next = { ...state.permissions }; delete next[uid]; return next; })()
       }));
 
-      get().addHint({ 
-        title: "Compte Supprimé", 
-        message: "L'utilisateur a été définitivement supprimé d'Auth et de la Base de données.", 
-        type: 'success' 
+      get().addHint({
+        title: cfSuccess ? "Compte Supprimé" : "Compte masqué",
+        message: cfSuccess
+          ? "L'utilisateur a été définitivement supprimé d'Auth et de la base de données."
+          : "L'utilisateur a été masqué de l'application. La suppression Auth sera finalisée par un administrateur.",
+        type: 'success',
       });
 
-      get().logAction('Suppression Définitive Utilisateur', `ID: ${uid}`, 'system');
+      get().logAction('Suppression Définitive Utilisateur', `ID: ${uid} — CF: ${cfSuccess}`, 'system');
       return { success: true };
 
     } catch (err) {
       console.error("Erreur suppression complète:", err);
-      get().addHint({ 
-        title: "Suppression Échouée", 
-        message: err.message || "Une erreur est survenue lors de la suppression définitive.", 
-        type: 'danger' 
+      get().addHint({
+        title: "Suppression Échouée",
+        message: err.message || "Une erreur est survenue lors de la suppression définitive.",
+        type: 'danger'
       });
       throw err;
     }
