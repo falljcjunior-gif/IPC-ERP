@@ -205,26 +205,49 @@ const SalairesTab = () => {
     return () => typeof unsub === 'function' && unsub();
   }, []);
 
-  // Merge salary data with employee data for display
+  // Merge salary data with employee data for display.
+  // Show ALL active employees regardless of whether a salary doc exists.
+  // Priority: Firestore salary doc > employee profile data > defaults.
   const enriched = useMemo(() => {
-    if (salaries.length > 0) return salaries;
-    // Fallback: build from employees if no salary docs yet
-    return storeEmployees.map(e => ({
-      id: e.id,
-      employee_id: e.id,
-      employee_nom: e.nom,
-      poste: e.poste || '—',
-      dept: e.dept || e.departement || '—',
-      salaire_base: parseFloat(e.salaire) || 0,
-      devise: 'XOF',
-      type_remuneration: 'Mensuel',
-      prime_transport: 0,
-      prime_logement: 0,
-      prime_performance: 0,
-      prime_anciennete: 0,
-      mode_paiement: 'Virement Bancaire',
-      payroll_status: 'Actif',
-    }));
+    // Build a map from the salary collection (keyed by employee_id OR doc id)
+    const salaryById = {};
+    salaries.forEach(s => {
+      if (s.employee_id) salaryById[s.employee_id] = s;
+      if (s.id)          salaryById[s.id]          = s;
+    });
+
+    const activeEmployees = storeEmployees.filter(e => e.active !== false);
+
+    return activeEmployees.map(e => {
+      const existing = salaryById[e.id];
+      if (existing) {
+        // Enrich with employee profile fields in case salary doc is missing them
+        return {
+          ...existing,
+          employee_nom: existing.employee_nom || e.nom || `${e.prenom || ''} ${e.nom || ''}`.trim(),
+          poste:        existing.poste        || e.poste || '—',
+          dept:         existing.dept         || e.dept  || e.departement || '—',
+        };
+      }
+      // No salary doc yet → show employee with defaults so HR can set salary
+      return {
+        id:               e.id,
+        employee_id:      e.id,
+        employee_nom:     e.nom || `${e.prenom || ''} ${e.nom || ''}`.trim() || e.email || '—',
+        poste:            e.poste || '—',
+        dept:             e.dept  || e.departement || '—',
+        salaire_base:     parseFloat(e.salaire_base) || parseFloat(e.salaire) || parseFloat(e.hr?.salaire_base) || 0,
+        devise:           'XOF',
+        type_remuneration:'Mensuel',
+        prime_transport:  0,
+        prime_logement:   0,
+        prime_performance:0,
+        prime_anciennete: 0,
+        mode_paiement:    'Virement Bancaire',
+        payroll_status:   'Actif',
+        _noSalaryDoc:     true, // flag to show "salaire non configuré" indicator
+      };
+    });
   }, [salaries, storeEmployees]);
 
   const departments = useMemo(() => {
@@ -375,9 +398,15 @@ const SalairesTab = () => {
                       {s.dept || s.payroll_group || '—'}
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
-                      <span style={{ fontWeight: 900, fontSize: '0.92rem', color: '#059669' }}>
-                        {fmt(s.salaire_base, s.devise || 'XOF')}
-                      </span>
+                      {s._noSalaryDoc && Number(s.salaire_base) === 0 ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, fontSize: '0.82rem', color: '#F59E0B' }}>
+                          <AlertCircle size={13} /> Non configuré
+                        </span>
+                      ) : (
+                        <span style={{ fontWeight: 900, fontSize: '0.92rem', color: '#059669' }}>
+                          {fmt(s.salaire_base, s.devise || 'XOF')}
+                        </span>
+                      )}
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <Chip label={s.type_remuneration || 'Mensuel'} color="#3B82F6" />
