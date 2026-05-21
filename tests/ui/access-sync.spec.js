@@ -14,12 +14,15 @@ import { test, expect } from '@playwright/test';
  *   - D3: admin modifie permissions d'un user connecté → propagation < 5s.
  */
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'fall.jcjunior@gmail.com';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
-const NEW_USER_EMAIL = process.env.NEW_USER_EMAIL || `test-${Date.now()}@example.com`;
+// All credentials must be set via environment variables — no hardcoded fallbacks.
+// Create .env.test (never commit) with ADMIN_EMAIL, ADMIN_PASSWORD, NEW_USER_EMAIL.
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const NEW_USER_EMAIL = process.env.NEW_USER_EMAIL || `e2e-test-${Date.now()}@ipc-test.invalid`;
 const NEW_USER_PASSWORD = 'StrongPass123!';
 
 async function login(page, email, password) {
+  if (!email || !password) throw new Error('Missing credentials — set env vars before running this spec');
   await page.goto('/');
   await page.getByPlaceholder(/email/i).fill(email);
   await page.getByPlaceholder(/mot de passe|password/i).fill(password);
@@ -28,6 +31,12 @@ async function login(page, email, password) {
 }
 
 test.describe('Sync Auth ↔ UI', () => {
+  test.beforeAll(() => {
+    if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+      test.skip(true, 'ADMIN_EMAIL / ADMIN_PASSWORD not set — skipping access-sync tests');
+    }
+  });
+
   test('D1: nouvel utilisateur apparaît immédiatement dans la liste admin', async ({ page }) => {
     await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
     await page.getByRole('button', { name: /rh|talent|hr/i }).click();
