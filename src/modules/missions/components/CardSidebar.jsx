@@ -267,6 +267,7 @@ const ErpLinksSection = ({ card, uid, onAddLink, onRemoveLink }) => {
             </div>
             <button
               onClick={() => onRemoveLink(link.entityId)}
+              aria-label={`Supprimer le lien ${link.label}`}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1' }}
             >
               <X size={12} />
@@ -309,7 +310,7 @@ const ErpLinksSection = ({ card, uid, onAddLink, onRemoveLink }) => {
               />
               <div style={{ display: 'flex', gap: '0.4rem' }}>
                 <button onClick={handleAdd} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.4rem', background: '#8B5CF6', color: 'white', border: 'none', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>Lier</button>
-                <button onClick={() => setAdding(false)} style={{ padding: '0.4rem 0.6rem', borderRadius: '0.4rem', background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.78rem' }}></button>
+                <button onClick={() => setAdding(false)} aria-label="Annuler" style={{ padding: '0.4rem 0.6rem', borderRadius: '0.4rem', background: '#F1F5F9', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.78rem' }}>✕</button>
               </div>
             </div>
           </motion.div>

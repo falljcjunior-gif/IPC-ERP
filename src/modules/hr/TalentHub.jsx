@@ -18,6 +18,7 @@ import SmartButton from '../../components/SmartButton';
 import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
 import SalairesTab from './tabs/SalairesTab';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 /* ─── Helpers ─── */
 const fade = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -184,6 +185,7 @@ const RecrutementTab = () => {
   const deleteRecord = useStore(state => state.deleteRecord);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
   const candidates = data.talent?.candidates || [];
 
   const filtered = candidates.filter(c =>
@@ -251,10 +253,11 @@ const RecrutementTab = () => {
                             Avancer →
                           </button>
                         )}
-                        <button onClick={() => deleteRecord('talent', 'candidates', c.id)}
+                        <button onClick={() => setCandidateToDelete(c)}
+                          aria-label={`Supprimer le candidat ${c.nom}`}
                           style={{ padding: '3px 6px', borderRadius: 6, border: 'none', background: '#EF444415', color: '#EF4444', cursor: 'pointer', fontSize: '0.65rem' }}>
- 
- </button>
+                          ✕
+                        </button>
                       </div>
                     </motion.div>
                   ))}
@@ -279,6 +282,16 @@ const RecrutementTab = () => {
           { name: 'notes', label: 'Notes / Observations' },
         ]}
         onSave={f => { addRecord('talent', 'candidates', { ...f, etape: f.etape || 'Candidature', statut: 'Actif' }); setShowModal(false); }}
+      />
+
+      <ConfirmDialog
+        isOpen={!!candidateToDelete}
+        title="Supprimer ce candidat ?"
+        message={`La fiche de ${candidateToDelete?.nom || 'ce candidat'} sera définitivement supprimée.`}
+        confirmLabel="Supprimer"
+        onConfirm={() => { deleteRecord('talent', 'candidates', candidateToDelete.id); setCandidateToDelete(null); }}
+        onCancel={() => setCandidateToDelete(null)}
+        danger
       />
     </div>
   );
