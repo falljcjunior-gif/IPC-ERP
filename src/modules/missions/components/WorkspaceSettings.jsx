@@ -18,6 +18,7 @@ import {
 import { MissionsFS } from '../services/missions.firestore';
 import { useWorkspaceAuth } from '../hooks/useWorkspaceAuth';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 
 // ─────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -223,7 +224,7 @@ function InvitePanel({ workspaceId, existingUids, onClose }) {
       await MissionsFS.addWorkspaceMember(workspaceId, user.uid, role);
       setInvited(s => new Set([...s, user.uid]));
     } catch (e) {
-      alert(`Erreur : ${e.message}`);
+      useToastStore.getState().addToast(`Erreur : ${e.message}`, 'error');
     } finally {
       setInviting(null);
     }

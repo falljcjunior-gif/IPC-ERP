@@ -116,17 +116,18 @@ function SectionHeader({ icon: Icon, title, subtitle, color = 'var(--accent)' })
 function AvatarUploader({ uid, currentAvatar, onUploaded }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
+  const addToast = useToastStore(s => s.addToast);
 
   const handleFile = async e => {
     const file = e.target.files?.[0];
     if (!file) return;
     // Validate: image only, max 3 MB
     if (!file.type.startsWith('image/')) {
-      alert('Fichier invalide — image uniquement.');
+      addToast('Fichier invalide — image uniquement.', 'error');
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      alert('Fichier trop volumineux (max 3 Mo).');
+      addToast('Fichier trop volumineux (max 3 Mo).', 'error');
       return;
     }
     setUploading(true);

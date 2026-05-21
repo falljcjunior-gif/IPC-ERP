@@ -10,6 +10,7 @@ import {
   useShellView, useAddRecord 
 } from '../../../store/selectors';
 import { FirestoreService, StorageService } from '../../../services/firestore.service';
+import { useToastStore } from '../../../store/useToastStore';
 import logger from '../../../utils/logger';
 import { webrtcService } from '../../../utils/WebRTCService';
 import { PresenceService } from '../../../services/presence.service';
@@ -267,7 +268,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
       }, 1000);
     } catch (err) {
       console.error("Audio err", err);
-      alert("Accès micro refusé.");
+      useToastStore.getState().addToast('Accès micro refusé. Vérifiez les permissions du navigateur.', 'error');
     }
   };
 

@@ -4,9 +4,11 @@ import {
   X, Package, Plus, Trash2, Save, Box, Search
 } from 'lucide-react';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 
 const BomBuilderModal = ({ isOpen, onClose, onSave }) => {
   const { data, formatCurrency } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const products = data.inventory?.products || [];
 
   const [targetProduct, setTargetProduct] = useState('');
@@ -43,8 +45,8 @@ const BomBuilderModal = ({ isOpen, onClose, onSave }) => {
 
   const handleSave = (e) => {
      e.preventDefault();
-     if (!targetProduct) return alert('Sélectionnez un produit fini.');
-     if (components.length === 0) return alert('Ajoutez au moins un composant à la recette.');
+     if (!targetProduct) { addToast('Sélectionnez un produit fini.', 'error'); return; }
+     if (components.length === 0) { addToast('Ajoutez au moins un composant à la recette.', 'error'); return; }
      
      // Find product name
      const targetP = products.find(p => p.id === targetProduct);

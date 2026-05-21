@@ -5,9 +5,11 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import SignaturePad from '../../../components/SignaturePad';
+import { useToastStore } from '../../../store/useToastStore';
 
 const RequestsTab = () => {
   const { data, addRecord, updateRecord, formatCurrency, logAction } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const requests = data.signature?.requests || [];
   const salesOrders = data.sales?.orders || [];
 
@@ -28,7 +30,7 @@ const RequestsTab = () => {
   const verifyOtp = (e) => {
     e.preventDefault();
     if (otpCode === '1234') setIsOtpVerified(true);
-    else alert('Code OTP incorrect (utilisez 1234 pour le test)');
+    else addToast('Code OTP incorrect (utilisez 1234 pour le test).', 'error');
   };
 
   const handleSign = (req) => {

@@ -683,7 +683,7 @@ const PeopleAndCulture = () => {
       date: new Date().toISOString(),
     }).catch(err => console.warn('[TalentHub] pulse save failed:', err.message));
     addRecord('talent', 'surveys', { type: 'Pulse', sentiment: mood, date: new Date().toISOString() });
-    alert(`Merci ! Votre sentiment "${mood}" a été enregistré.`);
+    useToastStore.getState().addToast(`Merci ! Votre sentiment "${mood}" a été enregistré.`, 'success');
   };
 
   return (

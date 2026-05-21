@@ -6,6 +6,7 @@ import {
   HeartHandshake, Plus, X 
 } from 'lucide-react';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 import { FirestoreService, StorageService } from '../../../services/firestore.service';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -68,10 +69,10 @@ const WallTab = ({ data, currentUser }) => {
         }
       }
 
-      alert(`${fixed} enregistrements synchronisés et réparés ! Rechargez la page.`);
+      useToastStore.getState().addToast(`${fixed} enregistrements synchronisés et réparés ! Rechargement…`, 'success');
       window.location.reload();
     } catch (err) {
-      alert("Erreur de réparation : " + err.message);
+      useToastStore.getState().addToast('Erreur de réparation : ' + err.message, 'error');
       console.error(err);
     }
   };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link, Cpu } from 'lucide-react';
 
 const BankReconTab = () => {
@@ -109,7 +110,7 @@ const BankReconTab = () => {
     
     // Check if amounts roughly match (within 1 FCFA precision)
     if (Math.abs(selectedBankLine.amount - systemEl.amount) > 1) {
-       alert("Attention: Le montant bancaire ne correspond pas exactement au montant système. Êtes-vous sûr de vouloir forcer le rapprochement ?");
+      useToastStore.getState().addToast('Attention : le montant bancaire diffère du montant système. Rapprochement forcé.', 'error');
     }
 
     setBankLines(prev => prev.map(line => line.id === selectedBankLine.id ? { ...line, reconciledWith: systemEl } : line));

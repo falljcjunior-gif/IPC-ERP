@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 import { X, MapPin, Clock, PlayCircle, StopCircle, Fingerprint, Activity } from 'lucide-react';
+import { useToastStore } from '../store/useToastStore';
 
 const PointageWidget = ({ onClose }) => {
   const { addRecord, currentUser } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState(null);
   const [projet, setProjet] = useState('');
@@ -52,7 +54,7 @@ const PointageWidget = ({ onClose }) => {
   }, [isCheckedIn, checkInTime]);
 
   const handleCheckIn = () => {
-    if (!projet.trim()) return alert("Sélectionnez votre centre de coût avant de pointer.");
+    if (!projet.trim()) { addToast('Sélectionnez votre centre de coût avant de pointer.', 'error'); return; }
     const now = Date.now();
     setIsCheckedIn(true);
     setCheckInTime(now);
@@ -96,7 +98,7 @@ const PointageWidget = ({ onClose }) => {
     localStorage.removeItem('ipc_pointage_loc');
     
     setLoading(false);
-    alert(`Temps enregistré: ${elapsed} \nCoordonnées cryptées et envoyées.`);
+    addToast(`Temps enregistré : ${elapsed}`, 'success');
     onClose();
   };
 
