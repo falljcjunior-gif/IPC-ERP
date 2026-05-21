@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, Clock, CheckCircle2 } from 'lucide-react';
 import { useStore } from '../../store';
+import { useToastStore } from '../../store/useToastStore';
 
 const FocusTracker = () => {
   const { addRecord, currentUser } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [duration, setDuration] = useState(25);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -27,7 +29,7 @@ const FocusTracker = () => {
   const reset = (newDuration = duration) => { setIsRunning(false); setDuration(newDuration); setTimeLeft(newDuration * 60); setSessionCompleted(false); };
 
   const logTimesheet = () => {
-    if (!taskName) return alert("Veuillez entrer le nom de la tâche.");
+    if (!taskName) { addToast('Veuillez entrer le nom de la tâche.', 'error'); return; }
     addRecord('hr', 'timesheets', {
       date: new Date().toISOString().split('T')[0],
       collaborateur: currentUser?.nom,
@@ -39,7 +41,7 @@ const FocusTracker = () => {
     });
     setShowLogModal(false);
     reset();
-    alert("Session enregistrée dans vos pointages !");
+    addToast('Session enregistrée dans vos pointages.', 'success');
   };
 
   const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   Factory, Plus, ClipboardList, Play, CheckCircle2,
   Layers, Wrench, AlertTriangle, MoreVertical, Activity
 } from 'lucide-react';
 import { useStore } from '../store';
+import { useToastStore } from '../store/useToastStore';
 import SmartButton from '../components/SmartButton';
 import BarcodeScanner from '../components/BarcodeScanner';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
@@ -16,6 +17,7 @@ const Manufacturing = ({ onOpenDetail }) => {
   const shellView = useStore(state => state.shellView);
   const updateRecord = useStore(state => state.updateRecord);
   const addRecord = useStore(state => state.addRecord);
+  const addToast = useToastStore(s => s.addToast);
   const [view, setView] = useState('orders');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -34,7 +36,7 @@ const Manufacturing = ({ onOpenDetail }) => {
     setIsScannerOpen(false);
     const order = workOrders.find(o => o.id === code);
     if (order) onOpenDetail(order, 'production', 'warehouses');
-    else alert(`Ordre de Fabrication non trouvé : ${code}`);
+    else addToast(`Ordre de Fabrication non trouvé : ${code}`, 'error');
   };
 
   return (

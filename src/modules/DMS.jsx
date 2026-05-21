@@ -6,6 +6,7 @@ import {
   MoreHorizontal, FolderPlus, X, Lock
 } from 'lucide-react';
 import { useStore } from '../store';
+import { useToastStore } from '../store/useToastStore';
 import { generatePDF } from '../utils/PDFExporter';
 import AnimatedCounter from '../components/Dashboard/AnimatedCounter';
 import SmartButton from '../components/SmartButton';
@@ -197,7 +198,7 @@ const DMS = ({ onOpenDetail }) => {
                 <button 
                   onClick={() => {
                     if (previewFile.metadata) generatePDF(previewFile.metadata, previewFile.metadata._appId || 'hr', previewFile.metadata._subModule || 'payslip');
-                    else alert('Mode demo: fichier factice.');
+                    else useToastStore.getState().addToast('Mode démo : fichier factice.', 'info');
                   }} 
                   style={{ padding: '1rem 2.5rem', borderRadius: '2rem', background: '#10B981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '1rem', boxShadow: '0 10px 25px rgba(16,185,129,0.3)' }}
                 >

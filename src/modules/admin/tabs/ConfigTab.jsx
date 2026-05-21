@@ -6,22 +6,24 @@ import {
   Monitor, Sparkles, Check, Upload, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 
 const ConfigTab = () => {
   const { config, updateConfig, globalSettings, updateGlobalSettings, uploadLogo } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = React.useRef();
 
   const handleLogoUpload = async (e) => {
      const file = e.target.files[0];
      if (!file) return;
-     
+
      setUploading(true);
      try {
         await uploadLogo(file);
-        alert("Logo mis à jour avec succès !");
+        addToast('Logo mis à jour avec succès.', 'success');
      } catch (err) {
-        alert("Erreur lors de l'upload : " + err.message);
+        addToast("Erreur lors de l'upload : " + err.message, 'error');
      } finally {
         setUploading(false);
      }
