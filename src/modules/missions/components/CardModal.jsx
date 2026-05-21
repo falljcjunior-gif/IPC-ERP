@@ -227,7 +227,7 @@ const CardModal = () => {
               onClick={e => e.stopPropagation()}
               style={{
                 pointerEvents: 'auto',
-                width: '100%', maxWidth: '860px', maxHeight: '92vh',
+                width: 'min(860px, 95vw)', maxHeight: 'min(92vh, 100dvh)',
                 background: 'white', borderRadius: '1.5rem',
                 overflow: 'hidden', display: 'flex', flexDirection: 'column',
                 boxShadow: '0 25px 60px -10px rgba(0,0,0,0.35)',
@@ -303,6 +303,7 @@ const CardModal = () => {
                   <div style={{ display: 'flex', gap: '0.4rem', flexShrink: 0 }}>
                     <button
                       onClick={() => handleUpdateCard({ isArchived: true })}
+                      aria-label="Archiver cette carte"
                       title="Archiver"
                       style={{ background: '#F1F5F9', border: 'none', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', color: '#64748B', display: 'flex' }}
                     >
@@ -310,6 +311,7 @@ const CardModal = () => {
                     </button>
                     <button
                       onClick={closeCardDetail}
+                      aria-label="Fermer"
                       style={{ background: '#F1F5F9', border: 'none', padding: '0.5rem', borderRadius: '0.5rem', cursor: 'pointer', color: '#64748B', display: 'flex' }}
                     >
                       <X size={16} />

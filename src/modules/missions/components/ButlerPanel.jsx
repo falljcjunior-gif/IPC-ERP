@@ -19,6 +19,8 @@ import {
   X, Check, RefreshCw,
 } from 'lucide-react';
 import { MissionsFS } from '../services/missions.firestore';
+import { useToastStore } from '../../../store/useToastStore';
+import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 
 // ─────────────────────────────────────────────────────────────────
 // CONSTANTS
@@ -79,6 +81,7 @@ function ActionForm({ action, index, onChange, onRemove }) {
         <span style={pill(meta.color)}>{meta.icon} {meta.label}</span>
         <button
           onClick={() => onRemove(index)}
+          aria-label="Supprimer l'action"
           style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1' }}
         >
           <X size={12} />
@@ -180,14 +183,16 @@ function RuleCard({ rule, boardId, onToggle, onDelete, onTest }) {
 
   const triggerMeta = TRIGGER_TYPES.find(t => t.value === rule.trigger?.type);
 
+  const addToast = useToastStore(s => s.addToast);
+
   const handleTest = async () => {
     if (!testCardId.trim()) return;
     setTesting(true);
     try {
       const res = await MissionsFS.executeButlerRule(boardId, rule.id, testCardId.trim());
-      alert(`${res.actionsExecuted} action(s) exécutée(s).`);
+      addToast(`${res.actionsExecuted} action(s) exécutée(s).`, 'success');
     } catch (e) {
-      alert(`Erreur : ${e.message}`);
+      addToast(`Erreur : ${e.message}`, 'error');
     } finally {
       setTesting(false);
     }
@@ -231,6 +236,7 @@ function RuleCard({ rule, boardId, onToggle, onDelete, onTest }) {
           {/* Toggle */}
           <button
             onClick={e => { e.stopPropagation(); onToggle(rule); }}
+            aria-label={rule.active ? 'Désactiver la règle' : 'Activer la règle'}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: rule.active ? '#10B981' : '#CBD5E1' }}
             title={rule.active ? 'Désactiver' : 'Activer'}
           >
@@ -239,6 +245,7 @@ function RuleCard({ rule, boardId, onToggle, onDelete, onTest }) {
           {/* Delete */}
           <button
             onClick={e => { e.stopPropagation(); onDelete(rule.id); }}
+            aria-label="Supprimer la règle"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1' }}
             title="Supprimer"
           >
@@ -320,6 +327,7 @@ const emptyRule = () => ({
 function RuleBuilder({ boardId, onSaved, onCancel }) {
   const [rule, setRule]     = useState(emptyRule());
   const [saving, setSaving] = useState(false);
+  const addToast = useToastStore(s => s.addToast);
 
   const setTriggerType = (type) =>
     setRule(r => ({ ...r, trigger: { type, conditions: {} } }));
@@ -337,14 +345,14 @@ function RuleBuilder({ boardId, onSaved, onCancel }) {
     setRule(r => ({ ...r, actions: r.actions.filter((_, idx) => idx !== i) }));
 
   const save = async () => {
-    if (!rule.name.trim())            { alert('Donnez un nom à la règle.'); return; }
-    if (rule.actions.length === 0)    { alert('Ajoutez au moins une action.'); return; }
+    if (!rule.name.trim())            { addToast('Donnez un nom à la règle.', 'error'); return; }
+    if (rule.actions.length === 0)    { addToast('Ajoutez au moins une action.', 'error'); return; }
     setSaving(true);
     try {
       await MissionsFS.saveButlerRule(boardId, rule);
       onSaved();
     } catch (e) {
-      alert(`Erreur : ${e.message}`);
+      addToast(`Erreur : ${e.message}`, 'error');
     } finally {
       setSaving(false);
     }
@@ -484,9 +492,10 @@ function RuleBuilder({ boardId, onSaved, onCancel }) {
 // ─────────────────────────────────────────────────────────────────
 
 const ButlerPanel = ({ boardId }) => {
-  const [rules, setRules]       = useState([]);
-  const [adding, setAdding]     = useState(false);
-  const [report, setReport]     = useState(null);
+  const [rules, setRules]             = useState([]);
+  const [adding, setAdding]           = useState(false);
+  const [report, setReport]           = useState(null);
+  const [ruleToDelete, setRuleToDelete] = useState(null);
 
   useEffect(() => {
     if (!boardId) return;
@@ -499,9 +508,14 @@ const ButlerPanel = ({ boardId }) => {
     await MissionsFS.saveButlerRule(boardId, { ...rule, active: !rule.active });
   };
 
-  const handleDelete = async (ruleId) => {
-    if (!window.confirm('Supprimer cette règle ?')) return;
-    await MissionsFS.deleteButlerRule(boardId, ruleId);
+  const handleDelete = (ruleId) => {
+    setRuleToDelete(ruleId);
+  };
+
+  const confirmDelete = async () => {
+    if (!ruleToDelete) return;
+    await MissionsFS.deleteButlerRule(boardId, ruleToDelete);
+    setRuleToDelete(null);
   };
 
   return (
@@ -634,6 +648,17 @@ const ButlerPanel = ({ boardId }) => {
           </div>
         </div>
       )}
+
+      {/* Confirm rule deletion */}
+      <ConfirmDialog
+        isOpen={!!ruleToDelete}
+        title="Supprimer cette règle ?"
+        message="Cette action est irréversible. La règle d'automatisation sera définitivement supprimée."
+        confirmLabel="Supprimer"
+        onConfirm={confirmDelete}
+        onCancel={() => setRuleToDelete(null)}
+        danger
+      />
     </div>
   );
 };
