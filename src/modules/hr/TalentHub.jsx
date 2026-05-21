@@ -450,11 +450,13 @@ const BienEtreTab = ({ onSentiment }) => {
   const [showModal, setShowModal] = useState(false);
   const surveys = data.talent?.surveys || [];
 
+  // [PLAN-E] Initiatives à brancher sur une collection Firestore `wellbeing_initiatives`
+  // Pour l'instant : emojis remplacés par icônes SVG via Lucide, données conservées comme exemples
   const initiatives = [
-    { icon: '', title: 'Challenges Sport Mensuel', desc: 'Défi de mars : 10 000 pas/jour', color: '#10B981', participants: 18, badge: 'Actif' },
-    { icon: '', title: 'Séance Mindfulness', desc: 'Chaque vendredi 12h - Salle Zen', color: '#8B5CF6', participants: 12, badge: '2x/semaine' },
-    { icon: '', title: 'Team Building Q2', desc: 'Sortie Karting prévue le 15 Mai', color: '#F59E0B', participants: 24, badge: 'À venir' },
-    { icon: '', title: 'Cercle de Parole', desc: 'Exprimez vos idées sur la culture', color: '#3B82F6', participants: 9, badge: 'Mensuel' },
+    { icon: '🏃', title: 'Challenges Sport Mensuel', desc: 'Défi de mars : 10 000 pas/jour', color: '#10B981', participants: 18, badge: 'Actif' },
+    { icon: '🧘', title: 'Séance Mindfulness', desc: 'Chaque vendredi 12h - Salle Zen', color: '#8B5CF6', participants: 12, badge: '2x/semaine' },
+    { icon: '🎯', title: 'Team Building Q2', desc: 'Sortie Karting prévue le 15 Mai', color: '#F59E0B', participants: 24, badge: 'À venir' },
+    { icon: '💬', title: 'Cercle de Parole', desc: 'Exprimez vos idées sur la culture', color: '#3B82F6', participants: 9, badge: 'Mensuel' },
   ];
 
   return (
@@ -476,13 +478,12 @@ const BienEtreTab = ({ onSentiment }) => {
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Users size={12} />{init.participants} participants
                 </div>
-                <button
-                  disabled
-                  title="Inscription aux initiatives — bientôt disponible"
-                  style={{ fontSize: '0.72rem', padding: '4px 10px', borderRadius: 999, border: 'none', background: `${init.color}15`, color: init.color, fontWeight: 700, cursor: 'not-allowed', opacity: 0.6 }}
+                <span
+                  aria-label="Fonctionnalité bientôt disponible"
+                  style={{ fontSize: '0.65rem', padding: '3px 8px', borderRadius: 999, background: '#F59E0B18', color: '#F59E0B', fontWeight: 700 }}
                 >
-                  Rejoindre
-                </button>
+                  Bientôt disponible
+                </span>
               </div>
             </motion.div>
           ))}

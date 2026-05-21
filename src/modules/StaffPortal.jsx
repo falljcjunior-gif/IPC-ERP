@@ -68,11 +68,17 @@ const StaffPortal = ({ embedded }) => {
     setLoadingDossier(true);
     let unsubSal, unsubCon;
 
+    // Timeout de sécurité : si Firestore ne répond pas en 10s, on arrête le spinner
+    const timeoutId = setTimeout(() => {
+      setLoadingDossier(false);
+      console.warn('[StaffPortal] Timeout — Firestore ne répond pas après 10s');
+    }, 10000);
+
     // salaries/{uid}
     unsubSal = FirestoreService.subscribeToDocument(
       'salaries', currentUser.id,
-      (doc) => { setMySalary(doc || null); setLoadingDossier(false); },
-      (err) => { console.warn('[StaffPortal] salary sub:', err?.message); setLoadingDossier(false); }
+      (doc) => { setMySalary(doc || null); setLoadingDossier(false); clearTimeout(timeoutId); },
+      (err) => { console.warn('[StaffPortal] salary sub:', err?.message); setLoadingDossier(false); clearTimeout(timeoutId); }
     );
 
     // contracts/{uid}
@@ -83,6 +89,7 @@ const StaffPortal = ({ embedded }) => {
     );
 
     return () => {
+      clearTimeout(timeoutId);
       typeof unsubSal === 'function' && unsubSal();
       typeof unsubCon === 'function' && unsubCon();
     };

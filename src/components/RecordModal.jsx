@@ -43,11 +43,12 @@ const RecordModal = ({
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    
+
+    // Validation — return early, pas de throw (évite crash formulaire)
     const missingFields = fields.filter(f => f.required && !formData[f.name]);
     if (missingFields.length > 0) {
-        addToast("Champs requis : " + missingFields.map(f => t(f.label)).join(', '), 'error');
-        throw new Error("Missing required fields");
+      addToast('Champs requis manquants : ' + missingFields.map(f => t(f.label)).join(', '), 'error');
+      return; // early return, pas de throw
     }
 
     try {
@@ -58,18 +59,25 @@ const RecordModal = ({
       }
       setTimeout(() => {
         setShowSuccessAnim(false);
-        if (!recordId) onClose(); // Auto-close after creation success
+        if (!recordId) onClose();
       }, 2000);
     } catch (err) {
-      addToast("Erreur lors de l'enregistrement", 'error');
-      throw err;
+      // Message d'erreur spécifique selon le code Firebase
+      const code = err?.code || '';
+      let msg = "Erreur lors de l'enregistrement.";
+      if (code.includes('permission-denied')) msg = "Permission refusée. Contactez votre administrateur.";
+      else if (code.includes('not-found')) msg = "Ressource introuvable. Elle a peut-être été supprimée.";
+      else if (code.includes('unavailable')) msg = "Service indisponible. Vérifiez votre connexion.";
+      else if (err?.message && err.message.length < 100) msg = err.message;
+      addToast(msg, 'error');
+      // Ne pas re-throw — permet à l'UI de rester ouverte pour corriger
     }
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div role="dialog" aria-modal="true" aria-labelledby="record-modal-title" style={{ position: 'fixed', inset: 0, zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
           
           {/* Elite Backdrop */}
           <motion.div 

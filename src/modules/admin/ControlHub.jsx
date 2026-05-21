@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldCheck, Settings, Users, Database, 
-  Lock, 
+import {
+  ShieldCheck, Settings, Users, Database,
+  Lock,
   Power, Terminal, Cpu, Layout, Activity, RefreshCw
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { functions } from '../../firebase/config';
 import { httpsCallable } from 'firebase/functions';
+import { useToastStore } from '../../store/useToastStore';
+import ConfirmDialog from '../../components/ui/ConfirmDialog';
 
 // Components
 import IdentityTab from './tabs/IdentityTab';
@@ -20,19 +22,22 @@ import History from '../History';
 
 const ControlHub = ({ onOpenDetail }) => {
   const { userRole, currentUser, resetAllData, shellView } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [activeTab, setActiveTab] = useState('identity');
   const [isBackfilling, setIsBackfilling] = useState(false);
+  const [showBackfillConfirm, setShowBackfillConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleBackfill = async () => {
-    if (!window.confirm('LANCER LA SYNCHRONISATION MASSIVE ? Cette opération va pousser toutes les données vers PostgreSQL.')) return;
+    setShowBackfillConfirm(false);
     setIsBackfilling(true);
     try {
       const backfillFn = httpsCallable(functions, 'backfillGreenBlock');
       const result = await backfillFn();
-      alert(`Backfill Terminé : ${result.data.syncs} enregistrements synchronisés.`);
+      addToast(`Synchronisation terminée : ${result.data?.syncs ?? 0} enregistrements synchronisés.`, 'success');
     } catch (err) {
-      console.error(err);
-      alert('Échec du Backfill. Vérifiez les logs Cloud Functions.');
+      console.error('[ControlHub] Backfill failed:', err);
+      addToast('Échec de la synchronisation. Consultez les logs Cloud Functions.', 'error');
     } finally {
       setIsBackfilling(false);
     }
@@ -91,34 +96,54 @@ const ControlHub = ({ onOpenDetail }) => {
                 <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--nexus-text-muted)' }}>Status : Optimal</span>
              </div>
              
-             <button 
-                onClick={handleBackfill}
+             <button
+                onClick={() => setShowBackfillConfirm(true)}
                 disabled={isBackfilling}
-                className="nexus-card" 
-                style={{ 
-                  padding: '0.9rem 2rem', 
-                  background: 'var(--nexus-primary)', 
-                  color: 'white', 
-                  border: 'none', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem', 
-                  fontWeight: 900, 
+                className="nexus-card"
+                style={{
+                  padding: '0.9rem 2rem',
+                  background: 'var(--nexus-primary)',
+                  color: 'white',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  fontWeight: 900,
                   cursor: isBackfilling ? 'not-allowed' : 'pointer',
                   opacity: isBackfilling ? 0.7 : 1
                 }}
               >
-                 <RefreshCw size={20} className={isBackfilling ? 'spin' : ''} /> 
+                 <RefreshCw size={20} className={isBackfilling ? 'spin' : ''} />
                  {isBackfilling ? 'Synchronisation...' : 'Lancer Backfill SSOT'}
               </button>
 
-             <button onClick={() => {
-               if(window.confirm('EFFACER TOUTES LES DONNÉES : Ceci va supprimer TOUS les enregistrements irréversiblement. Confirmer ?')) {
-                  resetAllData();
-               }
-             }} className="nexus-card" style={{ padding: '0.9rem 2rem', background: '#EF4444', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, cursor: 'pointer' }}>
+             <button
+               onClick={() => setShowResetConfirm(true)}
+               className="nexus-card"
+               style={{ padding: '0.9rem 2rem', background: '#EF4444', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 900, cursor: 'pointer' }}
+             >
                 <Power size={20} /> Effacer les Données
              </button>
+
+             {/* Confirm backfill */}
+             <ConfirmDialog
+               isOpen={showBackfillConfirm}
+               title="Lancer la synchronisation SSOT ?"
+               message="Cette opération va pousser toutes les données vers PostgreSQL. L'opération peut prendre plusieurs minutes."
+               confirmLabel="Synchroniser"
+               onConfirm={handleBackfill}
+               onCancel={() => setShowBackfillConfirm(false)}
+             />
+             {/* Confirm reset */}
+             <ConfirmDialog
+               isOpen={showResetConfirm}
+               title="Effacer toutes les données ?"
+               message="Cette action est IRRÉVERSIBLE. Tous les enregistrements seront définitivement supprimés."
+               confirmLabel="Effacer définitivement"
+               onConfirm={() => { setShowResetConfirm(false); resetAllData(); }}
+               onCancel={() => setShowResetConfirm(false)}
+               danger
+             />
           </div>
         </div>
       )}
