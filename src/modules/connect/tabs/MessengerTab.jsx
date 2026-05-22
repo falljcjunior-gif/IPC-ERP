@@ -154,7 +154,7 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     if (!activeRoom?.id) return;
     let unsub;
     try {
-      unsub = FirestoreService.subscribeToCollection(`rooms/${activeRoom.id}/participants`, (participants) => {
+      unsub = FirestoreService.subscribeToCollection(`rooms/${activeRoom.id}/participants`, {}, (participants) => {
         const pMap = {};
         participants.forEach(p => { pMap[p.id] = p; });
         setActiveParticipants(pMap);
@@ -187,12 +187,16 @@ const MessengerTab = ({ onOpenDetail, navigationIntent }) => {
     if (!currentUser?.id) return;
     let unsub;
     try {
-      unsub = FirestoreService.subscribeToCollection('rooms', (rooms) => {
-        setCustomRooms(rooms);
-      }, [
-        { field: 'type', operator: '==', value: 'group' },
-        { field: 'members', operator: 'array-contains', value: currentUser.id }
-      ]);
+      unsub = FirestoreService.subscribeToCollection(
+        'rooms',
+        {
+          filters: [
+            { field: 'type', operator: '==', value: 'group' },
+            { field: 'members', operator: 'array-contains', value: currentUser.id }
+          ]
+        },
+        (rooms) => { setCustomRooms(rooms); }
+      );
     } catch (err) {
       console.warn('[MessengerTab] Rooms Firestore non disponible (mode DEV sans auth):', err.message);
     }

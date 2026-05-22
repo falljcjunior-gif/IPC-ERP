@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Mic, MicOff, Video, VideoOff, PhoneOff, 
-  Maximize2, Minimize2, User
+import {
+  Mic, MicOff, Video, VideoOff, PhoneOff,
+  User, AlertCircle, Wifi, WifiOff, Loader
 } from 'lucide-react';
 import { FirestoreService } from '../services/firestore.service';
 import logger from '../utils/logger';
 import { webrtcService } from '../utils/WebRTCService';
 import { useCurrentUser } from '../store/selectors';
+import { useNotificationStore } from '../store/useNotificationStore';
 
 const CallInterface = ({ 
   isOpen, 
@@ -19,12 +20,14 @@ const CallInterface = ({
   onHangup
 }) => {
   const currentUser = useCurrentUser();
+  const { addNotification } = useNotificationStore();
   const [localStream, setLocalStream] = useState(null);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(callType === 'video');
-
   const [remoteParticipants, setRemoteParticipants] = useState({}); // { id: MediaStream }
-  
+  const [connectionState, setConnectionState] = useState('connecting'); // 'connecting'|'connected'|'reconnecting'|'failed'
+  const [callDuration, setCallDuration] = useState(0);
+
   // Local speaker detection
   const [localSpeaking, setLocalSpeaking] = useState(false);
 
@@ -60,10 +63,30 @@ const CallInterface = ({
     let audioCtx = null;
     let animationFrameId = null;
 
+    const MEDIA_ERRORS = {
+      NotAllowedError: 'Autorisez l\'accès à la caméra et au microphone dans votre navigateur.',
+      PermissionDeniedError: 'Autorisez l\'accès à la caméra et au microphone dans votre navigateur.',
+      NotFoundError: 'Aucun périphérique audio/vidéo détecté sur cet appareil.',
+      DevicesNotFoundError: 'Aucun périphérique audio/vidéo détecté sur cet appareil.',
+      NotReadableError: 'Votre caméra ou micro est déjà utilisé par une autre application.',
+      TrackStartError: 'Votre caméra ou micro est déjà utilisé par une autre application.',
+    };
+
     const setupCall = async () => {
       try {
         logger.info(`CallInterface: Setting up WebRTC for room ${callId}`);
-        const stream = await webrtcService.startLocalStream(callType);
+
+        let stream;
+        try {
+          stream = await webrtcService.startLocalStream(callType);
+        } catch (mediaErr) {
+          const msg = MEDIA_ERRORS[mediaErr.name] || 'Impossible de démarrer l\'appel vidéo.';
+          logger.error('CallInterface: getUserMedia failed', mediaErr);
+          addNotification({ title: 'Appel impossible', message: msg, priority: 'warning', module: 'Connect' });
+          if (isMounted && onClose) onClose();
+          return;
+        }
+
         if (!isMounted) return;
         setLocalStream(stream);
 
@@ -71,11 +94,11 @@ const CallInterface = ({
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const analyser = audioCtx.createAnalyser();
         const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser); 
+        source.connect(analyser);
         analyser.fftSize = 256;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
-        
+
         const checkVolume = () => {
           if (!isMounted) return;
           if (!stream.getAudioTracks()[0]?.enabled) {
@@ -92,11 +115,16 @@ const CallInterface = ({
         };
         checkVolume();
 
-        await webrtcService.joinRoom(callId, currentUser?.id, currentUser?.nom, (streams) => {
-          if (isMounted) setRemoteParticipants({ ...streams });
-        });
+        await webrtcService.joinRoom(
+          callId,
+          currentUser?.id,
+          currentUser?.nom,
+          (streams) => { if (isMounted) setRemoteParticipants({ ...streams }); },
+          (state) => { if (isMounted) setConnectionState(state); }
+        );
       } catch (err) {
         logger.error("Group Call Setup Error:", err);
+        if (isMounted) setConnectionState('failed');
       }
     };
 
@@ -111,6 +139,16 @@ const CallInterface = ({
       // webrtcService.hangup est géré par handleHangup ou le listener global
     };
   }, [isOpen, callId, currentUser?.id, currentUser?.nom, callType]);
+
+  // Compteur durée d'appel
+  useEffect(() => {
+    if (!isOpen) { setCallDuration(0); return; }
+    const timer = setInterval(() => setCallDuration(d => d + 1), 1000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
+
+  const fmtDuration = (s) =>
+    `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 
   const toggleMic = () => {
     if (webrtcService.localStream) {
@@ -147,6 +185,8 @@ const CallInterface = ({
   if (!isOpen) return null;
 
   const participantsCount = Object.keys(remoteParticipants).length + 1; // +1 for local
+  // Inline keyframes pour l'icône de chargement (pas de dépendance CSS externe)
+  const spinStyle = { animation: 'callif-spin 1s linear infinite' };
 
   // Grid logic
   let gridCols = '1fr';
@@ -165,13 +205,39 @@ const CallInterface = ({
         color: 'white'
       }}
     >
+      <style>{`@keyframes callif-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       {/* Top Bar / Controls */}
       <div style={{ padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', zIndex: 10 }}>
         <div>
-           <h4 style={{ margin: 0, fontWeight: 800 }}>{contactName}</h4>
-           <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>{participantsCount} participant{participantsCount > 1 ? 's' : ''}</p>
+          <h4 style={{ margin: 0, fontWeight: 800 }}>{contactName}</h4>
+          <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>
+            {participantsCount} participant{participantsCount > 1 ? 's' : ''}
+          </p>
         </div>
-
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Durée d'appel */}
+          {connectionState === 'connected' && (
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums', opacity: 0.8 }}>
+              {fmtDuration(callDuration)}
+            </span>
+          )}
+          {/* Indicateur état connexion */}
+          {connectionState === 'connecting' && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', opacity: 0.7 }}>
+              <Loader size={14} style={spinStyle} /> Connexion…
+            </span>
+          )}
+          {connectionState === 'reconnecting' && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#F59E0B' }}>
+              <Wifi size={14} /> Reconnexion…
+            </span>
+          )}
+          {connectionState === 'failed' && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#EF4444' }}>
+              <WifiOff size={14} /> Connexion perdue
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -190,10 +256,44 @@ const CallInterface = ({
               {localSpeaking && <div style={{ position: 'absolute', top: '1rem', right: '1rem', padding: '4px', borderRadius: '50%', background: '#10B981' }}><Mic size={14} color="white" /></div>}
             </div>
 
-            {/* Remote Participants */}
-            {Object.entries(remoteParticipants).map(([id, stream]) => (
-              <RemoteVideo key={id} id={id} stream={stream} />
-            ))}
+            {/* Remote Participants ou placeholder de connexion */}
+            {Object.keys(remoteParticipants).length === 0 ? (
+              <div style={{
+                position: 'relative', borderRadius: '1.5rem', overflow: 'hidden',
+                background: '#1E293B', border: '3px solid rgba(255,255,255,0.08)',
+                minHeight: '240px', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '1rem'
+              }}>
+                {connectionState === 'failed' ? (
+                  <>
+                    <WifiOff size={40} style={{ opacity: 0.4 }} />
+                    <p style={{ margin: 0, opacity: 0.5, fontSize: '0.9rem' }}>Connexion impossible</p>
+                    <button
+                      onClick={handleHangup}
+                      style={{ padding: '0.5rem 1.2rem', borderRadius: '0.5rem', background: '#EF4444', border: 'none', color: 'white', cursor: 'pointer', fontWeight: 700 }}
+                    >
+                      Raccrocher
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <motion.div
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <User size={48} style={{ opacity: 0.3 }} />
+                    </motion.div>
+                    <p style={{ margin: 0, opacity: 0.4, fontSize: '0.85rem' }}>
+                      {connectionState === 'reconnecting' ? 'Reconnexion en cours…' : 'En attente de connexion…'}
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : (
+              Object.entries(remoteParticipants).map(([id, stream]) => (
+                <RemoteVideo key={id} id={id} stream={stream} />
+              ))
+            )}
           </div>
       </div>
 
