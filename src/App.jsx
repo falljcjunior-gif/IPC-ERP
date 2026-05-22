@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase/config';
 const PlatformShell = React.lazy(() => import('./components/PlatformShell'));
+const LandingPage = React.lazy(() => import('./components/landing/LandingPage'));
 import Login from './components/Login';
 import { BusinessProvider } from './BusinessContext';
 import { initRegistry } from './registry_init';
@@ -58,7 +59,7 @@ const AuthObserver = () => {
 };
 
 function App() {
-  const [view, setView] = useState('login');
+  const [view, setView] = useState('landing');
   const [isInitializing, setIsInitializing] = useState(true);
   const _hasHydrated = useStore(state => state._hasHydrated);
   const globalSettings = useStore(state => state.globalSettings);
@@ -133,7 +134,7 @@ function App() {
           }
         }
       } else {
-        setView('login');
+        setView('landing');
       }
       setIsInitializing(false);
     });
@@ -153,7 +154,13 @@ function App() {
         <ToastProvider>
           <AuthObserver />
           <div className="app-container">
-            {view === 'login' ? <Login onLogin={() => setView('dashboard')} /> : (
+            {view === 'landing' ? (
+              <React.Suspense fallback={<InitializingView label="Chargement..." />}>
+                <LandingPage onCTA={() => setView('login')} />
+              </React.Suspense>
+            ) : view === 'login' ? (
+              <Login onLogin={() => setView('dashboard')} onBack={() => setView('landing')} />
+            ) : (
               <React.Suspense fallback={<InitializingView label="Chargement du Noyau..." />}>
                 <PlatformShell theme={theme} setView={setView} />
               </React.Suspense>
