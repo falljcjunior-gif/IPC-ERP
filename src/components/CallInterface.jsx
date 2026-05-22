@@ -223,17 +223,34 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
   useEffect(() => {
     let animationFrameId;
     let audioCtx;
-    
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-      videoRef.current.onloadedmetadata = () => {
-        videoRef.current.play().catch(e => {
-          logger.warn(`[CallInterface] Autoplay prevented for ${id}`, e);
-          // Fallback: Show a "Click to unmute" button if needed, 
-          // but usually user interaction happened already.
-        });
+    const videoEl = videoRef.current;
+
+    if (videoEl && stream) {
+      // Attach stream only when it changes
+      if (videoEl.srcObject !== stream) {
+        videoEl.srcObject = stream;
+      }
+
+      const playVideo = async () => {
+        try {
+          await videoEl.play();
+          logger.info(`[CallInterface] Remote video playing for ${id}`);
+        } catch (e) {
+          if (e.name === 'NotAllowedError') {
+            logger.warn(`[CallInterface] Autoplay bloqué pour ${id} — interaction utilisateur requise`, e);
+          } else {
+            logger.warn(`[CallInterface] Play échoué pour ${id}:`, e);
+          }
+        }
       };
-      
+
+      // If already have metadata, play now; otherwise wait
+      if (videoEl.readyState >= 2) {
+        playVideo();
+      } else {
+        videoEl.onloadedmetadata = playVideo;
+      }
+
       // Analyze remote audio track
       const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack && window.AudioContext) {
@@ -271,6 +288,7 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
     return () => {
        if (animationFrameId) cancelAnimationFrame(animationFrameId);
        if (audioCtx && audioCtx.state !== 'closed') audioCtx.close();
+       if (videoEl) videoEl.onloadedmetadata = null;
     };
   }, [stream, onSpeak]);
 
@@ -287,9 +305,8 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
       boxShadow: (isSpeaking && !strip && !full) ? '0 0 15px rgba(16, 185, 129, 0.4)' : (strip && isSpeaking ? 'inset 0 0 0 3px #10B981' : 'none'),
       transition: 'all 0.2s ease-in-out'
     }}>
-      <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-      {/* Hidden audio element to ensure audio plays even if video is broken/invisible */}
-      <audio ref={el => { if (el && el.srcObject !== stream) { el.srcObject = stream; el.play().catch(() => {}); } }} autoPlay style={{ display: 'none' }} />
+      {/* ⚠️ Ne PAS mettre `muted` ici — l'élément video gère l'audio ET la vidéo distante */}
+      <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       {!strip && (
         <div style={{ position: 'absolute', bottom: full ? '1.5rem' : '1rem', left: full ? '1.5rem' : '1rem', padding: '6px 16px', borderRadius: '20px', background: 'rgba(0,0,0,0.6)', fontSize: full ? '0.9rem' : '0.8rem', fontWeight: 600 }}>
           {id.startsWith('dm_') ? 'Contact' : 'Participant'}
