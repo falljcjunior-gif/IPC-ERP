@@ -70,6 +70,13 @@ export default [
       },
     },
   },
+  // ── React Three Fiber — disable react/no-unknown-property for Three.js JSX props ──
+  {
+    files: ['src/components/landing/three/**/*.{js,jsx}'],
+    rules: {
+      'react/no-unknown-property': 'off',
+    },
+  },
   // ── Test files — Vitest globals ──────────────────────────────────────────
   {
     files: ['src/__tests__/**/*.{js,jsx,ts,tsx}', '**/*.test.{js,jsx,ts,tsx}', '**/*.spec.{js,jsx,ts,tsx}', 'tests/**/*.{js,jsx,ts,tsx}'],
