@@ -39,17 +39,13 @@ function LandingNav({ onCTA }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Logo */}
-      <div className="landing-nav-logo">
-        <svg width="24" height="21" viewBox="0 0 64 56" fill="none">
-          <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#064E3B" />
-          <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(6,78,59,0.4)" />
-          <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(6,78,59,0.25)" />
-          <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(6,78,59,0.85)" />
-          <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(6,78,59,0.3)" />
-          <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(6,78,59,0.15)" />
-        </svg>
-        I.P.C Intelligence
+      {/* Logos */}
+      <div className="landing-nav-logo" style={{ gap: '0.75rem' }}>
+        <img src="/logo-holding.png" alt="IPC Green Blocks Holding" style={{ height: 36, objectFit: 'contain' }} />
+        <div style={{ width: 1, height: 22, background: 'var(--border)', flexShrink: 0 }} />
+        <img src="/logo-filiale.png" alt="IPC Green Blocks" style={{ height: 36, objectFit: 'contain' }} />
+        <div style={{ width: 1, height: 22, background: 'var(--border)', flexShrink: 0 }} />
+        <img src="/logo-fondation.png" alt="Fondation IPC Collect" style={{ height: 36, objectFit: 'contain' }} />
       </div>
 
       {/* Links */}
