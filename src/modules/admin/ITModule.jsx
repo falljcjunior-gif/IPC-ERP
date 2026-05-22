@@ -67,8 +67,8 @@ const ITModule = () => {
 
   const confirmSensitiveAction = () => {
     setShowDoubleAuth(false);
+    useToastStore.getState().addToast(`Action "${pendingAction}" exécutée`, 'success');
     setPendingAction(null);
-    alert(`Action exécutée : ${pendingAction}`);
   };
 
   return (

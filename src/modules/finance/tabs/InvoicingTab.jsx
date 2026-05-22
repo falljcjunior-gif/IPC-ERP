@@ -10,17 +10,19 @@ import EnterpriseView from '../../../components/EnterpriseView';
 import { financeSchema } from '../../../schemas/finance.schema';
 import Chip from '../../marketing/components/Chip';
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 
 const InvoicingTab = ({ onOpenDetail, formatCurrency }) => {
   const { data } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [activeView, setActiveView] = useState('invoices'); // 'invoices', 'vendor_bills'
 
   const handleExportJournal = () => {
     const invoices = data?.finance?.invoices || [];
-    if (invoices.length === 0) { alert('Aucune facture à exporter.'); return; }
+    if (invoices.length === 0) { addToast('Aucune facture à exporter.', 'error'); return; }
     const header_csv = ['N° Facture', 'Client', 'Date', 'Échéance', 'Montant TTC', 'Statut'].join(';');
     const rows = invoices.map(inv => [
       inv.number || inv.id || '—',

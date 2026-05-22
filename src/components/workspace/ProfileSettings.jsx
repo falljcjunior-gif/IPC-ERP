@@ -116,17 +116,18 @@ function SectionHeader({ icon: Icon, title, subtitle, color = 'var(--accent)' })
 function AvatarUploader({ uid, currentAvatar, onUploaded }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
+  const addToast = useToastStore(s => s.addToast);
 
   const handleFile = async e => {
     const file = e.target.files?.[0];
     if (!file) return;
     // Validate: image only, max 3 MB
     if (!file.type.startsWith('image/')) {
-      alert('Fichier invalide — image uniquement.');
+      addToast('Fichier invalide — image uniquement.', 'error');
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      alert('Fichier trop volumineux (max 3 Mo).');
+      addToast('Fichier trop volumineux (max 3 Mo).', 'error');
       return;
     }
     setUploading(true);
@@ -723,18 +724,41 @@ export default function ProfileSettings() {
   const [showPwdModal, setShowPwdModal] = useState(false);
 
   // ── Professional fields from profile (Zone C) ────────────────────────────
+  // Fields are stored in nested sub-objects by buildUnifiedUserPayload:
+  //   profile.profile.poste / profile.profile.dept
+  //   profile.hr.contratType / profile.hr.date_entree
+  // Fall back to flat root fields for legacy documents.
   const hrFields = useMemo(() => {
     if (!profile) return {};
-    return {
-      employeeId:   profile.employeeId   || '',
-      poste:        profile.poste        || profile.title || '',
-      departement:  profile.departement  || '',
-      managerName:  profile.managerName  || '',
-      hireDate:     profile.hireDate
-        ? new Date(profile.hireDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
-        : '',
-      contractType: profile.contractType || '',
-    };
+    const p = profile.profile || {};  // nested profile sub-object
+    const hr = profile.hr || {};      // nested hr sub-object
+
+    // Employee ID: prefer explicit field, fallback to UID
+    const employeeId = profile.employeeId || p.employeeId || profile.uid || profile.id || '';
+
+    // Poste: nested profile.poste > root profile.poste > root title
+    const poste = p.poste || profile.poste || profile.title || '';
+
+    // Département: nested profile.dept > root departement
+    const departement = p.dept || profile.departement || '';
+
+    // Manager: not always set
+    const managerName = profile.managerName || p.managerName || hr.managerName || '';
+
+    // Hire date: nested hr.date_entree > root hireDate
+    const rawDate = hr.date_entree || profile.hireDate || '';
+    const hireDate = rawDate
+      ? (() => {
+          try {
+            return new Date(rawDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+          } catch { return rawDate; }
+        })()
+      : '';
+
+    // Contract type: nested hr.contratType > root contractType
+    const contractType = hr.contratType || profile.contractType || '';
+
+    return { employeeId, poste, departement, managerName, hireDate, contractType };
   }, [profile]);
 
   if (loading) {

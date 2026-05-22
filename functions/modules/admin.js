@@ -29,7 +29,16 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
     hierarchy_level: extraData.hierarchy_level || 'Employee',
     // Multi-tenant routing fields — MUST be present for App.jsx space detection
     entity_type: extraData.entity_type || 'SUBSIDIARY',
-    entity_id:   extraData.entity_id   || 'ipc_green_blocks',
+    // [SECURITY FIX B-P1] No silent fallback to 'ipc_green_blocks'.
+    // Callers MUST supply entity_id. If absent, log a warning and default to null
+    // so the Firestore rule (canReadOwnEntity(null)) blocks cross-entity reads.
+    entity_id: (() => {
+      if (!extraData.entity_id) {
+        logger.warn('[buildUnifiedUserPayload] entity_id absent — defaulting to null. User will be blocked by Firestore rules until entity_id is set.', { uid: user.uid });
+        return null;
+      }
+      return extraData.entity_id;
+    })(),
     entity_name: extraData.entity_name || extraData.entity_id || 'IPC Group',
     tenant_id:   extraData.tenant_id   || 'ipc_group',
 
@@ -346,18 +355,13 @@ exports.deleteUserAccount = onCall({
   const DELETION_ROLES = new Set([
     'SUPER_ADMIN', 'HOLDING_CEO', 'HOLDING_CFO', 'HOLDING_CSO',
   ]);
-  // AUTHORIZED_EMAILS: project owners / super-admins identified by email
-  // as a fallback when custom claims haven't been set yet.
-  const AUTHORIZED_EMAILS = [
-    'ra.yoman@ipcgreenblocks.com',
-    'yomanraphael26@gmail.com',
-    'fall.jcjunior@gmail.com',
-  ];
-
-  const canDelete = DELETION_ROLES.has(callerRole) || AUTHORIZED_EMAILS.includes(callerEmail);
+  // [SECURITY FIX A.2] AUTHORIZED_EMAILS whitelist removed — bypassed RBAC.
+  // Authorization is now exclusively role-based via Custom Claims.
+  // If a SUPER_ADMIN account hasn't been bootstrapped yet, use bootstrapSuperAdmin().
+  const canDelete = DELETION_ROLES.has(callerRole);
 
   if (!canDelete) {
-    logger.warn(`Unauthorized delete attempt by ${callerUid} (role: ${callerRole})`);
+    logger.warn(`Unauthorized delete attempt by ${callerUid} (role: ${callerRole}, email: ${callerEmail})`);
     throw new HttpsError('permission-denied',
       'Seuls les rôles HOLDING_CEO et SUPER_ADMIN peuvent supprimer des comptes.');
   }

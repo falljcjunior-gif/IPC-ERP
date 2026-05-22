@@ -60,6 +60,7 @@ const CheckItem = ({ item, onToggle, onDelete, onRename }) => {
       {/* Checkbox */}
       <button
         onClick={() => onToggle(item.id, !item.complete)}
+        aria-label={item.complete ? 'Marquer comme non terminé' : 'Marquer comme terminé'}
         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', marginTop: '1px', flexShrink: 0 }}
       >
         {item.complete
@@ -98,6 +99,7 @@ const CheckItem = ({ item, onToggle, onDelete, onRename }) => {
       {/* Supprimer */}
       <button
         onClick={() => onDelete(item.id)}
+        aria-label="Supprimer l'élément"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1', padding: '2px', flexShrink: 0, opacity: 0, transition: 'opacity 0.15s' }}
         onMouseEnter={e => e.currentTarget.style.opacity = '1'}
         onMouseLeave={e => e.currentTarget.style.opacity = '0'}
@@ -196,9 +198,7 @@ const Checklist = ({ checklist, cardId, cardProgress, uid }) => {
             <button onClick={addItem} style={{ padding: '0.35rem 0.75rem', borderRadius: '0.4rem', background: '#8B5CF6', color: 'white', border: 'none', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
               Ajouter
             </button>
-            <button onClick={() => { setAddingItem(false); setNewItemText(''); }} style={{ padding: '0.35rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.8rem' }}>
- 
- </button>
+            <button onClick={() => { setAddingItem(false); setNewItemText(''); }} aria-label="Annuler" style={{ padding: '0.35rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer', fontSize: '0.8rem' }}>✕</button>
           </div>
         </div>
       ) : (
@@ -259,9 +259,7 @@ const ChecklistSection = ({ cardId, cardProgress, uid }) => {
             <button onClick={createChecklist} style={{ padding: '0.4rem 0.875rem', borderRadius: '0.4rem', background: '#8B5CF6', color: 'white', border: 'none', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}>
               Créer
             </button>
-            <button onClick={() => { setAddingCl(false); setNewClTitle(''); }} style={{ padding: '0.4rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer' }}>
- 
- </button>
+            <button onClick={() => { setAddingCl(false); setNewClTitle(''); }} aria-label="Annuler" style={{ padding: '0.4rem', background: 'transparent', border: 'none', color: '#64748B', cursor: 'pointer' }}>✕</button>
           </div>
         </div>
       ) : (

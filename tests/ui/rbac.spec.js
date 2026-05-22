@@ -30,6 +30,12 @@ const VISIBILITY_MATRIX = [
 
   // Signature is hidden (GO-LIVE blocker — mock OTP)
   { label: 'Signature Électronique',    visible: false, roles: ['superAdmin', 'staffCI', 'holdingCeo'] },
+
+  // Phase C hidden modules — should not appear for any role
+  { label: 'Nexus Academy',             visible: false, roles: ['superAdmin', 'staffCI'] },
+  { label: 'Stocks & Logistique',       visible: false, roles: ['superAdmin', 'staffCI', 'holdingCeo'] },
+  { label: 'Marketing Digital',         visible: false, roles: ['superAdmin', 'holdingCeo'] },
+  { label: 'Flotte',                    visible: false, roles: ['superAdmin'] },
 ];
 
 // Run visibility checks per role

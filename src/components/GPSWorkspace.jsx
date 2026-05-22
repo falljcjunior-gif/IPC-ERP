@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Target, Flag, Zap, Plus, X, Save, CheckCircle2, Circle, Search, Users2 } from 'lucide-react';
 import { useStore } from '../store';
+import { useToastStore } from '../store/useToastStore';
 
 const GPSWorkspace = () => {
   const { data, currentUser, addRecord, updateRecord, userRole } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [gpsData, setGpsData] = useState({ goals: [] });
   const [recordId, setRecordId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -48,7 +50,7 @@ const GPSWorkspace = () => {
   };
 
   const addGoal = () => {
-    if (gpsData.goals.length >= 3) return alert("Maximum 3 Goals (Objectifs) autorisés pour rester focus !");
+    if (gpsData.goals.length >= 3) { addToast('Maximum 3 objectifs autorisés pour rester focus.', 'error'); return; }
     setGpsData({ ...gpsData, goals: [...gpsData.goals, { id: Date.now().toString(), titre: 'Nouvel Objectif Macro', priorities: [] }] });
     setIsEditing(true);
   };
@@ -57,7 +59,7 @@ const GPSWorkspace = () => {
     setGpsData(prev => {
       const goals = prev.goals.map(g => {
         if (g.id === goalId) {
-          if (g.priorities.length >= 3) { alert("Maximum 3 priorités par objectif !"); return g; }
+          if (g.priorities.length >= 3) { addToast('Maximum 3 priorités par objectif.', 'error'); return g; }
           return { ...g, priorities: [...g.priorities, { id: Date.now().toString(), titre: 'Nouvelle Priorité Clé', strategies: [] }] };
         }
         return g;
@@ -75,7 +77,7 @@ const GPSWorkspace = () => {
             ...g,
             priorities: g.priorities.map(p => {
               if (p.id === priorityId) {
-                if (p.strategies.length >= 5) { alert("Maximum 5 stratégies d'action !"); return p; }
+                if (p.strategies.length >= 5) { addToast("Maximum 5 stratégies d'action par priorité.", 'error'); return p; }
                 return { ...p, strategies: [...p.strategies, { id: Date.now().toString(), titre: 'Nouvelle Action', done: false }] };
               }
               return p;

@@ -134,14 +134,16 @@ export const initRegistry = () => {
   registry.register({
     id: 'marketing', label: 'Marketing Digital', icon: <Mail size={18} />,
     category: 'crm', roles: ['ADMIN', 'HR', 'SALES'],
-    component: Marketing, priority: 14
+    component: Marketing, priority: 14,
+    hidden: true, // [PHASE-C] MVP1: déprioritisé — réactiver post-validation campagnes
   });
 
   // --- Opérations & Logistique ---
   registry.register({
     id: 'inventory', label: 'Stocks & Logistique', icon: <Package size={18} />,
     category: 'operations', roles: ['ADMIN', 'SALES', 'FINANCE'],
-    component: LogisticsHub, priority: 20
+    component: LogisticsHub, priority: 20,
+    hidden: true, // [PHASE-C] MVP1: réactiver quand les flux de stock sont opérationnels
   });
 
   registry.register({
@@ -171,7 +173,8 @@ export const initRegistry = () => {
   registry.register({
     id: 'fleet', label: 'Flotte', icon: <Truck size={18} />,
     category: 'operations', roles: ['ADMIN', 'LOGISTICS', 'SUPER_ADMIN'],
-    component: FleetHub, priority: 25
+    component: FleetHub, priority: 25,
+    hidden: true, // [PHASE-C] Collection 'fleet' non souscrite dans BusinessContext — réactiver après wiring Firestore
   });
 
   // --- Finance & Stratégie ---
@@ -291,7 +294,8 @@ export const initRegistry = () => {
     id: 'academy', label: 'Nexus Academy', icon: <GraduationCap size={18} />,
     category: 'cockpit',
     roles: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'HR', 'FINANCE', 'SALES', 'PRODUCTION', 'STAFF'],
-    component: NexusAcademy, priority: 9
+    component: NexusAcademy, priority: 9,
+    hidden: true, // [PHASE-C] Réécriture contenu novice planifiée — réactiver après refonte des guides
   });
 
   // ══════════════════════════════════════════════════════════

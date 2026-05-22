@@ -9,12 +9,14 @@ import EnterpriseView from '../../../components/EnterpriseView';
 import { accountingSchema } from '../../../schemas/accounting.schema';
 
 import { useStore } from '../../../store';
+import { useToastStore } from '../../../store/useToastStore';
 import SmartButton from '../../../components/SmartButton';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 
 const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
   const { data } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const accounts = data?.finance?.accounts || [];
   const lines = data?.finance?.lines || [];
   const [view, setView] = useState('ledger'); // 'ledger', 'saisie', 'coe', 'balance', 'bilan_sheet', 'pnl'
@@ -76,7 +78,7 @@ const AccountingTab = ({ onOpenDetail, addAccountingEntry }) => {
 
   const handleExportBalance = () => {
     const bal = balanceGenerale();
-    if (bal.lines.length === 0) { alert('Aucune écriture à exporter.'); return; }
+    if (bal.lines.length === 0) { addToast('Aucune écriture à exporter.', 'error'); return; }
     const header_csv = ['Code', 'Libellé', 'Débit', 'Crédit', 'Solde Débit', 'Solde Crédit'].join(';');
     const rows = bal.lines.map(l =>
       [l.code, `"${l.label}"`, l.debit.toFixed(0), l.credit.toFixed(0), l.soldeDebit.toFixed(0), l.soldeCredit.toFixed(0)].join(';')

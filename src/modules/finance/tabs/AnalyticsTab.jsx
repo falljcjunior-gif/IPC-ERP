@@ -14,6 +14,7 @@ import KpiCard from '../../../components/KpiCard';
 import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
 import { IPCReportGenerator } from '../../../utils/PDFExporter';
+import { useToastStore } from '../../../store/useToastStore';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -217,7 +218,7 @@ const AnalyticsTab = ({ data, formatCurrency }) => {
                </div>
             </div>
          </div>
-         <button className="nexus-card" onClick={() => alert('Connexion bancaire : fonctionnalité disponible après configuration des APIs Open Banking dans les paramètres d\'administration.')} style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
+         <button className="nexus-card" onClick={() => useToastStore.getState().addToast('Connexion bancaire disponible après configuration des APIs Open Banking dans les paramètres d\'administration.', 'info')} style={{ marginTop: '2rem', width: '100%', padding: '0.75rem', background: 'transparent', border: '1px dashed var(--nexus-border)', color: 'var(--nexus-text-muted)', fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer' }}>
             Connecter un nouveau compte
          </button>
       </motion.div>

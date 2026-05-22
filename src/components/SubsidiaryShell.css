@@ -1,114 +1,195 @@
 /**
- * SubsidiaryShell.css — ANTIGRAVITY OS · Subsidiary Space Shell Overrides
+ * SubsidiaryShell.css — IPC ANTIGRAVITY OS · FILIALE SPACE
  *
- * Scoped to [data-space="SUBSIDIARY"] — zero bleed into HOLDING or FOUNDATION.
- * Identity: White + Vert Cyan — dynamique, productive, moderne, opérationnelle.
+ * Identity: Blanc / Cyan-Vert — Croissance · Performance · Opérations
+ * Palette:  #0284C7 (sky blue) · #22D3EE (cyan) · #FFFFFF (white)
+ * Inspired: Notion · Linear · Figma · Intercom
  *
- * Palette: pure white base, cyan-teal accent (#0891B2), operational energy
+ * Scoped to [data-space="SUBSIDIARY"] — zero bleed.
  */
 
-/* ── CSS token overrides scoped to SUBSIDIARY ────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   TOKEN OVERRIDES — SUBSIDIARY SPACE
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] {
-  --antigravity-primary:      #0891B2;
-  --antigravity-primary-glow: rgba(8,145,178,0.12);
-  --antigravity-glass:        rgba(255,255,255,0.97);
-  --antigravity-border:       rgba(8,145,178,0.12);
+  --antigravity-primary:      #0284C7;
+  --antigravity-primary-glow: rgba(2,132,199,0.14);
+  --antigravity-secondary:    #0C4A6E;
+  --antigravity-glass:        rgba(255,255,255,0.98);
+  --antigravity-border:       rgba(6,182,212,0.13);
   --antigravity-card:         #FFFFFF;
   --antigravity-bg:           #F0FDFF;
-  --antigravity-text:         #0C4A6E;
-  --antigravity-text-muted:   #6B7280;
+  --antigravity-text:         #0C1A28;
+  --antigravity-text-muted:   #3D5A72;
+  --shadow-antigravity:       0 2px 16px rgba(2,132,199,0.08);
+  --shadow-antigravity-hover: 0 8px 32px rgba(2,132,199,0.14);
 }
 
-/* ── Sidebar — white with cyan accent line ───────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   SIDEBAR — White with cyan accent
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] .antigravity-floating-sidebar {
-  background:      rgba(255,255,255,0.97) !important;
-  border:          1px solid rgba(8,145,178,0.10) !important;
-  box-shadow:      0 2px 24px rgba(8,145,178,0.08) !important;
-  backdrop-filter: blur(24px) !important;
+  background:      rgba(255,255,255,0.98) !important;
+  border:          1px solid rgba(6,182,212,0.14) !important;
+  box-shadow:
+    0 1px 0 rgba(6,182,212,0.06),
+    0 4px 32px rgba(2,132,199,0.08) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
 }
 
-/* Kill any emerald pseudo-elements on sidebar */
-[data-space="SUBSIDIARY"] .antigravity-floating-sidebar::before,
+/* Cyan gradient hairline at the top of the sidebar */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar::before {
+  content: '';
+  display: block !important;
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #22D3EE 35%, #0EA5E9 65%, transparent 100%);
+  border-radius: 2rem 2rem 0 0;
+  opacity: 0.85;
+  z-index: 1;
+}
+
 [data-space="SUBSIDIARY"] .antigravity-floating-sidebar::after {
   display: none !important;
 }
 
-/* ── Sidebar logo cube — cyan accent ─────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   SIDEBAR — Navigation items
+═══════════════════════════════════════════════════ */
+
+/* Category labels */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [style*="0.65rem"][style*="uppercase"] {
+  color: rgba(2,132,199,0.45) !important;
+  letter-spacing: 0.10em !important;
+}
+
+/* Hover — subtle cyan lift */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [style*="cursor: pointer"]:hover,
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [style*="cursor:pointer"]:hover {
+  background: rgba(6,182,212,0.06) !important;
+  color: #0284C7 !important;
+}
+
+/* Active item */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar div[style*="background: white"] {
+  background: rgba(2,132,199,0.07) !important;
+  color: #0284C7 !important;
+  box-shadow: 0 1px 6px rgba(2,132,199,0.10) !important;
+}
+
+/* Active left bar — cyan */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [style*="background: var(--antigravity-primary)"][style*="width: 4px"] {
+  background: #22D3EE !important;
+}
+
+/* Kill default emerald hover tint */
+[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [style*="rgba(16, 185, 129"] {
+  background: rgba(6,182,212,0.06) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   USER AVATAR — cyan accent
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] .antigravity-glow {
-  background:  #0891B2 !important;
-  box-shadow:  0 0 12px rgba(8,145,178,0.30) !important;
+  background: linear-gradient(135deg, #0284C7, #22D3EE) !important;
+  box-shadow: 0 2px 10px rgba(2,132,199,0.28) !important;
 }
 
-/* ── Sidebar "Antigravity OS" gradient text → cyan muted ─────────────────── */
+/* ═══════════════════════════════════════════════════
+   GRADIENT TEXT — cyan
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] .antigravity-gradient-text {
-  background:               none !important;
-  -webkit-background-clip:  unset !important;
-  background-clip:          unset !important;
-  -webkit-text-fill-color:  #9CA3AF !important;
-  color:                    #9CA3AF !important;
+  background:              linear-gradient(135deg, #0284C7, #22D3EE) !important;
+  -webkit-background-clip: text !important;
+  background-clip:         text !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
-/* ── Sidebar nav items — cyan active tint ────────────────────────────────── */
-[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="active"]::before,
-[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="accent-bar"] {
-  display: none !important;
-}
-
-/* Active nav item — cyan on white */
-[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [class*="active"],
-[data-space="SUBSIDIARY"] .antigravity-floating-sidebar [aria-current="page"] {
-  color:      #0891B2 !important;
-  background: rgba(8,145,178,0.08) !important;
-}
-
-/* ── SpaceBadge — cyan pill ──────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   SPACE BADGE — cyan pill
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] [class*="SpaceBadge"],
 [data-space="SUBSIDIARY"] [class*="space-badge"],
 [data-space="SUBSIDIARY"] [class*="space_badge"] {
-  background:   #0891B2 !important;
-  color:        #FFFFFF !important;
-  border:       1px solid rgba(8,145,178,0.20) !important;
-  font-weight:  700 !important;
-  letter-spacing: 0.08em !important;
-  box-shadow:   0 2px 8px rgba(8,145,178,0.20) !important;
+  background:     linear-gradient(135deg, #0284C7, #06B6D4) !important;
+  color:          #FFFFFF !important;
+  border:         1px solid rgba(6,182,212,0.25) !important;
+  font-weight:    700 !important;
+  letter-spacing: 0.07em !important;
+  box-shadow:     0 2px 10px rgba(2,132,199,0.22) !important;
 }
 
-/* ── Bento-card inside SUBSIDIARY — override global emerald accent bar ───── */
-[data-space="SUBSIDIARY"] .bento-card {
-  background:    #FFFFFF !important;
-  border:        1px solid rgba(8,145,178,0.08) !important;
-  box-shadow:    0 1px 3px rgba(8,145,178,0.06) !important;
-}
-[data-space="SUBSIDIARY"] .bento-card:hover {
-  background:    #F0FDFF !important;
-  border-color:  rgba(8,145,178,0.16) !important;
-  transform:     none !important;
-  box-shadow:    0 4px 16px rgba(8,145,178,0.10) !important;
-}
-[data-space="SUBSIDIARY"] .bento-card::before,
-[data-space="SUBSIDIARY"] .bento-card:hover::before {
-  opacity: 0 !important;
+/* ═══════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════ */
+[data-space="SUBSIDIARY"] header[style*="background"] {
+  background:      rgba(255,255,255,0.96) !important;
+  border:          1px solid rgba(6,182,212,0.13) !important;
+  box-shadow:
+    0 1px 0 rgba(6,182,212,0.06),
+    0 4px 20px rgba(2,132,199,0.07) !important;
+  backdrop-filter: blur(20px) !important;
 }
 
-/* ── antigravity-card in SUBSIDIARY → clean white card with cyan tint ────── */
+/* Search bar — cyan on white */
+[data-space="SUBSIDIARY"] header [style*="rgba(16, 185, 129"] {
+  background:   rgba(6,182,212,0.05) !important;
+  border-color: rgba(6,182,212,0.20) !important;
+}
+
+/* AI Antigravity button — cyan-blue */
+[data-space="SUBSIDIARY"] header button[style*="var(--antigravity-secondary)"] {
+  background: linear-gradient(135deg, #0284C7, #0369A1) !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] .antigravity-card {
   background:   #FFFFFF !important;
-  border:       1px solid rgba(8,145,178,0.08) !important;
-  box-shadow:   0 1px 3px rgba(8,145,178,0.06) !important;
+  border:       1px solid rgba(6,182,212,0.10) !important;
+  box-shadow:   0 1px 4px rgba(2,132,199,0.05) !important;
+  transition:   transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease !important;
 }
 [data-space="SUBSIDIARY"] .antigravity-card:hover {
   transform:    translateY(-2px) !important;
-  box-shadow:   0 6px 20px rgba(8,145,178,0.12) !important;
-  border-color: rgba(8,145,178,0.18) !important;
+  box-shadow:   0 8px 28px rgba(2,132,199,0.12) !important;
+  border-color: rgba(6,182,212,0.24) !important;
 }
 
-/* ── Buttons + interactive elements — cyan accent ───────────────────────── */
+[data-space="SUBSIDIARY"] .bento-card {
+  background:  #FFFFFF !important;
+  border:      1px solid rgba(6,182,212,0.09) !important;
+  box-shadow:  0 1px 4px rgba(2,132,199,0.05) !important;
+}
+[data-space="SUBSIDIARY"] .bento-card:hover {
+  background:    #F0FDFF !important;
+  border-color:  rgba(6,182,212,0.20) !important;
+  transform:     translateY(-2px) !important;
+  box-shadow:    0 6px 20px rgba(2,132,199,0.10) !important;
+}
+[data-space="SUBSIDIARY"] .bento-card::before {
+  background: linear-gradient(90deg, #22D3EE, transparent) !important;
+}
+[data-space="SUBSIDIARY"] .bento-card:hover::before {
+  opacity: 1 !important;
+}
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════ */
 [data-space="SUBSIDIARY"] .antigravity-btn-primary,
+[data-space="SUBSIDIARY"] .btn-primary,
 [data-space="SUBSIDIARY"] button[class*="primary"] {
-  background: #0891B2 !important;
+  background: linear-gradient(135deg, #0284C7, #0369A1) !important;
   color:      #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(2,132,199,0.22) !important;
 }
 [data-space="SUBSIDIARY"] .antigravity-btn-primary:hover,
+[data-space="SUBSIDIARY"] .btn-primary:hover,
 [data-space="SUBSIDIARY"] button[class*="primary"]:hover {
-  background: #0E7490 !important;
+  background: linear-gradient(135deg, #0369A1, #0C4A6E) !important;
+  box-shadow: 0 4px 16px rgba(2,132,199,0.28) !important;
 }

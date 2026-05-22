@@ -6,6 +6,7 @@ import {
   Download, Play, ClipboardList, Sparkles, TrendingUp
 } from 'lucide-react';
 import { useStore } from '../../store';
+import { useToastStore } from '../../store/useToastStore';
 import { useTranslation } from 'react-i18next';
 import { productionSchema } from '../../schemas/production.schema';
 import PermissionGuard from '../../components/PermissionGuard';
@@ -25,10 +26,11 @@ import MaintenanceTab from './tabs/MaintenanceTab';
 
 const Production = ({ onOpenDetail, appId }) => {
   const { t } = useTranslation();
-  const { 
-    data, setData, formatCurrency, userRole, shellView 
+  const {
+    data, setData, formatCurrency, userRole, shellView
   } = useStore();
   const { addRecord } = useStore();
+  const addToast = useToastStore(s => s.addToast);
   const [mainTab, setMainTab] = useState(appId === 'manufacturing' ? 'execution' : 'analytics');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('workOrders');
@@ -53,7 +55,7 @@ const Production = ({ onOpenDetail, appId }) => {
 
   const handleScan = (code) => {
     setIsScannerOpen(false);
-    alert(`Ordre de Fabrication Détecté : ${code}. Synchronisation avec l'atelier...`);
+    addToast(`Ordre de Fabrication détecté : ${code}. Synchronisation avec l'atelier…`, 'success');
   };
 
   const handleExport = async () => {
