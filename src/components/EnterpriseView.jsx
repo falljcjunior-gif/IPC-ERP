@@ -18,11 +18,12 @@ import { groupData } from '../utils/GroupingHelper';
  * A generic Odoo-style view engine driven by JSON schemas.
  * Replaces hardcoded layouts with a standardized, data-driven experience.
  */
-const EnterpriseView = ({ 
-  moduleId, 
-  modelId, 
-  schema, 
-  onOpenDetail 
+const EnterpriseView = ({
+  moduleId,
+  modelId,
+  schema,
+  onOpenDetail,
+  rowActions,      // optional: (item) => ReactNode — rendered before the chevron
 }) => {
   const { t } = useTranslation();
   const addRecord = useStore(s => s.addRecord);
@@ -160,8 +161,12 @@ const EnterpriseView = ({
             </td>
           );
         })}
-        <td style={{ padding: '1rem', textAlign: 'right' }}>
-           <ChevronRight size={16} color="var(--text-muted)" />
+        <td style={{ padding: '1rem', textAlign: 'right', whiteSpace: 'nowrap' }}
+            onClick={e => rowActions && e.stopPropagation()}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+            {rowActions && rowActions(item)}
+            <ChevronRight size={16} color="var(--text-muted)" />
+          </div>
         </td>
       </tr>
     );
