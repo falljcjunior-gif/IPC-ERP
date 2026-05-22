@@ -338,7 +338,7 @@ export const BusinessProvider = ({ children }) => {
         employees: flattenedUsers,
         hr: { ...prev.hr, employees: flattenedUsers }
       }));
-      
+
       // 3. Current User Identity Bridge
       const rawUser = users.find(u => u.id === userId); // Inclut le user courant même si soft-deleted
       if (rawUser) {
@@ -348,7 +348,7 @@ export const BusinessProvider = ({ children }) => {
         const userPerms = currentUserProfile.permissions || {};
         const primaryRole = (userPerms.roles && userPerms.roles.length > 0) ? userPerms.roles[0] : null;
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
-        
+
         if (isCreatorEmail(useStore.getState().user?.email)) {
           finalRole = 'SUPER_ADMIN';
         }

@@ -364,6 +364,15 @@ service cloud.firestore {
       allow write: if false; // Écrit uniquement par Cloud Functions (admin SDK)
     }
 
+    // ── System Alerts — flagged anomalies from scheduled audits ────────────
+    // Written exclusively by Cloud Functions (auditOrphanUsersScheduled).
+    // Read access for SUPER_ADMIN + AUDIT + SECURITY so dashboards can surface
+    // the daily orphan-user report.
+    match /system_alerts/{alertId} {
+      allow read:  if isAuthenticated() && (isSuperAdmin() || isAdmin() || hasRole('AUDIT') || hasRole('SECURITY'));
+      allow write: if false;
+    }
+
     // ── Audit (collection legacy utilisée par BusinessContext.subscribeToCollection) ──
     // [3-SPACE ISOLATION] Chaque entité ne voit que ses propres audits.
     // HOLDING voit tous les audits (supervision groupe — lecture seule).

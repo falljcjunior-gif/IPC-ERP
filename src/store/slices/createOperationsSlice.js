@@ -187,12 +187,43 @@ export const createOperationsSlice = (set, get) => ({
       return false;
     }
 
-    const entryId = Date.now().toString();
-    const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
-    const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
+    // [BANK-GRADE 2026-05-22] Ledger writes now go through a Cloud Function
+    // (postAccountingEntry) that validates balance, entity_id from Custom
+    // Claims, period lock, and writes to /accounting + audit_logs atomically.
+    // No client can fabricate or alter the ledger anymore.
+    const clientEntryId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
     try {
-      // 1. Update local state immediately (Optimistic UI)
+      const { httpsCallable } = await import('firebase/functions');
+      const { functions } = await import('../../firebase/config');
+      const postFn = httpsCallable(functions, 'postAccountingEntry');
+
+      const result = await postFn({
+        clientEntryId,
+        piece:   entry.piece || entry.num || clientEntryId,
+        date:    entry.date || new Date().toISOString().slice(0, 10),
+        libelle: entry.libelle || entry.description || '—',
+        journal: entry.journal || 'OD',
+        lines: lines.map(l => ({
+          accountId:   String(l.accountId || l.compte || ''),
+          accountCode: l.accountCode || l.code || undefined,
+          libelle:     l.libelle || undefined,
+          debit:       Number(l.debit)  || 0,
+          credit:      Number(l.credit) || 0,
+        })),
+      });
+
+      // Local cache update — Firestore subscription on /accounting will
+      // eventually overwrite this with the canonical server payload.
+      const newEntry = {
+        ...entry,
+        id: result.data?.entryId,
+        clientEntryId,
+        total: totalDebit,
+        createdAt: new Date().toISOString(),
+      };
       set(prev => {
         const data = prev.data || {};
         const finance = data.finance || { entries: [], lines: [] };
@@ -203,19 +234,10 @@ export const createOperationsSlice = (set, get) => ({
             finance: {
               ...finance,
               entries: [newEntry, ...(finance.entries || [])],
-              lines: [...newLines, ...(finance.lines || [])]
-            }
-          }
+            },
+          },
         };
       });
-
-      // 2. Persist to Firestore (Source of Truth)
-      if (get().user) {
-        await Promise.all([
-          FirestoreService.setDocument('finance', entryId, { ...newEntry, subModule: 'entries' }),
-          ...newLines.map(l => FirestoreService.setDocument('finance', l.id, { ...l, subModule: 'lines' }))
-        ]);
-      }
 
       get().logAction('Écriture Comptable', entry.libelle, 'finance');
       return true;
@@ -638,15 +660,58 @@ export const createOperationsSlice = (set, get) => ({
    if (newData.departement && !newData.dept) dotUpdate['profile.dept'] = newData.departement;
    if (dotUpdate['profile.dept'] === undefined && newData.dept) dotUpdate['profile.dept'] = newData.dept;
    if (Object.keys(dotUpdate).length > 0) {
-     FirestoreService.updateDocument('users', id, dotUpdate).catch(err =>
-       console.error('[updateRecord hr/employees] users write failed:', err.message)
-     );
+     // [P1 FIX 2026-05-22] Propagate Firestore failure to UX — previously
+     // errors were console-logged and the local state retained the new
+     // value, then the next Firestore snapshot would revert it, giving
+     // the user the impression that their save was silently undone.
+     FirestoreService.updateDocument('users', id, dotUpdate).catch(err => {
+       console.error('[updateRecord hr/employees] users write failed:', err.message);
+       // Revert local state to the previous record so UI matches Firestore.
+       set(p => {
+         const list = p.data?.[appId]?.[subModule] || [];
+         return {
+           ...p,
+           data: {
+             ...p.data,
+             [appId]: { ...p.data[appId], [subModule]: list.map(it => it.id === id ? oldRecord : it) },
+             // Mirror revert to flat employees array
+             ...(appId === 'hr' && subModule === 'employees' && Array.isArray(p.data.employees) ? {
+               employees: p.data.employees.map(it => it.id === id ? oldRecord : it),
+             } : {}),
+           },
+         };
+       });
+       get().addHint({
+         title: 'Modification non sauvegardée',
+         message: `Échec de la sauvegarde Firestore — ${err.message || 'erreur réseau'}. La valeur précédente a été restaurée.`,
+         type: 'error',
+       });
+     });
    }
  } else if (appId === 'hr' && (subModule === 'leaves' || subModule === 'expenses' || subModule === 'private_data' || subModule === 'requests')) {
    const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
-   FirestoreService.setDocument(`users/${targetUid}/hr_private`, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+   FirestoreService.setDocument(`users/${targetUid}/hr_private`, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true)
+     .catch(err => {
+       console.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
+       get().addHint({ title: 'Modification non sauvegardée', message: err.message || 'Erreur réseau', type: 'error' });
+     });
  } else {
-   FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true);
+   FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true)
+     .catch(err => {
+       console.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
+       set(p => {
+         const list = p.data?.[appId]?.[subModule] || [];
+         return {
+           ...p,
+           data: { ...p.data, [appId]: { ...p.data[appId], [subModule]: list.map(it => it.id === id ? oldRecord : it) } },
+         };
+       });
+       get().addHint({
+         title: 'Modification non sauvegardée',
+         message: `Échec de la sauvegarde — ${err.message || 'erreur réseau'}. Valeur restaurée.`,
+         type: 'error',
+       });
+     });
  }
          }
       }, 0);
