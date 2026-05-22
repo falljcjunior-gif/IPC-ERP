@@ -283,8 +283,11 @@ export const createAdminSlice = (set, get) => ({
     const uid = String(userId);
     try {
       if (auth.currentUser) {
+        // [P0 FIX 2026-05-22] Stop writing to legacy /hr collection — only /users is canonical.
+        // The /hr collection is fed by deprecated migration scripts (fix_users_from_hr.js,
+        // final_fix.js) that reverse-sync stale data into /users with role='GUEST',
+        // silently reverting role migrations and creating phantom user records.
         await FirestoreService.setDocument('users', uid, { profile: { active: activeStatus } }, true);
-        await FirestoreService.setDocument('hr', uid, { active: activeStatus }, true);
       }
       get().logAction(activeStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
       return { success: true };

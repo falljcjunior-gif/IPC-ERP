@@ -35,8 +35,12 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
     // so the Firestore rule (canReadOwnEntity(null)) blocks cross-entity reads.
     entity_id: (() => {
       if (!extraData.entity_id) {
-        logger.warn('[buildUnifiedUserPayload] entity_id absent — defaulting to null. User will be blocked by Firestore rules until entity_id is set.', { uid: user.uid });
-        return null;
+        // [P0 FIX 2026-05-22] Previously logged a warning and wrote null,
+        // which created users invisible to entity-scoped Firestore subscriptions
+        // and impossible to recover without a manual patch. Now hard-fail at the
+        // provisioning boundary so the caller is forced to pass an entity_id.
+        logger.error('[buildUnifiedUserPayload] entity_id REQUIRED — refusing to write user with null entity_id', { uid: user.uid });
+        throw new Error('entity_id is required when provisioning a user');
       }
       return extraData.entity_id;
     })(),

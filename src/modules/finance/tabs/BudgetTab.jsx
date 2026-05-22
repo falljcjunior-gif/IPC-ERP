@@ -24,8 +24,13 @@ const BudgetTab = ({ data, formatCurrency, onOpenDetail }) => {
       {/* Budget Performance Overview */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.5rem' }}>
         {budgets.map((b, i) => {
-           const burnRate = Math.round((b.realise / b.prevision) * 100);
-           const isOver = burnRate > 100;
+           // [P0 FIX] Guard against division by zero / NaN propagation —
+           // an empty/zero prevision produced Infinity → NaN > 100 = false
+           // → silently green-styled broken card with width=NaN%.
+           const prevision = Number(b.prevision) || 0;
+           const realise   = Number(b.realise)   || 0;
+           const burnRate  = prevision > 0 ? Math.round((realise / prevision) * 100) : 0;
+           const isOver    = burnRate > 100;
            return (
              <motion.div 
                key={b.id} 

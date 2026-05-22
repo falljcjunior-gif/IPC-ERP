@@ -187,9 +187,42 @@ export const createOperationsSlice = (set, get) => ({
       return false;
     }
 
+    // [P0 FIX] Resolve tenant context BEFORE constructing the entry — every
+    // accounting write MUST carry entity_id or Firestore rules silently reject it
+    // (rules:245 → canWriteOwnEntity(request.resource.data.entity_id)).
+    // Without this, the optimistic UI shows success but no ledger doc is ever persisted.
+    const { getTenantContext } = await import('../../services/TenantContext');
+    const tenantCtx = getTenantContext() || {};
+    const tenantFields = {
+      entity_id:   tenantCtx.entity_id   || null,
+      entity_type: tenantCtx.entity_type || null,
+      tenant_id:   tenantCtx.tenant_id   || null,
+      createdBy:   get().user?.id        || null,
+    };
+    if (!tenantFields.entity_id) {
+      console.error('[addAccountingEntry] entity_id missing — write will be rejected by Firestore rules');
+      get().addHint({
+        title: "Contexte d'entité manquant",
+        message: "Aucune entité active — impossible d'enregistrer l'écriture.",
+        type: 'error',
+      });
+      return false;
+    }
+
     const entryId = Date.now().toString();
-    const newEntry = { ...entry, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
-    const newLines = lines.map(l => ({ ...l, id: Math.random().toString(36).substr(2, 9), entryId, createdAt: new Date().toISOString() }));
+    // crypto.randomUUID() — collision-safe, replaces deprecated substr().
+    const safeId = () =>
+      (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const newEntry = { ...entry, ...tenantFields, id: entryId, createdAt: new Date().toISOString(), total: totalDebit };
+    const newLines = lines.map(l => ({
+      ...l,
+      ...tenantFields,
+      id: safeId(),
+      entryId,
+      createdAt: new Date().toISOString(),
+    }));
 
     try {
       // 1. Update local state immediately (Optimistic UI)
