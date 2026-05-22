@@ -183,7 +183,52 @@ export const useStore = create(
         }
         localStorage.removeItem('ipc_erp_current_user');
         localStorage.removeItem('daxcelor_data');
-        set({ user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' }, currentUser: null, userRole: 'GUEST' });
+        sessionStorage.clear();
+        // Clear Firestore IndexedDB to prevent cross-session data leaks
+        try {
+          if (window.indexedDB?.databases) {
+            const dbs = await window.indexedDB.databases();
+            for (const db of dbs) {
+              if (db.name) window.indexedDB.deleteDatabase(db.name);
+            }
+          }
+        } catch (_e) { /* non-fatal */ }
+        set({
+          user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' },
+          currentUser: null,
+          userRole: 'GUEST',
+          permissions: {},
+          activeApp: 'home',
+          dashboardPreferences: ['finance', 'crm', 'production', 'hr', 'supply'],
+          hints: [],
+          searchResults: [],
+          workflows: [],
+          notifications: [],
+          navigationIntent: null,
+          schemaOverrides: {},
+          shellView: { sidebar: true, mobile: false, profile: false, ai: false, notifs: false, chat: false },
+          data: {
+            base: {},
+            hr: { employees: [] },
+            crm: { leads: [], customers: [] },
+            sales: { orders: [], invoices: [] },
+            inventory: { products: [], movements: [] },
+            production: { orders: [], boms: [], machines: [], workOrders: [] },
+            finance: { entries: [], lines: [], invoices: [], vendor_bills: [] },
+            purchase: { orders: [] },
+            logistics: { shipments: [] },
+            legal: { contracts: [], litigations: [] },
+            signature: { requests: [] },
+            activities: [],
+            marketing: { campaigns: [] },
+            audit: { logs: [], sessions: [], certifications: [] },
+            payroll: { slips: [], taxes: [] },
+            projects: { items: [] },
+            budget: { allocations: [] },
+            planning: { events: [] },
+            cockpit: { global_metrics: {}, alerts: [] },
+          },
+        });
       },
 
       // ── Navigation ───────────────────────────────────────────────────────

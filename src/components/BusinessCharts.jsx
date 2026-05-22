@@ -81,7 +81,8 @@ export const DonutChartComp = ({ data }) => (
 );
 
 export const FunnelChartComp = ({ data }) => {
-  const maxVal = Math.max(...data.map(d => d.value));
+  if (!data?.length) return null;
+  const maxVal = Math.max(...data.map(d => d.value || 0)) || 1;
   
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>

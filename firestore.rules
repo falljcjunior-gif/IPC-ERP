@@ -769,7 +769,8 @@ service cloud.firestore {
      */
     function canViewModule(moduleId) {
       return isSuperAdmin() || isHoldingLevel() ||
-             hasModuleAction(moduleId, 'view');
+             hasModuleAction(moduleId, 'view') ||
+             hasModuleAction(moduleId, 'supervise');
     }
 
     /**

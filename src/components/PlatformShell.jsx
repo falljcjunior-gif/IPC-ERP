@@ -39,6 +39,7 @@ import './HoldingShell.css';
 import './SubsidiaryShell.css';
 import './FoundationShell.css';
 import CommandPalette from './shell/CommandPalette';
+import ErrorBoundary from './ErrorBoundary';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -112,19 +113,7 @@ const PlatformShell = ({ theme, setView }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- ULTIMATE SECURITY GUARD (FORCED ROLE SYNC) ---
-  // [BUG FIX RE-RENDER LOOP] N'utiliser que l'EMAIL dans les deps (string stable),
-  // pas l'objet `currentUser` (référence change à chaque setUser → boucle infinie
-  // ping-pong avec le syncProfile de BusinessContext).
-  const creatorEmail = currentUser?.email;
-  useEffect(() => {
-    if (isCreatorEmail(creatorEmail) && userRole !== 'SUPER_ADMIN') {
-      console.warn('[Shell] Security Guard detected role mismatch. Forcing SUPER_ADMIN for creator.');
-      useStore.getState().setUserRole('SUPER_ADMIN');
-      // Note: on ne réécrit PAS l'objet user complet — uniquement le role via setUserRole,
-      // pour préserver la stabilité de la référence user et éviter la boucle.
-    }
-  }, [creatorEmail, userRole]);
+  // Role is always sourced from Firebase Custom Claims via BusinessContext — no client-side override.
 
   //  [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
   useEffect(() => {
@@ -296,14 +285,16 @@ const PlatformShell = ({ theme, setView }) => {
     if (regModule && regModule.component) {
       const RegComponent = regModule.component;
       return (
-        <Suspense fallback={
-          <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-             <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--accent)', borderRadius: '50%', marginBottom: '1rem' }} />
-             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cerveau analytique en cours d'activation...</div>
-          </div>
-        }>
-          <RegComponent {...commonProps} />
-        </Suspense>
+        <ErrorBoundary key={activeApp} fallbackScope="module" moduleName={activeApp}>
+          <Suspense fallback={
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+               <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--accent)', borderRadius: '50%', marginBottom: '1rem' }} />
+               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cerveau analytique en cours d'activation...</div>
+            </div>
+          }>
+            <RegComponent {...commonProps} />
+          </Suspense>
+        </ErrorBoundary>
       );
     }
 
