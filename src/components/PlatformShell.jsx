@@ -38,6 +38,8 @@ import AntigravitySearch from './NexusSearch';
 import './HoldingShell.css';
 import './SubsidiaryShell.css';
 import './FoundationShell.css';
+import './shell/ERPDark.css';
+import CommandPalette from './shell/CommandPalette';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -83,6 +85,7 @@ const PlatformShell = ({ theme, setView }) => {
   });
 
   const [search, setSearch] = useState({ query: '', focused: false, nexusOpen: false });
+  const [cmdOpen, setCmdOpen] = useState(false);
   const [details, setDetails] = useState({ record: null, context: { appId: '', subModule: '' } });
   
   // Password Change State
@@ -268,6 +271,18 @@ const PlatformShell = ({ theme, setView }) => {
     return () => clearTimeout(handler);
   }, [search.query, globalSearch]);
 
+  // ── Global Ctrl+K / Cmd+K shortcut ──────────────────────────────────────────
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setCmdOpen(o => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const renderContent = () => {
     const accessLevel = getModuleAccess(currentUser?.id, activeApp);
     const commonProps = { 
@@ -314,6 +329,7 @@ const PlatformShell = ({ theme, setView }) => {
   return (
     <div
       data-space={activeSpace}
+      data-erp-theme="dark"
       style={{
         display: 'flex', height: '100vh', background: 'var(--bg)',
         '--primary': config?.theme?.primary || '#529990', '--accent': config?.theme?.accent || '#3d7870',
@@ -497,8 +513,8 @@ const PlatformShell = ({ theme, setView }) => {
               <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {shellView.sidebar ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
               </button>
-              <div 
-                onClick={() => setSearch(p => ({ ...p, nexusOpen: true }))}
+              <div
+                onClick={() => setCmdOpen(true)}
                 style={{ 
                   display: 'flex', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '1rem', padding: '0.5rem 1.25rem', gap: '0.75rem', flex: 1, maxWidth: '450px', cursor: 'pointer', border: '1px solid rgba(16, 185, 129, 0.2)', transition: 'var(--transition-antigravity)' 
                 }}
@@ -555,6 +571,16 @@ const PlatformShell = ({ theme, setView }) => {
            </div>
         </header>
 
+        <CommandPalette
+          isOpen={cmdOpen}
+          onClose={() => setCmdOpen(false)}
+          appsPool={appsPool}
+          onNavigate={(id) => setActiveApp(id)}
+          onAction={(id) => {
+            if (id === '_logout') { logout(); setView('login'); }
+            if (id === '_settings') setActiveApp('settings');
+          }}
+        />
         <AntigravitySearch isOpen={search.nexusOpen} onClose={(val) => setSearch(p => ({ ...p, nexusOpen: val }))} />
 
         <AnimatePresence mode="wait">
