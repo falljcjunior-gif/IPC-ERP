@@ -329,8 +329,7 @@ const PlatformShell = ({ theme, setView }) => {
   return (
     <div
       data-space={activeSpace}
-      data-erp-theme="dark"
-      style={{
+style={{
         display: 'flex', height: '100vh', background: 'var(--bg)',
         '--primary': config?.theme?.primary || '#529990', '--accent': config?.theme?.accent || '#3d7870',
         '--accent-hover': (config?.theme?.accent || '#3d7870') + 'dd', '--radius': config?.theme?.borderRadius || '1rem'
