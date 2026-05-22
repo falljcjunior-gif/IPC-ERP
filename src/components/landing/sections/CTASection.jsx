@@ -152,16 +152,12 @@ export default function CTASection({ onCTA }) {
       {/* Footer */}
       <footer style={{ background: 'var(--primary)', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '2rem' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', color: 'white', fontFamily: 'var(--font-heading)', fontWeight: 800, fontSize: '1rem' }}>
-            <svg width="22" height="19" viewBox="0 0 64 56" fill="none">
-              <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="white" />
-              <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(255,255,255,0.4)" />
-              <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(255,255,255,0.25)" />
-              <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(255,255,255,0.85)" />
-              <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(255,255,255,0.3)" />
-              <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(255,255,255,0.15)" />
-            </svg>
-            I.P.C Intelligence
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <img src="/logo-holding.png" alt="IPC Green Blocks Holding" style={{ height: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+            <img src="/logo-filiale.png" alt="IPC Green Blocks" style={{ height: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            <div style={{ width: 1, height: 20, background: 'rgba(255,255,255,0.2)', flexShrink: 0 }} />
+            <img src="/logo-fondation.png" alt="Fondation IPC Collect" style={{ height: 32, objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
           </div>
           <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.35)' }}>
             © {new Date().getFullYear()} IPC Green Blocks. Tous droits réservés.
