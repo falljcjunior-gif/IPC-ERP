@@ -275,7 +275,7 @@ export class WebRTCService {
                 logger.info(`[WebRTC] Stats → ${targetId} [${r.kind}] tx:${r.bytesSent}B`);
               }
             });
-          } catch (_) {}
+          } catch (_err) { /* getStats non disponible sur cette PC */ }
         }, 10000);
         this.statsIntervals.set(targetId, interval);
       } else if (pc.connectionState === 'failed') {
@@ -361,7 +361,7 @@ export class WebRTCService {
                 logger.info(`[WebRTC] Stats → ${senderId} [${r.kind}] tx:${r.bytesSent}B`);
               }
             });
-          } catch (_) {}
+          } catch (_err) { /* getStats non disponible sur cette PC */ }
         }, 10000);
         this.statsIntervals.set(senderId, interval);
       } else if (pc.connectionState === 'failed') {
