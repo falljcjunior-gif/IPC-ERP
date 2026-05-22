@@ -98,8 +98,46 @@ class ErrorBoundary extends React.Component {
 
   render() {
     const { hasError, error, isChunkError, autoReloading } = this.state;
+    const { fallbackScope, moduleName } = this.props;
 
     if (!hasError) return this.props.children;
+
+    // Module-scoped boundary: show contained error card, not full-page overlay
+    if (fallbackScope === 'module' && !autoReloading) {
+      return (
+        <div style={{
+          height: '100%', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: '1.25rem', padding: '3rem', minHeight: '300px',
+        }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: '14px',
+            background: 'rgba(239,68,68,0.08)',
+            border: '1px solid rgba(239,68,68,0.2)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.5rem',
+          }}>⚠</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.4rem' }}>
+              {moduleName ? `Le module "${moduleName}" a rencontré une erreur` : 'Erreur de module'}
+            </div>
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              Les autres modules restent disponibles.
+            </div>
+          </div>
+          <button
+            onClick={this.handleRetry}
+            style={{
+              padding: '0.5rem 1.25rem', borderRadius: '0.625rem',
+              background: 'var(--accent)', color: 'white',
+              border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+            }}
+          >
+            Réessayer
+          </button>
+        </div>
+      );
+    }
 
     // Auto-reload screen
     if (autoReloading) {

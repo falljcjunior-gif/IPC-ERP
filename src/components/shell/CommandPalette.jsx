@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import './CommandPalette.css';
 import { Search, ArrowRight, LayoutDashboard, Settings, LogOut, ChevronRight } from 'lucide-react';
 
 const EASE = [0.16, 1, 0.3, 1];

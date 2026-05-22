@@ -51,8 +51,8 @@ exports.setUserRole = onCall({
     throw new HttpsError('unauthenticated', 'Authentification requise');
   }
 
-  // [AUDIT FIX] Rate limiting — prevent RBAC abuse
-  await checkCallRate(db, request.auth.uid, 'setUserRole', { maxRequests: 15, windowMs: 60_000 });
+  // Rate limiting — max 3 role changes per minute per caller
+  await checkCallRate(db, request.auth.uid, 'setUserRole', { maxRequests: 3, windowMs: 60_000 });
 
   // 2. Seul SUPER_ADMIN peut modifier les rôles
   const callerRole = request.auth.token?.role;
