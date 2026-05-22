@@ -59,12 +59,15 @@ service cloud.firestore {
     // ── Users & HR (Unified Model 2.0) ──────────────────────────────────────
     match /users/{userId} {
       // [3-SPACE ISOLATION] Lecture scopée à l'entité courante.
-      // Exceptions : propre profil, Holding (vue groupe), Super Admin.
+      // Exceptions : propre profil, Holding (vue groupe), Super Admin,
+      // et les profils de niveau Holding (entity_type==HOLDING) visibles
+      // par toutes les entités — ce sont les managers groupe.
       allow read: if isAuthenticated() && (
         request.auth.uid == userId ||
         isSuperAdmin() ||
         isHoldingLevel() ||
-        canReadOwnEntity(resource.data.get('entity_id', null))
+        canReadOwnEntity(resource.data.get('entity_id', null)) ||
+        resource.data.get('entity_type', '') == 'HOLDING'
       );
       allow create: if isAuthenticated() && (isAdmin() || isCreatorEmail());
 

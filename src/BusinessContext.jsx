@@ -305,39 +305,52 @@ export const BusinessProvider = ({ children }) => {
     // NOTE: includeDeleted:true car Firestore n'indexe pas les valeurs null —
     // where('_deletedAt','==',null) retournerait 0 résultats même si le champ est null.
     // On filtre côté client pour exclure les soft-deleted (ceux avec un Timestamp non-null).
-    let _lastSelfPermsHash = null;
-    const unsubUsers = FirestoreService.subscribeToCollection('users', { includeDeleted: true }, (users) => {
-      // Exclure les utilisateurs réellement supprimés (soft-delete = _deletedAt est un Timestamp)
-      const activeUsers = users.filter(u => !u._deletedAt || u._deletedAt === null);
+    //
+    // [HR FIX] Les SUPER_ADMIN / rôles Holding ont entity_id='ipc_holding'.
+    // Une session SUBSIDIARY ne les verrait pas avec le filtre entity_id habituel.
+    // Solution : 2e subscription ciblée sur entity_type==HOLDING, mergée avec la
+    // première. La règle Firestore autorise désormais la lecture de ces docs par
+    // tous les utilisateurs authentifiés.
+    let _entityUsersCache = [];       // users de l'entité courante
+    let _holdingUsersCache = [];      // users Holding (SUPER_ADMIN, managers groupe)
 
-      // 1. Map all permissions for Admin/HR modules
+    const mergeAndPublish = (entityUsers, holdingUsers, selfHashRef) => {
+      // Déduplique par id — l'entité courante est prioritaire (données plus fraîches)
+      const map = new Map();
+      holdingUsers.forEach(u => map.set(u.id, u));
+      entityUsers.forEach(u => map.set(u.id, u));
+      const merged = Array.from(map.values());
+
       const permissionsMap = {};
-      activeUsers.forEach(u => {
-        if (u.permissions) permissionsMap[u.id] = u.permissions;
-      });
+      merged.forEach(u => { if (u.permissions) permissionsMap[u.id] = u.permissions; });
       useStore.getState().setPermissions(permissionsMap);
 
-      // 1b. [SYNC FIX] Si les permissions/rôle du user courant viennent de changer,
-      // forcer un refresh du token pour que les Custom Claims côté client soient à jour
-      // et que les règles Firestore voient le nouveau rôle.
+      // [SYNC FIX] détecte un changement de rôle/permissions du user courant
       const selfPerms = permissionsMap[userId];
-      const selfRole = activeUsers.find(u => u.id === userId)?.role || null;
+      const selfRole = merged.find(u => u.id === userId)?.role || null;
       const hash = JSON.stringify({ p: selfPerms, r: selfRole });
-      if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
+      if (selfHashRef.last !== null && selfHashRef.last !== hash && auth.currentUser) {
         UserService.forceClaimRefresh(auth.currentUser).catch(() => {});
       }
-      _lastSelfPermsHash = hash;
+      selfHashRef.last = hash;
 
-      // 2. Sync to data.employees for unified access (Flattened for easier UI consumption)
-      const flattenedUsers = activeUsers.map(u => ({
-        ...u,
-        ...(u.profile || {})
-      }));
+      const flattenedUsers = merged.map(u => ({ ...u, ...(u.profile || {}) }));
       useStore.getState().setData(prev => ({
         ...prev,
         employees: flattenedUsers,
         hr: { ...prev.hr, employees: flattenedUsers }
       }));
+      return merged;
+    };
+
+    let _lastSelfPermsHash = null;
+    const selfHashRef = { last: null };
+
+    const unsubUsers = FirestoreService.subscribeToCollection('users', { includeDeleted: true }, (users) => {
+      // Exclure les utilisateurs réellement supprimés (soft-delete = _deletedAt est un Timestamp)
+      const activeUsers = users.filter(u => !u._deletedAt || u._deletedAt === null);
+      _entityUsersCache = activeUsers;
+      const merged = mergeAndPublish(_entityUsersCache, _holdingUsersCache, selfHashRef);
       
       // 3. Current User Identity Bridge
       const rawUser = users.find(u => u.id === userId); // Inclut le user courant même si soft-deleted
@@ -348,7 +361,7 @@ export const BusinessProvider = ({ children }) => {
         const userPerms = currentUserProfile.permissions || {};
         const primaryRole = (userPerms.roles && userPerms.roles.length > 0) ? userPerms.roles[0] : null;
         let finalRole = currentUserProfile.role || primaryRole || 'STAFF';
-        
+
         if (isCreatorEmail(useStore.getState().user?.email)) {
           finalRole = 'SUPER_ADMIN';
         }
@@ -358,6 +371,25 @@ export const BusinessProvider = ({ children }) => {
         }
       }
     });
+
+    // D2. [HR FIX] Subscription secondaire : users de niveau HOLDING (SUPER_ADMIN,
+    //     managers groupe). Visible par toutes les entités — règle Firestore mise à jour.
+    //     Skip si l'utilisateur courant est déjà en session HOLDING (redondant).
+    let unsubHoldingUsers = () => {};
+    if (!isHoldingSession()) {
+      unsubHoldingUsers = FirestoreService.subscribeToCollection(
+        'users',
+        {
+          includeDeleted: false,
+          skipEntityFilter: true,
+          filters: [['entity_type', '==', 'HOLDING']],
+        },
+        (holdingUsers) => {
+          _holdingUsersCache = holdingUsers;
+          mergeAndPublish(_entityUsersCache, _holdingUsersCache, selfHashRef);
+        }
+      );
+    }
 
     // E. Call Listener (Decoupled Service)
     CallListener.init(userId);
@@ -458,6 +490,7 @@ export const BusinessProvider = ({ children }) => {
       unsubWorkflows();
       unsubNotify();
       unsubUsers();
+      unsubHoldingUsers();
       if (unsubSettings) unsubSettings();
       CallListener.stop();
     };
