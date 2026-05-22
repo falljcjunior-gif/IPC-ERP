@@ -15,7 +15,8 @@ export const adminSchema = {
         role: { 
           label: 'Rôle Système', 
           type: 'selection', 
-          options: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF', 'GUEST'],
+          // [ROLE SIMPLIFICATION 2026-05-22] GUEST removed from selectable roles.
+          options: ['SUPER_ADMIN', 'ADMIN', 'MANAGER', 'STAFF', 'EMPLOYEE'],
           required: true,
           search: true
         },

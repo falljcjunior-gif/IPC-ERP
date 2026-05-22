@@ -17,7 +17,8 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
   const email = user.email;
   const displayName = user.displayName || extraData.nom || email?.split('@')[0] || 'Utilisateur';
   
-  const role = extraData.role || 'GUEST';
+  // [ROLE SIMPLIFICATION 2026-05-22] Default to EMPLOYEE — GUEST role retired.
+  const role = extraData.role || 'EMPLOYEE';
   
   return {
     _createdAt: now,
@@ -432,7 +433,8 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
     // If the auth user already has meaningful claims (set by provisioning script
     // or bootstrapSuperAdmin before this trigger fires), never overwrite them.
     const existingClaims = user.customClaims || {};
-    const hasProvisionedClaims = existingClaims.role && existingClaims.role !== 'GUEST';
+    // GUEST treated as unprovisioned (legacy) — EMPLOYEE is the new baseline.
+    const hasProvisionedClaims = existingClaims.role && existingClaims.role !== 'GUEST' && existingClaims.role !== 'EMPLOYEE';
 
     if (!docSnap.exists) {
       const userData = buildUnifiedUserPayload(user, now);

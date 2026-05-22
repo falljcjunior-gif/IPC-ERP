@@ -27,6 +27,7 @@ exports.backfillGreenBlock = adminModule.backfillGreenBlock;
 const rbac = require('./modules/rbac');
 exports.setUserRole = rbac.setUserRole;
 exports.bootstrapSuperAdmin = rbac.bootstrapSuperAdmin;
+exports.migrateGuestToEmployee = rbac.migrateGuestToEmployee;
 
 // 2c. reCAPTCHA Enterprise — Vérification anti-bot
 const recaptcha = require('./modules/recaptcha');

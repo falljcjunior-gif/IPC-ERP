@@ -501,7 +501,11 @@ export const ROLE_DEFAULT_PERMISSIONS = {
   LEGAL:       makePerms({ legal: FULL, signature: FULL, dms: FULL }),
   AUDIT:       makePerms({ __all__: READ_ONLY }),
   STAFF:       makePerms({ connect: STANDARD, dms: [ACTIONS.VIEW], missions: STANDARD, academy: READ_ONLY, helpdesk: STANDARD }),
-  GUEST:       makePerms({ academy: READ_ONLY }),
+  // [ROLE SIMPLIFICATION 2026-05-22] GUEST removed from public role surface — only ADMIN & EMPLOYEE remain.
+  // EMPLOYEE = base authenticated user (Connect, DMS read, Missions, Helpdesk, Academy read).
+  EMPLOYEE:    makePerms({ connect: STANDARD, dms: [ACTIONS.VIEW], missions: STANDARD, academy: READ_ONLY, helpdesk: STANDARD }),
+  // GUEST kept as alias for backward compat with legacy users — maps to EMPLOYEE permissions.
+  GUEST:       makePerms({ connect: STANDARD, dms: [ACTIONS.VIEW], missions: STANDARD, academy: READ_ONLY, helpdesk: STANDARD }),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

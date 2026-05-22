@@ -246,14 +246,15 @@ export const createAdminSlice = (set, get) => ({
         email: userData.email,
         password: userData.password,
         nom: userData.nom,
-        role: userData.role || 'GUEST',
+        // [ROLE SIMPLIFICATION] Default to EMPLOYEE (GUEST role retired)
+        role: userData.role || 'EMPLOYEE',
         poste: userData.poste,
         dept: userData.dept,
         salaire: userData.salaire,
         contratType: userData.contratType,
         date_entree: userData.date_entree,
         permissions: userData.permissions || {
-          roles: [userData.role || 'GUEST'],
+          roles: [userData.role || 'EMPLOYEE'],
           allowedModules: ['home'],
           moduleAccess: { home: 'write' }
         }
