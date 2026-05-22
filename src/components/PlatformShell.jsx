@@ -38,7 +38,6 @@ import AntigravitySearch from './NexusSearch';
 import './HoldingShell.css';
 import './SubsidiaryShell.css';
 import './FoundationShell.css';
-import './shell/ERPDark.css';
 import CommandPalette from './shell/CommandPalette';
 
 /* ══════════════════════════════════════════════════════════════════════════
