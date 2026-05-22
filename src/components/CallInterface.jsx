@@ -333,14 +333,16 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
 
       const playVideo = async () => {
         try {
+          // Pattern autoplay : commencer muet (toujours autorisé), puis démueter immédiatement.
+          // Cela contourne la restriction autoplay-with-sound du navigateur sans perdre l'audio.
+          videoEl.muted = true;
           await videoEl.play();
-          logger.info(`[CallInterface] Remote video playing for ${id}`);
+          videoEl.muted = false; // Démueter dès que play() a démarré → audio passe
+          logger.info(`[CallInterface] ✅ Audio/vidéo distant actif pour ${id}`);
         } catch (e) {
-          if (e.name === 'NotAllowedError') {
-            logger.warn(`[CallInterface] Autoplay bloqué pour ${id} — interaction utilisateur requise`, e);
-          } else {
-            logger.warn(`[CallInterface] Play échoué pour ${id}:`, e);
-          }
+          logger.warn(`[CallInterface] Play échoué pour ${id}:`, e);
+          // Dernier recours : laisser l'élément muted visible, l'utilisateur peut cliquer
+          videoEl.muted = false;
         }
       };
 

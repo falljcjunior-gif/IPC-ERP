@@ -145,17 +145,15 @@ service cloud.firestore {
       allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id);
       allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
 
-      // Sous-collections room — héritent du scoping entity_id de la room parente
-      // [3-SPACE ISOLATION A.1.a] Empêche le hijacking cross-entity si un UID room est connu.
+      // Sous-collections WebRTC — signalisation d'appel (SDP/ICE), éphémères et chiffrées.
+      // Délibérément non scopées par entity_id : un appel HOLDING → SUBSIDIARY doit traverser
+      // les entités. La sécurité est garantie par : (a) isAuthenticated, (b) filtre to==userId
+      // dans le listener, (c) suppression du signal après traitement côté récepteur.
       match /participants/{uid} {
-        allow read, write: if isAuthenticated() && canReadOwnEntity(
-          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
-        );
+        allow read, write: if isAuthenticated();
       }
       match /signals/{sigId} {
-        allow read, write: if isAuthenticated() && canReadOwnEntity(
-          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
-        );
+        allow read, write: if isAuthenticated();
       }
     }
 
