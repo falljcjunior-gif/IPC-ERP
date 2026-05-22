@@ -582,13 +582,22 @@ export const createOperationsSlice = (set, get) => ({
 
       const changes = Object.keys(newData).filter(key => newData[key] !== oldRecord[key]).map(key => `${key}: ${oldRecord[key] || 'vide'} → ${newData[key]}`).join(', ');
       const updatedList = data[appId][subModule].map(item => item.id === id ? { ...item, ...newData } : item);
-      let nextState = { 
-        ...prev, 
+      let nextState = {
+        ...prev,
         data: {
           ...data,
           [appId]: { ...data[appId], [subModule]: updatedList }
         }
       };
+      // [HR SSOT FIX] Mirror HR employee updates to the flat `data.employees` array
+      // so legacy consumers (Onboarding, HumanCapitalTab, PeopleTab) see the change
+      // immediately — preventing the apparent "revert to old value" UX bug while
+      // Firestore subscription catches up.
+      if (appId === 'hr' && subModule === 'employees' && Array.isArray(data.employees)) {
+        nextState.data.employees = data.employees.map(item =>
+          item.id === id ? { ...item, ...newData } : item
+        );
+      }
       const record = updatedList.find(o => o.id === id);
       setTimeout(async () => {
          get().logAction(`Modification ${subModule}`, changes ? `Changements sur ${record.num || id}: ${changes}` : `Mise à jour ${record.num || id}`, appId, id);

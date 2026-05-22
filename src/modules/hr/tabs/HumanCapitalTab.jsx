@@ -23,7 +23,8 @@ const item = {
 };
 
 const HumanCapitalTab = ({ data, onOpenDetail, searchQuery = '' }) => {
-  const employees = data?.employees || [];
+  // [SSOT] Single source of truth — canonical nested path with legacy fallback.
+  const employees = data?.hr?.employees || data?.employees || [];
   
   const filteredEmployees = useMemo(() => {
     if (!searchQuery) return employees;

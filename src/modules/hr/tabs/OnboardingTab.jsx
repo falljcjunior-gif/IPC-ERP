@@ -405,7 +405,11 @@ const OnboardingTab = ({ accessLevel }) => {
     modules: { home: { access: 'write', subTabs: {} } }
   });
 
-  const allEmployees = useMemo(() => data?.employees || [], [data?.employees]);
+  // [SSOT] Single source of truth for HR employees — both legacy flat and canonical nested paths.
+  const allEmployees = useMemo(
+    () => data?.hr?.employees || data?.employees || [],
+    [data?.hr?.employees, data?.employees]
+  );
   
   const filteredEmployees = useMemo(() => {
     if (!searchQuery.trim()) return allEmployees;

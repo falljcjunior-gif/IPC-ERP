@@ -17,7 +17,9 @@ const ENTERPRISE_ROLES = [
   'COUNTRY_HR', 'COUNTRY_FINANCE', 'COUNTRY_OPERATIONS', 'COUNTRY_AUDITOR',
   'ADMIN', 'DIRECTOR', 'MANAGER', 'HR_MANAGER', 'HR',
   'FINANCE', 'SALES', 'CRM', 'PRODUCTION', 'LOGISTICS', 'LEGAL', 'AUDIT',
-  'STAFF', 'GUEST',
+  // [ROLE SIMPLIFICATION 2026-05-22] EMPLOYEE is the new baseline role.
+  // GUEST kept in enum for backward compat with legacy users only — never assigned to new users.
+  'STAFF', 'EMPLOYEE', 'GUEST',
 ];
 
 const SetRoleSchema = z.object({
@@ -173,4 +175,83 @@ exports.bootstrapSuperAdmin = onCall({
     logger.error('[Bootstrap] Erreur:', err);
     throw new HttpsError('internal', err.message);
   }
+});
+
+/**
+ * MIGRATION: Convert all legacy `GUEST` users to `EMPLOYEE`.
+ * One-off callable triggered manually by a SUPER_ADMIN after the 2026-05-22
+ * role simplification (only ADMIN and EMPLOYEE remain in the public surface).
+ *
+ * Usage (Firebase Console / shell):
+ *   migrateGuestToEmployee({})
+ *
+ * Operation:
+ *   1. Lists all users where role == 'GUEST'
+ *   2. Updates Firestore `users/{uid}.role` → 'EMPLOYEE'
+ *   3. Updates Custom Claims `role` → 'EMPLOYEE' so Firestore rules see the new role
+ *   4. Revokes refresh tokens to force re-login with fresh claims
+ *   5. Writes an audit log per migrated user
+ */
+exports.migrateGuestToEmployee = onCall({
+  region: 'europe-west1',
+  enforceAppCheck: false, // one-off migration; admin-gated
+  maxInstances: 1,
+}, async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentification requise.');
+  }
+  const callerRole = request.auth.token?.role;
+  if (callerRole !== 'SUPER_ADMIN') {
+    throw new HttpsError('permission-denied', 'Seul un SUPER_ADMIN peut exécuter cette migration.');
+  }
+
+  const guestUsers = await db.collection('users').where('role', '==', 'GUEST').get();
+  if (guestUsers.empty) {
+    return { migrated: 0, message: 'Aucun utilisateur GUEST trouvé.' };
+  }
+
+  let migrated = 0;
+  const errors = [];
+  for (const docSnap of guestUsers.docs) {
+    const uid = docSnap.id;
+    try {
+      // 1. Firestore role + permissions
+      const data = docSnap.data() || {};
+      const prevPerms = data.permissions || {};
+      const nextPerms = {
+        ...prevPerms,
+        roles: ['EMPLOYEE'],
+      };
+      await docSnap.ref.update({
+        role: 'EMPLOYEE',
+        permissions: nextPerms,
+        _migratedFromGuestAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // 2. Custom Claims
+      const existingClaims = (await admin.auth().getUser(uid).catch(() => null))?.customClaims || {};
+      await admin.auth().setCustomUserClaims(uid, { ...existingClaims, role: 'EMPLOYEE' });
+
+      // 3. Revoke tokens to force fresh claim load on next request
+      await admin.auth().revokeRefreshTokens(uid).catch(() => {});
+
+      // 4. Audit
+      await db.collection('audit_logs').add({
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        collection: 'users',
+        docId: uid,
+        operation: 'MIGRATE_GUEST_TO_EMPLOYEE',
+        changedBy: request.auth.uid,
+        summary: `Migration automatique: GUEST → EMPLOYEE`,
+      });
+
+      migrated++;
+    } catch (err) {
+      logger.error(`[migrateGuestToEmployee] Échec ${uid}:`, err.message);
+      errors.push({ uid, error: err.message });
+    }
+  }
+
+  logger.info(`[migrateGuestToEmployee] ${migrated} utilisateurs migrés, ${errors.length} échecs`);
+  return { migrated, errors, total: guestUsers.size };
 });
