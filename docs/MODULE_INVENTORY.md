@@ -1,6 +1,6 @@
 # IPC ERP — Module Inventory
 
-Last updated: 2026-05-18 (post Phase A→C remediation)
+Last updated: 2026-05-21 (post Phase A→E remediation)
 
 ## Status Legend
 
@@ -23,7 +23,7 @@ Last updated: 2026-05-18 (post Phase A→C remediation)
 | `foundation` | IPC Foundation | ✅ REAL | FOUNDATION only · 4 live Firestore subscriptions |
 | `missions` | Portail des Missions | ✅ REAL | 16 Firestore calls · entity_id isolation fixed (Phase A) |
 | `connect` | Connect Plus | ✅ REAL | Rooms, messaging · subcollection isolation fixed (Phase A) |
-| `academy` | Nexus Academy | 📋 STATIC | 32 user guides · search functional · no Firestore needed |
+| `academy` | Nexus Academy | 🔒 HIDDEN | Phase C: novice content rewrite planned — re-enable after new guides |
 
 ---
 
@@ -33,7 +33,7 @@ Last updated: 2026-05-18 (post Phase A→C remediation)
 |---|---|---|---|
 | `crm` | CRM & Ventes | ✅ REAL | Kanban pipeline · reads from `data.crm.deals` |
 | `sales` | Ventes & Devis | ✅ REAL | Orders + quotes · reads from `data.sales.orders` |
-| `marketing` | Marketing Digital | ✅ REAL | Campaigns, emailings, events · reads from store |
+| `marketing` | Marketing Digital | 🔒 HIDDEN | Phase C: campaign workflow not validated for MVP1 — re-enable post sign-off |
 
 ---
 
@@ -41,12 +41,12 @@ Last updated: 2026-05-18 (post Phase A→C remediation)
 
 | Module ID | Label | Status | Notes |
 |---|---|---|---|
-| `inventory` | Stocks & Logistique | ✅ REAL | Inventory + purchases · reads from store |
+| `inventory` | Stocks & Logistique | 🔒 HIDDEN | Phase C: stock flows not validated for MVP1 — re-enable after warehouse ops |
 | `shipping` | Expéditions | ✅ REAL | Reads from store |
 | `production` | Production Avancée | ✅ REAL | Work orders · OEE computed from real data |
 | `quality` | Qualité & HSE | ✅ REAL | Reads from store |
 | `projects` | Projets | ✅ REAL | Reads from store |
-| `fleet` | Flotte | ✅ REAL | Vehicles · reads from store |
+| `fleet` | Flotte | 🔒 HIDDEN | Phase C: `fleet` collection not subscribed in BusinessContext → add to collections_to_sync to re-enable |
 
 ---
 
@@ -114,5 +114,9 @@ Last updated: 2026-05-18 (post Phase A→C remediation)
 |---|---|---|
 | Run `backfillHrPrivateEntityId` callable | SUPER_ADMIN | Before first HR login post-deploy |
 | Re-enable `signature` module after e-sign integration | Dev team | Future sprint |
+| Re-enable `academy` after novice guide rewrite | Dev team | Future sprint |
+| Re-enable `marketing` after campaign workflow sign-off | Dev team | Future sprint |
+| Re-enable `inventory` after warehouse ops validation | Dev team | Future sprint |
+| Re-enable `fleet` — add `fleet` to `collections_to_sync` in BusinessContext | Dev team | Future sprint |
 | Set env vars for E2E test accounts | DevOps | Before CI/CD pipeline |
 | Wire Playwright tests into CI pipeline | DevOps | After test accounts created |

@@ -12,17 +12,18 @@ import { test, expect } from '@playwright/test';
 import { login, logout, CREDS, skipIfNoCreds } from './helpers/auth.js';
 
 // All modules that should open without error for SUPER_ADMIN
+// Phase C hidden modules (academy, inventory, marketing, fleet, signature) are excluded here
+// and verified in the "hidden modules" suite below.
 const FUNCTIONAL_MODULES = [
   { label: 'Espace Personnel',        heading: /espace personnel|bonjour|dashboard/i },
   { label: 'Missions',                heading: /missions|portail/i },
   { label: 'Connect',                 heading: /connect/i },
   { label: 'CRM',                     heading: /crm|ventes|pipeline/i },
   { label: 'Ventes & Devis',          heading: /ventes|devis|sales/i },
-  { label: 'Marketing',               heading: /marketing/i },
-  { label: 'Stocks',                  heading: /stocks|logistique|inventaire/i },
   { label: 'Production',              heading: /production/i },
   { label: 'Finance',                 heading: /finance|comptabilité/i },
   { label: 'Juridique',               heading: /juridique|legal/i },
+  { label: 'Business Intelligence',   heading: /intelligence|decision core|bi/i },
   { label: 'Ressources Humaines',     heading: /ressources humaines|rh|human/i },
   { label: 'People & Culture',        heading: /people|culture|talent/i },
   { label: 'Planning',                heading: /planning|événements/i },
@@ -30,8 +31,16 @@ const FUNCTIONAL_MODULES = [
   { label: 'Documents Cloud',         heading: /documents|dms/i },
   { label: 'Administration',          heading: /administration|contrôle/i },
   { label: 'IT Operations',           heading: /it operations|operational/i },
-  { label: 'Nexus Academy',           heading: /academy|nexus academy/i },
   { label: 'Contrats',                heading: /contrats|abonnements/i },
+];
+
+// Modules hidden by Phase C (should NOT appear in sidebar for any role)
+const PHASE_C_HIDDEN_MODULES = [
+  'Nexus Academy',
+  'Stocks & Logistique',
+  'Marketing Digital',
+  'Flotte',
+  'Signature Électronique',
 ];
 
 test.describe('Smoke — all functional modules open without crash', () => {
@@ -83,15 +92,20 @@ test.describe('Smoke — all functional modules open without crash', () => {
   }
 });
 
-test.describe('Smoke — Signature module is correctly hidden', () => {
-  test('Signature Électronique does not appear in sidebar', async ({ page }) => {
+test.describe('Smoke — Phase C hidden modules do not appear in sidebar', () => {
+  test.beforeEach(async ({ page }) => {
     skipIfNoCreds(test, 'superAdmin');
     await login(page, CREDS.superAdmin.email, CREDS.superAdmin.password);
-    await expect(
-      page.locator('aside').getByText(/signature électronique/i)
-    ).not.toBeVisible({ timeout: 4000 }).catch(() => {});
-    await logout(page);
   });
+  test.afterEach(async ({ page }) => { await logout(page); });
+
+  for (const label of PHASE_C_HIDDEN_MODULES) {
+    test(`"${label}" is NOT visible in sidebar (hidden: true)`, async ({ page }) => {
+      await expect(
+        page.locator('aside').getByText(new RegExp(label, 'i')).first()
+      ).not.toBeVisible({ timeout: 4000 }).catch(() => {});
+    });
+  }
 });
 
 test.describe('Smoke — BI module shows live values, not hardcoded ones', () => {
