@@ -15,6 +15,7 @@ import TreasuryTab from './tabs/TreasuryTab';
 import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
 import { IPCReportGenerator } from '../../utils/PDFExporter';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
+import { sumMoney, safePercent, isPaid, currentQuarterLabel, fiscalYearLabel } from '../../utils/finance';
 import '../../components/GlobalDashboard.css';
 
 const ALL_TABS = [
@@ -34,19 +35,54 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
   const isBudgetContext = appId === 'budget';
   const tabs = ALL_TABS.filter(t => !t.permission || hasAccess(PERMISSIONS[t.permission]));
 
+  // [P2 FIX] Health index — weighted recouvrement (60%) + balance entries (40%).
+  const healthIndex = React.useMemo(() => {
+    const invoices = data?.finance?.invoices || data?.sales?.invoices || [];
+    if (invoices.length === 0) return null;
+    const paid   = invoices.filter(isPaid).length;
+    const recPct = safePercent(paid, invoices.length);
+    const balancedShare = (data?.finance?.entries || []).filter(e => e.balanced !== false).length;
+    const entryHealth = safePercent(balancedShare, (data?.finance?.entries || []).length);
+    return Math.round(recPct * 0.6 + entryHealth * 0.4);
+  }, [data?.finance?.invoices, data?.finance?.entries, data?.sales?.invoices]);
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      // [P1 FIX] Compute real values from the store instead of hardcoded fiction.
+      const invoices  = data?.finance?.invoices    || data?.sales?.invoices || [];
+      const entries   = data?.finance?.entries     || [];
+      const budgets   = data?.budget?.allocations  || [];
+      const shipments = data?.logistics?.shipments || [];
+
+      const paidInvoices   = invoices.filter(isPaid);
+      const totalRevenu    = sumMoney(paidInvoices, i => i.montant || i.total || 0);
+      const totalOutstanding = sumMoney(invoices.filter(i => !isPaid(i)), i => i.montant || i.total || 0);
+      const recouvrementPct  = safePercent(paidInvoices.length, invoices.length);
+      const totalBudget    = sumMoney(budgets, b => b.prevision || 0);
+      const totalRealise   = sumMoney(budgets, b => b.realise   || 0);
+      const efficacite     = safePercent(totalRealise, totalBudget);
+      const livraisons     = shipments.filter(s => (s.statut || '').toLowerCase().includes('livr')).length;
+
       await IPCReportGenerator.generateFinancialStatement({
         title: "IPC Financial Intelligence Statement",
-        summary: "Analyse institutionnelle consolidée des flux de trésorerie.",
-        metrics: [{ label: 'Période', value: 'Q2 2024' }, { label: 'Liquidité', value: 'Optimal' }],
+        summary: `Analyse institutionnelle consolidée — ${fiscalYearLabel()}.`,
+        metrics: [
+          { label: 'Période',           value: currentQuarterLabel() },
+          { label: 'CA encaissé',       value: formatCurrency(totalRevenu, true) },
+          { label: 'En attente',        value: formatCurrency(totalOutstanding, true) },
+          { label: 'Recouvrement',      value: `${recouvrementPct}%` },
+          { label: 'Écritures saisies', value: String(entries.length) },
+        ],
         rows: [
-          { module: 'Trésorerie', description: 'Flux de trésorerie Core', status: 'Stable' },
-          { module: 'Facturation', description: 'Performance du recouvrement', status: 'Optimal' },
-          { module: 'Budget', description: 'Efficacité de l\'allocation', status: '82%' }
-        ]
+          { module: 'Trésorerie',  description: `Flux net consolidé — ${entries.length} écritures sur la période`, status: totalRevenu > 0 ? 'Actif' : 'Inactif' },
+          { module: 'Facturation', description: `${paidInvoices.length}/${invoices.length} factures soldées`,      status: `${recouvrementPct}%` },
+          { module: 'Budget',      description: `${budgets.length} enveloppes — ${formatCurrency(totalRealise, true)} consommé sur ${formatCurrency(totalBudget, true)}`, status: `${efficacite}%` },
+          { module: 'Logistique',  description: `${livraisons} livraisons confirmées`,                              status: livraisons > 0 ? 'OK' : '—' },
+        ],
       });
+    } catch (err) {
+      console.error('[FinanceExport] failed:', err);
     } finally {
       setIsExporting(false);
     }
@@ -72,7 +108,9 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
             <ShieldCheck size={24} color="#10B981" />
             <div>
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase' }}>Indice Santé</div>
-              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: '#111827' }}>—</div>
+              <div style={{ fontWeight: 800, fontSize: '1.5rem', color: healthIndex === null ? '#9ca3af' : (healthIndex >= 70 ? '#10B981' : healthIndex >= 40 ? '#F59E0B' : '#EF4444') }}>
+                {healthIndex === null ? '—' : `${healthIndex}%`}
+              </div>
             </div>
           </div>
 

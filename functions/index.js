@@ -29,6 +29,15 @@ exports.setUserRole = rbac.setUserRole;
 exports.bootstrapSuperAdmin = rbac.bootstrapSuperAdmin;
 exports.migrateGuestToEmployee = rbac.migrateGuestToEmployee;
 
+// 2d. Accounting ledger — bank-grade CF-only writes
+const accounting = require('./modules/accounting');
+exports.postAccountingEntry = accounting.postAccountingEntry;
+
+// 2e. Daily orphan-user audit (data-integrity safety net)
+const auditOrphans = require('./modules/audit_orphans');
+exports.auditOrphanUsersScheduled = auditOrphans.auditOrphanUsersScheduled;
+exports.auditOrphanUsersNow = auditOrphans.auditOrphanUsersNow;
+
 // 2c. reCAPTCHA Enterprise — Vérification anti-bot
 const recaptcha = require('./modules/recaptcha');
 exports.verifyRecaptcha = recaptcha.verifyRecaptcha;
