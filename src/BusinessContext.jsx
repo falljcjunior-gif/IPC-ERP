@@ -324,7 +324,9 @@ export const BusinessProvider = ({ children }) => {
       const selfRole = activeUsers.find(u => u.id === userId)?.role || null;
       const hash = JSON.stringify({ p: selfPerms, r: selfRole });
       if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
-        UserService.forceClaimRefresh(auth.currentUser).catch(() => {});
+        UserService.forceClaimRefresh(auth.currentUser).catch((err) => {
+          console.error('[BusinessContext] forceClaimRefresh failed — user may keep stale permissions:', err.message);
+        });
       }
       _lastSelfPermsHash = hash;
 

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
+import { useToastStore } from '../../store/useToastStore';
 import { GROUP_ENTITIES, isHoldingRole } from '../../schemas/org.schema';
 import './HoldingOS.css';
 
@@ -667,8 +668,11 @@ function GovernanceTab({ approvals }) {
         approvedBy: 'HOLDING_CEO',
         approvedAt: new Date().toISOString(),
       });
+      useToastStore.getState().addToast(`Approuvé : ${item.description || item.id}`, 'success');
     } catch (err) {
-      console.warn('[Governance] Approve (dev mode):', err.message);
+      console.warn('[Governance] Approve failed:', err.message);
+      useToastStore.getState().addToast(`Erreur lors de l'approbation : ${err.message}`, 'error');
+      setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }
   };
 
@@ -680,8 +684,11 @@ function GovernanceTab({ approvals }) {
         rejectedBy: 'HOLDING_CEO',
         rejectedAt: new Date().toISOString(),
       });
+      useToastStore.getState().addToast(`Rejeté : ${item.description || item.id}`, 'info');
     } catch (err) {
-      console.warn('[Governance] Reject (dev mode):', err.message);
+      console.warn('[Governance] Reject failed:', err.message);
+      useToastStore.getState().addToast(`Erreur lors du rejet : ${err.message}`, 'error');
+      setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }
   };
 

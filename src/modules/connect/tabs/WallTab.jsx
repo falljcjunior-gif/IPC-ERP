@@ -94,7 +94,8 @@ const WallTab = ({ data, currentUser }) => {
         reactionsCount: FirestoreService.increment(isLiked ? -1 : 1)
       });
     } catch (err) {
-      console.error("Erreur Like:", err);
+      console.error('[WallTab] Like failed:', err.message);
+      useToastStore.getState().addToast('Impossible d\'enregistrer la réaction.', 'error');
     }
   };
 
@@ -115,7 +116,8 @@ const WallTab = ({ data, currentUser }) => {
       });
       setCommentInputs(prev => ({ ...prev, [postId]: '' }));
     } catch (err) {
-      console.error("Erreur Commentaire:", err);
+      console.error('[WallTab] Comment failed:', err.message);
+      useToastStore.getState().addToast('Impossible d\'envoyer le commentaire.', 'error');
     }
   };
 

@@ -176,7 +176,9 @@ export class WebRTCService {
           } catch (err) {
             logger.error(`[WebRTC] Error handling signal: ${err.message}`);
           } finally {
-            FirestoreService.deleteDocument(`rooms/${roomId}/signals`, signal.id).catch(() => {});
+            FirestoreService.deleteDocument(`rooms/${roomId}/signals`, signal.id).catch((err) => {
+              logger.warn(`[WebRTC] Signal cleanup failed for ${signal.id}:`, err.message);
+            });
           }
         }
       }
