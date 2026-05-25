@@ -23,6 +23,7 @@ import AnalyticsTab from './tabs/AnalyticsTab';
 import ExecutionTab from './tabs/ExecutionTab';
 import DesignTab from './tabs/DesignTab';
 import MaintenanceTab from './tabs/MaintenanceTab';
+import MRPTab from './tabs/MRPTab';
 
 const Production = ({ onOpenDetail, appId }) => {
   const { t } = useTranslation();
@@ -96,6 +97,7 @@ const Production = ({ onOpenDetail, appId }) => {
   const tabs = [
     { id: 'analytics', label: 'EFFICACITÉ (OEE)', icon: <BarChart3 size={16} /> },
     { id: 'execution', label: 'ORDRES DE FAB.', icon: <Factory size={16} /> },
+    { id: 'mrp', label: 'PLAN MRP', icon: <Database size={16} /> },
     { id: 'design', label: 'INGÉNIERIE', icon: <Layers size={16} /> },
     { id: 'maintenance', label: 'MAINTENANCE', icon: <Wrench size={16} /> },
   ];
@@ -177,6 +179,7 @@ const Production = ({ onOpenDetail, appId }) => {
         >
           {mainTab === 'analytics' && <AnalyticsTab data={data} formatCurrency={formatCurrency} />}
           {mainTab === 'execution' && <ExecutionTab data={data} onOpenDetail={onOpenDetail} onNewWorkOrder={() => { setModalMode('workOrders'); setIsModalOpen(true); }} />}
+          {mainTab === 'mrp' && <MRPTab />}
           {mainTab === 'design' && <DesignTab data={data} onOpenDetail={(rec, app, sub) => {
             if (!rec) { setIsBomModalOpen(true); }
             else if (onOpenDetail) onOpenDetail(rec, app, sub);
