@@ -559,7 +559,9 @@ exports.provisionCountryScope = onCall(
       country_id,
       _createdAt: now,
       _subModule: 'notifications',
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.error('[CountryProvisioning] notification write failed:', err.message);
+    });
 
     await auditLog('CREATE_COUNTRY_SCOPE', actorUid, country_id, {
       subsidiary_id, foundation_id,

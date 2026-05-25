@@ -74,7 +74,7 @@ export const useNotificationStore = create(
               FirestoreService.updateDocument('notifications', id, { isRead: true, readAt: now })
                 .catch(err => console.warn(`[NotificationStore] markAllAsRead failed for ${id}:`, err.message))
             )
-          );
+          ).catch(err => console.error('[NotificationStore] markAllAsRead batch failed:', err.message));
         }
       },
 
