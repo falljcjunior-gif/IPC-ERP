@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { useToastStore } from '../../../store/useToastStore';
+import { logger } from '../../../utils/logger';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
@@ -173,7 +174,7 @@ const MRPTab = () => {
       });
       addToast(`OF ${nextNum} créé pour "${line.produit}" — ${line.netNeed} unités`, 'success');
     } catch (err) {
-      console.error('[MRP] createOF failed:', err.message);
+      logger.error('[MRP] createOF failed:', err.message);
       addToast(`Erreur lors de la création de l'OF : ${err.message}`, 'error');
     } finally {
       setCreatingOf(p => ({ ...p, [line.produit]: false }));

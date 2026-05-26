@@ -12,6 +12,7 @@ import { useToastStore } from '../../../store/useToastStore';
 import KpiCard from '../../../components/KpiCard';
 import SkeletonLoader from '../../../components/ui/SkeletonLoader';
 import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
+import { logger } from '../../../utils/logger';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmt = (n, devise = 'XOF') => {
@@ -307,7 +308,7 @@ const SalairesTab = () => {
       useToastStore.getState().addToast('Rémunération enregistrée avec succès.', 'success');
       setEditTarget(null);
     } catch (err) {
-      console.error('[SalairesTab] save error:', err);
+      logger.error('[SalairesTab] save error:', err);
       useToastStore.getState().addToast(`Erreur lors de la sauvegarde : ${err.message}`, 'error');
     }
   };

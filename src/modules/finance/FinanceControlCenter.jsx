@@ -17,6 +17,7 @@ import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
 import { sumMoney, safePercent, isPaid, currentQuarterLabel, fiscalYearLabel } from '../../utils/finance';
 import '../../components/GlobalDashboard.css';
+import { logger } from '../../utils/logger';
 
 const ALL_TABS = [
   { id: 'analytics',  label: 'Analyse Stratégique',    icon: <BarChart3 size={16} /> },
@@ -83,7 +84,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
         ],
       });
     } catch (err) {
-      console.error('[FinanceExport] failed:', err);
+      logger.error('[FinanceExport] failed:', err);
     } finally {
       setIsExporting(false);
     }

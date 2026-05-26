@@ -9,6 +9,7 @@ import {
 } from '../../schemas/permissions.schema';
 
 import { registry } from '../../services/Registry';
+import logger from '../../utils/logger';
 
 export const createAdminSlice = (set, get) => ({
 
@@ -122,7 +123,7 @@ export const createAdminSlice = (set, get) => ({
         type: 'success'
       });
     } catch (err) {
-      console.error("Erreur updatePermissions:", err);
+      logger.error("Erreur updatePermissions:", err);
       get().addHint({
         title: "Erreur Gouvernance",
         message: err.message || "Impossible de mettre à jour les droits.",
@@ -145,7 +146,7 @@ export const createAdminSlice = (set, get) => ({
         await UserService.forceClaimRefresh(auth.currentUser);
       }
     } catch (err) {
-      console.error("Erreur save role:", err);
+      logger.error("Erreur save role:", err);
       get().addHint({
         title: "Échec mise à jour rôle",
         message: err.message || "Impossible de modifier le rôle.",
@@ -173,7 +174,7 @@ export const createAdminSlice = (set, get) => ({
         await UserService.forceClaimRefresh(auth.currentUser);
       }
     } catch (err) {
-      console.error("Erreur save permissions:", err);
+      logger.error("Erreur save permissions:", err);
       get().addHint({
         title: "Échec mise à jour accès",
         message: err.message || "Impossible de modifier l'accès au module.",
@@ -268,7 +269,7 @@ export const createAdminSlice = (set, get) => ({
 
       return result.data;
     } catch (err) {
-      console.error("Erreur provisioning:", err);
+      logger.error("Erreur provisioning:", err);
       get().addHint({ 
         title: "Échec Création", 
         message: err.message || "Une erreur est survenue lors du provisionnement.", 
@@ -292,7 +293,7 @@ export const createAdminSlice = (set, get) => ({
       get().logAction(activeStatus ? 'Réactivation Utilisateur' : 'Désactivation Utilisateur', `ID: ${uid}`, 'system');
       return { success: true };
     } catch (e) {
-      console.error("toggleUserStatus error:", e);
+      logger.error("toggleUserStatus error:", e);
       throw e;
     }
   },
@@ -322,7 +323,7 @@ export const createAdminSlice = (set, get) => ({
         if (cfErr?.code !== 'functions/permission-denied') throw cfErr;
         // permission-denied: CF can't delete Auth token — fall through to
         // Firestore-only soft-delete so the ghost doesn't linger in the UI.
-        console.warn(`[permanentlyDeleteUserRecord] CF permission-denied for ${uid} — applying Firestore soft-delete only.`);
+        logger.warn(`[permanentlyDeleteUserRecord] CF permission-denied for ${uid} — applying Firestore soft-delete only.`);
       }
 
       // Firestore safety net: soft-delete the users/{uid} document so it
@@ -334,7 +335,7 @@ export const createAdminSlice = (set, get) => ({
             _deletedBy: auth.currentUser?.uid || 'client',
           });
         } catch (fsErr) {
-          console.error('[permanentlyDeleteUserRecord] Firestore soft-delete failed:', fsErr.message);
+          logger.error('[permanentlyDeleteUserRecord] Firestore soft-delete failed:', fsErr.message);
           // Best-effort: if this also fails, at least clear the local store below.
         }
       }
@@ -362,7 +363,7 @@ export const createAdminSlice = (set, get) => ({
       return { success: true };
 
     } catch (err) {
-      console.error("Erreur suppression complète:", err);
+      logger.error("Erreur suppression complète:", err);
       get().addHint({
         title: "Suppression Échouée",
         message: err.message || "Une erreur est survenue lors de la suppression définitive.",
@@ -385,7 +386,7 @@ export const createAdminSlice = (set, get) => ({
       });
       return result.data;
     } catch (err) {
-      console.error("Erreur déclenchement Backup:", err);
+      logger.error("Erreur déclenchement Backup:", err);
       get().addHint({ 
         title: "Échec du Backup", 
         message: err.message || "Une erreur est survenue lors du lancement de la sauvegarde.", 
@@ -409,7 +410,7 @@ export const createAdminSlice = (set, get) => ({
       });
       return result.data;
     } catch (err) {
-      console.error("Erreur Synchronisation:", err);
+      logger.error("Erreur Synchronisation:", err);
       get().addHint({ 
         title: "Échec de Synchronisation",
         message: err.message || "Une erreur est survenue lors de la synchronisation des comptes.",

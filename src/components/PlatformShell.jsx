@@ -41,6 +41,7 @@ import './SubsidiaryShell.css';
 import './FoundationShell.css';
 import CommandPalette from './shell/CommandPalette';
 import ErrorBoundary from './ErrorBoundary';
+import { logger } from '../utils/logger';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
@@ -172,7 +173,7 @@ const PlatformShell = ({ theme, setView }) => {
       FirestoreService.updateDocument('users', currentUser.id, {
         isOnline,
         lastSeen: new Date().toISOString()
-      }).catch(err => console.warn("Presence Error:", err));
+      }).catch(err => logger.warn("Presence Error:", err));
     };
 
     updatePresence(true);
@@ -198,7 +199,7 @@ const PlatformShell = ({ theme, setView }) => {
             }
           }
         } catch (err) {
-          console.warn('[FCM] Registration failed:', err.message);
+          logger.warn('[FCM] Registration failed:', err.message);
         }
       };
       fcmTimer = setTimeout(registerFCM, 3000);

@@ -16,6 +16,7 @@ import {
   FoundationCollecteSchema,
   FoundationExpenseSchema,
 } from '../../../schemas/foundation.schema';
+import logger from '../../../utils/logger';
 
 const FOUNDATION_ROLES = ['FOUNDATION_ADMIN', 'FOUNDATION_STAFF', 'SUPER_ADMIN', 'ADMIN'];
 
@@ -44,7 +45,7 @@ export const createFoundationSlice = (set, get) => ({
   _foundationGuard: () => {
     const role = get().userRole;
     if (!FOUNDATION_ROLES.includes(role)) {
-      console.error('[Foundation] Accès refusé — rôle:', role);
+      logger.error('[Foundation] Accès refusé — rôle:', role);
       throw new Error('Accès non autorisé au module Foundation.');
     }
     return true;

@@ -14,6 +14,7 @@ import { createAdminSlice } from './slices/createAdminSlice';
 import { createCallSlice } from './slices/createCallSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
 import { createFoundationSlice } from './slices/foundation/createFoundationSlice';
+import logger from '../utils/logger';
 
 // ══════════════════════════════════════════════════════════════════════════
 //  IPC INTELLIGENCE ENGINE: CENTRAL STORE
@@ -54,7 +55,7 @@ const secureStorage = {
       const decrypted = xorDecrypt(encrypted, ENCRYPTION_KEY);
       return decrypted ? JSON.parse(decrypted) : null;
     } catch (e) {
-      console.error('[SecureStorage] Erreur de déchiffrement:', e);
+      logger.error('[SecureStorage] Erreur de déchiffrement:', e);
       return null;
     }
   },
@@ -63,7 +64,7 @@ const secureStorage = {
       const encrypted = xorEncrypt(JSON.stringify(value), ENCRYPTION_KEY);
       localStorage.setItem(name, encrypted);
     } catch (e) {
-      console.error('[SecureStorage] Erreur de chiffrement:', e);
+      logger.error('[SecureStorage] Erreur de chiffrement:', e);
     }
   },
   removeItem: (name) => localStorage.removeItem(name),
@@ -179,7 +180,7 @@ export const useStore = create(
         try {
           await AuthService.logout();
         } catch (e) {
-          console.warn('Logout error:', e);
+          logger.warn('Logout error:', e);
         }
         localStorage.removeItem('ipc_erp_current_user');
         localStorage.removeItem('daxcelor_data');

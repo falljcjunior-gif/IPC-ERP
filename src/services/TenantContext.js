@@ -29,6 +29,7 @@
  */
 
 import { ENTITY_TYPES } from '../schemas/org.schema';
+import logger from '../utils/logger';
 
 // ── Internal state ────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ let _listeners = [];
  */
 export function setTenantContext(ctx) {
   if (!ctx?.tenant_id) {
-    console.warn('[TenantContext] tenant_id manquant — vérifier la configuration utilisateur.');
+    logger.warn('[TenantContext] tenant_id manquant — vérifier la configuration utilisateur.');
     return;
   }
 
