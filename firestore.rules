@@ -1163,6 +1163,12 @@ service cloud.firestore {
                   && (resource.data.authorId == request.auth.uid || isAdmin());
     }
 
+    // ── _rate_limits (server-side only — Cloud Functions via Admin SDK) ───────
+    // Aucun client ne devrait jamais lire ni écrire cette collection directement.
+    match /_rate_limits/{docId} {
+      allow read, write: if false;
+    }
+
     // ── Refus par défaut (sécurité) ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

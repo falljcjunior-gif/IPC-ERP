@@ -479,7 +479,7 @@ style={{
                onClick={() => { logout(); setView('login'); }}
                aria-label="Se déconnecter"
                title="Se déconnecter"
-               style={{ background: 'transparent', border: 'none', color: 'var(--antigravity-text-muted)', cursor: 'pointer', opacity: 0.5 }}
+               style={{ background: 'transparent', border: 'none', color: 'var(--antigravity-text-muted)', cursor: 'pointer', opacity: 0.5, minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
              >
                 <LogOut size={18} aria-hidden="true" />
              </button>
