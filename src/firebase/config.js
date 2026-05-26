@@ -76,9 +76,9 @@ export const messaging = (typeof window !== 'undefined' && typeof navigator !== 
 if (typeof window !== 'undefined' && !import.meta.env?.VITEST) {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
-      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+      logger.warn('[Firestore] Multi-tab persistence: un seul onglet actif à la fois');
     } else if (err.code === 'unimplemented') {
-      console.warn("The current browser does not support all of the features required to enable persistence");
+      logger.warn('[Firestore] Persistence IndexedDB non supportée par ce navigateur');
     }
   });
 }

@@ -1,5 +1,4 @@
 /**
-import { logger } from './logger';
  * ══════════════════════════════════════════════════════════════════
  * RECAPTCHA ENTERPRISE — UTILITAIRE CENTRALISÉ
  * ══════════════════════════════════════════════════════════════════
@@ -11,8 +10,10 @@ import { logger } from './logger';
  * Le token retourné (valide 2 minutes) est envoyé au backend
  * pour vérification via l'API reCAPTCHA Enterprise.
  */
+import { logger } from './logger';
 
-const RECAPTCHA_SITE_KEY = '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
+// Clé publique reCAPTCHA Enterprise (même clé utilisée pour App Check)
+const RECAPTCHA_SITE_KEY = import.meta.env?.VITE_RECAPTCHA_SITE_KEY || '6Lc5zPwsAAAAADjek9KiEzFDMiYG17Bw9A7Q7XrK';
 
 /**
  * Obtient un token reCAPTCHA Enterprise pour une action donnée.
