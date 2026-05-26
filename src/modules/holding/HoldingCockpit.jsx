@@ -268,7 +268,7 @@ export default function HoldingCockpit() {
             exit="hidden"
             variants={FADE_UP}
           >
-            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={loading} />}
+            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={loading} onDrillDown={setTab} />}
             {tab === 'performance' && <PerformanceTab />}
             {tab === 'finance'     && <FinanceTab consolidated={consolidated} />}
             {tab === 'governance'  && <GovernanceTab approvals={approvals} />}
@@ -299,15 +299,15 @@ export default function HoldingCockpit() {
 // TAB: OVERVIEW
 // ════════════════════════════════════════════════════════════════════════════
 
-function OverviewTab({ consolidated, loading }) {
+function OverviewTab({ consolidated, loading, onDrillDown }) {
   const hasData = consolidated.revenue > 0 || consolidated.headcount > 0;
 
   const kpis = [
-    { label: 'CA Consolidé',     rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet    },
-    { label: 'EBITDA Groupe',    rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3 },
-    { label: 'Trésorerie',       rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark  },
-    { label: 'Effectif Total',   rawValue: consolidated.headcount,    formatter: fmt,  unit: 'EMP', Icon: Users     },
-    { label: 'Filiales Actives', rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2 },
+    { label: 'CA Consolidé',     rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet,    drillTab: 'finance'     },
+    { label: 'EBITDA Groupe',    rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3, drillTab: 'performance' },
+    { label: 'Trésorerie',       rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark,  drillTab: 'finance'     },
+    { label: 'Effectif Total',   rawValue: consolidated.headcount,    formatter: fmt,  unit: 'EMP', Icon: Users,     drillTab: 'entities'    },
+    { label: 'Filiales Actives', rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2, drillTab: 'entities' },
   ];
 
   return (
@@ -322,8 +322,18 @@ function OverviewTab({ consolidated, loading }) {
         {kpis.map(k => {
           const KpiIcon = k.Icon;
           return (
-            <motion.div key={k.label} variants={FADE_UP} className="os-card"
-              style={{ padding: '1.5rem' }}>
+            <motion.div
+              key={k.label}
+              variants={FADE_UP}
+              className="os-card"
+              role="button"
+              tabIndex={0}
+              aria-label={`${k.label} — voir le détail`}
+              onClick={() => onDrillDown?.(k.drillTab)}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onDrillDown?.(k.drillTab)}
+              whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
+              whileTap={{ scale: 0.98 }}
+              style={{ padding: '1.5rem', cursor: 'pointer', transition: 'box-shadow 0.2s' }}>
               <div style={{
                 display: 'flex', justifyContent: 'space-between',
                 alignItems: 'flex-start', marginBottom: 24,
@@ -331,7 +341,7 @@ function OverviewTab({ consolidated, loading }) {
                 <KpiIcon size={15} strokeWidth={1.5} style={{ color: OS.dim }} />
                 {hasData && (
                   <span style={{ fontSize: 10, color: OS.dim, fontWeight: 500,
-                    letterSpacing: '0.05em' }}>YTD</span>
+                    letterSpacing: '0.05em' }}>YTD →</span>
                 )}
               </div>
 
