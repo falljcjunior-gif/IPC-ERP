@@ -372,15 +372,15 @@ export const BusinessProvider = ({ children }) => {
 
     // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
     const unsubAuth = auth.onAuthStateChanged(async fbUser => {
-      console.log('[Auth] State Changed:', fbUser ? `Logged in as ${fbUser.uid}` : 'Logged out');
-      console.log('[Firebase] Project ID:', auth.app.options.projectId);
-      
+      logger.log('[Auth] State Changed:', fbUser ? 'Logged in' : 'Logged out');
+      logger.log('[Firebase] Project ID:', auth.app.options.projectId);
+
       if (fbUser) {
         try {
-          console.log('[BusinessContext] Syncing profile for:', fbUser.email);
+          logger.log('[BusinessContext] Syncing profile...');
           const userProfile = await UserService.syncProfile(fbUser);
           setUser(userProfile);
-          console.log('[BusinessContext] Profile Loaded:', userProfile);
+          logger.log('[BusinessContext] Profile Loaded: OK');
 
           // ══════════════════════════════════════════════════════════
           // [GROUP GOVERNANCE v2] TenantContext — 3-level org model
