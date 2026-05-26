@@ -21,6 +21,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
+const { checkCallRate } = require('./rate_limiter');
 
 const db  = admin.firestore;
 const auth = admin.auth;
@@ -99,6 +100,8 @@ exports.createGroupEntity = onCall(
   async (request) => {
     const token = requireHoldingRole(request);
     const uid   = request.auth.uid;
+    // Max 5 créations d'entité par heure — opération lourde (provisioning multi-étapes)
+    await checkCallRate(db(), uid, 'createGroupEntity', { maxRequests: 5, windowMs: 60 * 60 * 1000 });
 
     const {
       type,            // 'SUBSIDIARY' | 'FOUNDATION'
@@ -354,6 +357,8 @@ exports.changeEntityState = onCall(
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;
+    // Max 10 changements d'état par heure — prévient les suspensions/réactivations en boucle
+    await checkCallRate(db(), uid, 'changeEntityState', { maxRequests: 10, windowMs: 60 * 60 * 1000 });
 
     const { entityId, newState, reason = '' } = request.data;
     if (!entityId) throw new HttpsError('invalid-argument', 'entityId requis.');
@@ -497,6 +502,8 @@ exports.duplicateGroupEntity = onCall(
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;
+    // Max 3 duplications par heure — opération aussi lourde que createGroupEntity
+    await checkCallRate(db(), uid, 'duplicateGroupEntity', { maxRequests: 3, windowMs: 60 * 60 * 1000 });
 
     const { sourceEntityId, name, director, licensePlanId } = request.data;
     if (!sourceEntityId || !name || !director?.email) {

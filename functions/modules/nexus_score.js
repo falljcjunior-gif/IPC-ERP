@@ -24,6 +24,7 @@ const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
+const { checkCallRate } = require('./rate_limiter');
 
 const db = admin.firestore();
 const FS = admin.firestore;
@@ -494,6 +495,8 @@ exports.computeNexusScoresNow = onCall({
   if (!['SUPER_ADMIN', 'ADMIN'].includes(role)) {
     throw new HttpsError('permission-denied', 'Réservé aux administrateurs.');
   }
+  // Max 5 calculs manuels par heure — computation lourde (scan multi-collection)
+  await checkCallRate(db, request.auth.uid, 'computeNexusScoresNow', { maxRequests: 5, windowMs: 60 * 60 * 1000 });
   const { periodDays = 7 } = request.data || {};
   const result = await runScoreComputation(periodDays);
   return result;
