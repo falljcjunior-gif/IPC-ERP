@@ -149,6 +149,10 @@ const webhooks = require('./modules/webhooks');
 exports.dispatchWebhookEvent = webhooks.dispatchWebhookEvent;
 exports.manageWebhook        = webhooks.manageWebhook;
 
+// 13. API REST publique — Intégrations tierces (Zapier, Make, ERP partenaires)
+const api_rest = require('./modules/api_rest');
+exports.api = api_rest.api;
+
 // 9. Firestore Partitioning Utilities
 // Pas d'export Cloud Function — utilitaires pour la migration
 // const partitioning = require('./modules/firestore_partitioning');
