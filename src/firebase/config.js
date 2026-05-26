@@ -61,10 +61,12 @@ if (typeof window !== 'undefined') {
 
 export const auth = getAuth(app);
 
-// [FIX REAL-TIME] Disable Fetch Streams & Force Long Polling to prevent silent onSnapshot drop
+// [FIX P2] Utiliser autoDetect plutôt que force long polling.
+// experimentalAutoDetectLongPolling : WebSocket natif si disponible (Chrome/Firefox),
+// repli automatique sur long polling (Safari, proxies corporate).
+// Élimine la dégradation de performance de forceLongPolling en prod.
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false
+  experimentalAutoDetectLongPolling: true,
 });
 
 export const rtdb = getDatabase(app);

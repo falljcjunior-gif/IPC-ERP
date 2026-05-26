@@ -1183,6 +1183,37 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Webhooks : configs, events, deliveries ───────────────────────────────
+    // [FIX P2] Architecture webhook sortant — Admin SDK only pour events/deliveries.
+    // Les admins peuvent lire et gérer les configs via l'UI (lecture seule en list).
+    match /webhook_configs/{docId} {
+      // Admins et Super Admins peuvent lire les configs de leur entité
+      allow read: if isAuthenticated()
+                && (isSuperAdmin() || isAdmin())
+                && (isSuperAdmin() || canReadOwnEntity(resource.data.entity_id));
+      // Écriture via Cloud Function manageWebhook uniquement (Admin SDK)
+      // Le client ne peut pas écrire directement
+      allow create, update, delete: if false;
+    }
+
+    // webhook_events : écrits par le client (via EventBus), lus par Cloud Function uniquement
+    match /webhook_events/{docId} {
+      // Seuls les utilisateurs authentifiés de la bonne entité peuvent créer un événement
+      allow create: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id);
+      // Lecture/suppression : Admin SDK uniquement (Cloud Function)
+      allow read, update, delete: if false;
+    }
+
+    // webhook_deliveries : écrits et lus par Cloud Function (Admin SDK) uniquement
+    match /webhook_deliveries/{docId} {
+      // Admins peuvent consulter l'historique des livraisons
+      allow read: if isAuthenticated()
+                && (isSuperAdmin() || isAdmin());
+      // Écriture réservée au serveur
+      allow create, update, delete: if false;
+    }
+
     // ── Refus par défaut (sécurité) ────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;
