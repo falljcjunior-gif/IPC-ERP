@@ -112,6 +112,7 @@ exports.changeCountryScopeState = countryProvisioning.changeCountryScopeState;
 const monitoring = require('./modules/monitoring');
 const backups = require('./modules/backup_scheduler');
 exports.getBackendStatus = monitoring.getBackendStatus;
+exports.cleanupExpiredRateLimits = monitoring.cleanupExpiredRateLimits;
 exports.scheduledFirestoreExport = backups.scheduledFirestoreExport;
 exports.manualFirestoreExport = backups.manualFirestoreExport;
 
