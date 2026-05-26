@@ -488,9 +488,10 @@ style={{
       </motion.aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <main style={{ 
-        flex: 1, 
+      <main style={{
+        flex: 1,
         padding: '2rem',
+        paddingBottom: shellView.mobile ? 'calc(2rem + 90px)' : '2rem', // Space for mobile bottom nav
         transition: 'var(--transition)',
         maxWidth: '100vw',
         overflowX: 'hidden',
