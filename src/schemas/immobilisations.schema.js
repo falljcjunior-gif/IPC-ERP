@@ -109,7 +109,7 @@ export function calculerPlanAmortissement(actif) {
         ? vncDebut * tauxLineaireRestant
         : vncDebut * tauxDegressif;
 
-      const dotationArrondie = Math.min(Math.round(dotation), vncDebut - Number(valeur_residuelle) - cumule);
+      const dotationArrondie = Math.min(Math.round(dotation), valeurAmortissable - cumule);
       const effectiveDotation = Math.max(0, dotationArrondie);
       cumule += effectiveDotation;
       const vncFin = Math.max(Number(valeur_residuelle), vncDebut - effectiveDotation);
