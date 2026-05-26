@@ -10,6 +10,7 @@ import { useStore } from '../../../store';
 import { FirestoreService } from '../../../services/firestore.service';
 import { useToastStore } from '../../../store/useToastStore';
 import KpiCard from '../../../components/KpiCard';
+import SkeletonLoader from '../../../components/ui/SkeletonLoader';
 import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -144,10 +145,7 @@ const HistoryModal = ({ employeeId, employeeName, onClose }) => {
         </div>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            <Loader className="spin" size={32} style={{ margin: '0 auto 1rem' }} />
-            <p>Chargement...</p>
-          </div>
+          <SkeletonLoader.List count={4} />
         ) : history.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
             <History size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
@@ -356,9 +354,8 @@ const SalairesTab = () => {
       {/* Table */}
       <div className="glass" style={{ borderRadius: '1.75rem', border: '1px solid var(--border)', overflow: 'hidden' }}>
         {loadingSalaries ? (
-          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>
-            <Loader className="spin" size={40} style={{ marginBottom: '1rem' }} />
-            <p style={{ fontWeight: 600 }}>Chargement des données salariales...</p>
+          <div style={{ padding: '1.5rem' }}>
+            <SkeletonLoader.Table rows={6} columns={5} />
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)' }}>

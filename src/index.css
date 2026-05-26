@@ -421,12 +421,29 @@ textarea:focus-visible,
 }
 
 /* ══ ANIMATIONS ══ */
+
+/* Spin — utilisé par <Loader className="spin" /> partout dans l'app */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
 
 @keyframes btn-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* erp-shimmer — used by DataTable loading skeleton rows */
+@keyframes erp-shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
