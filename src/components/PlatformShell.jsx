@@ -42,12 +42,15 @@ import './FoundationShell.css';
 import CommandPalette from './shell/CommandPalette';
 import ErrorBoundary from './ErrorBoundary';
 import { logger } from '../utils/logger';
+import { useIdleTimeout } from '../hooks/useIdleTimeout';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ theme, setView }) => {
   const { t, i18n } = useTranslation();
+  // [FIX AUDIT P0] Session idle timeout — déconnexion automatique après inactivité
+  useIdleTimeout({ enabled: true });
   const globalSearch = useStore(s => s.globalSearch);
   const searchResults = useStore(s => s.searchResults);
   const updateRecord = useStore(s => s.updateRecord);

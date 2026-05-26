@@ -1,17 +1,64 @@
 {
-  "name": "I.P.C. Industrial OS",
-  "short_name": "IPC Connect",
-  "description": "L'ERP industriel d'avant-garde",
-  "start_url": "/",
+  "name": "IPC Intelligence Engine",
+  "short_name": "IPC ERP",
+  "description": "ERP IA multi-entités — Gérez votre groupe en temps réel",
+  "start_url": "/?source=pwa",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
   "background_color": "#0F172A",
-  "theme_color": "#06B6D4",
+  "theme_color": "#10B981",
+  "lang": "fr",
+  "scope": "/",
+  "categories": ["business", "productivity", "finance"],
+  "id": "ipc-intelligence-engine",
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
   "icons": [
     {
       "src": "/favicon.svg",
-      "sizes": "192x192 256x256 512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "short_name": "Dashboard",
+      "description": "Ouvrir le cockpit principal",
+      "url": "/?shortcut=dashboard",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "CRM",
+      "short_name": "CRM",
+      "description": "Gérer les opportunités commerciales",
+      "url": "/?shortcut=crm",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "Finance",
+      "short_name": "Finance",
+      "description": "Comptabilité et trésorerie",
+      "url": "/?shortcut=finance",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

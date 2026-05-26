@@ -13,6 +13,7 @@ import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
 import { setTenantContext } from './services/TenantContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConsentBanner } from './components/ConsentBanner';
 import { logger } from './utils/logger';
 import './index.css';
 
@@ -154,6 +155,7 @@ function App() {
       <BusinessProvider>
         <ToastProvider>
           <AuthObserver />
+          <ConsentBanner />
           <div className="app-container">
             {view === 'landing' ? (
               <React.Suspense fallback={<InitializingView label="Chargement..." />}>

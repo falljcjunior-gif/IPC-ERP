@@ -28,7 +28,12 @@ import {
 import {
   onSnapshot, doc,
 } from 'firebase/firestore';
-import { db } from '../../firebase/config';
+import {
+  multiFactor,
+  TotpMultiFactorGenerator,
+  TotpSecret,
+} from 'firebase/auth';
+import { db, auth } from '../../firebase/config';
 import { useStore } from '../../store';
 import { AuthService } from '../../services/auth.service';
 import { FirestoreService, StorageService } from '../../services/firestore.service';
@@ -675,6 +680,86 @@ export default function ProfileSettings() {
   const [profile, setProfile]   = useState(null);
   const [loading, setLoading]   = useState(true);
 
+  // ── [FIX AUDIT P1] MFA TOTP — Firebase multiFactor ────────────────────────
+  // AVANT : badge "Bientôt" — aucune implémentation
+  // APRÈS : TOTP (Google Authenticator, Authy) via firebase/auth multiFactor API
+  const [mfaState, setMfaState]         = useState('idle'); // idle | setup | verify | enabled | disabling
+  const [totpSecret, setTotpSecret]     = useState(null);   // TotpSecret instance
+  const [totpQrUrl, setTotpQrUrl]       = useState('');     // otpauth:// URL pour QR code
+  const [totpCode, setTotpCode]         = useState('');     // code 6 chiffres utilisateur
+  const [mfaLoading, setMfaLoading]     = useState(false);
+
+  // Vérifie si MFA est déjà activé pour cet utilisateur
+  const isMfaEnabled = auth.currentUser
+    ? multiFactor(auth.currentUser).enrolledFactors.length > 0
+    : false;
+
+  /** Démarre l'enrôlement TOTP */
+  const handleStartMfaSetup = async () => {
+    setMfaLoading(true);
+    try {
+      const mfaSession  = await multiFactor(auth.currentUser).getSession();
+      const secret      = await TotpMultiFactorGenerator.generateSecret(mfaSession);
+      const appName     = 'IPC ERP';
+      const qrUrl       = secret.generateQrCodeUrl(auth.currentUser.email, appName);
+      setTotpSecret(secret);
+      setTotpQrUrl(qrUrl);
+      setMfaState('setup');
+    } catch (err) {
+      logger.error('[MFA] Échec démarrage setup TOTP:', err);
+      addToast('Impossible de démarrer la configuration MFA. Réessayez.', 'error');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  /** Vérifie le code TOTP et finalise l'enrôlement */
+  const handleVerifyAndEnroll = async () => {
+    if (!totpCode || totpCode.length !== 6) {
+      addToast('Entrez un code à 6 chiffres.', 'warning');
+      return;
+    }
+    setMfaLoading(true);
+    try {
+      const assertion = TotpMultiFactorGenerator.assertionForEnrollment(totpSecret, totpCode);
+      await multiFactor(auth.currentUser).enroll(assertion, 'Application TOTP (IPC ERP)');
+      setMfaState('idle');
+      setTotpCode('');
+      setTotpSecret(null);
+      setTotpQrUrl('');
+      await FirestoreService.updateDocument('users', uid, { 'security.mfaEnabled': true });
+      addToast('✅ Authentification multi-facteurs activée avec succès !', 'success');
+    } catch (err) {
+      logger.error('[MFA] Échec enrôlement TOTP:', err);
+      if (err.code === 'auth/invalid-verification-code') {
+        addToast('Code incorrect. Vérifiez votre application TOTP.', 'error');
+      } else {
+        addToast('Erreur lors de l\'activation MFA. Réessayez.', 'error');
+      }
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
+  /** Désactive MFA (nécessite ré-auth récente) */
+  const handleDisableMfa = async () => {
+    setMfaLoading(true);
+    try {
+      const factors = multiFactor(auth.currentUser).enrolledFactors;
+      for (const factor of factors) {
+        await multiFactor(auth.currentUser).unenroll(factor);
+      }
+      await FirestoreService.updateDocument('users', uid, { 'security.mfaEnabled': false });
+      setMfaState('idle');
+      addToast('MFA désactivé. Votre compte est moins protégé.', 'warning');
+    } catch (err) {
+      logger.error('[MFA] Échec désactivation:', err);
+      addToast('Impossible de désactiver MFA. Reconnectez-vous et réessayez.', 'error');
+    } finally {
+      setMfaLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!uid) return;
     const unsub = onSnapshot(doc(db, 'users', uid), snap => {
@@ -948,34 +1033,132 @@ export default function ProfileSettings() {
             </button>
           </div>
 
-          {/* MFA row */}
+          {/* MFA row — [FIX AUDIT P1] Implémentation TOTP réelle */}
           <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '0.9rem 1rem', borderRadius: '0.7rem',
-            border: '1px solid var(--border)', background: 'var(--bg-subtle)',
+            borderRadius: '0.7rem',
+            border: `1px solid ${isMfaEnabled ? '#10B98130' : 'var(--border)'}`,
+            background: isMfaEnabled ? '#10B98108' : 'var(--bg-subtle)',
+            overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-              <div style={{
-                width: 34, height: 34, borderRadius: '0.55rem',
-                background: '#10B98118', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Shield size={15} style={{ color: '#10B981' }} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                  Authentification multi-facteurs (MFA)
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                  Sécurisez votre compte avec un code SMS ou une application TOTP.
-                </div>
-              </div>
-            </div>
-            <span style={{
-              padding: '0.25rem 0.65rem', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: 700,
-              background: '#F59E0B18', color: '#F59E0B',
+            {/* Header MFA */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '0.9rem 1rem',
             }}>
-              Bientôt
-            </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{
+                  width: 34, height: 34, borderRadius: '0.55rem',
+                  background: isMfaEnabled ? '#10B98118' : '#94A3B818',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Shield size={15} style={{ color: isMfaEnabled ? '#10B981' : '#94A3B8' }} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem' }}>
+                    Authentification multi-facteurs (MFA)
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    {isMfaEnabled
+                      ? '✅ Activé — TOTP (Google Authenticator / Authy)'
+                      : 'Sécurisez votre compte avec une application TOTP.'}
+                  </div>
+                </div>
+              </div>
+              {isMfaEnabled ? (
+                <button
+                  onClick={handleDisableMfa}
+                  disabled={mfaLoading}
+                  style={{
+                    padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.72rem',
+                    fontWeight: 600, border: '1px solid #EF444440', background: '#EF444412',
+                    color: '#EF4444', cursor: 'pointer',
+                  }}
+                >
+                  {mfaLoading ? 'Traitement…' : 'Désactiver'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleStartMfaSetup}
+                  disabled={mfaLoading || mfaState !== 'idle'}
+                  style={{
+                    padding: '0.3rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.72rem',
+                    fontWeight: 600, border: '1px solid var(--accent)', background: 'var(--accent)',
+                    color: '#fff', cursor: 'pointer', opacity: mfaLoading ? 0.6 : 1,
+                  }}
+                >
+                  {mfaLoading ? 'Chargement…' : 'Activer'}
+                </button>
+              )}
+            </div>
+
+            {/* Panel setup TOTP */}
+            <AnimatePresence>
+              {mfaState === 'setup' && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  style={{ overflow: 'hidden', borderTop: '1px solid var(--border)' }}
+                >
+                  <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      1. Scannez ce QR code avec <strong>Google Authenticator</strong> ou <strong>Authy</strong>.
+                    </div>
+                    {/* QR Code affiché via une image Google Charts (fallback sûr) */}
+                    {totpQrUrl && (
+                      <img
+                        src={`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(totpQrUrl)}`}
+                        alt="QR Code MFA"
+                        width={160} height={160}
+                        style={{ borderRadius: '0.5rem', border: '1px solid var(--border)' }}
+                      />
+                    )}
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      2. Entrez le code à 6 chiffres affiché dans votre application.
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        placeholder="000000"
+                        value={totpCode}
+                        onChange={e => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        style={{
+                          width: 120, padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
+                          border: '1px solid var(--border)', background: 'var(--bg)',
+                          color: 'var(--text)', fontSize: '1.1rem', letterSpacing: '0.2em',
+                          fontFamily: 'monospace', textAlign: 'center',
+                        }}
+                      />
+                      <button
+                        onClick={handleVerifyAndEnroll}
+                        disabled={mfaLoading || totpCode.length !== 6}
+                        style={{
+                          padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 600,
+                          background: 'var(--accent)', color: '#fff', border: 'none',
+                          cursor: totpCode.length === 6 ? 'pointer' : 'not-allowed',
+                          opacity: totpCode.length === 6 ? 1 : 0.5,
+                        }}
+                      >
+                        {mfaLoading ? 'Vérification…' : 'Confirmer'}
+                      </button>
+                      <button
+                        onClick={() => { setMfaState('idle'); setTotpCode(''); setTotpSecret(null); }}
+                        style={{
+                          padding: '0.5rem 0.75rem', borderRadius: '0.5rem',
+                          border: '1px solid var(--border)', background: 'transparent',
+                          color: 'var(--text-muted)', cursor: 'pointer',
+                        }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Active sessions info */}
