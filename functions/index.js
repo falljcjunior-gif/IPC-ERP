@@ -149,6 +149,32 @@ const webhooks = require('./modules/webhooks');
 exports.dispatchWebhookEvent = webhooks.dispatchWebhookEvent;
 exports.manageWebhook        = webhooks.manageWebhook;
 
+// 13. API REST publique — Intégrations tierces (Zapier, Make, ERP partenaires)
+const api_rest = require('./modules/api_rest');
+exports.api = api_rest.api;
+
+// 14a. SIEM — Détection d'anomalies de sécurité en temps réel (Zero Trust)
+const siem = require('./modules/siem');
+exports.detectBruteForce          = siem.detectBruteForce;
+exports.detectPrivilegeEscalation = siem.detectPrivilegeEscalation;
+exports.detectDataExfiltration    = siem.detectDataExfiltration;
+exports.siemHourlyScan            = siem.siemHourlyScan;
+exports.getSecurityEvents         = siem.getSecurityEvents;
+exports.resolveSecurityEvent      = siem.resolveSecurityEvent;
+
+// 14. Data Quality Monitor — Scan nocturne d'intégrité à 02:00 UTC
+const dataQuality = require('./modules/data_quality');
+exports.dataQualityScan       = dataQuality.dataQualityScan;
+exports.dataQualityScanNow    = dataQuality.dataQualityScanNow;
+exports.getDataQualityReport  = dataQuality.getDataQualityReport;
+
+// 15. AI Forecasting — Prévisions Gemini (CA, Stock, Churn, Trésorerie)
+const aiForecast = require('./modules/ai_forecasting');
+exports.forecastSalesRevenue   = aiForecast.forecastSalesRevenue;
+exports.forecastStockDepletion = aiForecast.forecastStockDepletion;
+exports.forecastCashFlow       = aiForecast.forecastCashFlow;
+exports.computeForecastNow     = aiForecast.computeForecastNow;
+
 // 9. Firestore Partitioning Utilities
 // Pas d'export Cloud Function — utilitaires pour la migration
 // const partitioning = require('./modules/firestore_partitioning');
