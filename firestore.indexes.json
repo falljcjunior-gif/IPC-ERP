@@ -619,7 +619,74 @@
     { "collectionGroup": "posts",               "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
     { "collectionGroup": "counters",            "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
     { "collectionGroup": "accounting",          "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
-    { "collectionGroup": "financial_periods",   "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] }
+    { "collectionGroup": "financial_periods",   "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id",   "order": "ASCENDING" }, { "fieldPath": "_createdAt",  "order": "DESCENDING" }] },
+    {
+      "collectionGroup": "immobilisations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id",       "order": "ASCENDING"  },
+        { "fieldPath": "date_acquisition","order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "immobilisations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING"  },
+        { "fieldPath": "_createdAt","order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "roomId",    "order": "ASCENDING" },
+        { "fieldPath": "_createdAt","order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order": "ASCENDING" },
+        { "fieldPath": "roomId",    "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rooms",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id", "order":       "ASCENDING" },
+        { "fieldPath": "type",      "order":       "ASCENDING" },
+        { "fieldPath": "members",   "arrayConfig": "CONTAINS"  }
+      ]
+    },
+    {
+      "collectionGroup": "evaluations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id",  "order": "ASCENDING"  },
+        { "fieldPath": "nexusScore", "order": "DESCENDING" }
+      ]
+    },
+    { "collectionGroup": "it_assets",        "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "it_interventions", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "it_tickets",       "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "foundation_donations",     "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "foundation_programs",      "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "foundation_beneficiaries", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    { "collectionGroup": "foundation_campaigns",     "queryScope": "COLLECTION", "fields": [{ "fieldPath": "entity_id", "order": "ASCENDING" }, { "fieldPath": "_createdAt", "order": "DESCENDING" }] },
+    {
+      "collectionGroup": "compensation_history",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "entity_id",   "order": "ASCENDING"  },
+        { "fieldPath": "employeeId",  "order": "ASCENDING"  },
+        { "fieldPath": "date_effet",  "order": "DESCENDING" }
+      ]
+    }
   ],
   "fieldOverrides": [
     {
