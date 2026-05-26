@@ -77,3 +77,26 @@ createRoot(document.getElementById('root')).render(
     <App />
   </ErrorBoundary>
 )
+
+// ── [FIX AUDIT P4] Service Worker — Cache-First + offline premium ─────────────
+// AVANT : sw.js présent dans /public mais jamais enregistré → zéro bénéfice
+// APRÈS : Enregistrement au load, mise à jour silencieuse, log dev
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js', { scope: '/' })
+      .then(reg => {
+        // Vérifier les mises à jour toutes les heures
+        setInterval(() => reg.update(), 60 * 60 * 1000);
+        if (import.meta.env.DEV) {
+          console.info('[SW] Registered:', reg.scope);
+        }
+      })
+      .catch(err => {
+        // Non-critique : l'app fonctionne sans SW
+        if (import.meta.env.DEV) {
+          console.warn('[SW] Registration failed:', err.message);
+        }
+      });
+  });
+}

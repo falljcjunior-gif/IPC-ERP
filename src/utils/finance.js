@@ -36,7 +36,7 @@ export function safePercent(num, den, fallback = 0) {
 // ─────────────────────────────────────────────────────────────────────
 const PAID_TOKENS = new Set([
   'paye', 'payee', 'payé', 'payée',
-  'paid', 'settled', 'reglé', 'réglé', 'reglee', 'réglée',
+  'paid', 'settled', 'regle', 'reglé', 'réglé', 'reglee', 'réglée',
 ]);
 
 /**

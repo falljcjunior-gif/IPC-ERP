@@ -25,8 +25,9 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const BATCH_SIZE      = 20;
 
 async function sendViaResend({ to, subject, html, from }) {
-  const apiKey = process.env.RESEND_API_KEY;
-  const sender = from || process.env.MAIL_FROM || 'IPC Platform <no-reply@ipcgreenblocks.com>';
+  const { safeGet, RESEND_API_KEY: RESEND_SECRET, MAIL_FROM: MAIL_FROM_SECRET } = require('./secrets');
+  const apiKey = safeGet(RESEND_SECRET, 'RESEND_API_KEY');
+  const sender = from || safeGet(MAIL_FROM_SECRET, 'MAIL_FROM') || 'IPC Platform <no-reply@ipcgreenblocks.com>';
 
   if (!apiKey) {
     // No key configured — log and signal so the caller can keep status PENDING
