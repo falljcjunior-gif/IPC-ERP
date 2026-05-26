@@ -21,7 +21,8 @@ import { resolveSpace, getSpaceTheme, getSpaceHome } from '../services/space.con
 import SpaceBadge from './SpaceBadge';
 
 // Lazy loaded components
-const DetailOverlay = lazy(() => import('./DetailOverlay'));
+const DetailOverlay    = lazy(() => import('./DetailOverlay'));
+const OnboardingWizard = lazy(() => import('./OnboardingWizard'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import ToastContainer from './ToastContainer';
@@ -96,6 +97,14 @@ const PlatformShell = ({ theme, setView }) => {
 
   // Pointage RH State
   const [showPointage, setShowPointage] = useState(false);
+
+  // Onboarding Wizard — première connexion
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    const uid = currentUser?.id;
+    if (!uid || uid === 'guest') return false;
+    if (currentUser?.onboardingCompleted) return false;
+    try { return !localStorage.getItem(`ipc_onboarded_${uid}`); } catch { return false; }
+  });
 
   // Navigation State
   const [appsPool, setAppsPool] = useState([]);
@@ -739,6 +748,15 @@ style={{
       `}</style>
       <NotificationCenter />
       <ToastContainer />
+
+      {/* ── Onboarding Wizard — première connexion ── */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <Suspense fallback={null}>
+            <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
