@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, Activity, Heart, TrendingUp, 
+import {
+  Users, Activity, Heart, TrendingUp,
   Zap, ShieldCheck, Wallet, Sparkles,
   Search, Filter
 } from 'lucide-react';
 import EmployeeProfileCard from '../components/EmployeeProfileCard';
 import { useStore } from '../../../store';
 import KpiCard from '../../../components/KpiCard';
+import { VirtualGrid } from '../../../components/VirtualList';
 
 const container = {
   hidden: { opacity: 0 },
@@ -126,21 +127,21 @@ const HumanCapitalTab = ({ data, onOpenDetail, searchQuery = '' }) => {
           </div>
         </motion.div>
 
-        <motion.div 
-          variants={item}
-          style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-            gap: '2rem' 
-          }}
-        >
-          {filteredEmployees.map(emp => (
-            <EmployeeProfileCard 
-              key={emp.id} 
-              employee={emp} 
-              onOpenDetail={onOpenDetail} 
-            />
-          ))}
+        <motion.div variants={item}>
+          <VirtualGrid
+            items={filteredEmployees}
+            columns={3}
+            estimateSize={240}
+            threshold={50}
+            renderItem={(emp) => (
+              <EmployeeProfileCard
+                key={emp.id}
+                employee={emp}
+                onOpenDetail={onOpenDetail}
+              />
+            )}
+            style={{ gap: '2rem' }}
+          />
           
           {/* ── ADD NEW TALENT (EMPTY STATE STYLE) ── */}
           <motion.div
