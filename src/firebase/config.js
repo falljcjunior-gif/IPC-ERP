@@ -61,10 +61,12 @@ if (typeof window !== 'undefined') {
 
 export const auth = getAuth(app);
 
-// [FIX REAL-TIME] Disable Fetch Streams & Force Long Polling to prevent silent onSnapshot drop
+// [FIX P2] Utiliser autoDetect plutôt que force long polling.
+// experimentalAutoDetectLongPolling : WebSocket natif si disponible (Chrome/Firefox),
+// repli automatique sur long polling (Safari, proxies corporate).
+// Élimine la dégradation de performance de forceLongPolling en prod.
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false
+  experimentalAutoDetectLongPolling: true,
 });
 
 export const rtdb = getDatabase(app);
@@ -76,9 +78,9 @@ export const messaging = (typeof window !== 'undefined' && typeof navigator !== 
 if (typeof window !== 'undefined' && !import.meta.env?.VITEST) {
   enableMultiTabIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
-      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+      logger.warn('[Firestore] Multi-tab persistence: un seul onglet actif à la fois');
     } else if (err.code === 'unimplemented') {
-      console.warn("The current browser does not support all of the features required to enable persistence");
+      logger.warn('[Firestore] Persistence IndexedDB non supportée par ce navigateur');
     }
   });
 }

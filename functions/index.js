@@ -144,6 +144,11 @@ exports.backfillHrPrivateEntityId = migrations.backfillHrPrivateEntityId;
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
 // const { RATE_PRESETS } = require('./modules/rate_limiter');
 
+// 12. Webhooks sortants — Dispatch événements métier vers endpoints HTTP tiers
+const webhooks = require('./modules/webhooks');
+exports.dispatchWebhookEvent = webhooks.dispatchWebhookEvent;
+exports.manageWebhook        = webhooks.manageWebhook;
+
 // 9. Firestore Partitioning Utilities
 // Pas d'export Cloud Function — utilitaires pour la migration
 // const partitioning = require('./modules/firestore_partitioning');

@@ -96,7 +96,7 @@ const BASELINE_MODULES = ['home', 'hr', 'finance', 'connect'];
 // ── CALLABLE: createGroupEntity ───────────────────────────────────────────────
 
 exports.createGroupEntity = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     const token = requireHoldingRole(request);
     const uid   = request.auth.uid;
@@ -307,7 +307,7 @@ exports.createGroupEntity = onCall(
 // ── CALLABLE: updateGroupEntity ───────────────────────────────────────────────
 
 exports.updateGroupEntity = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     const token = requireHoldingRole(request);
     const uid   = request.auth.uid;
@@ -353,7 +353,7 @@ const ALLOWED_TRANSITIONS = {
 };
 
 exports.changeEntityState = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;
@@ -413,7 +413,7 @@ exports.changeEntityState = onCall(
 // ── CALLABLE: assignEntityLicense ─────────────────────────────────────────────
 
 exports.assignEntityLicense = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;
@@ -439,7 +439,7 @@ exports.assignEntityLicense = onCall(
 // ── CALLABLE: approveEntityUpgrade ───────────────────────────────────────────
 
 exports.approveEntityUpgrade = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;
@@ -498,7 +498,7 @@ exports.approveEntityUpgrade = onCall(
 // ── CALLABLE: duplicateGroupEntity ────────────────────────────────────────────
 
 exports.duplicateGroupEntity = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const uid = request.auth.uid;

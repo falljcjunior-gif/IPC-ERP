@@ -3,11 +3,11 @@ import { registry } from './services/Registry';
 import { 
   Home, Users, ShoppingCart, Mail, Package, Truck,
   Factory, Layers, CreditCard, Landmark, Wallet,
-  FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase, 
-  Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck, 
+  FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase,
+  Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck,
   Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
   PieChart, History as HistoryIcon, UserCircle, Scale, Heart, Rocket, Inbox, Shield,
-  Banknote, Smartphone, GraduationCap
+  Banknote, Smartphone, GraduationCap, Building2
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
@@ -218,6 +218,12 @@ export const initRegistry = () => {
     id: 'audit_hub', label: 'Audit & Conformité', icon: <ShieldCheck size={18} />,
     category: 'finance', roles: ['ADMIN', 'SUPER_ADMIN', 'LEGAL'],
     component: AuditHub, priority: 37, schema: auditSchema
+  });
+
+  registry.register({
+    id: 'immobilisations', label: 'Immobilisations', icon: <Building2 size={18} />,
+    category: 'finance', roles: ['ADMIN', 'FINANCE'],
+    component: lazy(() => import('./modules/finance/ImmobilisationsHub')), priority: 38
   });
 
   // --- RH & Collaboration ---

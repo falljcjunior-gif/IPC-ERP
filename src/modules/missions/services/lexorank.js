@@ -155,7 +155,7 @@ export function rankBetween(prevRank, nextRank) {
 
   if (prevBody === nextBody) {
     // Cas pathologique : même rank. Déclenche rebalancing.
-    console.warn('[LexoRank] Collision détectée. Rebalancing nécessaire.');
+    if (import.meta.env?.DEV) console.warn('[LexoRank] Collision détectée. Rebalancing nécessaire.');
     return buildRank(bucket, prevBody + intToChar(Math.floor(BASE / 2)));
   }
 
@@ -225,12 +225,14 @@ if (import.meta.env?.DEV) {
   const r3 = rankBetween(r1, r2);                  // milieu
   const r4 = rankBefore(r1);                       // avant r1
 
+  // DEV-only self-test (silencieux en prod via flag import.meta.env.DEV)
+  /* eslint-disable no-console */
   console.log('[LexoRank] initial:', r1);
   console.log('[LexoRank] after r1:', r2);
   console.log('[LexoRank] between r1&r2:', r3);
   console.log('[LexoRank] before r1:', r4);
   console.log('[LexoRank] needsRebalancing(r1):', needsRebalancing(r1));
-
   const rebalanced = rebalance(['c1', 'c2', 'c3', 'c4', 'c5']);
   console.log('[LexoRank] rebalanced:', rebalanced);
+  /* eslint-enable no-console */
 }

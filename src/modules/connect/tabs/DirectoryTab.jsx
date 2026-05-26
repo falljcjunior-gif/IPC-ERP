@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../../../store';
 import { FirestoreService } from '../../../services/firestore.service';
+import { logger } from '../../../utils/logger';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const item = { hidden: { opacity: 0, y: 15 }, show: { opacity: 1, y: 0 } };
@@ -35,7 +36,7 @@ const DirectoryTab = ({ data, onOpenDetail }) => {
         setPresenceData(pMap);
       });
     } catch (err) {
-      console.warn('[DirectoryTab] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[DirectoryTab] Firestore non disponible (mode DEV sans auth):', err.message);
     }
     return () => typeof unsub === 'function' && unsub();
   }, []);

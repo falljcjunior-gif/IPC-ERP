@@ -1,4 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// logger doit être mocké AVANT l'import de AuthService (qui l'importe transitif via recaptcha + config)
+vi.mock('../utils/logger', () => {
+  const stub = { log: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+  return { default: stub, logger: stub };
+});
+
 import { AuthService } from '../services/auth.service';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { FirestoreService } from '../services/firestore.service';

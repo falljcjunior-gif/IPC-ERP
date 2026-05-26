@@ -276,6 +276,20 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions / Super Admins manage periods
     }
 
+    // Registre des immobilisations corporelles & incorporelles (PCG)
+    // Lecture : ADMIN, FINANCE, ACCOUNTING — écriture : ADMIN ou FINANCE seulement
+    match /immobilisations/{docId} {
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('FINANCE'))
+                  && request.resource.data.valeur_brute is number
+                  && request.resource.data.valeur_brute >= 0
+                  && request.resource.data.duree_amortissement is number
+                  && request.resource.data.duree_amortissement >= 1;
+      allow delete: if isAdmin(); // Soft-delete préféré (etat = 'mis_au_rebut')
+    }
+
     match /sales/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('STAFF') || hasRole('FINANCE'));
@@ -1167,6 +1181,37 @@ service cloud.firestore {
     // Aucun client ne devrait jamais lire ni écrire cette collection directement.
     match /_rate_limits/{docId} {
       allow read, write: if false;
+    }
+
+    // ── Webhooks : configs, events, deliveries ───────────────────────────────
+    // [FIX P2] Architecture webhook sortant — Admin SDK only pour events/deliveries.
+    // Les admins peuvent lire et gérer les configs via l'UI (lecture seule en list).
+    match /webhook_configs/{docId} {
+      // Admins et Super Admins peuvent lire les configs de leur entité
+      allow read: if isAuthenticated()
+                && (isSuperAdmin() || isAdmin())
+                && (isSuperAdmin() || canReadOwnEntity(resource.data.entity_id));
+      // Écriture via Cloud Function manageWebhook uniquement (Admin SDK)
+      // Le client ne peut pas écrire directement
+      allow create, update, delete: if false;
+    }
+
+    // webhook_events : écrits par le client (via EventBus), lus par Cloud Function uniquement
+    match /webhook_events/{docId} {
+      // Seuls les utilisateurs authentifiés de la bonne entité peuvent créer un événement
+      allow create: if isAuthenticated()
+                  && canWriteOwnEntity(request.resource.data.entity_id);
+      // Lecture/suppression : Admin SDK uniquement (Cloud Function)
+      allow read, update, delete: if false;
+    }
+
+    // webhook_deliveries : écrits et lus par Cloud Function (Admin SDK) uniquement
+    match /webhook_deliveries/{docId} {
+      // Admins peuvent consulter l'historique des livraisons
+      allow read: if isAuthenticated()
+                && (isSuperAdmin() || isAdmin());
+      // Écriture réservée au serveur
+      allow create, update, delete: if false;
     }
 
     // ── Refus par défaut (sécurité) ────────────────────────────────────────

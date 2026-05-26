@@ -69,7 +69,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
         }, 100);
       });
     } catch (err) {
-      console.warn('[TeamChat] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[TeamChat] Firestore non disponible (mode DEV sans auth):', err.message);
     }
     return () => typeof unsubscribe === 'function' && unsubscribe();
   }, [activeRoom.id, currentUser?.id]);
@@ -116,7 +116,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
         contactName: activeRoom.label 
       });
     } catch (err) {
-      console.error("Initiate Call Error:", err);
+      logger.error("Initiate Call Error:", err);
     }
   };
 

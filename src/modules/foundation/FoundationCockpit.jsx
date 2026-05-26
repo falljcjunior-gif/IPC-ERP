@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
 import { isHoldingRole, isFoundationRole, ORG_ROLES } from '../../schemas/org.schema';
+import { logger } from '../../utils/logger';
 
 // ── Design tokens (white + green/khaki/cyan) ─────────────────────────────────
 const C = {
@@ -86,7 +87,7 @@ export default function FoundationCockpit() {
           docs => setData(d => ({ ...d, campaigns: docs }))),
       );
     } catch (err) {
-      console.warn('[FoundationCockpit] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[FoundationCockpit] Firestore non disponible (mode DEV sans auth):', err.message);
     }
     const timer = setTimeout(() => setLoading(false), 600);
     return () => { unsubs.forEach(u => typeof u === 'function' && u()); clearTimeout(timer); };

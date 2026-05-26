@@ -10,8 +10,10 @@
  * Le token retourné (valide 2 minutes) est envoyé au backend
  * pour vérification via l'API reCAPTCHA Enterprise.
  */
+import { logger } from './logger';
 
-const RECAPTCHA_SITE_KEY = '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
+// Clé publique reCAPTCHA Enterprise (même clé utilisée pour App Check)
+const RECAPTCHA_SITE_KEY = import.meta.env?.VITE_RECAPTCHA_SITE_KEY || '6Lc5zPwsAAAAADjek9KiEzFDMiYG17Bw9A7Q7XrK';
 
 /**
  * Obtient un token reCAPTCHA Enterprise pour une action donnée.
@@ -33,14 +35,14 @@ export async function getRecaptchaToken(action = 'LOGIN') {
     });
 
     if (!window.grecaptcha?.enterprise) {
-      console.warn('[reCAPTCHA] API non disponible — le script n\'a pas pu charger.');
+      logger.warn('[reCAPTCHA] API non disponible — le script n\'a pas pu charger.');
       return null;
     }
 
     const token = await window.grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
     return token;
   } catch (err) {
-    console.error('[reCAPTCHA] Erreur lors de l\'obtention du token:', err);
+    logger.error('[reCAPTCHA] Erreur lors de l\'obtention du token:', err);
     return null;
   }
 }

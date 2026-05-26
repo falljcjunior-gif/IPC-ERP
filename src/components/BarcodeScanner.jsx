@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Camera } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { logger } from '../utils/logger';
 
 const BarcodeScanner = ({ onScan, onClose }) => {
   const [error, setError] = useState(null);
@@ -32,7 +33,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
                   isStopped = true;
                   html5QrCode.stop().then(() => {
                     onScan(decodedText);
-                  }).catch(console.error);
+                  }).catch(err => logger.error("caught", err));
                 }
               },
               (errorMessage) => {
@@ -44,7 +45,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
           }
         }, 100);
       } catch (err) {
-        console.error("Scanner Error:", err);
+        logger.error("Scanner Error:", err);
         setError("Impossible de charger le moteur de code-barres offline.");
       }
     };
@@ -55,7 +56,7 @@ const BarcodeScanner = ({ onScan, onClose }) => {
       isStopped = true;
       if (html5QrCode) {
         html5QrCode.stop().catch(error => {
-          console.warn("L'arrêt du scanner a échoué:", error);
+          logger.warn("L'arrêt du scanner a échoué:", error);
         });
       }
     };

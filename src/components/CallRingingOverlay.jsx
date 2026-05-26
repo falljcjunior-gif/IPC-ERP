@@ -5,6 +5,7 @@ import { useStore } from '../store';
 import { FirestoreService } from '../services/firestore.service';
 
 import { soundEngine } from '../utils/soundEngine';
+import { logger } from '../utils/logger';
 
 const CallRingingOverlay = () => {
   const activeCall = useStore(s => s.activeCall);
@@ -35,7 +36,7 @@ const CallRingingOverlay = () => {
         acceptedAt: new Date()
       });
     } catch (err) {
-      console.error("Accept call error", err);
+      logger.error("Accept call error", err);
       // Optionnel: Revenir en arrière si erreur critique
     }
   };
@@ -48,7 +49,7 @@ const CallRingingOverlay = () => {
       });
       setActiveCall(null);
     } catch (err) {
-      console.error("Decline call error", err);
+      logger.error("Decline call error", err);
     }
   };
 

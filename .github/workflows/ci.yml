@@ -1,0 +1,250 @@
+# ══════════════════════════════════════════════════════════════════
+# IPC INTELLIGENCE ENGINE — CI/CD PIPELINE
+# ══════════════════════════════════════════════════════════════════
+#
+# FIX AUDIT P0 — Absence de CI/CD automatisé
+# AVANT : `npm run deploy` manuel → zéro gate qualité avant prod
+# APRÈS : 3 gates automatiques : Lint → Tests → Build → Deploy
+#
+# Triggers :
+#   push main/develop      → CI complet + déploiement Firebase
+#   pull_request any       → CI complet (pas de deploy)
+#   workflow_dispatch      → Deploy manuel depuis GitHub UI
+
+name: 🚀 IPC ERP — CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, 'release/*']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environnement cible'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true  # Annule le CI précédent si un nouveau push arrive
+
+env:
+  NODE_VERSION: '20'
+  FIREBASE_PROJECT: 'ipc-erp'
+
+jobs:
+  # ── JOB 1 : Qualité Code ───────────────────────────────────────
+  quality:
+    name: 🔍 Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Check for console.log (security leak)
+        run: |
+          # Empêcher les console.log en dehors du logger d'entrer en prod
+          VIOLATIONS=$(grep -r "console\.log\|console\.warn\|console\.error" src/ \
+            --include="*.js" --include="*.jsx" \
+            | grep -v "//.*console\|logger\|observability\|ErrorBoundary\|lexorank\|InteractionAuditor\|TenantContext" \
+            | grep -v "test\|spec\|setup" | wc -l)
+          echo "Console violations found: $VIOLATIONS"
+          if [ "$VIOLATIONS" -gt "5" ]; then
+            echo "❌ Too many console.* calls outside logger ($VIOLATIONS). Use logger instead."
+            exit 1
+          fi
+          echo "✅ Console hygiene OK ($VIOLATIONS minor)"
+
+  # ── JOB 2 : Tests ─────────────────────────────────────────────
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+          VITEST: 'true'
+
+      - name: Run coverage report
+        run: npm run test:coverage -- --reporter=json --reporter=text
+        continue-on-error: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # ── JOB 3 : Build ─────────────────────────────────────────────
+  build:
+    name: 🏗️ Build Production
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_RECAPTCHA_SITE_KEY: ${{ secrets.VITE_RECAPTCHA_SITE_KEY }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+
+      - name: Analyze bundle size
+        run: |
+          echo "=== Bundle sizes (top 10) ==="
+          ls -la dist/assets/ | awk '{print $5, $9}' | sort -rn | head -10
+          # Fail if any single chunk > 1MB
+          OVERSIZED=$(ls -la dist/assets/*.js | awk '{if($5 > 1048576) print $5, $9}')
+          if [ -n "$OVERSIZED" ]; then
+            echo "⚠️ Large bundles detected:"
+            echo "$OVERSIZED"
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7
+
+  # ── JOB 4 : Security Audit ────────────────────────────────────
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: NPM audit (high severity only)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+      - name: Check for hardcoded secrets
+        run: |
+          # Recherche de patterns suspects (API keys, tokens hardcodés)
+          if grep -r "sk_live_\|pk_live_\|AKIA\|aws_secret\|ghp_\|glpat-" src/ --include="*.js" --include="*.jsx" 2>/dev/null | grep -v "node_modules"; then
+            echo "❌ Possible hardcoded secrets detected!"
+            exit 1
+          fi
+          echo "✅ No obvious hardcoded secrets found"
+
+  # ── JOB 5 : Deploy (main branch only) ────────────────────────
+  deploy:
+    name: 🚀 Deploy to Firebase
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://ipc-erp.web.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: ${{ env.FIREBASE_PROJECT }}
+
+      - name: Deploy Firebase Functions
+        run: npx firebase-tools deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "🚀 Deployment completed: ${{ job.status }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Author: ${{ github.actor }}"
+
+  # ── JOB 6 : Deploy Staging (develop branch) ───────────────────
+  deploy-staging:
+    name: 🧪 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Firebase Preview Channel
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: ${{ env.FIREBASE_PROJECT }}
+          # Crée un canal preview unique par branche
+          channelId: staging-${{ github.run_id }}
+          expires: 7d

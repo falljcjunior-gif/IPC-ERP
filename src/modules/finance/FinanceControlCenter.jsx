@@ -13,10 +13,11 @@ import InvoicingTab from './tabs/InvoicingTab';
 import BudgetTab from './tabs/BudgetTab';
 import TreasuryTab from './tabs/TreasuryTab';
 import { RBACGuard, useRBAC, PERMISSIONS } from '../../utils/RBACGuard';
-import { IPCReportGenerator } from '../../utils/PDFExporter';
+// IPCReportGenerator chargé dynamiquement au moment de l'export (évite ~430KB dans le bundle initial)
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
 import { sumMoney, safePercent, isPaid, currentQuarterLabel, fiscalYearLabel } from '../../utils/finance';
 import '../../components/GlobalDashboard.css';
+import { logger } from '../../utils/logger';
 
 const ALL_TABS = [
   { id: 'analytics',  label: 'Analyse Stratégique',    icon: <BarChart3 size={16} /> },
@@ -64,6 +65,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
       const efficacite     = safePercent(totalRealise, totalBudget);
       const livraisons     = shipments.filter(s => (s.statut || '').toLowerCase().includes('livr')).length;
 
+      const { IPCReportGenerator } = await import('../../utils/PDFExporter');
       await IPCReportGenerator.generateFinancialStatement({
         title: "IPC Financial Intelligence Statement",
         summary: `Analyse institutionnelle consolidée — ${fiscalYearLabel()}.`,
@@ -82,7 +84,7 @@ const FinanceControlCenter = ({ onOpenDetail, appId }) => {
         ],
       });
     } catch (err) {
-      console.error('[FinanceExport] failed:', err);
+      logger.error('[FinanceExport] failed:', err);
     } finally {
       setIsExporting(false);
     }

@@ -13,6 +13,8 @@ import { UserService } from './services/user.service';
 import { FirestoreService } from './services/firestore.service';
 import { setTenantContext } from './services/TenantContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ConsentBanner } from './components/ConsentBanner';
+import { logger } from './utils/logger';
 import './index.css';
 
 const AuthObserver = () => {
@@ -29,7 +31,7 @@ const AuthObserver = () => {
       sessionStorage.removeItem('oauth_state');
 
       if (!expectedState || expectedState !== receivedState) {
-        console.error('[OAuth] CSRF détecté ou state manquant. Callback rejeté.');
+        logger.error('[OAuth] CSRF détecté ou state manquant. Callback rejeté.');
         addToast('Connexion refusée : anomalie de sécurité détectée.', 'error');
         window.history.replaceState({}, document.title, '/');
         return;
@@ -47,7 +49,7 @@ const AuthObserver = () => {
           window.history.replaceState({}, document.title, "/");
           addToast("Compte Marketing connecté avec succès !", 'success');
         } catch (error) {
-          console.error("Erreur exchange token:", error);
+          logger.error('Erreur exchange token', error);
           addToast("Échec de la connexion API. Vérifiez vos accès.", 'error');
         }
       };
@@ -76,7 +78,7 @@ function App() {
     // Safety fallback: If Firebase doesn't respond in 5s, we force initialization
     const fallbackTimer = setTimeout(() => {
       if (isInitializing) {
-        console.warn('Firebase Auth took too long to respond. Forcing initialization.');
+        logger.warn('Firebase Auth took too long to respond. Forcing initialization.');
         setIsInitializing(false);
       }
     }, 5000);
@@ -117,7 +119,7 @@ function App() {
 
           setView('dashboard');
         } catch (error) {
-          console.error("[App] Erreur sync profil:", error);
+          logger.error('[App] Erreur sync profil', error);
           // Fallback minimal — rôle depuis Custom Claims (token signé, non modifiable côté client)
           try {
             const tokenResult = await firebaseUser.getIdTokenResult();
@@ -153,6 +155,7 @@ function App() {
       <BusinessProvider>
         <ToastProvider>
           <AuthObserver />
+          <ConsentBanner />
           <div className="app-container">
             {view === 'landing' ? (
               <React.Suspense fallback={<InitializingView label="Chargement..." />}>

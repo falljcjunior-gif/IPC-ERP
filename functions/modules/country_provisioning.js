@@ -282,7 +282,7 @@ async function provisionCountryDirector({
 // ── CALLABLE: provisionCountryScope ─────────────────────────────────────────
 
 exports.provisionCountryScope = onCall(
-  { region: 'europe-west1', enforceAppCheck: false, timeoutSeconds: 120 },
+  { region: 'europe-west1', enforceAppCheck: true, timeoutSeconds: 120 },
   async (request) => {
     const token   = requireHoldingRole(request);
     const actorUid = request.auth.uid;
@@ -590,7 +590,7 @@ exports.provisionCountryScope = onCall(
 const VALID_COUNTRY_STATES = ['ACTIVE', 'SUSPENDED', 'ARCHIVED'];
 
 exports.changeCountryScopeState = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const actorUid = request.auth.uid;

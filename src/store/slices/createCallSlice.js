@@ -1,4 +1,5 @@
 import { FirestoreService } from '../../services/firestore.service';
+import logger from '../../utils/logger';
 
 export const createCallSlice = (set, get) => ({
   activeCall: null,
@@ -41,7 +42,7 @@ export const createCallSlice = (set, get) => ({
       // 2. Sync with Firestore in background
       await FirestoreService.updateDocument('calls', activeCall.id, { status: 'accepted' });
     } catch (err) { 
-      console.error("Accept Error:", err); 
+      logger.error("Accept Error:", err); 
     }
   },
 
@@ -55,7 +56,7 @@ export const createCallSlice = (set, get) => ({
       // 2. Notify other side via Firestore
       await FirestoreService.updateDocument('calls', activeCall.id, { status: 'rejected' });
     } catch (err) { 
-      console.error("Reject Error:", err); 
+      logger.error("Reject Error:", err); 
     }
   },
 });

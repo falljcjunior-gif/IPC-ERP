@@ -28,6 +28,7 @@ import { FirestoreService } from '../../services/firestore.service';
 import { useToastStore } from '../../store/useToastStore';
 import { GROUP_ENTITIES, isHoldingRole } from '../../schemas/org.schema';
 import './HoldingOS.css';
+import { logger } from '../../utils/logger';
 
 // ── Lazy-loaded sub-modules ───────────────────────────────────────────────
 const EntityManagementCenter = lazy(() => import('./tabs/EntityManagementCenter'));
@@ -155,7 +156,7 @@ export default function HoldingCockpit() {
         docs => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); }
       );
     } catch (err) {
-      console.warn('[HoldingCockpit] Firestore non disponible (mode DEV):', err.message);
+      logger.warn('[HoldingCockpit] Firestore non disponible (mode DEV):', err.message);
       setLoading(false);
     }
     return () => typeof unsub === 'function' && unsub();
@@ -680,7 +681,7 @@ function GovernanceTab({ approvals }) {
       });
       useToastStore.getState().addToast(`Approuvé : ${item.description || item.id}`, 'success');
     } catch (err) {
-      console.warn('[Governance] Approve failed:', err.message);
+      logger.warn('[Governance] Approve failed:', err.message);
       useToastStore.getState().addToast(`Erreur lors de l'approbation : ${err.message}`, 'error');
       setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }
@@ -696,7 +697,7 @@ function GovernanceTab({ approvals }) {
       });
       useToastStore.getState().addToast(`Rejeté : ${item.description || item.id}`, 'info');
     } catch (err) {
-      console.warn('[Governance] Reject failed:', err.message);
+      logger.warn('[Governance] Reject failed:', err.message);
       useToastStore.getState().addToast(`Erreur lors du rejet : ${err.message}`, 'error');
       setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }

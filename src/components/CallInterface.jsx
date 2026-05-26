@@ -50,7 +50,7 @@ const CallInterface = ({
         }
       });
     } catch (err) {
-      console.warn('[CallInterface] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[CallInterface] Firestore non disponible (mode DEV sans auth):', err.message);
     }
 
     return () => typeof unsub === 'function' && unsub();
@@ -382,7 +382,7 @@ const RemoteVideo = ({ id, stream, strip, full, onSpeak, isSelected }) => {
             };
             checkVolume();
          } catch (e) {
-            console.warn("Failed to create AudioContext for remote track", e);
+            logger.warn("Failed to create AudioContext for remote track", e);
          }
       }
     }

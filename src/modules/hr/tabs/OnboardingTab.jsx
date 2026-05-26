@@ -13,6 +13,7 @@ import { PermissionMatrix } from '../components/PermissionMatrix';
 import { debugInteraction } from '../../../utils/InteractionAuditor';
 import { SALARY_TYPES, CURRENCIES, PAYMENT_MODES } from '../../../schemas/payroll.schema';
 import { getTenantContext } from '../../../services/TenantContext';
+import { logger } from '../../../utils/logger';
 
 // ─────────────────────────────────────────────────────────────────
 // WIZARD STEPS
@@ -481,7 +482,7 @@ const OnboardingTab = ({ accessLevel }) => {
         });
       }, 5000);
     } catch (err) {
-      console.error('[Onboarding] Provisioning failed:', err);
+      logger.error('[Onboarding] Provisioning failed:', err);
       setError(err.message || "Échec du provisionnement. Vérifiez la connexion.");
     } finally {
       setLoading(false);

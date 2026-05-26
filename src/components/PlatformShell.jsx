@@ -21,7 +21,8 @@ import { resolveSpace, getSpaceTheme, getSpaceHome } from '../services/space.con
 import SpaceBadge from './SpaceBadge';
 
 // Lazy loaded components
-const DetailOverlay = lazy(() => import('./DetailOverlay'));
+const DetailOverlay    = lazy(() => import('./DetailOverlay'));
+const OnboardingWizard = lazy(() => import('./OnboardingWizard'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import ToastContainer from './ToastContainer';
@@ -40,12 +41,16 @@ import './SubsidiaryShell.css';
 import './FoundationShell.css';
 import CommandPalette from './shell/CommandPalette';
 import ErrorBoundary from './ErrorBoundary';
+import { logger } from '../utils/logger';
+import { useIdleTimeout } from '../hooks/useIdleTimeout';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ theme, setView }) => {
   const { t, i18n } = useTranslation();
+  // [FIX AUDIT P0] Session idle timeout — déconnexion automatique après inactivité
+  useIdleTimeout({ enabled: true });
   const globalSearch = useStore(s => s.globalSearch);
   const searchResults = useStore(s => s.searchResults);
   const updateRecord = useStore(s => s.updateRecord);
@@ -96,6 +101,14 @@ const PlatformShell = ({ theme, setView }) => {
 
   // Pointage RH State
   const [showPointage, setShowPointage] = useState(false);
+
+  // Onboarding Wizard — première connexion
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    const uid = currentUser?.id;
+    if (!uid || uid === 'guest') return false;
+    if (currentUser?.onboardingCompleted) return false;
+    try { return !localStorage.getItem(`ipc_onboarded_${uid}`); } catch { return false; }
+  });
 
   // Navigation State
   const [appsPool, setAppsPool] = useState([]);
@@ -163,7 +176,7 @@ const PlatformShell = ({ theme, setView }) => {
       FirestoreService.updateDocument('users', currentUser.id, {
         isOnline,
         lastSeen: new Date().toISOString()
-      }).catch(err => console.warn("Presence Error:", err));
+      }).catch(err => logger.warn("Presence Error:", err));
     };
 
     updatePresence(true);
@@ -189,7 +202,7 @@ const PlatformShell = ({ theme, setView }) => {
             }
           }
         } catch (err) {
-          console.warn('[FCM] Registration failed:', err.message);
+          logger.warn('[FCM] Registration failed:', err.message);
         }
       };
       fcmTimer = setTimeout(registerFCM, 3000);
@@ -739,6 +752,15 @@ style={{
       `}</style>
       <NotificationCenter />
       <ToastContainer />
+
+      {/* ── Onboarding Wizard — première connexion ── */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <Suspense fallback={null}>
+            <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

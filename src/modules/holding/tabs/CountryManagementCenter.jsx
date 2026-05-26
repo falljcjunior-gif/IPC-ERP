@@ -32,6 +32,7 @@ import {
   SUPPORTED_COUNTRIES, COUNTRY_SCOPE_STATES, getCountryByCode, buildEntityIds, buildEntityNames,
 } from '../../../schemas/country.schema';
 import { useStore } from '../../../store';
+import { logger } from '../../../utils/logger';
 
 // ── Design tokens (white premium, parité HoldingCockpit) ────────────────────
 const C = {
@@ -124,7 +125,7 @@ export default function CountryManagementCenter() {
         (docs) => { setScopes(docs); setLoading(false); }
       );
     } catch (err) {
-      console.warn('[CountryManagementCenter] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[CountryManagementCenter] Firestore non disponible (mode DEV sans auth):', err.message);
       setLoading(false);
     }
     return () => typeof unsub === 'function' && unsub();
@@ -440,7 +441,7 @@ function CountryWizard({ existingCountryIds, onClose }) {
       }
     } catch (err) {
       clearInterval(stepTimer);
-      console.error('[CountryWizard] submit:', err);
+      logger.error('[CountryWizard] submit:', err);
       setProvisioningDone({ success: false, error: err.message || 'Erreur inconnue' });
     } finally {
       setSubmitting(false);

@@ -8,6 +8,7 @@ import {
 import { getAuth } from 'firebase/auth';
 import app from '../firebase/config';
 import { useStore } from '../store';
+import { logger } from '../utils/logger';
 
 // ── Config ────────────────────────────────────────────────────────
 const JARVIS_STREAM_URL = import.meta.env.DEV
@@ -347,7 +348,7 @@ const AIAssistant = ({ spotlightOpen, setSpotlightOpen, activeModule }) => {
       speak(displayText);
 
     } catch (err) {
-      console.error('JARVIS Stream error:', err);
+      logger.error('JARVIS Stream error:', err);
       const errorMsg = err.message?.includes('401') || err.message?.includes('authentifié')
         ? 'Session expirée. Reconnectez-vous.'
         : 'Interruption du canal JARVIS.';

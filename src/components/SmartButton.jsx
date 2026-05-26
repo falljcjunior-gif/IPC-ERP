@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { logger } from '../utils/logger';
 // import { Haptics, ImpactStyle } from '@capacitor/haptics'; // Optional: for mobile
 
 /**
@@ -48,7 +49,7 @@ const SmartButton = ({
       setStatus('success');
       setTimeout(() => setStatus('idle'), 2000);
     } catch (err) {
-      console.error('SmartButton Error:', err);
+      logger.error('SmartButton Error:', err);
       setStatus('error');
       setTimeout(() => setStatus('idle'), 3000);
     } finally {

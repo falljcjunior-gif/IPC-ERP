@@ -4,8 +4,7 @@ import {
   BarChart3, Megaphone, Mail, CalendarDays, Users2,
   DollarSign, Download, Plus, Activity, Zap, Sparkles
 } from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+// jsPDF et autoTable chargés dynamiquement à l'export (évite ~430KB dans le bundle initial)
 import { useStore } from '../../store';
 //
 import TabBar from './components/TabBar';
@@ -47,7 +46,9 @@ const Marketing = ({ onOpenDetail, navigateTo }) => {
     setIsModalOpen(false);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const { jsPDF } = await import('jspdf');
+    await import('jspdf-autotable');
     const doc = new jsPDF();
     const W = doc.internal.pageSize.getWidth();
     doc.setFillColor(236, 72, 153);

@@ -1,6 +1,7 @@
 import { onSnapshot, collection, query, where, limit } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { useStore } from '../store';
+import { logger } from '../utils/logger';
 
 /**
  * CallListener Service
@@ -13,7 +14,7 @@ export const CallListener = {
     if (this.unsubscribe) this.unsubscribe();
     if (!userId) return;
 
-    console.log(`[CallListener] Initializing for user: ${userId}`);
+    logger.log(`[CallListener] Initializing for user: ${userId}`);
 
     const q = query(
       collection(db, 'calls'), 
@@ -27,7 +28,7 @@ export const CallListener = {
       
       if (snap.empty) {
         if (activeCall?.status === 'ringing' && activeCall?.role === 'receiver') {
-          console.log("[CallListener] Call cancelled or answered elsewhere");
+          logger.log("[CallListener] Call cancelled or answered elsewhere");
           setActiveCall(null);
         }
         return;
@@ -38,7 +39,7 @@ export const CallListener = {
       
       if (activeCall?.id === callDoc.id) return;
 
-      console.log(`[CallListener] Incoming call detected: ${callDoc.id}`);
+      logger.log(`[CallListener] Incoming call detected: ${callDoc.id}`);
       setActiveCall({ 
         id: callDoc.id, 
         roomId: callData.roomId || callDoc.id,
