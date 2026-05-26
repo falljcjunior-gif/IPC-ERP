@@ -151,8 +151,8 @@ export default function HoldingCockpit() {
     try {
       unsub = FirestoreService.subscribeToCollection(
         'intercompany_approvals',
-        docs => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); },
-        { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 }
+        { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 },
+        docs => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); }
       );
     } catch (err) {
       console.warn('[HoldingCockpit] Firestore non disponible (mode DEV):', err.message);
