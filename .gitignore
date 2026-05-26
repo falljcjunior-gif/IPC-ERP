@@ -21,3 +21,4 @@ request.json
 artifacts/
 playwright-report/
 test-results/
+coverage/

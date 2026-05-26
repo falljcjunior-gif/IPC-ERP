@@ -96,7 +96,7 @@ const recordWebVitals = () => {
       const last    = entries[entries.length - 1];
       _buffer.push({ metric: 'LCP', value: Math.round(last.startTime), unit: 'ms', ts: Date.now() });
     }).observe({ type: 'largest-contentful-paint', buffered: true });
-  } catch {}
+  } catch (_e) { /* PerformanceObserver not supported */ }
 
   // CLS
   try {
@@ -107,7 +107,7 @@ const recordWebVitals = () => {
       });
       _buffer.push({ metric: 'CLS', value: Math.round(cls * 1000) / 1000, unit: 'score', ts: Date.now() });
     }).observe({ type: 'layout-shift', buffered: true });
-  } catch {}
+  } catch (_e) { /* PerformanceObserver not supported */ }
 
   // TTFB
   try {
@@ -118,7 +118,7 @@ const recordWebVitals = () => {
         }
       });
     }).observe({ type: 'navigation', buffered: true });
-  } catch {}
+  } catch (_e) { /* PerformanceObserver not supported */ }
 
   // INP (Interaction to Next Paint — remplace FID)
   try {
@@ -131,7 +131,7 @@ const recordWebVitals = () => {
         }
       });
     }).observe({ type: 'event', durationThreshold: 16, buffered: true });
-  } catch {}
+  } catch (_e) { /* PerformanceObserver not supported */ }
 };
 
 // ── Hook principal ────────────────────────────────────────────────────────────

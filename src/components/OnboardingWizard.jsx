@@ -260,14 +260,14 @@ const OnboardingWizard = ({ onComplete }) => {
       logger.warn('[Onboarding] Could not persist completion:', err.message);
     } finally {
       // Store in localStorage as fallback
-      try { localStorage.setItem(`ipc_onboarded_${currentUser?.id}`, '1'); } catch {}
+      try { localStorage.setItem(`ipc_onboarded_${currentUser?.id}`, '1'); } catch (_e) { /* localStorage unavailable */ }
       onComplete?.();
     }
   }, [currentUser, completing, onComplete]);
 
   const handleSkip = useCallback(async () => {
     // Skip: store in localStorage only (will not reappear this session, but may next)
-    try { localStorage.setItem(`ipc_onboarded_${currentUser?.id}`, '1'); } catch {}
+    try { localStorage.setItem(`ipc_onboarded_${currentUser?.id}`, '1'); } catch (_e) { /* localStorage unavailable */ }
     onComplete?.();
   }, [currentUser, onComplete]);
 
