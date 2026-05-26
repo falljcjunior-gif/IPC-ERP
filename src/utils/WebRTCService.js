@@ -46,13 +46,22 @@ const servers = {
 
 export class WebRTCService {
   constructor() {
-    this.pcs = new Map(); // { participantId: RTCPeerConnection }
+    this.pcs = new Map();           // { participantId: RTCPeerConnection }
     this.localStream = null;
-    this.remoteStreams = new Map(); // { participantId: MediaStream }
-    this.candidateQueues = {}; // { participantId: RTCIceCandidateInit[] }
+    this.remoteStreams = new Map();  // { participantId: MediaStream }
+    this.candidateQueues = {};       // { participantId: RTCIceCandidateInit[] }
     this.unsubscribeParticipants = null;
     this.unsubscribeSignals = null;
     this.processedSignals = new Set();
+    this.onConnectionStateChange = null; // (state: 'connecting'|'connected'|'reconnecting'|'failed') => void
+    this.statsIntervals = new Map(); // { participantId: setIntervalId }
+  }
+
+  // Mapper RTCPeerConnection.connectionState → état UI simplifié
+  _mapConnectionState(raw) {
+    return { new: 'connecting', checking: 'connecting', connecting: 'connecting',
+             connected: 'connected', disconnected: 'reconnecting',
+             failed: 'failed', closed: 'failed' }[raw] || raw;
   }
 
   async startLocalStream(type = 'video') {
@@ -103,8 +112,9 @@ export class WebRTCService {
   }
 
   // Multi-party Room Joining (Mesh Architecture)
-  async joinRoom(roomId, userId, userName, onParticipantsUpdate) {
+  async joinRoom(roomId, userId, userName, onParticipantsUpdate, onConnectionStateChange) {
     logger.info(`[WebRTC] Joining room: ${roomId} as ${userName}`);
+    this.onConnectionStateChange = onConnectionStateChange || null;
     
     // 1. Ensure room exists (Defensive)
     const room = await FirestoreService.getDocument('rooms', roomId);
@@ -166,7 +176,9 @@ export class WebRTCService {
           } catch (err) {
             logger.error(`[WebRTC] Error handling signal: ${err.message}`);
           } finally {
-            FirestoreService.deleteDocument(`rooms/${roomId}/signals`, signal.id).catch(() => {});
+            FirestoreService.deleteDocument(`rooms/${roomId}/signals`, signal.id).catch((err) => {
+              logger.warn(`[WebRTC] Signal cleanup failed for ${signal.id}:`, err.message);
+            });
           }
         }
       }
@@ -178,7 +190,12 @@ export class WebRTCService {
     const senderId = signal.from;
 
     if (data.type === 'offer') {
-      await this.handleOffer(roomId, myId, senderId, data, onParticipantsUpdate);
+      // ICE restart : réutiliser la PC existante plutôt que d'en créer une nouvelle
+      if (data.iceRestart && this.pcs.has(senderId)) {
+        await this.handleIceRestartOffer(roomId, myId, senderId, data);
+      } else {
+        await this.handleOffer(roomId, myId, senderId, data, onParticipantsUpdate);
+      }
     } else if (data.type === 'answer') {
       await this.handleAnswer(senderId, data);
     } else if (data.type === 'candidate') {
@@ -243,8 +260,26 @@ export class WebRTCService {
 
     pc.onconnectionstatechange = () => {
       logger.info(`[WebRTC] Connection state with ${targetId}: ${pc.connectionState}`);
+      if (this.onConnectionStateChange) {
+        this.onConnectionStateChange(this._mapConnectionState(pc.connectionState));
+      }
       if (pc.connectionState === 'connected') {
         logger.info(`[WebRTC] ✅ Connexion établie avec ${targetId}`);
+        // Démarrer le monitoring stats
+        const interval = setInterval(async () => {
+          try {
+            const stats = await pc.getStats();
+            stats.forEach(r => {
+              if (r.type === 'inbound-rtp') {
+                logger.info(`[WebRTC] Stats ← ${targetId} [${r.kind}] rx:${r.bytesReceived}B lost:${r.packetsLost}`);
+              }
+              if (r.type === 'outbound-rtp') {
+                logger.info(`[WebRTC] Stats → ${targetId} [${r.kind}] tx:${r.bytesSent}B`);
+              }
+            });
+          } catch (_err) { /* getStats non disponible sur cette PC */ }
+        }, 10000);
+        this.statsIntervals.set(targetId, interval);
       } else if (pc.connectionState === 'failed') {
         logger.error(`[WebRTC] ❌ Connexion définitivement échouée avec ${targetId}`);
         this.closePeerConnection(targetId);
@@ -312,8 +347,25 @@ export class WebRTCService {
 
     pc.onconnectionstatechange = () => {
       logger.info(`[WebRTC] Connection state with ${senderId}: ${pc.connectionState}`);
+      if (this.onConnectionStateChange) {
+        this.onConnectionStateChange(this._mapConnectionState(pc.connectionState));
+      }
       if (pc.connectionState === 'connected') {
         logger.info(`[WebRTC] ✅ Connexion établie avec ${senderId}`);
+        const interval = setInterval(async () => {
+          try {
+            const stats = await pc.getStats();
+            stats.forEach(r => {
+              if (r.type === 'inbound-rtp') {
+                logger.info(`[WebRTC] Stats ← ${senderId} [${r.kind}] rx:${r.bytesReceived}B lost:${r.packetsLost}`);
+              }
+              if (r.type === 'outbound-rtp') {
+                logger.info(`[WebRTC] Stats → ${senderId} [${r.kind}] tx:${r.bytesSent}B`);
+              }
+            });
+          } catch (_err) { /* getStats non disponible sur cette PC */ }
+        }, 10000);
+        this.statsIntervals.set(senderId, interval);
       } else if (pc.connectionState === 'failed') {
         logger.error(`[WebRTC] ❌ Connexion définitivement échouée avec ${senderId}`);
         this.closePeerConnection(senderId);
@@ -375,8 +427,24 @@ export class WebRTCService {
     }
   }
 
+  // ICE Restart côté répondant — réutilise la PC existante (évite fuite mémoire)
+  async handleIceRestartOffer(roomId, myId, senderId, signal) {
+    const pc = this.pcs.get(senderId);
+    if (!pc) return; // Fallback: la PC a peut-être déjà été fermée
+    logger.info(`[WebRTC] ICE restart — réponse à l'offre de ${senderId} sur PC existante`);
+    await pc.setRemoteDescription(new RTCSessionDescription({ type: 'offer', sdp: signal.sdp }));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    await this.sendSignal(roomId, myId, senderId, { type: 'answer', sdp: answer.sdp });
+  }
+
   closePeerConnection(participantId) {
     logger.info(`[WebRTC] Closing peer connection with ${participantId}`);
+    // Arrêter le monitoring stats
+    if (this.statsIntervals.has(participantId)) {
+      clearInterval(this.statsIntervals.get(participantId));
+      this.statsIntervals.delete(participantId);
+    }
     const pc = this.pcs.get(participantId);
     if (pc) {
       pc.close();
@@ -402,12 +470,18 @@ export class WebRTCService {
       await FirestoreService.deleteDocument(`rooms/${roomId}/participants`, userId);
     }
     
+    // Stopper tous les intervals stats
+    this.statsIntervals.forEach((interval) => clearInterval(interval));
+    this.statsIntervals.clear();
+
     this.pcs.forEach((pc, id) => {
       logger.info(`[WebRTC] Closing peer ${id} during leaveRoom`);
       pc.close();
     });
     this.pcs.clear();
     this.remoteStreams.clear();
+    this.processedSignals.clear();
+    this.onConnectionStateChange = null;
     
     if (this.localStream) {
       logger.info("[WebRTC] Stopping local stream tracks");

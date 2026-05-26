@@ -73,13 +73,17 @@ export default function FoundationCockpit() {
     try {
       unsubs.push(
         FirestoreService.subscribeToCollection('foundation_donations',
-          docs => setData(d => ({ ...d, donations: docs })), { limit: 100 }),
+          { orderByField: '_createdAt', descending: true, limit: 100 },
+          docs => setData(d => ({ ...d, donations: docs }))),
         FirestoreService.subscribeToCollection('foundation_programs',
-          docs => setData(d => ({ ...d, programs: docs })), { limit: 50 }),
+          { orderByField: '_createdAt', descending: true, limit: 50 },
+          docs => setData(d => ({ ...d, programs: docs }))),
         FirestoreService.subscribeToCollection('foundation_beneficiaries',
-          docs => setData(d => ({ ...d, beneficiaries: docs })), { limit: 200 }),
+          { orderByField: '_createdAt', descending: true, limit: 200 },
+          docs => setData(d => ({ ...d, beneficiaries: docs }))),
         FirestoreService.subscribeToCollection('foundation_campaigns',
-          docs => setData(d => ({ ...d, campaigns: docs })), { limit: 50 }),
+          { orderByField: '_createdAt', descending: true, limit: 50 },
+          docs => setData(d => ({ ...d, campaigns: docs }))),
       );
     } catch (err) {
       console.warn('[FoundationCockpit] Firestore non disponible (mode DEV sans auth):', err.message);

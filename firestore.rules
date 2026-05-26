@@ -145,16 +145,31 @@ service cloud.firestore {
       allow update: if isAuthenticated() && canWriteOwnEntity(resource.data.entity_id);
       allow delete: if isAdmin() && canWriteOwnEntity(resource.data.entity_id);
 
-      // Sous-collections room — héritent du scoping entity_id de la room parente
-      // [3-SPACE ISOLATION A.1.a] Empêche le hijacking cross-entity si un UID room est connu.
+      // Sous-collections WebRTC — signalisation d'appel (SDP/ICE), éphémères et chiffrées.
+      // Délibérément non scopées par entity_id : un appel HOLDING → SUBSIDIARY doit traverser
+      // les entités. La sécurité est garantie par : (a) isAuthenticated, (b) filtre émetteur/destinataire,
+      // (c) suppression du signal après traitement côté récepteur.
       match /participants/{uid} {
-        allow read, write: if isAuthenticated() && canReadOwnEntity(
-          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
-        );
+        // Lecture : tout utilisateur auth (pour voir qui est dans la room).
+        // Écriture : uniquement l'utilisateur inscrit (chaque user gère son propre doc participant).
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() && (uid == request.auth.uid);
       }
       match /signals/{sigId} {
-        allow read, write: if isAuthenticated() && canReadOwnEntity(
-          get(/databases/$(database)/documents/rooms/$(roomId)).data.get('entity_id', null)
+        // Lecture : destinataire du signal uniquement (to == moi) OU émetteur (for cleanup).
+        // Écriture : émetteur uniquement (from == moi) OU Admin.
+        // Liste (onSnapshot) : auth suffisante car le listener filtre sur `to==myId` côté client.
+        allow read: if isAuthenticated() && (
+          resource.data.get('to', '') == request.auth.uid ||
+          resource.data.get('from', '') == request.auth.uid ||
+          isAdmin()
+        );
+        allow create: if isAuthenticated() && request.resource.data.get('from', '') == request.auth.uid;
+        allow update: if isAuthenticated() && resource.data.get('from', '') == request.auth.uid;
+        allow delete: if isAuthenticated() && (
+          resource.data.get('from', '') == request.auth.uid ||
+          resource.data.get('to', '') == request.auth.uid ||
+          isAdmin()
         );
       }
     }
@@ -171,7 +186,9 @@ service cloud.firestore {
         resource.data.callerId == request.auth.uid ||
         resource.data.receiverId == request.auth.uid
       );
-      allow delete: if isAuthenticated();
+      // Soft-delete uniquement : les admins peuvent supprimer, les parties prenantes non.
+      // Empêche la destruction de preuves d'appel par les utilisateurs lambda.
+      allow delete: if isAdmin();
     }
 
     // ── Notifications ─────────────────────────────────────────────────────────
@@ -1144,6 +1161,12 @@ service cloud.firestore {
                   && canWriteOwnEntity(resource.data.entity_id);
       allow delete: if isAuthenticated()
                   && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // ── _rate_limits (server-side only — Cloud Functions via Admin SDK) ───────
+    // Aucun client ne devrait jamais lire ni écrire cette collection directement.
+    match /_rate_limits/{docId} {
+      allow read, write: if false;
     }
 
     // ── Refus par défaut (sécurité) ────────────────────────────────────────

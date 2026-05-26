@@ -130,7 +130,7 @@ const FleetHub = ({ onOpenDetail, accessLevel }) => {
               {vehicles.slice(0, 6).map(v => {
                 const colors = FLEET_STATUS_COLORS[v.statut] || FLEET_STATUS_COLORS['Disponible'];
                 return (
-                  <motion.div key={v.id} whileHover={{ scale: 1.02 }} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => onOpenDetail?.(v, 'fleet', 'vehicles')}>
+                  <motion.div key={v.id} role="button" tabIndex={0} aria-label={`Véhicule ${v.immatriculation}`} whileHover={{ scale: 1.02 }} className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--border)', cursor: 'pointer' }} onClick={() => onOpenDetail?.(v, 'fleet', 'vehicles')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpenDetail?.(v, 'fleet', 'vehicles')}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{v.immatriculation}</div>
                       <span style={{ padding: '3px 10px', borderRadius: '999px', fontSize: '0.7rem', fontWeight: 700, ...colors }}>{v.statut}</span>

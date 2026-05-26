@@ -159,7 +159,7 @@ const StudioTab = () => {
                       {Object.entries(currentModelSchema.fields).map(([name, f]) => {
                          const isActive = currentModelSchema.views.list.includes(name);
                          return (
-                            <motion.div key={name} whileHover={{ scale: 1.02 }} onClick={() => handleToggleColumn(name)}
+                            <motion.div key={name} role="checkbox" aria-checked={isActive} aria-label={f.label} tabIndex={0} whileHover={{ scale: 1.02 }} onClick={() => handleToggleColumn(name)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleToggleColumn(name)}
                                style={{ padding: '1rem 1.25rem', borderRadius: '1.25rem', border: `1px solid ${isActive ? '#8B5CF6' : 'var(--border)'}`, background: isActive ? '#8B5CF608' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}>
                                <div style={{ width: 22, height: 22, borderRadius: '6px', border: '2px solid var(--border)', background: isActive ? '#8B5CF6' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
                                   {isActive && <BadgeCheck size={14} color="white" />}

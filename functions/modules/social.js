@@ -3,6 +3,7 @@ const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const axios = require('axios');
 const { z } = require('zod');
+const { checkCallRate } = require('./rate_limiter');
 
 const db = admin.firestore();
 
@@ -20,6 +21,8 @@ exports.exchangeSocialToken = onCall({
   maxInstances: 5
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'User must be logged in.');
+  // Max 10 échanges OAuth par heure — prévient l'abus de tokens tiers
+  await checkCallRate(db, request.auth.uid, 'exchangeSocialToken', { maxRequests: 10, windowMs: 60 * 60 * 1000 });
 
   // Validate Input
   const result = ExchangeTokenSchema.safeParse(request.data);

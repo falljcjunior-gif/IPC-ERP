@@ -194,14 +194,19 @@ const ITModule = () => {
                     if (!nom?.trim()) return;
                     const type = window.prompt('Type (Laptop / Serveur / Switch / Imprimante / Autre)', 'Laptop');
                     const assignedTo = window.prompt('Assigné à (nom ou email, optionnel)', '') || '';
-                    await FirestoreService.addDocument('it_assets', {
-                      nom: nom.trim(),
-                      type: type?.trim() || 'Autre',
-                      assignedTo: assignedTo.trim(),
-                      status: 'Actif',
-                      healthScore: 100,
-                    });
-                    useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
+                    try {
+                      await FirestoreService.addDocument('it_assets', {
+                        nom: nom.trim(),
+                        type: type?.trim() || 'Autre',
+                        assignedTo: assignedTo.trim(),
+                        status: 'Actif',
+                        healthScore: 100,
+                      });
+                      useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
+                    } catch (err) {
+                      console.error('[ITModule] addDocument it_assets failed:', err.message);
+                      useToastStore.getState().addToast(`Erreur : impossible d'ajouter l'actif. ${err.message}`, 'error');
+                    }
                   }}
                 >
                   Nouvel Actif

@@ -5,8 +5,7 @@ import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
-// App Check import — activé uniquement quand la clé est liée dans la console Firebase
-// import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from "firebase/app-check";
 import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
@@ -27,15 +26,38 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 // ── [SECURITY] Firebase App Check ────────────────────────────────────
-// PENDING: Lier la clé reCAPTCHA Enterprise dans Firebase Console → App Check
-// avant d'activer. Sans cette étape, le SDK retourne 400 et bloque Firestore.
-// const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
-// if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
-//   initializeAppCheck(app, {
-//     provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-//     isTokenAutoRefreshEnabled: true,
-//   });
-// }
+// SETUP REQUIS (une seule fois) :
+//   1. Firebase Console → App Check → Register app → reCAPTCHA Enterprise
+//   2. Copier le Site Key dans VITE_RECAPTCHA_SITE_KEY (.env)
+//   3. Activer enforceAppCheck: true dans chaque Cloud Function
+//
+// En DEV : le debug token est auto-généré par le SDK et affiché dans la console.
+//          Enregistrer ce token dans Firebase Console → App Check → Apps → Add debug token.
+// En PROD : la clé reCAPTCHA Enterprise est obligatoire avant de passer enforceAppCheck: true.
+if (typeof window !== 'undefined') {
+  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+  const isDevMode = import.meta.env.DEV || import.meta.env.MODE === 'development';
+
+  if (recaptchaKey) {
+    // PRODUCTION : reCAPTCHA Enterprise
+    try {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
+        isTokenAutoRefreshEnabled: true,
+      });
+      logger.info('[AppCheck] ✅ reCAPTCHA Enterprise activé');
+    } catch (e) {
+      logger.warn('[AppCheck] reCAPTCHA init failed:', e.message);
+    }
+  } else if (isDevMode) {
+    // DEV : debug token auto — copier le token affiché dans Firebase Console → App Check
+    // eslint-disable-next-line no-restricted-globals
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    logger.info('[AppCheck] 🔧 Debug mode — token auto-généré (voir console)');
+  } else {
+    logger.warn('[AppCheck] ⚠️ VITE_RECAPTCHA_SITE_KEY absent — App Check désactivé. Configurer .env.production');
+  }
+}
 
 export const auth = getAuth(app);
 

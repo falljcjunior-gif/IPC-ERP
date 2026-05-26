@@ -230,7 +230,9 @@ async function syncLinkedEntitiesOnDone(card, cardId) {
         await db.collection('hr').doc(link.entityId).update({
           lastMissionCompleted:   cardId,
           lastMissionCompletedAt: FS.FieldValue.serverTimestamp(),
-        }).catch(() => {});
+        }).catch((err) => {
+          logger.error(`[Butler] Cross-module write hr/${link.entityId} failed:`, err.message);
+        });
       }
 
       if (link.module === 'production') {
@@ -238,7 +240,9 @@ async function syncLinkedEntitiesOnDone(card, cardId) {
           missionStatus: 'completed',
           missionCardId: cardId,
           updatedAt:     FS.FieldValue.serverTimestamp(),
-        }).catch(() => {});
+        }).catch((err) => {
+          logger.error(`[Butler] Cross-module write production/${link.entityId} failed:`, err.message);
+        });
       }
 
       if (link.module === 'finance') {
@@ -246,7 +250,9 @@ async function syncLinkedEntitiesOnDone(card, cardId) {
           missionStatus: 'completed',
           missionCardId: cardId,
           updatedAt:     FS.FieldValue.serverTimestamp(),
-        }).catch(() => {});
+        }).catch((err) => {
+          logger.error(`[Butler] Cross-module write finance/${link.entityId} failed:`, err.message);
+        });
       }
     } catch (e) {
       logger.error(`[Butler] Cross-module write ${link.module}/${link.entityId}:`, e.message);

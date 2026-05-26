@@ -105,19 +105,19 @@ const MailTab = () => {
           <p>Choisissez votre fournisseur pour intégrer vos emails professionnels directement dans Nexus OS.</p>
           
           <div className="provider-grid">
-            <motion.div whileHover={{ y: -5 }} className="provider-card" onClick={() => handleConnect('gmail')}>
+            <motion.div whileHover={{ y: -5 }} className="provider-card" role="button" tabIndex={0} aria-label="Connecter Google Workspace" onClick={() => handleConnect('gmail')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleConnect('gmail')}>
               <div className="provider-logo gmail">G</div>
               <h3>Google Workspace</h3>
               <span>Gmail & Drive Integration</span>
             </motion.div>
 
-            <motion.div whileHover={{ y: -5 }} className="provider-card" onClick={() => handleConnect('outlook')}>
+            <motion.div whileHover={{ y: -5 }} className="provider-card" role="button" tabIndex={0} aria-label="Connecter Microsoft 365" onClick={() => handleConnect('outlook')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleConnect('outlook')}>
               <div className="provider-logo outlook">M</div>
               <h3>Microsoft 365</h3>
               <span>Outlook & Exchange</span>
             </motion.div>
 
-            <motion.div whileHover={{ y: -5 }} className="provider-card" onClick={() => { setSelectedProvider('private'); setSetupStep('form'); setShowSetup(true); }}>
+            <motion.div whileHover={{ y: -5 }} className="provider-card" role="button" tabIndex={0} aria-label="Configurer un serveur privé IMAP/SMTP" onClick={() => { setSelectedProvider('private'); setSetupStep('form'); setShowSetup(true); }} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (setSelectedProvider('private'), setSetupStep('form'), setShowSetup(true))}>
               <div className="provider-logo private"><Cpu size={24} /></div>
               <h3>Serveur Privé</h3>
               <span>IMAP / SMTP Custom</span>

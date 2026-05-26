@@ -56,7 +56,7 @@ export const createOperationsSlice = (set, get) => ({
           ...activity,
           _createdAt: FirestoreService.serverTimestamp(),
           _deletedAt: null
-        });
+        }).catch(err => console.error('[OperationsSlice] addActivity persist failed:', err.message));
       }
     }, 0);
   },
@@ -89,7 +89,7 @@ export const createOperationsSlice = (set, get) => ({
           ...note,
           _createdAt: FirestoreService.serverTimestamp(),
           _deletedAt: null
-        });
+        }).catch(err => console.error('[OperationsSlice] addNote persist failed:', err.message));
       }
     }, 0);
   },
