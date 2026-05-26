@@ -276,7 +276,7 @@ const Shipping = ({ onOpenDetail, appId = 'shipping' }) => {
         {filtered.map((s, i) => {
           const sc = SHIP_STATUS[s.statut] || SHIP_STATUS['Expédié'];
           return (
-            <motion.div key={i} whileHover={{ y: -5, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }} onClick={() => onOpenDetail?.(s, 'shipping', 'shipments')}
+            <motion.div key={i} role="button" tabIndex={0} aria-label={`Expédition ${s.reference || s.id}`} whileHover={{ y: -5, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }} onClick={() => onOpenDetail?.(s, 'shipping', 'shipments')} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onOpenDetail?.(s, 'shipping', 'shipments')}
               className="luxury-widget" style={{ gridColumn: 'span 4', padding: '2.5rem', cursor: 'pointer' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
                 <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#111827' }}>{s.id}</div>
