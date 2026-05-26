@@ -16,7 +16,7 @@ import TabBar from '../marketing/components/TabBar';
 import RecordModal from '../../components/RecordModal';
 import BomBuilderModal from './components/BomBuilderModal';
 import BarcodeScanner from '../../components/BarcodeScanner';
-import { IPCReportGenerator } from '../../utils/PDFExporter';
+// IPCReportGenerator chargé dynamiquement au moment de l'export (évite ~430KB dans le bundle initial)
 
 // Tabs
 import AnalyticsTab from './tabs/AnalyticsTab';
@@ -76,6 +76,7 @@ const Production = ({ onOpenDetail, appId }) => {
         ? `${(completed.reduce((s, w) => s + (w.qualityRate || 0), 0) / Math.max(1, okRuns)).toFixed(1)}%`
         : 'N/A';
 
+      const { IPCReportGenerator } = await import('../../utils/PDFExporter');
       await IPCReportGenerator.generateFinancialStatement({
         title: "Rapport de Rendement Industriel (OEE)",
         metrics: [
