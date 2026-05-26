@@ -425,12 +425,18 @@ style={{
                   return (
                     <motion.div
                       key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={t(`nav.${item.id}`, { defaultValue: item.label })}
+                      aria-current={isActive ? 'page' : undefined}
                       whileHover={{ x: 8, backgroundColor: 'rgba(16, 185, 129, 0.05)' }}
                       onClick={() => setActiveApp(item.id)}
+                      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setActiveApp(item.id)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         padding: '0.85rem 1rem',
+                        minHeight: '44px',
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
@@ -508,7 +514,7 @@ style={{
                 onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))}
                 aria-label={shellView.sidebar ? 'Réduire le menu' : 'Afficher le menu'}
                 title={shellView.sidebar ? 'Réduire' : 'Afficher'}
-                style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '44px', height: '44px', minWidth: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 {shellView.sidebar ? <ChevronLeft size={20} aria-hidden="true" /> : <ChevronRight size={20} aria-hidden="true" />}
               </button>
@@ -522,7 +528,7 @@ style={{
                   <button
                     onClick={() => setActiveApp('home')}
                     aria-label="Accueil"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.82rem', padding: '0.1rem 0.25rem', borderRadius: '4px', transition: 'var(--transition)' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.82rem', padding: '0.35rem 0.5rem', minHeight: '44px', borderRadius: '4px', transition: 'var(--transition)', display: 'flex', alignItems: 'center' }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
                   >
@@ -573,7 +579,7 @@ style={{
                 }}
                 aria-label={i18n.language === 'fr' ? 'Passer en anglais' : 'Switch to French'}
                 title={i18n.language === 'fr' ? 'Passer en anglais' : 'Switch to French'}
-                className="antigravity-card" style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                className="antigravity-card" style={{ width: '44px', height: '44px', minWidth: '44px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
                  <Globe size={18} color="var(--antigravity-text)" aria-hidden="true" />
                  <span style={{ fontSize: '0.55rem', fontWeight: 900, position: 'absolute', bottom: -4, background: 'var(--antigravity-primary)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
                    {i18n.language.substring(0, 2)}
@@ -586,7 +592,7 @@ style={{
                   aria-label={unreadCount > 0 ? `Notifications — ${unreadCount} non lues` : 'Notifications'}
                   title="Notifications"
                   className="antigravity-card"
-                  style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
+                  style={{ width: '44px', height: '44px', minWidth: '44px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
                 >
                   <Bell size={20} color="var(--antigravity-text)" aria-hidden="true" />
                   {unreadCount > 0 && (
