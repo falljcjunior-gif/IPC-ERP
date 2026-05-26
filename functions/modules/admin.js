@@ -493,7 +493,7 @@ exports.backfillUsers = onCall({
   maxInstances: 1, // Limiter à 1 pour éviter les conflits de backfill concurrents
   timeoutSeconds: 540,
   memory: '1GiB',
-  enforceAppCheck: false
+  enforceAppCheck: true
 }, async (request) => {
   const callerUid = request.auth?.uid;
   const callerEmail = request.auth?.token?.email;

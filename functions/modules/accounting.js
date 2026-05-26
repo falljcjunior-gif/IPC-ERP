@@ -54,7 +54,7 @@ const ALLOWED_ROLES = new Set([
 
 exports.postAccountingEntry = onCall({
   region: 'europe-west1',
-  enforceAppCheck: false,
+  enforceAppCheck: true,
   maxInstances: 10,
 }, async (request) => {
   // 1. Auth + RBAC
