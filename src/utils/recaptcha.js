@@ -1,4 +1,5 @@
 /**
+import { logger } from './logger';
  * ══════════════════════════════════════════════════════════════════
  * RECAPTCHA ENTERPRISE — UTILITAIRE CENTRALISÉ
  * ══════════════════════════════════════════════════════════════════
@@ -33,14 +34,14 @@ export async function getRecaptchaToken(action = 'LOGIN') {
     });
 
     if (!window.grecaptcha?.enterprise) {
-      console.warn('[reCAPTCHA] API non disponible — le script n\'a pas pu charger.');
+      logger.warn('[reCAPTCHA] API non disponible — le script n\'a pas pu charger.');
       return null;
     }
 
     const token = await window.grecaptcha.enterprise.execute(RECAPTCHA_SITE_KEY, { action });
     return token;
   } catch (err) {
-    console.error('[reCAPTCHA] Erreur lors de l\'obtention du token:', err);
+    logger.error('[reCAPTCHA] Erreur lors de l\'obtention du token:', err);
     return null;
   }
 }

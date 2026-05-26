@@ -19,6 +19,7 @@ import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
 import SalairesTab from './tabs/SalairesTab';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import { logger } from '../../utils/logger';
 
 /* ─── Helpers ─── */
 const fade = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -681,7 +682,7 @@ const PeopleAndCulture = () => {
     FirestoreService.addDocument('employee_pulses', {
       sentiment: mood,
       date: new Date().toISOString(),
-    }).catch(err => console.warn('[TalentHub] pulse save failed:', err.message));
+    }).catch(err => logger.warn('[TalentHub] pulse save failed:', err.message));
     addRecord('talent', 'surveys', { type: 'Pulse', sentiment: mood, date: new Date().toISOString() });
     useToastStore.getState().addToast(`Merci ! Votre sentiment "${mood}" a été enregistré.`, 'success');
   };

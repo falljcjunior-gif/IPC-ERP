@@ -20,6 +20,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../firebase/config';
 import { useStore } from '../../store';
+import { logger } from '../../utils/logger';
 
 // ─────────────────────────────────────────────────────────────────────
 // Helpers
@@ -272,7 +273,7 @@ function ChatPanel({ uid, activeAlert, onClose }) {
     try {
       await commanderChat({ reply: text, logId: activeAlert.logId });
     } catch (err) {
-      console.error('[Commander Chat]', err);
+      logger.error('[Commander Chat]', err);
     } finally {
       setSending(false);
     }

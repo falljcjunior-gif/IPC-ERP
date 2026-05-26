@@ -23,6 +23,7 @@ import { MissionsFS, seedDefaultWorkspaces } from './services/missions.firestore
 import { useWorkspaceAuth } from './hooks/useWorkspaceAuth';
 import { useStore }         from '../../store';
 import MissionEngine        from './MissionEngine';
+import { logger } from '../../utils/logger';
 
 const CardModal        = lazy(() => import('./components/CardModal'));
 const ButlerPanel      = lazy(() => import('./components/ButlerPanel'));
@@ -300,7 +301,7 @@ function BoardGrid({ workspaceId, onSelectBoard, isAdmin }) {
         setLoading(false);
       });
     } catch (err) {
-      console.warn('[BoardGrid] subscribeBoards non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[BoardGrid] subscribeBoards non disponible (mode DEV sans auth):', err.message);
       setLoading(false);
     }
     return unsub;
@@ -386,7 +387,7 @@ export default function MissionsHub() {
     if (!uid || !workspacesLoaded) return;
     if (workspaces.length === 0) {
       seedDefaultWorkspaces(uid).catch(err =>
-        console.warn('[MissionsHub] Seeding failed:', err)
+        logger.warn('[MissionsHub] Seeding failed:', err)
       );
     }
   }, [uid, workspacesLoaded, workspaces.length]);

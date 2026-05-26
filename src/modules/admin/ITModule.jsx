@@ -15,6 +15,7 @@ import SecurityThreatMap from './components/SecurityThreatMap';
 import SmartButton from '../../components/SmartButton';
 import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
+import { logger } from '../../utils/logger';
 
 /**
  *  NEXUS OS: IT OPERATIONS MODULE (ELITE 2.0 COMMANDER HUD)
@@ -204,7 +205,7 @@ const ITModule = () => {
                       });
                       useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
                     } catch (err) {
-                      console.error('[ITModule] addDocument it_assets failed:', err.message);
+                      logger.error('[ITModule] addDocument it_assets failed:', err.message);
                       useToastStore.getState().addToast(`Erreur : impossible d'ajouter l'actif. ${err.message}`, 'error');
                     }
                   }}

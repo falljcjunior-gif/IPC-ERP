@@ -276,6 +276,20 @@ service cloud.firestore {
       allow write: if false; // Only Cloud Functions / Super Admins manage periods
     }
 
+    // Registre des immobilisations corporelles & incorporelles (PCG)
+    // Lecture : ADMIN, FINANCE, ACCOUNTING — écriture : ADMIN ou FINANCE seulement
+    match /immobilisations/{docId} {
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
+                  && (isAdmin() || hasRole('FINANCE') || hasRole('ACCOUNTING'));
+      allow create, update: if isAuthenticated() && canWriteOwnEntity(request.resource.data.entity_id)
+                  && (isAdmin() || hasRole('FINANCE'))
+                  && request.resource.data.valeur_brute is number
+                  && request.resource.data.valeur_brute >= 0
+                  && request.resource.data.duree_amortissement is number
+                  && request.resource.data.duree_amortissement >= 1;
+      allow delete: if isAdmin(); // Soft-delete préféré (etat = 'mis_au_rebut')
+    }
+
     match /sales/{docId} {
       allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id)
                   && (isManager() || hasRole('SALES') || hasRole('STAFF') || hasRole('FINANCE'));

@@ -239,7 +239,7 @@ export const BusinessProvider = ({ children }) => {
           scheduleUpdate(colName, docs);
         },
         (err) => {
-          console.error(`[BusinessContext] Sync FAILED for ${colName}:`, err);
+          logger.error(`[BusinessContext] Sync FAILED for ${colName}`, err);
           // [FALLBACK] Si la requête filtrée échoue (index manquant, permissions),
           // réessayer sans filtres temporels mais avec la limite de base
           if (options.filters?.length) {
@@ -274,7 +274,7 @@ export const BusinessProvider = ({ children }) => {
         logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
         scheduleUpdate('hr_private', docs);
       },
-      (err) => console.error(`[BusinessContext] hr_private Sync failed:`, err)
+      (err) => logger.error('[BusinessContext] hr_private Sync failed', err)
     );
 
     unsubscribes.push(unsubHrPrivate);
@@ -325,7 +325,7 @@ export const BusinessProvider = ({ children }) => {
       const hash = JSON.stringify({ p: selfPerms, r: selfRole });
       if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
         UserService.forceClaimRefresh(auth.currentUser).catch((err) => {
-          console.error('[BusinessContext] forceClaimRefresh failed — user may keep stale permissions:', err.message);
+          logger.error('[BusinessContext] forceClaimRefresh failed — user may keep stale permissions', err.message);
         });
       }
       _lastSelfPermsHash = hash;
@@ -430,7 +430,7 @@ export const BusinessProvider = ({ children }) => {
           }
 
         } catch (err) {
-          console.error('[BusinessContext] Profile Sync FAILED:', err);
+          logger.error('[BusinessContext] Profile Sync FAILED', err);
           // Fallback minimal si Firestore indisponible
           setUser({
             id: fbUser.uid,

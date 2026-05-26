@@ -15,6 +15,7 @@ import { db, storage } from '../../../firebase/config';
 import { nanoid } from 'nanoid';
 import { rankAfter, rankBetween, rebalance, needsRebalancing, sortByRank } from './lexorank';
 import { getCurrentEntityId } from '../../../services/TenantContext';
+import { logger } from '../../../utils/logger';
 
 // ── Noms des collections top-level ──────────────────────────────
 const COL = {
@@ -543,7 +544,7 @@ export const MissionsFS = {
       });
     } catch (e) {
       // Non bloquant : le journal ne doit jamais faire planter l'UX
-      console.warn('[MissionsFS] Activity log failed:', e.message);
+      logger.warn('[MissionsFS] Activity log failed:', e.message);
     }
   },
 

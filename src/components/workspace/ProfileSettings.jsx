@@ -35,6 +35,7 @@ import { FirestoreService, StorageService } from '../../services/firestore.servi
 import { useMissionsStore } from '../../modules/missions/store/useMissionsStore';
 import { PRIORITY_META } from '../../modules/missions/engine/transforms';
 import { useToastStore } from '../../store/useToastStore';
+import { logger } from '../../utils/logger';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -139,7 +140,7 @@ function AvatarUploader({ uid, currentAvatar, onUploaded }) {
       await AuthService.updateAuthProfile({ photoURL: url });
       onUploaded(url);
     } catch (err) {
-      console.error('[AvatarUploader]', err);
+      logger.error('[AvatarUploader]', err);
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -714,7 +715,7 @@ export default function ProfileSettings() {
       setTimeout(() => setSaved(false), 3000);
     } catch (err) {
       addToast('Erreur lors de la sauvegarde.', 'error');
-      console.error('[ProfileSettings] save error', err);
+      logger.error('[ProfileSettings] save error', err);
     } finally {
       setSaving(false);
     }

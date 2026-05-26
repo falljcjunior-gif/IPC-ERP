@@ -19,6 +19,7 @@ import SecurityTab from './tabs/SecurityTab';
 import HealthTab from './tabs/HealthTab';
 import MasterData from '../MasterData';
 import History from '../History';
+import { logger } from '../../utils/logger';
 
 const ControlHub = ({ onOpenDetail }) => {
   const { userRole, currentUser, resetAllData, shellView } = useStore();
@@ -36,7 +37,7 @@ const ControlHub = ({ onOpenDetail }) => {
       const result = await backfillFn();
       addToast(`Synchronisation terminée : ${result.data?.syncs ?? 0} enregistrements synchronisés.`, 'success');
     } catch (err) {
-      console.error('[ControlHub] Backfill failed:', err);
+      logger.error('[ControlHub] Backfill failed:', err);
       addToast('Échec de la synchronisation. Consultez les logs Cloud Functions.', 'error');
     } finally {
       setIsBackfilling(false);

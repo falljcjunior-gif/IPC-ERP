@@ -25,6 +25,7 @@ import { create } from 'zustand';
 import { MissionsFS } from '../services/missions.firestore';
 import { rankBetween, rankAfter, sortByRank, needsRebalancing, rebalance } from '../services/lexorank';
 import { useToastStore } from '../../../store/useToastStore';
+import { logger } from '../../../utils/logger';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -248,7 +249,7 @@ export const useMissionsStore = create((set, get) => ({
           pendingOps: new Set([...s.pendingOps].filter(id => id !== cardId)),
         }));
         toast('Déplacement échoué. La carte a été replacée à sa position initiale.');
-        console.error('[MissionsStore] moveCard rollback:', err);
+        logger.error('[MissionsStore] moveCard rollback:', err);
       }
     },
 
