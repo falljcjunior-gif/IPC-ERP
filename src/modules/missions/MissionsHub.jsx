@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { useMissionsStore } from './store/useMissionsStore';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import { MissionsFS, seedDefaultWorkspaces } from './services/missions.firestore';
 import { useWorkspaceAuth } from './hooks/useWorkspaceAuth';
 import { useStore }         from '../../store';
@@ -51,9 +52,8 @@ const BG_PRESETS = [
 
 function Spinner() {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', minHeight:200 }}>
-      <Loader2 size={32} style={{ animation:'spin 1s linear infinite', color:'var(--accent)' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ padding: '2rem' }}>
+      <SkeletonLoader.Page />
     </div>
   );
 }
