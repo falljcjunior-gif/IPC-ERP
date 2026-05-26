@@ -165,7 +165,7 @@ export class WebRTCService {
     // 4. Listen for incoming signals
     this.unsubscribeSignals = FirestoreService.subscribeToCollection(
       `rooms/${roomId}/signals`,
-      { filters: [['to', '==', userId]] },
+      { filters: [{ field: 'to', operator: '==', value: userId }] },
       async (signals) => {
         for (const signal of signals) {
           if (this.processedSignals.has(signal.id)) continue;
