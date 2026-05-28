@@ -37,31 +37,34 @@ const EntityManagementCenter = lazy(() => import('./tabs/EntityManagementCenter'
 const LicenseCenter          = lazy(() => import('./tabs/LicenseCenter'));
 const CountryManagementCenter = lazy(() => import('./tabs/CountryManagementCenter'));
 
-// ── Design tokens (white premium) ────────────────────────────────────────
+// ── Design tokens — Nexus Executive Dark ────────────────────────────────
+// Mirror of HoldingOS.css CSS vars (used for inline styles only).
+// Prefer CSS classes (.os-card, .os-btn, etc.) over inline styles.
 const OS = {
-  bg:       '#FFFFFF',
-  surface:  '#F9FAFB',
-  card:     '#FFFFFF',
-  cardHi:   '#F5F5F5',
-  modal:    '#FFFFFF',
-  border:   'rgba(0,0,0,0.07)',
-  borderMd: 'rgba(0,0,0,0.12)',
-  borderHi: 'rgba(0,0,0,0.20)',
-  track:    'rgba(0,0,0,0.04)',
-  text:     '#0F0F10',
-  sub:      '#6B7280',
-  muted:    '#9CA3AF',
-  dim:      '#D1D5DB',
-  black:    '#000000',
-  overlay:  'rgba(0,0,0,0.40)',
+  bg:       '#060E1B',
+  surface:  '#0A1628',
+  card:     '#0F1E34',
+  cardHi:   '#142540',
+  border:   'rgba(255,255,255,0.07)',
+  borderMd: 'rgba(255,255,255,0.12)',
+  borderHi: 'rgba(255,255,255,0.20)',
+  track:    'rgba(255,255,255,0.04)',
+  text:     '#F0F6FF',
+  sub:      '#94A3B8',
+  muted:    '#4A6580',
+  dim:      '#2A3D52',
+  accent:   '#10B981',
+  accentHi: '#34D399',
+  danger:   '#EF4444',
+  warning:  '#F59E0B',
 };
 
-// Chart palette — dark on white
+// Chart palette — light on dark
 const OS_CHART = {
-  stroke:  'rgba(0,0,0,0.55)',
-  fill:    'rgba(0,0,0,0.04)',
-  grid:    'rgba(0,0,0,0.05)',
-  tick:    '#9CA3AF',
+  stroke:  '#10B981',
+  fill:    'rgba(16,185,129,0.08)',
+  grid:    'rgba(255,255,255,0.04)',
+  tick:    '#4A6580',
 };
 
 // ── Motion variants ──────────────────────────────────────────────────────
@@ -229,26 +232,28 @@ export default function HoldingCockpit() {
       <div className="holding-os" style={{
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        minHeight: '100vh', gap: 0,
-      }}>
+        minHeight: '100vh', gap: 24,
+      }} role="alert" aria-live="assertive">
         <IPCLogo />
-        <div style={{ margin: '52px 0 20px', color: OS.dim }}>
-          <Lock size={28} strokeWidth={1} />
-        </div>
         <div style={{
-          fontSize: 15, fontWeight: 500, color: OS.sub,
-          letterSpacing: '-0.01em',
+          width: 64, height: 64, borderRadius: '50%',
+          background: 'rgba(239,68,68,0.08)',
+          border: '1px solid rgba(239,68,68,0.18)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: OS.danger,
         }}>
-          Accès réservé au Groupe
+          <Lock size={26} strokeWidth={1.5} aria-hidden="true" />
         </div>
-        <div style={{
-          fontSize: 12, color: OS.muted, textAlign: 'center',
-          maxWidth: 340, lineHeight: 1.8, marginTop: 12,
-        }}>
-          Ce cockpit est accessible aux rôles<br />
-          <span style={{ color: OS.dim, letterSpacing: '0.04em' }}>
-            HOLDING_CEO · HOLDING_CFO · SUPER_ADMIN
-          </span>
+        <div style={{ textAlign: 'center' }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: OS.text, margin: '0 0 8px', letterSpacing: '-0.01em' }}>
+            Accès restreint
+          </p>
+          <p style={{ fontSize: 12, color: OS.muted, maxWidth: 340, lineHeight: 1.8, margin: 0 }}>
+            Ce cockpit est réservé aux rôles<br />
+            <span style={{ color: OS.sub, letterSpacing: '0.04em', fontWeight: 600 }}>
+              HOLDING_CEO · HOLDING_CFO · SUPER_ADMIN
+            </span>
+          </p>
         </div>
       </div>
     );
@@ -261,33 +266,27 @@ export default function HoldingCockpit() {
       <header className="os-topbar">
         <IPCLogo />
 
-        {/* Tab navigation */}
-        <nav style={{
-          flex: 1, display: 'flex', alignItems: 'stretch',
-          height: '100%', overflow: 'hidden',
-        }}>
+        {/* Tab navigation — scrollable on mobile */}
+        <nav className="os-tab-nav" role="tablist" aria-label="Navigation Holding">
           {TABS.map(t => {
             const active = tab === t.id;
             const TabIcon = t.Icon;
             return (
               <button
                 key={t.id}
-                className="os-tab-btn"
+                role="tab"
+                aria-selected={active}
+                aria-controls={`os-panel-${t.id}`}
+                id={`os-tab-${t.id}`}
+                className={`os-tab-btn${active ? ' os-tab-btn--active' : ''}`}
                 onClick={() => setTab(t.id)}
-                style={{
-                  fontWeight: active ? 600 : 400,
-                  color: active ? OS.text : OS.muted,
-                }}
               >
-                <TabIcon size={12} strokeWidth={active ? 2 : 1.5} />
+                <TabIcon size={12} strokeWidth={active ? 2.5 : 1.5} />
                 {t.label}
                 {active && (
                   <motion.div
                     layoutId="os-tab-line"
-                    style={{
-                      position: 'absolute', bottom: 0, left: 8, right: 8,
-                      height: 1.5, background: OS.black, borderRadius: 2,
-                    }}
+                    className="os-tab-line"
                     transition={{ type: 'spring', stiffness: 520, damping: 40 }}
                   />
                 )}
@@ -299,14 +298,21 @@ export default function HoldingCockpit() {
         {/* Right status area */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {approvals.length > 0 && (
-            <span className="os-badge os-badge--alert">
+            <span className="os-badge os-badge--alert" aria-live="polite">
               <Clock size={9} />
               {approvals.length} décision{approvals.length > 1 ? 's' : ''}
             </span>
           )}
-          <span className="os-badge">
+          {/* Data freshness indicator */}
+          {!metricsLoading && consolidated._source && (
+            <span className="os-freshness" title="Données consolidées en temps réel">
+              <span className="os-freshness-dot" aria-hidden="true" />
+              Live
+            </span>
+          )}
+          <span className="os-badge" aria-label={`Date : ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`}>
             {new Date().toLocaleDateString('fr-FR', {
-              day: 'numeric', month: 'short', year: 'numeric',
+              day: 'numeric', month: 'short',
             })}
           </span>
         </div>
@@ -322,7 +328,7 @@ export default function HoldingCockpit() {
             exit="hidden"
             variants={FADE_UP}
           >
-            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={metricsLoading} onDrillDown={setTab} />}
+            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={metricsLoading} onDrillDown={setTab} approvals={approvals} />}
             {tab === 'performance' && <PerformanceTab subsidiaryPerf={consolidated.subsidiaryPerf} loading={metricsLoading} />}
             {tab === 'finance'     && <FinanceTab consolidated={consolidated} loading={metricsLoading} />}
             {tab === 'governance'  && <GovernanceTab approvals={approvals} callerUid={callerUid} callerRole={role} loading={loading} />}
@@ -353,78 +359,118 @@ export default function HoldingCockpit() {
 // TAB: OVERVIEW
 // ════════════════════════════════════════════════════════════════════════════
 
-function OverviewTab({ consolidated, loading, onDrillDown }) {
+function OverviewTab({ consolidated, loading, onDrillDown, approvals = [] }) {
   const subsidiaryPerf = consolidated.subsidiaryPerf || [];
   const hasData = consolidated.revenue > 0 || consolidated.headcount > 0;
 
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+
   const kpis = [
-    { label: 'CA Consolidé',     rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet,    drillTab: 'finance'     },
-    { label: 'EBITDA Groupe',    rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3, drillTab: 'performance' },
-    { label: 'Trésorerie',       rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark,  drillTab: 'finance'     },
-    { label: 'Effectif Total',   rawValue: consolidated.headcount,    formatter: fmt,  unit: 'EMP', Icon: Users,     drillTab: 'entities'    },
-    { label: 'Filiales Actives', rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2, drillTab: 'entities' },
+    { label: 'CA Consolidé',     rawValue: consolidated.revenue,      formatter: fmtM, unit: 'XOF', Icon: Wallet,    drillTab: 'finance',     color: OS.accent },
+    { label: 'EBITDA Groupe',    rawValue: consolidated.ebitda,       formatter: fmtM, unit: 'XOF', Icon: BarChart3, drillTab: 'performance', color: '#60A5FA' },
+    { label: 'Trésorerie',       rawValue: consolidated.cash,         formatter: fmtM, unit: 'XOF', Icon: Landmark,  drillTab: 'finance',     color: '#A78BFA' },
+    { label: 'Effectif Total',   rawValue: consolidated.headcount,    formatter: fmt,  unit: '',    Icon: Users,     drillTab: 'entities',    color: OS.warning },
+    { label: 'Filiales Actives', rawValue: consolidated.subsidiaries, formatter: v => String(v), unit: '', Icon: Building2, drillTab: 'entities', color: '#F472B6' },
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+
+      {/* ── Welcome Banner ─────────────────────────────────────────────────── */}
+      <div className="os-welcome-banner" role="banner">
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <p className="os-welcome-greeting" aria-hidden="true">
+            {greeting} 👋
+          </p>
+          <h1 className="os-welcome-title">
+            Vue d'ensemble du Groupe
+          </h1>
+          <p className="os-welcome-sub">
+            {hasData
+              ? `${consolidated.subsidiaries} filiale${consolidated.subsidiaries > 1 ? 's' : ''} actives · CA consolidé ${fmtM(consolidated.revenue)} XOF`
+              : 'En attente des données consolidées de vos filiales…'}
+          </p>
+        </div>
+        <div className="os-welcome-actions" style={{ position: 'relative', zIndex: 1 }}>
+          <button
+            className="os-btn os-btn--primary"
+            onClick={() => onDrillDown?.('governance')}
+            aria-label="Voir la file de gouvernance"
+          >
+            <Scale size={13} strokeWidth={2} />
+            {approvals.length > 0 ? `${approvals.length} décision${approvals.length > 1 ? 's' : ''}` : 'Gouvernance'}
+          </button>
+          <button
+            className="os-btn"
+            onClick={() => onDrillDown?.('performance')}
+          >
+            <Activity size={13} strokeWidth={1.5} />
+            Performance
+          </button>
+        </div>
+      </div>
 
       {/* ── KPI grid ──────────────────────────────────────────────────────── */}
-      <motion.div variants={STAGGER} initial="hidden" animate="show" style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-        gap: 12,
-      }}>
+      <motion.div
+        variants={STAGGER}
+        initial="hidden"
+        animate="show"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
+          gap: 10,
+        }}
+        role="list"
+        aria-label="Indicateurs clés du groupe"
+      >
         {kpis.map(k => {
           const KpiIcon = k.Icon;
           return (
             <motion.div
               key={k.label}
               variants={FADE_UP}
-              className="os-card"
-              role="button"
+              className="os-kpi-card"
+              role="listitem button"
               tabIndex={0}
-              aria-label={`${k.label} — voir le détail`}
+              aria-label={`${k.label}${k.rawValue ? ` : ${k.formatter(k.rawValue)}` : ''} — voir le détail`}
               onClick={() => onDrillDown?.(k.drillTab)}
               onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onDrillDown?.(k.drillTab)}
-              whileHover={{ y: -2, boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
               whileTap={{ scale: 0.98 }}
-              style={{ padding: '1.5rem', cursor: 'pointer', transition: 'box-shadow 0.2s' }}>
-              <div style={{
-                display: 'flex', justifyContent: 'space-between',
-                alignItems: 'flex-start', marginBottom: 24,
-              }}>
-                <KpiIcon size={15} strokeWidth={1.5} style={{ color: OS.dim }} />
-                {hasData && (
-                  <span style={{ fontSize: 10, color: OS.dim, fontWeight: 500,
-                    letterSpacing: '0.05em' }}>YTD →</span>
-                )}
+            >
+              {/* Top row: icon + YTD tag */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div
+                  className="os-kpi-icon"
+                  style={{
+                    background: `${k.color}14`,
+                    borderColor: `${k.color}25`,
+                    color: k.color,
+                  }}
+                  aria-hidden="true"
+                >
+                  <KpiIcon size={15} strokeWidth={1.5} />
+                </div>
+                {hasData && <span className="os-kpi-ytd">YTD</span>}
               </div>
 
               {/* Value */}
-              <div style={{
-                fontSize: '2rem', fontWeight: 300,
-                letterSpacing: '-0.045em', color: OS.text,
-                lineHeight: 1, minHeight: 36,
-              }}>
+              <div style={{ minHeight: 36 }}>
                 {loading
-                  ? <div className="os-skeleton" style={{ width: 72, height: 30 }} />
-                  : <AnimatedCounter from={0} to={k.rawValue} duration={1.6} formatter={k.formatter} />
+                  ? <div className="os-skeleton" style={{ width: 72, height: 30 }} aria-hidden="true" />
+                  : (
+                    <span className="os-kpi-value" aria-label={k.formatter(k.rawValue)}>
+                      <AnimatedCounter from={0} to={k.rawValue} duration={1.6} formatter={k.formatter} />
+                    </span>
+                  )
                 }
               </div>
 
-              {/* Label + unit row */}
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 10 }}>
-                <span style={{
-                  fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.16em',
-                  textTransform: 'uppercase', color: OS.muted,
-                }}>
-                  {k.label}
-                </span>
-                {k.unit && (
-                  <span style={{ fontSize: '0.6rem', color: OS.dim, letterSpacing: '0.08em' }}>
-                    {k.unit}
-                  </span>
-                )}
+              {/* Label + unit */}
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span className="os-kpi-label">{k.label}</span>
+                {k.unit && <span className="os-kpi-unit">{k.unit}</span>}
               </div>
             </motion.div>
           );
@@ -451,12 +497,12 @@ function OverviewTab({ consolidated, loading, onDrillDown }) {
                   <div style={{ width: 150, fontSize: 12, color: OS.sub, fontWeight: 500, flexShrink: 0 }}>
                     {entity?.shortName || s.id}
                   </div>
-                  <div style={{ flex: 1, height: 3, borderRadius: 99, background: OS.track }}>
+                  <div className="os-progress-track">
                     <motion.div
+                      className="os-progress-fill"
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                      style={{ height: '100%', borderRadius: 99, background: OS.sub }}
                     />
                   </div>
                   <div style={{ width: 100, textAlign: 'right', fontSize: 12, fontWeight: 600, color: OS.text }}>
@@ -564,12 +610,24 @@ function PerformanceTab({ subsidiaryPerf = [], loading }) {
                       </td>
                       <td>{entity?.industry}</td>
                       <td style={{ fontWeight: 600, color: OS.text }}>{fmtM(s.revenue)}</td>
-                      <td style={{ color: s.growth > 0 ? OS.text : '#DC2626', fontWeight: 600 }}>
-                        {s.growth > 0 ? '+' : ''}{s.growth}%
+                      <td style={{
+                        color: s.growth > 0 ? OS.accent : OS.danger,
+                        fontWeight: 600,
+                      }}>
+                        {s.growth > 0 ? '↑ +' : '↓ '}{s.growth}%
                       </td>
-                      <td>{s.margin}%</td>
-                      <td>{s.headcount}</td>
-                      <td><span className="os-score">{s.score}</span></td>
+                      <td style={{ color: OS.text }}>{s.margin}%</td>
+                      <td className="os-col-hide-mobile">{fmt(s.headcount)}</td>
+                      <td>
+                        <span className={`os-score${
+                          s.score >= 90 ? ' os-score--excellent' :
+                          s.score >= 75 ? ' os-score--good'      :
+                          s.score >= 60 ? ' os-score--warn'      :
+                                          ' os-score--bad'
+                        }`}>
+                          {s.score}
+                        </span>
+                      </td>
                       <td><TrendBadge trend={s.trend} /></td>
                     </tr>
                   );
@@ -581,22 +639,18 @@ function PerformanceTab({ subsidiaryPerf = [], loading }) {
       }
 
       {/* Legend */}
-      <div className="os-card" style={{ padding: '1.25rem 1.5rem' }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+      <div className="os-card" style={{ padding: '1rem 1.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
+          <span style={{ fontSize: 10, color: OS.muted, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginRight: 4 }}>Score</span>
           {[
-            { range: '90–100', label: 'Excellence',  opacity: 0.80 },
-            { range: '75–89',  label: 'Bon',         opacity: 0.55 },
-            { range: '60–74',  label: 'Acceptable',  opacity: 0.35 },
-            { range: '0–59',   label: 'Insuffisant', color: 'rgba(220,38,38,0.55)' },
+            { range: '90–100', label: 'Excellence',  cls: 'os-score--excellent' },
+            { range: '75–89',  label: 'Bon',         cls: 'os-score--good'      },
+            { range: '60–74',  label: 'Acceptable',  cls: 'os-score--warn'      },
+            { range: '0–59',   label: 'Insuffisant', cls: 'os-score--bad'       },
           ].map(l => (
-            <div key={l.range} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 8, height: 8, borderRadius: 2, flexShrink: 0,
-                background: l.color || `rgba(0,0,0,${l.opacity})`,
-              }} />
-              <span style={{ fontSize: 11, color: OS.muted }}>
-                <strong style={{ color: OS.sub }}>{l.range}</strong> — {l.label}
-              </span>
+            <div key={l.range} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span className={`os-score ${l.cls}`} style={{ fontSize: 10, minWidth: 36, height: 18 }}>{l.range}</span>
+              <span style={{ fontSize: 11, color: OS.muted }}>{l.label}</span>
             </div>
           ))}
         </div>
@@ -641,37 +695,41 @@ function FinanceTab({ consolidated, loading }) {
           <div className="os-card" style={{ overflow: 'hidden' }}>
             {rows.map((row, i) => (
               <div key={i} style={{
-                display: 'flex', alignItems: 'center',
+                display:        'flex',
+                alignItems:     'center',
                 justifyContent: 'space-between',
-                padding: '10px 24px',
-                background: row.accent
-                  ? 'rgba(0,0,0,0.03)'
-                  : row.bold ? 'rgba(0,0,0,0.015)' : 'transparent',
-                borderBottom: i < rows.length - 1 ? `1px solid rgba(0,0,0,0.05)` : 'none',
+                padding:        '10px 24px',
+                background:     row.accent
+                  ? 'rgba(16,185,129,0.05)'
+                  : row.bold ? 'rgba(255,255,255,0.025)' : 'transparent',
+                borderBottom: i < rows.length - 1 ? `1px solid rgba(255,255,255,0.04)` : 'none',
+                transition:   'background 0.15s ease',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   {row.bold && (
                     <div style={{
-                      width: 2, height: 14, borderRadius: 2,
-                      background: row.accent ? OS.text : OS.dim,
-                    flexShrink: 0,
+                      width:        2,
+                      height:       14,
+                      borderRadius: 2,
+                      background:   row.accent ? OS.accent : OS.muted,
+                      flexShrink:   0,
                     }} />
                   )}
                   <span style={{
-                    fontSize: row.bold ? 13 : 12,
-                    fontWeight: row.bold ? 600 : 400,
-                    color: row.accent ? OS.text : row.bold ? OS.sub : OS.muted,
+                    fontSize:    row.bold ? 13 : 12,
+                    fontWeight:  row.bold ? 600 : 400,
+                    color:       row.accent ? OS.accent : row.bold ? OS.text : OS.sub,
                     paddingLeft: row.bold ? 0 : 12,
                   }}>
                     {row.label}
                   </span>
                 </div>
                 <span style={{
-                  fontSize: row.bold ? 14 : 12,
-                  fontWeight: row.bold ? 700 : 400,
-                  color: row.value < 0 ? '#DC2626' : row.bold ? OS.text : OS.muted,
+                  fontSize:           row.bold ? 14 : 12,
+                  fontWeight:         row.bold ? 700 : 400,
+                  color:              row.value < 0 ? OS.danger : row.bold ? OS.text : OS.sub,
                   fontVariantNumeric: 'tabular-nums',
-                  letterSpacing: '-0.01em',
+                  letterSpacing:      '-0.01em',
                 }}>
                   {row.value < 0 ? '(' : ''}{fmtM(Math.abs(row.value))} XOF{row.value < 0 ? ')' : ''}
                 </span>
@@ -795,44 +853,44 @@ function GovernanceTab({ approvals, callerUid, callerRole, loading }) {
               const TypeIcon = cfg.Icon;
 
               return (
-                <motion.div key={item.id} variants={FADE_UP} className="os-card"
-                  style={{
-                    padding: '1.125rem 1.5rem',
-                    display: 'flex', alignItems: 'center', gap: 16,
-                    border: status === 'approved'
-                      ? '1px solid rgba(0,0,0,0.10)'
-                      : status === 'rejected'
-                      ? '1px solid rgba(220,38,38,0.15)'
-                      : undefined,
-                  }}>
+                <motion.div
+                  key={item.id}
+                  variants={FADE_UP}
+                  className={`os-governance-card${
+                    status === 'approved'  ? ' os-governance-card--approved'  :
+                    status === 'rejected'  ? ' os-governance-card--rejected'  :
+                    status === 'processing' ? ' os-governance-card--processing' : ''
+                  }`}
+                  aria-label={`${item.title || item.description || 'Demande'} — statut: ${status}`}
+                >
                   {/* Icon */}
-                  <div style={{
-                    width: 38, height: 38, borderRadius: 9, flexShrink: 0,
-                    background: 'rgba(0,0,0,0.04)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <TypeIcon size={16} strokeWidth={1.5} style={{ color: OS.muted }} />
+                  <div className={`os-governance-icon${item.urgency === 'high' ? ' os-governance-icon--urgent' : ''}`}>
+                    <TypeIcon size={16} strokeWidth={1.5} />
                   </div>
 
                   {/* Content */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: OS.text }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: OS.text, lineHeight: 1.3 }}>
                         {item.title || item.description || `Demande ${item.type}`}
                       </span>
                       {item.urgency === 'high' && (
-                        <span className="os-badge os-badge--alert" style={{ fontSize: 10 }}>
+                        <span className="os-badge os-badge--warning" style={{ fontSize: 10 }}>
                           Urgent
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: 11, color: OS.muted }}>
-                      {item.entityName || item.entity_id}
-                      {item.type && ` · ${item.type}`}
-                      {item.requestedBy && ` · ${item.requestedBy}`}
-                      {item._createdAt && ` · ${new Date(
-                        item._createdAt?.seconds ? item._createdAt.seconds * 1000 : item._createdAt
-                      ).toLocaleDateString('fr-FR')}`}
+                    <div style={{ fontSize: 11, color: OS.muted, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {item.entityName || item.entity_id ? (
+                        <span>{item.entityName || item.entity_id}</span>
+                      ) : null}
+                      {item.type        && <span>· {item.type}</span>}
+                      {item.requestedBy && <span>· {item.requestedBy}</span>}
+                      {item._createdAt  && (
+                        <span>· {new Date(
+                          item._createdAt?.seconds ? item._createdAt.seconds * 1000 : item._createdAt
+                        ).toLocaleDateString('fr-FR')}</span>
+                      )}
                     </div>
                   </div>
 
@@ -859,15 +917,8 @@ function GovernanceTab({ approvals, callerUid, callerRole, loading }) {
                       </button>
                     </div>
                   ) : (
-                    <span className="os-badge" style={{
-                      background: status === 'approved'
-                        ? 'rgba(0,0,0,0.04)' : 'rgba(220,38,38,0.06)',
-                      color: status === 'approved'
-                        ? OS.sub : 'rgba(220,38,38,0.8)',
-                      borderColor: status === 'approved'
-                        ? OS.border : 'rgba(220,38,38,0.2)',
-                    }}>
-                      {status === 'approved' ? 'Validé' : 'Refusé'}
+                    <span className={`os-badge ${status === 'approved' ? 'os-badge--active' : 'os-badge--alert'}`}>
+                      {status === 'approved' ? '✓ Validé' : '✕ Refusé'}
                     </span>
                   )}
                 </motion.div>
@@ -909,17 +960,13 @@ function EmptyState({ Icon, title, subtitle }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}
-      style={{
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '3.5rem 2rem', textAlign: 'center',
-        border: `1px dashed rgba(0,0,0,0.10)`,
-        borderRadius: 12, gap: 14,
-      }}
+      className="os-empty"
+      role="status"
+      aria-label={title}
     >
-      <Icon size={26} strokeWidth={1} style={{ color: 'rgba(0,0,0,0.15)' }} />
-      <div style={{ fontSize: 13, fontWeight: 500, color: OS.sub }}>{title}</div>
-      <div style={{ fontSize: 12, color: OS.muted, maxWidth: 380, lineHeight: 1.7 }}>{subtitle}</div>
+      <Icon size={26} strokeWidth={1} className="os-empty-icon" aria-hidden="true" />
+      <div className="os-empty-title">{title}</div>
+      <div className="os-empty-sub">{subtitle}</div>
     </motion.div>
   );
 }
