@@ -27,6 +27,8 @@ import { useStore } from '../../store';
 import { FirestoreService } from '../../services/firestore.service';
 import { useToastStore } from '../../store/useToastStore';
 import { GROUP_ENTITIES, isHoldingRole } from '../../schemas/org.schema';
+import { httpsCallable } from 'firebase/functions';
+import { functions as fbFunctions } from '../../firebase/config';
 import './HoldingOS.css';
 import { logger } from '../../utils/logger';
 
@@ -76,8 +78,15 @@ const STAGGER = {
 const fmt  = n => new Intl.NumberFormat('fr-CI', { maximumFractionDigits: 0 }).format(n);
 const fmtM = n => n >= 1e9 ? `${(n/1e9).toFixed(2)} Md` : n >= 1e6 ? `${(n/1e6).toFixed(1)} M` : fmt(n);
 
-// ── Data ─────────────────────────────────────────────────────────────────
-const SUBSIDIARY_PERF = []; // Loaded from consolidated_reports (Cloud Functions)
+// ── Default consolidated shape ────────────────────────────────────────────
+// Real data loaded from `consolidated_reports/{latest}` in Firestore
+// (populated by the aggregateHoldingMetrics Cloud Function every 15 min)
+const EMPTY_CONSOLIDATED = {
+  revenue: 0, ebitda: 0, cash: 0, headcount: 0, subsidiaries: 0,
+  eliminations: 0, opex: 0, depreciation: 0, financialCosts: 0, taxes: 0, netResult: 0,
+  subsidiaryPerf: [],
+  _source: null,
+};
 
 // ── Tabs ─────────────────────────────────────────────────────────────────
 const TABS = [
@@ -139,25 +148,77 @@ function IPCLogo() {
 // ════════════════════════════════════════════════════════════════════════════
 
 export default function HoldingCockpit() {
-  const role = useStore(s => s.userRole || s.user?.role);
-  const [tab, setTab]             = useState('overview');
-  const [loading, setLoading]     = useState(true);
-  const [approvals, setApprovals] = useState([]);
+  const { userRole, user, currentUser } = useStore(s => ({
+    userRole:    s.userRole || s.user?.role,
+    user:        s.user,
+    currentUser: s.currentUser,
+  }));
+  const role     = userRole;
+  const callerUid = user?.uid || currentUser?.uid || null;
+
+  const [tab, setTab]               = useState('overview');
+  const [loading, setLoading]       = useState(true);
+  const [metricsLoading, setMLoading] = useState(true);
+  const [approvals, setApprovals]   = useState([]);
+  const [consolidated, setConsolidated] = useState(EMPTY_CONSOLIDATED);
 
   const isAllowed = isHoldingRole(role);
 
+  // ── 1. Live approvals — scoped to holding entity ─────────────────────────
   useEffect(() => {
     if (!isAllowed) return;
     let unsub;
     try {
       unsub = FirestoreService.subscribeToCollection(
         'intercompany_approvals',
-        { orderBy: [{ field: '_createdAt', direction: 'desc' }], limit: 20 },
-        docs => { setApprovals(docs.filter(d => d.status === 'pending')); setLoading(false); }
+        {
+          where:   [{ field: 'status',     op: '==',   value: 'pending' }],
+          orderBy: [{ field: '_createdAt', direction: 'desc' }],
+          limit:   50,
+        },
+        docs => { setApprovals(docs); setLoading(false); }
       );
     } catch (err) {
       logger.warn('[HoldingCockpit] Firestore non disponible (mode DEV):', err.message);
       setLoading(false);
+    }
+    return () => typeof unsub === 'function' && unsub();
+  }, [isAllowed]);
+
+  // ── 2. Consolidated metrics — live from consolidated_reports ──────────────
+  // The aggregateHoldingMetrics CF writes to consolidated_reports/latest
+  // every 15 min. We subscribe for real-time cockpit updates.
+  useEffect(() => {
+    if (!isAllowed) return;
+    let unsub;
+    try {
+      unsub = FirestoreService.subscribeToDocument(
+        'consolidated_reports',
+        'latest',
+        (data) => {
+          if (data) {
+            setConsolidated({
+              revenue:       data.revenue       || 0,
+              ebitda:        data.ebitda        || 0,
+              cash:          data.cash          || 0,
+              headcount:     data.headcount     || 0,
+              subsidiaries:  data.subsidiaries  || 0,
+              eliminations:  data.eliminations  || 0,
+              opex:          data.opex          || 0,
+              depreciation:  data.depreciation  || 0,
+              financialCosts:data.financialCosts || 0,
+              taxes:         data.taxes         || 0,
+              netResult:     data.netResult     || 0,
+              subsidiaryPerf:Array.isArray(data.subsidiaryPerf) ? data.subsidiaryPerf : [],
+              _source:       data._computedAt || null,
+            });
+          }
+          setMLoading(false);
+        }
+      );
+    } catch (err) {
+      logger.warn('[HoldingCockpit] consolidated_reports indisponible:', err.message);
+      setMLoading(false);
     }
     return () => typeof unsub === 'function' && unsub();
   }, [isAllowed]);
@@ -192,14 +253,6 @@ export default function HoldingCockpit() {
       </div>
     );
   }
-
-  const consolidated = SUBSIDIARY_PERF.reduce(
-    (acc, s) => ({ revenue: acc.revenue + s.revenue, headcount: acc.headcount + s.headcount }),
-    { revenue: 0, headcount: 0 }
-  );
-  Object.assign(consolidated, {
-    ebitda: 0, subsidiaries: SUBSIDIARY_PERF.length, cash: 0,
-  });
 
   return (
     <div className="holding-os">
@@ -269,10 +322,10 @@ export default function HoldingCockpit() {
             exit="hidden"
             variants={FADE_UP}
           >
-            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={loading} onDrillDown={setTab} />}
-            {tab === 'performance' && <PerformanceTab />}
-            {tab === 'finance'     && <FinanceTab consolidated={consolidated} />}
-            {tab === 'governance'  && <GovernanceTab approvals={approvals} />}
+            {tab === 'overview'    && <OverviewTab consolidated={consolidated} loading={metricsLoading} onDrillDown={setTab} />}
+            {tab === 'performance' && <PerformanceTab subsidiaryPerf={consolidated.subsidiaryPerf} loading={metricsLoading} />}
+            {tab === 'finance'     && <FinanceTab consolidated={consolidated} loading={metricsLoading} />}
+            {tab === 'governance'  && <GovernanceTab approvals={approvals} callerUid={callerUid} callerRole={role} loading={loading} />}
             {tab === 'countries'   && (
               <Suspense fallback={<TabLoader label="Country Management Center" />}>
                 <CountryManagementCenter />
@@ -301,6 +354,7 @@ export default function HoldingCockpit() {
 // ════════════════════════════════════════════════════════════════════════════
 
 function OverviewTab({ consolidated, loading, onDrillDown }) {
+  const subsidiaryPerf = consolidated.subsidiaryPerf || [];
   const hasData = consolidated.revenue > 0 || consolidated.headcount > 0;
 
   const kpis = [
@@ -380,13 +434,13 @@ function OverviewTab({ consolidated, loading, onDrillDown }) {
       {/* ── Section: Contribution par Filiale ─────────────────────────────── */}
       <OSSectionHeader title="Contribution par Filiale" sub="CA cumulé YTD" />
 
-      {SUBSIDIARY_PERF.length === 0
+      {subsidiaryPerf.length === 0
         ? <EmptyState Icon={Building2}
             title="Aucune filiale n'a synchronisé ses métriques"
             subtitle="Les barres de contribution apparaîtront dès que les filiales remontent leurs données via consolidated_reports." />
         : (
           <div className="os-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {[...SUBSIDIARY_PERF].sort((a, b) => b.revenue - a.revenue).map(s => {
+            {[...subsidiaryPerf].sort((a, b) => b.revenue - a.revenue).map(s => {
               const entity = GROUP_ENTITIES.find(e => e.id === s.id);
               const pct = consolidated.revenue > 0
                 ? (s.revenue / consolidated.revenue * 100).toFixed(1)
@@ -431,7 +485,7 @@ function OverviewTab({ consolidated, loading, onDrillDown }) {
 // TAB: PERFORMANCE
 // ════════════════════════════════════════════════════════════════════════════
 
-function PerformanceTab() {
+function PerformanceTab({ subsidiaryPerf = [], loading }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
       <OSSectionHeader
@@ -444,11 +498,11 @@ function PerformanceTab() {
         <p className="os-section-title" style={{ marginBottom: 16 }}>Score de performance par filiale</p>
         <SafeResponsiveChart
           minHeight={200} fallbackHeight={200}
-          isDataEmpty={SUBSIDIARY_PERF.length === 0}
-          placeholderTitle="Scores indisponibles"
+          isDataEmpty={subsidiaryPerf.length === 0}
+          placeholderTitle={loading ? 'Chargement…' : 'Scores indisponibles'}
           placeholderSubtitle="Activé via consolidated_reports dès la mise en service des filiales."
         >
-          <BarChart data={SUBSIDIARY_PERF.map(s => ({
+          <BarChart data={subsidiaryPerf.map(s => ({
             name: GROUP_ENTITIES.find(e => e.id === s.id)?.shortName || s.id,
             score: s.score,
           }))}>
@@ -466,7 +520,7 @@ function PerformanceTab() {
               cursor={{ fill: OS.track }}
             />
             <Bar dataKey="score" radius={[4, 4, 0, 0]} barSize={28}>
-              {SUBSIDIARY_PERF.map((s, i) => (
+              {subsidiaryPerf.map((s, i) => (
                 <Cell key={i} fill={
                   s.score >= 90 ? 'rgba(0,0,0,0.80)' :
                   s.score >= 75 ? 'rgba(0,0,0,0.55)' :
@@ -480,9 +534,9 @@ function PerformanceTab() {
       </div>
 
       {/* Performance matrix table */}
-      {SUBSIDIARY_PERF.length === 0
+      {subsidiaryPerf.length === 0
         ? <EmptyState Icon={BarChart3}
-            title="Matrice de performance vide"
+            title={loading ? 'Chargement des données…' : 'Matrice de performance vide'}
             subtitle="La matrice se peuplera via les Cloud Functions d'agrégation dès la mise en service des filiales." />
         : (
           <div className="os-card" style={{ overflow: 'hidden' }}>
@@ -495,7 +549,7 @@ function PerformanceTab() {
                 </tr>
               </thead>
               <tbody>
-                {[...SUBSIDIARY_PERF].sort((a, b) => b.score - a.score).map(s => {
+                {[...subsidiaryPerf].sort((a, b) => b.score - a.score).map(s => {
                   const entity = GROUP_ENTITIES.find(e => e.id === s.id);
                   return (
                     <tr key={s.id}>
@@ -555,7 +609,7 @@ function PerformanceTab() {
 // TAB: FINANCIAL CONSOLIDATION
 // ════════════════════════════════════════════════════════════════════════════
 
-function FinanceTab({ consolidated }) {
+function FinanceTab({ consolidated, loading }) {
   const hasData = consolidated.revenue > 0;
 
   const rows = hasData ? [
@@ -581,7 +635,7 @@ function FinanceTab({ consolidated }) {
 
       {!hasData
         ? <EmptyState Icon={Wallet}
-            title="Aucune donnée financière consolidée"
+            title={loading ? 'Chargement de la consolidation…' : 'Aucune donnée financière consolidée'}
             subtitle="Le compte de résultat sera généré automatiquement via consolidated_reports dès que les filiales remontent leurs métriques." />
         : (
           <div className="os-card" style={{ overflow: 'hidden' }}>
@@ -668,36 +722,40 @@ const GOVERNANCE_ICONS = {
   'Investissement': { Icon: Construction, },
 };
 
-function GovernanceTab({ approvals }) {
+function GovernanceTab({ approvals, callerUid, callerRole, loading }) {
+  // Optimistic UI state — keyed by item.id
+  // Value: 'pending' | 'approved' | 'rejected' | 'processing'
   const [processed, setProcessed] = React.useState({});
 
+  // [FIX-02] Use Cloud Function to validate approvals server-side.
+  // Falls back to direct Firestore write in DEV mode only.
+  const approveGovernanceItem  = React.useMemo(() => httpsCallable(fbFunctions, 'approveGovernanceItem'), []);
+  const rejectGovernanceItem   = React.useMemo(() => httpsCallable(fbFunctions, 'rejectGovernanceItem'), []);
+
   const handleApprove = async (item) => {
-    setProcessed(p => ({ ...p, [item.id]: 'approved' }));
+    if (processed[item.id] === 'processing') return; // [SEC-01] prevent double-submit
+    setProcessed(p => ({ ...p, [item.id]: 'processing' }));
     try {
-      await FirestoreService.updateDocument('intercompany_approvals', item.id, {
-        status: 'approved',
-        approvedBy: 'HOLDING_CEO',
-        approvedAt: new Date().toISOString(),
-      });
+      // Server-side: validates caller role, writes audit log, sets approvedBy = auth.uid
+      await approveGovernanceItem({ itemId: item.id });
+      setProcessed(p => ({ ...p, [item.id]: 'approved' }));
       useToastStore.getState().addToast(`Approuvé : ${item.description || item.id}`, 'success');
     } catch (err) {
-      logger.warn('[Governance] Approve failed:', err.message);
+      logger.error('[Governance] Approve failed:', err.message);
       useToastStore.getState().addToast(`Erreur lors de l'approbation : ${err.message}`, 'error');
       setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }
   };
 
   const handleReject = async (item) => {
-    setProcessed(p => ({ ...p, [item.id]: 'rejected' }));
+    if (processed[item.id] === 'processing') return; // [SEC-01] prevent double-submit
+    setProcessed(p => ({ ...p, [item.id]: 'processing' }));
     try {
-      await FirestoreService.updateDocument('intercompany_approvals', item.id, {
-        status: 'rejected',
-        rejectedBy: 'HOLDING_CEO',
-        rejectedAt: new Date().toISOString(),
-      });
+      await rejectGovernanceItem({ itemId: item.id });
+      setProcessed(p => ({ ...p, [item.id]: 'rejected' }));
       useToastStore.getState().addToast(`Rejeté : ${item.description || item.id}`, 'info');
     } catch (err) {
-      logger.warn('[Governance] Reject failed:', err.message);
+      logger.error('[Governance] Reject failed:', err.message);
       useToastStore.getState().addToast(`Erreur lors du rejet : ${err.message}`, 'error');
       setProcessed(p => { const n = { ...p }; delete n[item.id]; return n; });
     }
@@ -779,15 +837,25 @@ function GovernanceTab({ approvals }) {
                   </div>
 
                   {/* Actions */}
-                  {status === 'pending' ? (
+                  {(status === 'pending' || status === 'processing') ? (
                     <div style={{ display: 'flex', gap: 7, flexShrink: 0 }}>
-                      <button className="os-btn os-btn--primary" onClick={() => handleApprove(item)}>
+                      <button
+                        className="os-btn os-btn--primary"
+                        onClick={() => handleApprove(item)}
+                        disabled={status === 'processing'}
+                        style={{ opacity: status === 'processing' ? 0.6 : 1 }}
+                      >
                         <CheckCircle2 size={11} strokeWidth={2.5} />
-                        Valider
+                        {status === 'processing' ? '…' : 'Valider'}
                       </button>
-                      <button className="os-btn os-btn--danger" onClick={() => handleReject(item)}>
+                      <button
+                        className="os-btn os-btn--danger"
+                        onClick={() => handleReject(item)}
+                        disabled={status === 'processing'}
+                        style={{ opacity: status === 'processing' ? 0.6 : 1 }}
+                      >
                         <AlertTriangle size={11} strokeWidth={2.5} />
-                        Refuser
+                        {status === 'processing' ? '…' : 'Refuser'}
                       </button>
                     </div>
                   ) : (

@@ -955,9 +955,35 @@ service cloud.firestore {
     }
 
     match /intercompany_approvals/{docId} {
-      allow read: if isAuthenticated() && (isHoldingLevel() || isManager());
+      allow read:   if isAuthenticated() && (isHoldingLevel() || isManager());
       allow create: if isAuthenticated() && isManager();
-      allow update: if isAuthenticated() && isHoldingLevel(); // Only Holding approves
+      // [FIX-02/FIX-03] approveGovernanceItem / rejectGovernanceItem CFs write this.
+      // Direct client writes are blocked — all approvals go through server-side validation.
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── Subsidiary Reports (each entity pushes its own metrics) ───────────
+    // Written by entity-local CF (subsidiary_report_sync), read by consolidation CF
+    // + Holding cockpit (consolidated_reports/latest aggregates them)
+    match /subsidiary_reports/{entityId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        hasRole('GROUP_AUDITOR') ||
+        entityId == getEntityId()
+      );
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ── Intercompany Flows (for elimination calculation) ──────────────────
+    match /intercompany_flows/{docId} {
+      allow read: if isAuthenticated() && (
+        isHoldingLevel() ||
+        resource.data.fromEntityId == getEntityId() ||
+        resource.data.toEntityId   == getEntityId()
+      );
+      allow create: if isAuthenticated() && (isManager() || isSubsidiaryLevel());
+      allow update: if false; // Status updated by CF only
       allow delete: if false;
     }
 
