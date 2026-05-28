@@ -32,8 +32,15 @@ export const CREDS = {
  */
 export async function login(page, email, password) {
   await page.goto('/');
-  // Wait for login form
-  await page.waitForSelector('input[type="email"]', { timeout: 10000 });
+  // The public root can render either the login form or the marketing landing.
+  // Follow the production UX before filling credentials.
+  const emailInput = page.locator('input[type="email"]').first();
+  if (!(await emailInput.isVisible({ timeout: 5000 }).catch(() => false))) {
+    const loginCta = page.getByRole('button', { name: /se connecter|connexion|login/i }).first();
+    await expect(loginCta).toBeVisible({ timeout: 10000 });
+    await loginCta.click();
+  }
+  await expect(emailInput).toBeVisible({ timeout: 10000 });
   await page.fill('input[type="email"]', email);
   await page.fill('input[type="password"]', password);
   await page.click('button[type="submit"]');

@@ -19,54 +19,14 @@ import { createFoundationSlice } from './slices/foundation/createFoundationSlice
 //  IPC INTELLIGENCE ENGINE: CENTRAL STORE
 // ══════════════════════════════════════════════════════════════════════════
 
-//  COUCHE DE SÉCURITÉ : CHIFFREMENT DU STOCKAGE LOCAL
-// La clé est lue depuis la variable d'environnement VITE_STORE_KEY.
-// Si absente, une clé éphémère par session est générée (les données ne
-// survivront pas au rechargement — comportement sécurisé par défaut).
-const _envKey = import.meta.env.VITE_STORE_KEY;
-const _sessionFallback = (() => {
-  const k = sessionStorage.getItem('_ipc_sk');
-  if (k) return k;
-  const generated = crypto.randomUUID();
-  sessionStorage.setItem('_ipc_sk', generated);
-  return generated;
-})();
-const ENCRYPTION_KEY = _envKey || _sessionFallback;
-
-const xorEncrypt = (str, key) =>
-  btoa(str.split('').map((c, i) =>
-    String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-  ).join(''));
-
-const xorDecrypt = (encoded, key) => {
-  try {
-    return atob(encoded).split('').map((c, i) =>
-      String.fromCharCode(c.charCodeAt(0) ^ key.charCodeAt(i % key.length))
-    ).join('');
-  } catch { return null; }
-};
-
-const secureStorage = {
-  getItem: (name) => {
-    try {
-      const encrypted = localStorage.getItem(name);
-      if (!encrypted) return null;
-      const decrypted = xorDecrypt(encrypted, ENCRYPTION_KEY);
-      return decrypted ? JSON.parse(decrypted) : null;
-    } catch (e) {
-      console.error('[SecureStorage] Erreur de déchiffrement:', e);
-      return null;
-    }
-  },
-  setItem: (name, value) => {
-    try {
-      const encrypted = xorEncrypt(JSON.stringify(value), ENCRYPTION_KEY);
-      localStorage.setItem(name, encrypted);
-    } catch (e) {
-      console.error('[SecureStorage] Erreur de chiffrement:', e);
-    }
-  },
-  removeItem: (name) => localStorage.removeItem(name),
+// ── Client persistence policy ───────────────────────────────────────────────
+// No business data and no user/role claims are persisted here. Firebase Auth is
+// the source of truth for session persistence, and Firestore is the source of
+// truth for tenant data. UI preferences live in sessionStorage only.
+const transientStorage = {
+  getItem: (name) => sessionStorage.getItem(name),
+  setItem: (name, value) => sessionStorage.setItem(name, value),
+  removeItem: (name) => sessionStorage.removeItem(name),
 };
 
 export const useStore = create(
@@ -192,7 +152,7 @@ export const useStore = create(
               if (db.name) window.indexedDB.deleteDatabase(db.name);
             }
           }
-        } catch (_e) { /* non-fatal */ }
+        } catch { /* non-fatal */ }
         set({
           user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' },
           currentUser: null,
@@ -254,16 +214,14 @@ export const useStore = create(
     }),
     {
       name: 'ipc-intelligence-store',
-      storage: createJSONStorage(() => secureStorage), // [SÉCURISÉ] Chiffrement XOR actif
+      storage: createJSONStorage(() => transientStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // [HYDRATION GUARD] : State is sourced from encrypted localStorage
-          // Role consistency is verified during BusinessContext sync with UserService
+          // Role consistency is verified during BusinessContext sync with UserService.
           state.setHasHydrated(true);
         }
       },
       partialize: (state) => ({ 
-        user: state.user, 
         globalSettings: state.globalSettings,
         activeApp: state.activeApp,
         dashboardPreferences: state.dashboardPreferences

@@ -16,7 +16,11 @@ import { login, logout, CREDS, skipIfNoCreds } from './helpers/auth.js';
 test.describe('Authentication — login per role', () => {
   test('invalid credentials show an error', async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('input[type="email"]');
+    const emailInput = page.locator('input[type="email"]').first();
+    if (!(await emailInput.isVisible({ timeout: 5000 }).catch(() => false))) {
+      await page.getByRole('button', { name: /se connecter|connexion|login/i }).first().click();
+    }
+    await expect(emailInput).toBeVisible({ timeout: 10000 });
     await page.fill('input[type="email"]', 'nobody@nowhere.com');
     await page.fill('input[type="password"]', 'wrongpassword');
     await page.click('button[type="submit"]');

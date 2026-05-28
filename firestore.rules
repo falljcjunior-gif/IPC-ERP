@@ -676,7 +676,8 @@ service cloud.firestore {
     }
 
     match /financial_audit_logs/{logId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || hasRole('AUDIT') || hasRole('CFO'));
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isSuperAdmin() || hasRole('AUDIT') || hasRole('CFO'));
       allow write: if false; // BANK-GRADE: Only Cloud Functions can write to financial audit logs
     }
 
@@ -724,13 +725,13 @@ service cloud.firestore {
     // ── [3-SPACE ISOLATION] Helper: tenant-aware read access ───────────────
     // HOLDING : voit tout (consolidation stratégique — lecture uniquement)
     // Sinon  : voit uniquement les docs de SON entity_id
-    // Si le doc n'a pas d'entity_id (collections globales pré-existantes),
-    // autorisation accordée pour compat — à durcir au cas par cas.
+    // Aucun accès legacy implicite : les documents opérationnels doivent porter
+    // un entity_id explicite. Les collections globales ont leurs propres règles.
     function canReadOwnEntity(docEntityId) {
       return isHoldingLevel() ||
-             docEntityId == null ||
-             docEntityId == '' ||
-             docEntityId == getEntityId();
+             (docEntityId != null &&
+              docEntityId != '' &&
+              docEntityId == getEntityId());
     }
 
     // ── [3-SPACE ISOLATION] Helper: tenant-aware WRITE access ──────────────
@@ -739,12 +740,12 @@ service cloud.firestore {
     // les données opérationnelles locales (filiales/foundations).
     //
     // Règle : entity_id du doc doit correspondre à entity_id du caller.
-    //         Exception : SUPER_ADMIN (opérations d'urgence) et docs sans entity_id (legacy).
+    //         Exception : SUPER_ADMIN uniquement pour les opérations d'urgence.
     function canWriteOwnEntity(docEntityId) {
       return isSuperAdmin() ||
-             docEntityId == null ||
-             docEntityId == '' ||
-             docEntityId == getEntityId();
+             (docEntityId != null &&
+              docEntityId != '' &&
+              docEntityId == getEntityId());
     }
 
     // Bonus : isolation country pour les rôles COUNTRY_* (filtre + strict)

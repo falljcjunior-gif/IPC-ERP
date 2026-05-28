@@ -11,6 +11,23 @@ const DeleteUserSchema = z.object({
   uid: z.string().min(20).max(128) // Standard Firebase UID length
 });
 
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
+
+const buildTenantClaims = (userData, existingClaims = {}, roleOverride = null) => {
+  const entityId = userData.entity_id || existingClaims.entity_id;
+  if (!entityId) {
+    throw new HttpsError('failed-precondition', 'entity_id manquant : impossible de publier des Custom Claims sûrs.');
+  }
+
+  return {
+    ...existingClaims,
+    role: roleOverride || userData.role || existingClaims.role || 'EMPLOYEE',
+    entity_type: userData.entity_type || existingClaims.entity_type || 'SUBSIDIARY',
+    entity_id: entityId,
+    tenant_id: userData.tenant_id || existingClaims.tenant_id || 'ipc_group',
+  };
+};
+
 // ── Unified Payload Builder (HR 2.0) ──────────────────────────────────────
 const buildUnifiedUserPayload = (user, now, extraData = {}) => {
   const uid = user.uid;
@@ -98,7 +115,12 @@ exports.provisionUser = onCall({
 
   const { email, password, ...extraData } = request.data;
   if (!email || !password) throw new HttpsError('invalid-argument', 'Email et Mot de passe requis.');
-  if (password.length < 6) throw new HttpsError('invalid-argument', 'Le mot de passe doit contenir au moins 6 caractères.');
+  if (!STRONG_PASSWORD_REGEX.test(password)) {
+    throw new HttpsError(
+      'invalid-argument',
+      'Le mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole.'
+    );
+  }
 
   try {
     // 1. Create Auth User
@@ -130,6 +152,9 @@ exports.provisionUser = onCall({
         iban: extraData.iban || null,
         ssn: extraData.ssn || null,
         _employeeId: uid,
+        entity_id: payload.entity_id,
+        entity_type: payload.entity_type,
+        tenant_id: payload.tenant_id,
         _createdAt: now,
         _updatedAt: now
       });
@@ -163,9 +188,9 @@ exports.provisionUser = onCall({
         compte_bancaire: extraData.compte_bancaire || null,
         date_effet: extraData.date_effet_salaire || new Date().toISOString().split('T')[0],
         payroll_status: 'Actif',
-        entity_id: extraData.entity_id || 'ipc_green_blocks',
-        entity_type: extraData.entity_type || 'SUBSIDIARY',
-        tenant_id: 'ipc_group',
+        entity_id: payload.entity_id,
+        entity_type: payload.entity_type,
+        tenant_id: payload.tenant_id,
         _createdAt: now,
         _updatedAt: now,
         _deletedAt: null,
@@ -181,9 +206,9 @@ exports.provisionUser = onCall({
         cotisation_its: true,
         bank_account: extraData.compte_bancaire || null,
         statut_paie: 'Actif',
-        entity_id: extraData.entity_id || 'ipc_green_blocks',
-        entity_type: extraData.entity_type || 'SUBSIDIARY',
-        tenant_id: 'ipc_group',
+        entity_id: payload.entity_id,
+        entity_type: payload.entity_type,
+        tenant_id: payload.tenant_id,
         _createdAt: now,
         _updatedAt: now,
         _deletedAt: null,
@@ -199,9 +224,9 @@ exports.provisionUser = onCall({
         salaire_base: extraData.salaire_base || extraData.salaire || 0,
         devise: extraData.devise || 'XOF',
         statut: 'Actif',
-        entity_id: extraData.entity_id || 'ipc_green_blocks',
-        entity_type: extraData.entity_type || 'SUBSIDIARY',
-        tenant_id: 'ipc_group',
+        entity_id: payload.entity_id,
+        entity_type: payload.entity_type,
+        tenant_id: payload.tenant_id,
         _createdAt: now,
         _updatedAt: now,
         _deletedAt: null,
@@ -225,12 +250,7 @@ exports.provisionUser = onCall({
 
     // 3. Set Custom Claims (include entity_type + entity_id for App.jsx space routing)
     try {
-      await admin.auth().setCustomUserClaims(uid, {
-        role:        payload.role,
-        entity_type: payload.entity_type,
-        entity_id:   payload.entity_id,
-        tenant_id:   payload.tenant_id,
-      });
+      await admin.auth().setCustomUserClaims(uid, buildTenantClaims(payload));
       logger.info(`Custom claims set for ${uid}: ${payload.role} / ${payload.entity_type}`);
     } catch (claimError) {
       logger.error(`Custom claims failed for ${uid}:`, claimError);
@@ -246,7 +266,7 @@ exports.provisionUser = onCall({
       throw new HttpsError('already-exists', 'Cet email est déjà utilisé.');
     }
     if (error.code === 'auth/invalid-password') {
-      throw new HttpsError('invalid-argument', 'Mot de passe invalide (min 6 caractères).');
+      throw new HttpsError('invalid-argument', 'Mot de passe invalide : 12 caractères minimum avec complexité forte.');
     }
     if (error.code === 'auth/invalid-email') {
       throw new HttpsError('invalid-argument', 'Format d\'email invalide.');
@@ -303,18 +323,21 @@ exports.updateUserPermissions = onCall({
     const snap = await userRef.get();
     if (!snap.exists) throw new HttpsError('not-found', `Utilisateur ${uid} introuvable.`);
 
+    const userData = snap.data();
     const updates = { _updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     if (permissions) updates.permissions = permissions;
     if (hierarchy_level) updates.hierarchy_level = hierarchy_level;
 
-    let finalRole = role || snap.data().role;
+    let finalRole = role || userData.role;
     if (role) updates.role = role;
     updates._permissionsUpdatedBy = request.auth.uid;
 
     await userRef.update(updates);
 
     if (finalRole) {
-      await admin.auth().setCustomUserClaims(uid, { role: finalRole });
+      const authUser = await admin.auth().getUser(uid);
+      const mergedClaims = buildTenantClaims(userData, authUser.customClaims || {}, finalRole);
+      await admin.auth().setCustomUserClaims(uid, mergedClaims);
     }
 
     await db.collection('audit_logs').add({
@@ -428,54 +451,37 @@ const functionsV1 = require('firebase-functions/v1');
  */
 exports.onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
   const uid = user.uid;
-  const email = user.email;
   try {
     const userRef = db.collection('users').doc(uid);
     const docSnap = await userRef.get();
     const now = admin.firestore.FieldValue.serverTimestamp();
 
-    // If the auth user already has meaningful claims (set by provisioning script
+    // If the auth user already has scoped claims (set by provisioning script
     // or bootstrapSuperAdmin before this trigger fires), never overwrite them.
     const existingClaims = user.customClaims || {};
-    // GUEST treated as unprovisioned (legacy) — EMPLOYEE is the new baseline.
-    const hasProvisionedClaims = existingClaims.role && existingClaims.role !== 'GUEST' && existingClaims.role !== 'EMPLOYEE';
+    const hasScopedClaims = Boolean(existingClaims.role && existingClaims.entity_id);
 
     if (!docSnap.exists) {
-      const userData = buildUnifiedUserPayload(user, now);
-
-      // If provisioned claims exist (set via bootstrapSuperAdmin or provisioning script
-      // before this trigger fires), honour them instead of defaulting to GUEST.
-      // No hardcoded emails — role elevation goes through bootstrapSuperAdmin exclusively.
-      if (hasProvisionedClaims) {
-        userData.role        = existingClaims.role;
-        userData.entity_type = existingClaims.entity_type || userData.entity_type;
-        userData.entity_id   = existingClaims.entity_id   || userData.entity_id;
-        if (userData.permissions) userData.permissions.roles = [existingClaims.role];
+      if (!hasScopedClaims) {
+        logger.warn(`[onUserCreated] Auth user ${uid} has no entity_id claim; Firestore mirror skipped until admin provisioning.`);
+        return null;
       }
+
+      const userData = buildUnifiedUserPayload(user, now, {
+        role: existingClaims.role,
+        entity_type: existingClaims.entity_type || 'SUBSIDIARY',
+        entity_id: existingClaims.entity_id,
+        tenant_id: existingClaims.tenant_id || 'ipc_group',
+      });
+      if (userData.permissions) userData.permissions.roles = [existingClaims.role];
 
       await userRef.set(userData);
-
-      // Only write default GUEST claims when no provisioned claims are present.
-      if (!hasProvisionedClaims) {
-        await admin.auth().setCustomUserClaims(uid, {
-          role:        userData.role,
-          entity_type: userData.entity_type || 'SUBSIDIARY',
-          entity_id:   userData.entity_id   || 'ipc_default',
-        });
-      }
-
       logger.info(`Mirrored user ${uid} (Unified) and set role ${userData.role}`);
     } else {
       // Sync claims from Firestore — merge to preserve all claim fields, never downgrade.
       const data = docSnap.data();
-      if (data.role && !hasProvisionedClaims) {
-        const mergedClaims = {
-          ...existingClaims,
-          role:        data.role,
-          entity_type: data.entity_type || existingClaims.entity_type || 'SUBSIDIARY',
-          entity_id:   data.entity_id   || existingClaims.entity_id   || 'ipc_default',
-        };
-        await admin.auth().setCustomUserClaims(uid, mergedClaims);
+      if (data.role && !hasScopedClaims) {
+        await admin.auth().setCustomUserClaims(uid, buildTenantClaims(data, existingClaims));
       }
     }
   } catch (error) {
@@ -536,24 +542,25 @@ exports.backfillUsers = onCall({
           const now = admin.firestore.FieldValue.serverTimestamp();
 
           const userDoc = await userRef.get();
+          const existingClaims = user.customClaims || {};
 
           // 1. Sync User & HR Unified Document
           if (!userDoc.exists) {
-            const userData = buildUnifiedUserPayload(user, now);
-            
-            // Auto-role logic (same as onUserCreated)
-            if (user.email === 'ra.yoman@ipcgreenblocks.com') {
-              userData.role = 'HOLDING_CEO';
-              userData.permissions.roles = ['HOLDING_CEO'];
-              userData.entity_type = 'HOLDING';
-              userData.entity_id   = 'ipc_holding';
-            } else if (user.email === 'yomanraphael26@gmail.com') {
-              userData.role = 'SUPER_ADMIN';
-              userData.permissions.roles = ['SUPER_ADMIN'];
+            if (!existingClaims.entity_id) {
+              errors++;
+              logger.warn(`Backfill: skipped ${uid} (${user.email}) because entity_id claim is missing.`);
+              continue;
             }
 
+            const userData = buildUnifiedUserPayload(user, now, {
+              role: existingClaims.role || 'EMPLOYEE',
+              entity_type: existingClaims.entity_type || 'SUBSIDIARY',
+              entity_id: existingClaims.entity_id,
+              tenant_id: existingClaims.tenant_id || 'ipc_group',
+            });
+
             await userRef.set(userData);
-            await admin.auth().setCustomUserClaims(uid, { role: userData.role });
+            await admin.auth().setCustomUserClaims(uid, buildTenantClaims(userData, existingClaims));
             
             // Initialize hr_private sub-collection
             const privateFields = {
@@ -561,17 +568,21 @@ exports.backfillUsers = onCall({
               iban: '',
               ssn: '',
               rib: '',
+              entity_id: userData.entity_id,
+              entity_type: userData.entity_type,
+              tenant_id: userData.tenant_id,
               lastModified: new Date().toISOString()
             };
             await userRef.collection('hr_private').doc('main').set(privateFields, { merge: true });
 
             createdUsers++;
+            createdHr++;
             logger.info(`Backfill: Created unified user doc for ${uid} (${user.email})`);
           } else {
             const data = userDoc.data();
             // Sync claims if missing or inconsistent
             if (data.role) {
-              await admin.auth().setCustomUserClaims(uid, { role: data.role });
+              await admin.auth().setCustomUserClaims(uid, buildTenantClaims(data, existingClaims));
             }
             
             // Repair metadata and hierarchy
@@ -579,13 +590,28 @@ exports.backfillUsers = onCall({
             if (data._deletedAt !== null) updates._deletedAt = null;
             if (!data.hierarchy_level) updates.hierarchy_level = 'Employee';
             if (!data.profile) {
-              const freshPayload = buildUnifiedUserPayload(user, now);
+              const freshPayload = buildUnifiedUserPayload(user, now, {
+                role: data.role,
+                entity_type: data.entity_type,
+                entity_id: data.entity_id,
+                tenant_id: data.tenant_id,
+              });
               updates.profile = freshPayload.profile;
             }
+            if (!data.tenant_id) updates.tenant_id = existingClaims.tenant_id || 'ipc_group';
             
             if (Object.keys(updates).length > 0) {
               await userRef.update(updates);
               patched++;
+            }
+
+            if (data.entity_id) {
+              await userRef.collection('hr_private').doc('main').set({
+                entity_id: data.entity_id,
+                entity_type: data.entity_type || existingClaims.entity_type || 'SUBSIDIARY',
+                tenant_id: data.tenant_id || existingClaims.tenant_id || 'ipc_group',
+                _updatedAt: now,
+              }, { merge: true });
             }
           }
 

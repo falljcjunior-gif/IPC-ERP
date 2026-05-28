@@ -1,13 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, initializeFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
-// App Check import — activé uniquement quand la clé est liée dans la console Firebase
-// import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
-import logger from '../utils/logger';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
 const d = (s) => typeof atob !== 'undefined' ? atob(s) : s;
@@ -27,22 +29,30 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 // ── [SECURITY] Firebase App Check ────────────────────────────────────
-// PENDING: Lier la clé reCAPTCHA Enterprise dans Firebase Console → App Check
-// avant d'activer. Sans cette étape, le SDK retourne 400 et bloque Firestore.
-// const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LfmFuMsAAAAAGASfSgEa4ypKfHbLIBldul9oMJQ';
-// if (typeof window !== 'undefined' && RECAPTCHA_SITE_KEY) {
-//   initializeAppCheck(app, {
-//     provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-//     isTokenAutoRefreshEnabled: true,
-//   });
-// }
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const APPCHECK_DEBUG_TOKEN = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
+const APP_CHECK_ENABLED = Boolean(
+  RECAPTCHA_SITE_KEY && (import.meta.env.PROD || import.meta.env.VITE_ENABLE_APPCHECK === 'true')
+);
+if (typeof window !== 'undefined' && !import.meta.env?.VITEST && APP_CHECK_ENABLED) {
+  if (APPCHECK_DEBUG_TOKEN) {
+    window.FIREBASE_APPCHECK_DEBUG_TOKEN = APPCHECK_DEBUG_TOKEN;
+  }
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 
 export const auth = getAuth(app);
 
 // [FIX REAL-TIME] Disable Fetch Streams & Force Long Polling to prevent silent onSnapshot drop
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
-  useFetchStreams: false
+  useFetchStreams: false,
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });
 
 export const rtdb = getDatabase(app);
@@ -50,17 +60,5 @@ export const storage = getStorage(app);
 export const functions = getFunctions(app, 'europe-west1'); // Region standard pour l'ERP
 export const messaging = (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? getMessaging(app) : null;
 
-// Activer le mode Offline-First (Uniquement hors mode TEST)
-if (typeof window !== 'undefined' && !import.meta.env?.VITEST) {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
-    } else if (err.code === 'unimplemented') {
-      console.warn("The current browser does not support all of the features required to enable persistence");
-    }
-  });
-}
-
 export { firebaseConfig };
 export default app;
-

@@ -274,6 +274,31 @@ export const FirestoreService = {
    */
   subscribeToCollection(collectionName, options = {}, onData, onError) {
     requireAuth();
+    if (typeof options === 'function') {
+      const legacyOnData = options;
+      const legacyFiltersOrOptions = onData;
+      const legacyOrder = onError;
+      const legacyLimit = arguments[4];
+
+      if (Array.isArray(legacyFiltersOrOptions)) {
+        options = {
+          filters: legacyFiltersOrOptions,
+          orderByField: legacyOrder?.field,
+          descending: legacyOrder?.direction === 'desc',
+          limitTo: legacyLimit,
+        };
+      } else if (legacyFiltersOrOptions && typeof legacyFiltersOrOptions === 'object') {
+        options = {
+          ...legacyFiltersOrOptions,
+          limitTo: legacyFiltersOrOptions.limitTo || legacyFiltersOrOptions.limit,
+        };
+      } else {
+        options = {};
+      }
+      onData = legacyOnData;
+      onError = undefined;
+    }
+
     const { filters = [], orderByField, limitTo, descending = false, includeDeleted = false, skipEntityFilter = false } = options;
     try {
       let q = collection(db, collectionName);

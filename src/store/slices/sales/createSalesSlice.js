@@ -17,12 +17,16 @@ export const createSalesSlice = (set, get) => ({
 
   salesActions: {
     initSales: () => {
-      FirestoreService.subscribeToCollection('sales_leads', (docs) => {
+      const unsubLeads = FirestoreService.subscribeToCollection('sales_leads', {}, (docs) => {
         set(state => ({ sales: { ...state.sales, leads: docs } }));
       });
-      FirestoreService.subscribeToCollection('sales_invoices', (docs) => {
+      const unsubInvoices = FirestoreService.subscribeToCollection('sales_invoices', {}, (docs) => {
         set(state => ({ sales: { ...state.sales, invoices: docs } }));
       });
+      return () => {
+        if (typeof unsubLeads === 'function') unsubLeads();
+        if (typeof unsubInvoices === 'function') unsubInvoices();
+      };
     },
 
     addLead: async (data) => {
