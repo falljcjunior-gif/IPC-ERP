@@ -140,22 +140,22 @@
   --foundation-glow:           rgba(132,204,22,0.13);
 }
 
-/* Dark Mode Removed as per User Request for Senior Refonte */
-
 /* ══ RESET & BASE ══ */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { 
+html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  /* AuraHealth dark base — prevents flash-of-white on load */
+  background-color: #060E1B;
+  color-scheme: dark;
 }
 
 body {
   font-family: var(--font-main);
-  background-color: var(--bg);
-  color: var(--text);
+  background-color: #060E1B;
+  color: #F0F6FF;
   line-height: 1.5;
-  transition: background-color 0.4s ease, color 0.4s ease;
   overflow-x: hidden;
 }
 
@@ -187,9 +187,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bento-card:hover {
-  transform: translateY(-8px) scale(1.01);
-  box-shadow: var(--shadow-premium);
-  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.12);
+  border-color: rgba(16,185,129,0.18);
 }
 
 .bento-card::before {

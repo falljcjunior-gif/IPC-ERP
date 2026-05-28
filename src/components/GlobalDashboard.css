@@ -2,13 +2,12 @@
 
 .luxury-dashboard-container {
   min-height: 100vh;
-  padding: 4rem 3rem;
-  background-color: #fdfdfd;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(240, 244, 248, 1) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(248, 250, 252, 0.8) 100%);
-  color: #111827;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  padding: 2rem 1.5rem;
+  background-color: var(--bg, #060E1B);
+  background-image:
+    radial-gradient(ellipse 80% 40% at 20% -10%, rgba(16,185,129,0.04) 0%, transparent 60%);
+  color: var(--text, #F0F6FF);
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   overflow-x: hidden;
 }
 
@@ -20,27 +19,27 @@
 }
 
 .luxury-title {
-  font-size: 3rem;
-  font-weight: 200;
-  letter-spacing: -0.04em;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
   margin: 0;
-  color: #000;
+  color: var(--text, #F0F6FF);
 }
 
 .luxury-title strong {
-  font-weight: 600;
-  background: linear-gradient(135deg, #111827 0%, #4b5563 100%);
+  font-weight: 900;
+  background: linear-gradient(135deg, #10B981 0%, #34D399 60%, #6EE7B7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .luxury-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: #9ca3af;
-  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-muted, #94A3B8);
+  font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
@@ -55,27 +54,26 @@
 }
 
 .luxury-widget {
-  background: #FFFFFF;
-  border: 1px solid var(--nexus-border);
-  border-radius: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-  padding: 2.5rem;
+  background: var(--bg-card, #0F1E34);
+  border: 1px solid var(--border, rgba(255,255,255,0.07));
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  padding: 1.5rem;
   position: relative;
   overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
 }
 
 .luxury-widget:hover {
-  box-shadow: 
-    0 30px 60px -15px rgba(0, 0, 0, 0.06), 
-    0 1px 3px rgba(0,0,0,0.02),
-    inset 0 1px 1px rgba(255, 255, 255, 1);
+  border-color: rgba(16,185,129,0.16);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(16,185,129,0.08);
+  transform: translateY(-1px);
 }
 
 .luxury-widget.dragging {
-  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.15), inset 0 1px 1px rgba(255, 255, 255, 1);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
   z-index: 50;
   cursor: grabbing !important;
 }
@@ -84,19 +82,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 .luxury-widget-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-weight: 700;
-  color: #6b7280;
+  letter-spacing: 0.1em;
+  font-weight: 800;
+  color: var(--text-muted, #94A3B8);
 }
 
 .luxury-drag-handle {
-  color: #d1d5db;
+  color: rgba(148,163,184,0.3);
   cursor: grab;
   opacity: 0;
   transition: opacity 0.2s, color 0.2s;
@@ -107,7 +105,7 @@
 }
 
 .luxury-drag-handle:hover {
-  color: #4b5563;
+  color: #94A3B8;
 }
 
 /* Remove Button */
@@ -117,10 +115,10 @@
   right: 1rem;
   background: transparent;
   border: none;
-  color: #d1d5db;
+  color: rgba(148,163,184,0.3);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s, color 0.2s;
+  transition: opacity 0.2s, color 0.2s, background 0.2s;
   padding: 0.5rem;
   border-radius: 50%;
   display: flex;
@@ -133,24 +131,24 @@
 }
 
 .luxury-remove-btn:hover {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.1);
+  color: #EF4444;
+  background: rgba(239, 68, 68, 0.12);
 }
 
 /* Add Widget Button */
 .luxury-add-widget {
   background: transparent;
-  border: 2px dashed rgba(156, 163, 175, 0.3);
-  border-radius: 2rem;
+  border: 1px dashed rgba(16,185,129,0.2);
+  border-radius: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  color: #9ca3af;
+  color: rgba(16,185,129,0.5);
   cursor: pointer;
-  transition: all 0.3s ease;
-  min-height: 250px;
+  transition: all 0.25s ease;
+  min-height: 200px;
 }
 
 .luxury-add-widget:hover {
