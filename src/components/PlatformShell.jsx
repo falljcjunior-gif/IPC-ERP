@@ -15,7 +15,8 @@ import { resolveSpace, getSpaceHome } from '../services/space.config';
 import SpaceBadge from './SpaceBadge';
 
 // Lazy loaded components
-const DetailOverlay = lazy(() => import('./DetailOverlay'));
+const DetailOverlay    = lazy(() => import('./DetailOverlay'));
+const OnboardingWizard = lazy(() => import('./OnboardingWizard'));
 import RecordModal from './RecordModal';
 import WorkflowAssistant from './WorkflowAssistant';
 import ToastContainer from './ToastContainer';
@@ -34,12 +35,16 @@ import './SubsidiaryShell.css';
 import './FoundationShell.css';
 import CommandPalette from './shell/CommandPalette';
 import ErrorBoundary from './ErrorBoundary';
+import { logger } from '../utils/logger';
+import { useIdleTimeout } from '../hooks/useIdleTimeout';
 
 /* ══════════════════════════════════════════════════════════════════════════
    PLATFORM SHELL (NEXT GEN REDESIGN)
    ══════════════════════════════════════════════════════════════════════════ */
 const PlatformShell = ({ theme, setView }) => {
   const { t, i18n } = useTranslation();
+  // [FIX AUDIT P0] Session idle timeout — déconnexion automatique après inactivité
+  useIdleTimeout({ enabled: true });
   const globalSearch = useStore(s => s.globalSearch);
   const updateRecord = useStore(s => s.updateRecord);
   const addRecord = useStore(s => s.addRecord);
@@ -85,6 +90,14 @@ const PlatformShell = ({ theme, setView }) => {
 
   // Pointage RH State
   const [showPointage, setShowPointage] = useState(false);
+
+  // Onboarding Wizard — première connexion
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    const uid = currentUser?.id;
+    if (!uid || uid === 'guest') return false;
+    if (currentUser?.onboardingCompleted) return false;
+    try { return !localStorage.getItem(`ipc_onboarded_${uid}`); } catch { return false; }
+  });
 
   // Navigation State
   const [appsPool, setAppsPool] = useState([]);
@@ -191,7 +204,7 @@ const PlatformShell = ({ theme, setView }) => {
       FirestoreService.updateDocument('users', currentUser.id, {
         isOnline,
         lastSeen: new Date().toISOString()
-      }).catch(err => console.warn("Presence Error:", err));
+      }).catch(err => logger.warn("Presence Error:", err));
     };
 
     updatePresence(true);
@@ -217,7 +230,7 @@ const PlatformShell = ({ theme, setView }) => {
             }
           }
         } catch (err) {
-          console.warn('[FCM] Registration failed:', err.message);
+          logger.warn('[FCM] Registration failed:', err.message);
         }
       };
       fcmTimer = setTimeout(registerFCM, 3000);
@@ -462,12 +475,18 @@ style={{
                   return (
                     <motion.div
                       key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={t(`nav.${item.id}`, { defaultValue: item.label })}
+                      aria-current={isActive ? 'page' : undefined}
                       whileHover={{ x: 8, backgroundColor: 'rgba(16, 185, 129, 0.05)' }}
                       onClick={() => setActiveApp(item.id)}
+                      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setActiveApp(item.id)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         padding: '0.85rem 1rem',
+                        minHeight: '44px',
                         borderRadius: '1rem',
                         cursor: 'pointer',
                         marginBottom: '0.25rem',
@@ -506,17 +525,23 @@ style={{
                  <div style={{ fontSize: '0.7rem', color: 'var(--antigravity-text-muted)', fontWeight: 600 }}>{userRole}</div>
                </div>
              )}
-             <button onClick={() => { logout(); setView('login'); }} style={{ background: 'transparent', border: 'none', color: 'var(--antigravity-text-muted)', cursor: 'pointer', opacity: 0.5 }}>
-                <LogOut size={18} />
+             <button
+               onClick={() => { logout(); setView('login'); }}
+               aria-label="Se déconnecter"
+               title="Se déconnecter"
+               style={{ background: 'transparent', border: 'none', color: 'var(--antigravity-text-muted)', cursor: 'pointer', opacity: 0.5, minWidth: '44px', minHeight: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}
+             >
+                <LogOut size={18} aria-hidden="true" />
              </button>
           </div>
         </div>
       </motion.aside>
 
       {/* ── MAIN CONTENT AREA ── */}
-      <main style={{ 
-        flex: 1, 
+      <main style={{
+        flex: 1,
         padding: '2rem',
+        paddingBottom: shellView.mobile ? 'calc(2rem + 90px)' : '2rem', // Space for mobile bottom nav
         transition: 'var(--transition)',
         maxWidth: '100vw',
         overflowX: 'hidden',
@@ -536,9 +561,43 @@ style={{
           boxShadow: 'var(--shadow-antigravity)'
         }}>
            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
-              <button onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))} style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {shellView.sidebar ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+              <button
+                onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))}
+                aria-label={shellView.sidebar ? 'Réduire le menu' : 'Afficher le menu'}
+                title={shellView.sidebar ? 'Réduire' : 'Afficher'}
+                style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '44px', height: '44px', minWidth: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                {shellView.sidebar ? <ChevronLeft size={20} aria-hidden="true" /> : <ChevronRight size={20} aria-hidden="true" />}
               </button>
+
+              {/* ── BREADCRUMB NAVIGATION (WCAG 2.4.8) ── */}
+              {activeApp && activeApp !== 'home' && (
+                <nav
+                  aria-label="Fil d'Ariane"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-muted)' }}
+                >
+                  <button
+                    onClick={() => setActiveApp('home')}
+                    aria-label="Accueil"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.82rem', padding: '0.35rem 0.5rem', minHeight: '44px', borderRadius: '4px', transition: 'var(--transition)', display: 'flex', alignItems: 'center' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+                  >
+                    Accueil
+                  </button>
+                  <ChevronRight size={12} aria-hidden="true" style={{ flexShrink: 0, opacity: 0.5 }} />
+                  <span
+                    aria-current="page"
+                    style={{ color: 'var(--text)', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}
+                  >
+                    {(() => {
+                      const mod = registry.getModule(activeApp);
+                      return mod?.label || t(`nav.${activeApp}`, { defaultValue: activeApp });
+                    })()}
+                  </span>
+                </nav>
+              )}
+
               <div
                 onClick={() => setCmdOpen(true)}
                 style={{ 
@@ -564,25 +623,29 @@ style={{
            </div>
            
            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <button 
+              <button
                 onClick={() => {
                   const newLng = i18n.language === 'fr' ? 'en' : 'fr';
                   i18n.changeLanguage(newLng);
                 }}
-                className="antigravity-card" style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                 <Globe size={18} color="var(--antigravity-text)" />
+                aria-label={i18n.language === 'fr' ? 'Passer en anglais' : 'Switch to French'}
+                title={i18n.language === 'fr' ? 'Passer en anglais' : 'Switch to French'}
+                className="antigravity-card" style={{ width: '44px', height: '44px', minWidth: '44px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
+                 <Globe size={18} color="var(--antigravity-text)" aria-hidden="true" />
                  <span style={{ fontSize: '0.55rem', fontWeight: 900, position: 'absolute', bottom: -4, background: 'var(--antigravity-primary)', color: 'white', padding: '1px 4px', borderRadius: '4px', textTransform: 'uppercase' }}>
                    {i18n.language.substring(0, 2)}
                  </span>
               </button>
               {/* NotificationCenter Bell Trigger */}
               <div style={{ position: 'relative' }}>
-                <button 
+                <button
                   onClick={() => toggleSidebar(true)}
-                  className="antigravity-card" 
-                  style={{ width: '42px', height: '42px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
+                  aria-label={unreadCount > 0 ? `Notifications — ${unreadCount} non lues` : 'Notifications'}
+                  title="Notifications"
+                  className="antigravity-card"
+                  style={{ width: '44px', height: '44px', minWidth: '44px', padding: 0, borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
                 >
-                  <Bell size={20} color="var(--antigravity-text)" />
+                  <Bell size={20} color="var(--antigravity-text)" aria-hidden="true" />
                   {unreadCount > 0 && (
                     <span style={{ position: 'absolute', top: -5, right: -5, background: '#EF4444', color: 'white', fontSize: '0.65rem', fontWeight: 900, width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid white' }}>
                       {unreadCount}
@@ -726,6 +789,15 @@ style={{
       `}</style>
       <NotificationCenter />
       <ToastContainer />
+
+      {/* ── Onboarding Wizard — première connexion ── */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <Suspense fallback={null}>
+            <OnboardingWizard onComplete={() => setShowOnboarding(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -5,8 +5,6 @@ import {
   Info, AlertTriangle, Shield, Clock, ChevronRight,
   Package, FileText, Users, RefreshCw, Calendar
 } from 'lucide-react';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
-import { db } from '../firebase/config';
 import { useNotificationStore } from '../store/useNotificationStore';
 import { useStore } from '../store';
 
@@ -21,32 +19,30 @@ const NotificationCenter = () => {
   } = useNotificationStore();
   
   const currentUser = useStore(s => s.currentUser);
+  // BusinessContext maintient useStore.notifications à jour via onSnapshot sur 'notifications'
+  // On les bridge ici dans useNotificationStore (UI store avec sidebar, markAsRead, etc.)
+  const storeNotifications = useStore(s => s.notifications || []);
 
-  // Sync Firebase Notifications with Zustand Store
   useEffect(() => {
-    if (!currentUser?.uid) return;
-    const q = query(collection(db, 'notifications_queue'), orderBy('createdAt', 'desc'), limit(20));
-    const unsub = onSnapshot(q, (snap) => {
-      snap.docChanges().forEach((change) => {
-        if (change.type === "added") {
-          const data = change.doc.data();
-          // Avoid adding existing ones if they are already in store (id check)
-          const exists = notifications.some(n => n.remoteId === change.doc.id);
-          if (!exists) {
-            addNotification({
-              remoteId: change.doc.id,
-              title: data.type || "Système",
-              message: data.message,
-              priority: data.priority?.toLowerCase() || 'info',
-              module: data.module || 'Cloud',
-              metadata: data.metadata
-            });
-          }
-        }
-      });
-    }, (err) => console.warn('[NotificationSync]', err));
-    return () => unsub();
-  }, [currentUser?.uid, addNotification]);
+    storeNotifications.forEach((n) => {
+      const alreadyInUI = notifications.some(
+        existing => existing.remoteId === n.id || existing.id === n.id
+      );
+      if (!alreadyInUI) {
+        addNotification({
+          id: n.id,          // Firestore doc ID (string) — permet markAsRead Firestore sync
+          remoteId: n.id,
+          title: n.title || n.type || 'Système',
+          message: n.message,
+          priority: (n.priority || n.level || 'info').toLowerCase(),
+          module: n.module || n.actionApp || 'Cloud',
+          metadata: n.metadata,
+          isRead: Array.isArray(n.readBy) ? n.readBy.includes(currentUser?.id) : !!n.isRead,
+        });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storeNotifications]);
 
   const getPriorityColor = (priority) => {
     switch (priority) {

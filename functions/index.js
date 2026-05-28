@@ -112,6 +112,7 @@ exports.changeCountryScopeState = countryProvisioning.changeCountryScopeState;
 const monitoring = require('./modules/monitoring');
 const backups = require('./modules/backup_scheduler');
 exports.getBackendStatus = monitoring.getBackendStatus;
+exports.cleanupExpiredRateLimits = monitoring.cleanupExpiredRateLimits;
 exports.scheduledFirestoreExport = backups.scheduledFirestoreExport;
 exports.manualFirestoreExport = backups.manualFirestoreExport;
 
@@ -142,6 +143,37 @@ exports.backfillHrPrivateEntityId = migrations.backfillHrPrivateEntityId;
 // 8. Rate Limiter (middleware — importé par les autres modules)
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
 // const { RATE_PRESETS } = require('./modules/rate_limiter');
+
+// 12. Webhooks sortants — Dispatch événements métier vers endpoints HTTP tiers
+const webhooks = require('./modules/webhooks');
+exports.dispatchWebhookEvent = webhooks.dispatchWebhookEvent;
+exports.manageWebhook        = webhooks.manageWebhook;
+
+// 13. API REST publique — Intégrations tierces (Zapier, Make, ERP partenaires)
+const api_rest = require('./modules/api_rest');
+exports.api = api_rest.api;
+
+// 14a. SIEM — Détection d'anomalies de sécurité en temps réel (Zero Trust)
+const siem = require('./modules/siem');
+exports.detectBruteForce          = siem.detectBruteForce;
+exports.detectPrivilegeEscalation = siem.detectPrivilegeEscalation;
+exports.detectDataExfiltration    = siem.detectDataExfiltration;
+exports.siemHourlyScan            = siem.siemHourlyScan;
+exports.getSecurityEvents         = siem.getSecurityEvents;
+exports.resolveSecurityEvent      = siem.resolveSecurityEvent;
+
+// 14. Data Quality Monitor — Scan nocturne d'intégrité à 02:00 UTC
+const dataQuality = require('./modules/data_quality');
+exports.dataQualityScan       = dataQuality.dataQualityScan;
+exports.dataQualityScanNow    = dataQuality.dataQualityScanNow;
+exports.getDataQualityReport  = dataQuality.getDataQualityReport;
+
+// 15. AI Forecasting — Prévisions Gemini (CA, Stock, Churn, Trésorerie)
+const aiForecast = require('./modules/ai_forecasting');
+exports.forecastSalesRevenue   = aiForecast.forecastSalesRevenue;
+exports.forecastStockDepletion = aiForecast.forecastStockDepletion;
+exports.forecastCashFlow       = aiForecast.forecastCashFlow;
+exports.computeForecastNow     = aiForecast.computeForecastNow;
 
 // 9. Firestore Partitioning Utilities
 // Pas d'export Cloud Function — utilitaires pour la migration

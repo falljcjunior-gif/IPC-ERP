@@ -6,7 +6,7 @@ import { useCanSeeSubTab } from '../../store/selectors';
 import { salesSchema } from '../../schemas/sales.schema';
 import RecordModal from '../../components/RecordModal';
 import AnimatedCounter from '../../components/Dashboard/AnimatedCounter';
-import { generateCommercialDocument } from '../../utils/InvoicePDFGenerator';
+// generateCommercialDocument chargé dynamiquement (évite ~430KB jsPDF dans le bundle initial)
 import '../../components/GlobalDashboard.css';
 
 const SalesItem = ({ item, type, formatCurrency, onOpenDetail }) => {
@@ -246,8 +246,10 @@ const Sales = ({ onOpenDetail, accessLevel }) => {
         onSave={(f) => {
           const newRecord = { statut: activeTab === 'invoices' ? 'Brouillon' : 'Envoyé', ...f };
           addRecord('sales', activeTab, newRecord);
-          // Génération et téléchargement automatique du PDF
-          generateCommercialDocument(newRecord, activeTab);
+          // Génération et téléchargement automatique du PDF (import dynamique)
+          import('../../utils/InvoicePDFGenerator').then(({ generateCommercialDocument }) => {
+            generateCommercialDocument(newRecord, activeTab);
+          });
           setIsModalOpen(false);
         }}
       />

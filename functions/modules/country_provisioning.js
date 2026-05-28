@@ -282,7 +282,7 @@ async function provisionCountryDirector({
 // ── CALLABLE: provisionCountryScope ─────────────────────────────────────────
 
 exports.provisionCountryScope = onCall(
-  { region: 'europe-west1', enforceAppCheck: false, timeoutSeconds: 120 },
+  { region: 'europe-west1', enforceAppCheck: true, timeoutSeconds: 120 },
   async (request) => {
     const token   = requireHoldingRole(request);
     const actorUid = request.auth.uid;
@@ -559,7 +559,9 @@ exports.provisionCountryScope = onCall(
       country_id,
       _createdAt: now,
       _subModule: 'notifications',
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.error('[CountryProvisioning] notification write failed:', err.message);
+    });
 
     await auditLog('CREATE_COUNTRY_SCOPE', actorUid, country_id, {
       subsidiary_id, foundation_id,
@@ -588,7 +590,7 @@ exports.provisionCountryScope = onCall(
 const VALID_COUNTRY_STATES = ['ACTIVE', 'SUSPENDED', 'ARCHIVED'];
 
 exports.changeCountryScopeState = onCall(
-  { region: 'europe-west1', enforceAppCheck: false },
+  { region: 'europe-west1', enforceAppCheck: true },
   async (request) => {
     requireHoldingRole(request);
     const actorUid = request.auth.uid;

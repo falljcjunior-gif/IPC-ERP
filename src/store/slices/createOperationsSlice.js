@@ -9,6 +9,7 @@ import {
   checkDocumentLock,
   imputerCoutAnalytique,
 } from '../../services/IpcEngine';
+import logger from '../../utils/logger';
 
 export const createOperationsSlice = (set, get) => ({
   addHint: (hint) => {
@@ -56,7 +57,7 @@ export const createOperationsSlice = (set, get) => ({
           ...activity,
           _createdAt: FirestoreService.serverTimestamp(),
           _deletedAt: null
-        });
+        }).catch(err => logger.error('[OperationsSlice] addActivity persist failed:', err.message));
       }
     }, 0);
   },
@@ -89,7 +90,7 @@ export const createOperationsSlice = (set, get) => ({
           ...note,
           _createdAt: FirestoreService.serverTimestamp(),
           _deletedAt: null
-        });
+        }).catch(err => logger.error('[OperationsSlice] addNote persist failed:', err.message));
       }
     }, 0);
   },
@@ -116,7 +117,7 @@ export const createOperationsSlice = (set, get) => ({
         });
       }
     } catch (e) {
-      console.error("sendNotification Error:", e);
+      logger.error("sendNotification Error:", e);
     }
   },
 
@@ -170,7 +171,7 @@ export const createOperationsSlice = (set, get) => ({
         }).catch(err => {
           // Non-blocking: the local optimistic value is already set.
           // On next app load, local state re-syncs from Firestore subscription.
-          console.warn(`[getNextSequence] Firestore transaction failed for ${key}:`, err.message);
+          logger.warn(`[getNextSequence] Firestore transaction failed for ${key}:`, err.message);
         });
       });
     }
@@ -242,7 +243,7 @@ export const createOperationsSlice = (set, get) => ({
       get().logAction('Écriture Comptable', entry.libelle, 'finance');
       return true;
     } catch (error) {
-      console.error('[OperationsSlice] addAccountingEntry Error:', error);
+      logger.error('[OperationsSlice] addAccountingEntry Error:', error);
       get().addHint({ title: "Échec de sauvegarde", message: "Impossible d'enregistrer l'écriture en base.", type: 'error' });
       return false;
     }
@@ -502,7 +503,7 @@ export const createOperationsSlice = (set, get) => ({
              .catch(err => {
                // Avant: l'écriture échouait silencieusement (permission-denied).
                // L'enregistrement apparaissait localement puis disparaissait au refresh.
-               console.error(`[addRecord] Firestore write failed for ${appId}/${newRecord.id}:`, err);
+               logger.error(`[addRecord] Firestore write failed for ${appId}/${newRecord.id}:`, err);
                // Rollback du state local pour éviter le ghost record
                try {
                  set(prev => {
@@ -633,7 +634,7 @@ export const createOperationsSlice = (set, get) => ({
  await setUserRoleFn({ uid: id, role: newData.role });
  get().addHint({ title: "Accréditation Mise à Jour", message:`Le rôle de ${record.nom} a été scellé par Custom Claims.`, type: 'success' });
  } catch (err) {
- console.error('[Admin] setUserRole Error:', err);
+ logger.error('[Admin] setUserRole Error:', err);
  get().addHint({ title: "Échec RBAC", message: "Impossible de mettre à jour les droits d'accès via Custom Claims.", type: 'error' });
  // On ne rollback pas le state local ici car Firestore sera mis à jour par la fonction si elle réussit,
  // mais ici elle a échoué. On laisse le state local en attendant la prochaine synchro.
@@ -665,7 +666,7 @@ export const createOperationsSlice = (set, get) => ({
      // value, then the next Firestore snapshot would revert it, giving
      // the user the impression that their save was silently undone.
      FirestoreService.updateDocument('users', id, dotUpdate).catch(err => {
-       console.error('[updateRecord hr/employees] users write failed:', err.message);
+       logger.error('[updateRecord hr/employees] users write failed:', err.message);
        // Revert local state to the previous record so UI matches Firestore.
        set(p => {
          const list = p.data?.[appId]?.[subModule] || [];
@@ -692,13 +693,13 @@ export const createOperationsSlice = (set, get) => ({
    const targetUid = record.collaborateurId || record.employeId || record.uid || get().user.id;
    FirestoreService.setDocument(`users/${targetUid}/hr_private`, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true)
      .catch(err => {
-       console.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
+       logger.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
        get().addHint({ title: 'Modification non sauvegardée', message: err.message || 'Erreur réseau', type: 'error' });
      });
  } else {
    FirestoreService.setDocument(appId, id, { ...record, subModule, updatedAt: new Date().toISOString() }, true)
      .catch(err => {
-       console.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
+       logger.error(`[updateRecord ${appId}/${subModule}] write failed:`, err.message);
        set(p => {
          const list = p.data?.[appId]?.[subModule] || [];
          return {
@@ -730,7 +731,7 @@ export const createOperationsSlice = (set, get) => ({
       // Now: Promise with catch → user gets an error hint if cascade fails.
       if (appId === 'sales' && subModule === 'quotes' && ['Accepté', 'Signé'].includes(newData.statut) && !['Accepté', 'Signé'].includes(oldRecord.statut)) {
         Promise.resolve().then(() => cascadeDevisToSaleOrder(record, get, set)).catch(err => {
-          console.error('[Cascade Devis→BC] Failed:', err.message);
+          logger.error('[Cascade Devis→BC] Failed:', err.message);
           get().addHint({ title: "Erreur Cascade Devis", message: `La création du bon de commande a échoué: ${err.message}. Veuillez réessayer.`, type: 'error', appId: 'sales' });
         });
       }
@@ -739,7 +740,7 @@ export const createOperationsSlice = (set, get) => ({
       // [AUDIT FIX] Same pattern — replaced fire-and-forget setTimeout.
       if (appId === 'sales' && subModule === 'orders' && newData.statut === 'Expédié' && oldRecord.statut !== 'Expédié') {
         Promise.resolve().then(() => cascadeBCToDelivery(record, get, set)).catch(err => {
-          console.error('[Cascade BC→Livraison] Failed:', err.message);
+          logger.error('[Cascade BC→Livraison] Failed:', err.message);
           get().addHint({ title: "Erreur Cascade Livraison", message: `La création du BL/Facture a échoué: ${err.message}. Vérifiez les données.`, type: 'error', appId: 'sales' });
         });
       }
@@ -1236,7 +1237,7 @@ export const createOperationsSlice = (set, get) => ({
     // Persist to Firestore so the change survives a page refresh.
     if (get().user) {
       FirestoreService.setDocument('settings', 'global', { pinnedModules: nextPinned }, true)
-        .catch(err => console.error('[togglePinnedModule] persist failed', err));
+        .catch(err => logger.error('[togglePinnedModule] persist failed', err));
     }
   },
 
@@ -1248,7 +1249,7 @@ export const createOperationsSlice = (set, get) => ({
       await get().updateGlobalSettings({ logoUrl: url });
       return url;
     } catch (error) {
-      console.error("Erreur lors de l'upload du logo:", error);
+      logger.error("Erreur lors de l'upload du logo:", error);
       throw error;
     }
   },
@@ -1410,7 +1411,7 @@ export const createOperationsSlice = (set, get) => ({
       });
       get().addHint({ title: "Wipe Terminé", message: "Le système est maintenant propre.", type: "success" });
     } catch (e) {
-      console.error("Erreur Nuclear Wipe:", e);
+      logger.error("Erreur Nuclear Wipe:", e);
       get().addHint({ title: "Échec du Wipe", message: e.message, type: "danger" });
     }
   },
@@ -1432,7 +1433,7 @@ export const createOperationsSlice = (set, get) => ({
       localStorage.clear();
       window.location.reload();
     } catch (err) {
-      console.error("Logout error:", err);
+      logger.error("Logout error:", err);
     }
   }
 });

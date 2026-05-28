@@ -6,6 +6,7 @@ import {
   Server, Activity, Clock, CloudLightning
 } from 'lucide-react';
 import { useStore } from '../../../store';
+import { logger } from '../../../utils/logger';
 
 const HealthTab = () => {
   const { syncAllAccounts, triggerManualBackup } = useStore();
@@ -25,7 +26,7 @@ const HealthTab = () => {
     try {
       await triggerManualBackup();
     } catch (err) {
-      console.error(err);
+      logger.error('HealthTab action failed', err);
     } finally {
       setIsBackingUp(false);
     }
@@ -37,7 +38,7 @@ const HealthTab = () => {
     try {
       await syncAllAccounts();
     } catch (err) {
-      console.error(err);
+      logger.error('HealthTab action failed', err);
     } finally {
       setIsSyncing(false);
     }

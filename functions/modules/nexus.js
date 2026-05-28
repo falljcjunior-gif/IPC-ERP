@@ -68,9 +68,9 @@ exports.nexusChat = onCall({
     }
   });
 
-  // ── [SECURITY FIX V-06] Clé API uniquement depuis Secret Manager ──
-  // Le fallback Firestore est supprimé (exposait la clé Gemini aux lecteurs Firestore).
-  const apiKey = process.env.GEMINI_API_KEY;
+  // ── [SECURITY FIX V-06] Clé API via Cloud Secret Manager ──────────
+  const { safeGet, GEMINI_API_KEY: GEMINI_SECRET } = require('./secrets');
+  const apiKey = safeGet(GEMINI_SECRET, 'GEMINI_API_KEY');
   if (!apiKey) {
     logger.error('GEMINI_API_KEY not configured in Secret Manager');
     throw new HttpsError('failed-precondition', 'Service IA non configuré.');

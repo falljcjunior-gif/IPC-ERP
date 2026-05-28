@@ -233,7 +233,9 @@ exports.migrateGuestToEmployee = onCall({
       await admin.auth().setCustomUserClaims(uid, { ...existingClaims, role: 'EMPLOYEE' });
 
       // 3. Revoke tokens to force fresh claim load on next request
-      await admin.auth().revokeRefreshTokens(uid).catch(() => {});
+      await admin.auth().revokeRefreshTokens(uid).catch((err) => {
+        logger.error(`[RBAC] revokeRefreshTokens failed for ${uid}:`, err.message);
+      });
 
       // 4. Audit
       await db.collection('audit_logs').add({

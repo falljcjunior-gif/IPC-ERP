@@ -239,7 +239,7 @@ export const BusinessProvider = ({ children }) => {
           scheduleUpdate(colName, docs);
         },
         (err) => {
-          console.error(`[BusinessContext] Sync FAILED for ${colName}:`, err);
+          logger.error(`[BusinessContext] Sync FAILED for ${colName}`, err);
           // [FALLBACK] Si la requête filtrée échoue (index manquant, permissions),
           // réessayer sans filtres temporels mais avec la limite de base
           if (options.filters?.length) {
@@ -274,7 +274,7 @@ export const BusinessProvider = ({ children }) => {
         logger.info(`[Sync] hr_private (Group): ${docs.length} docs received`);
         scheduleUpdate('hr_private', docs);
       },
-      (err) => console.error(`[BusinessContext] hr_private Sync failed:`, err)
+      (err) => logger.error('[BusinessContext] hr_private Sync failed', err)
     );
 
     unsubscribes.push(unsubHrPrivate);
@@ -324,7 +324,9 @@ export const BusinessProvider = ({ children }) => {
       const selfRole = activeUsers.find(u => u.id === userId)?.role || null;
       const hash = JSON.stringify({ p: selfPerms, r: selfRole });
       if (_lastSelfPermsHash !== null && _lastSelfPermsHash !== hash && auth.currentUser) {
-        UserService.forceClaimRefresh(auth.currentUser).catch(() => {});
+        UserService.forceClaimRefresh(auth.currentUser).catch((err) => {
+          logger.error('[BusinessContext] forceClaimRefresh failed — user may keep stale permissions', err.message);
+        });
       }
       _lastSelfPermsHash = hash;
 
@@ -370,15 +372,15 @@ export const BusinessProvider = ({ children }) => {
 
     // 0. Auth Identity Bridge — rôle lu depuis Firestore via UserService
     const unsubAuth = auth.onAuthStateChanged(async fbUser => {
-      console.log('[Auth] State Changed:', fbUser ? `Logged in as ${fbUser.uid}` : 'Logged out');
-      console.log('[Firebase] Project ID:', auth.app.options.projectId);
-      
+      logger.log('[Auth] State Changed:', fbUser ? 'Logged in' : 'Logged out');
+      logger.log('[Firebase] Project ID:', auth.app.options.projectId);
+
       if (fbUser) {
         try {
-          console.log('[BusinessContext] Syncing profile for:', fbUser.email);
+          logger.log('[BusinessContext] Syncing profile...');
           const userProfile = await UserService.syncProfile(fbUser);
           setUser(userProfile);
-          console.log('[BusinessContext] Profile Loaded:', userProfile);
+          logger.log('[BusinessContext] Profile Loaded: OK');
 
           // ══════════════════════════════════════════════════════════
           // [GROUP GOVERNANCE v2] TenantContext — 3-level org model
@@ -428,7 +430,7 @@ export const BusinessProvider = ({ children }) => {
           }
 
         } catch (err) {
-          console.error('[BusinessContext] Profile Sync FAILED:', err);
+          logger.error('[BusinessContext] Profile Sync FAILED', err);
           // Fallback minimal si Firestore indisponible
           setUser({
             id: fbUser.uid,

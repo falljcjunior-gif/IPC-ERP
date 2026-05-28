@@ -13,7 +13,7 @@ import {
 import KpiCard from '../../../components/KpiCard';
 import SafeResponsiveChart from '../../../components/charts/SafeResponsiveChart';
 
-import { IPCReportGenerator } from '../../../utils/PDFExporter';
+// IPCReportGenerator — import supprimé (non utilisé dans ce fichier)
 import { useToastStore } from '../../../store/useToastStore';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };

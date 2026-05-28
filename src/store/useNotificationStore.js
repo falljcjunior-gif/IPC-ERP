@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { FirestoreService } from '../services/firestore.service';
+import logger from '../utils/logger';
 
 /**
  *  NEXUS OS: NOTIFICATION & EVENT STORE
@@ -38,7 +39,7 @@ export const useNotificationStore = create(
 
         // Trigger system sound or vibration if critical
         if (notification.priority === 'critical') {
-          console.warn(`[CRITICAL ALERT]: ${notification.title}`);
+          logger.warn(`[CRITICAL ALERT]: ${notification.title}`);
           // Potential integration with Browser Notification API here
         }
       },
@@ -55,7 +56,7 @@ export const useNotificationStore = create(
         // Persist to Firestore if the notification has a Firestore doc ID (string)
         if (typeof id === 'string' && id.length > 10) {
           FirestoreService.updateDocument('notifications', id, { isRead: true, readAt: new Date().toISOString() })
-            .catch(err => console.warn('[NotificationStore] markAsRead Firestore sync failed:', err.message));
+            .catch(err => logger.warn('[NotificationStore] markAsRead Firestore sync failed:', err.message));
         }
       },
 
@@ -72,9 +73,9 @@ export const useNotificationStore = create(
           Promise.all(
             firestoreIds.map(id =>
               FirestoreService.updateDocument('notifications', id, { isRead: true, readAt: now })
-                .catch(err => console.warn(`[NotificationStore] markAllAsRead failed for ${id}:`, err.message))
+                .catch(err => logger.warn(`[NotificationStore] markAllAsRead failed for ${id}:`, err.message))
             )
-          );
+          ).catch(err => logger.error('[NotificationStore] markAllAsRead batch failed:', err.message));
         }
       },
 

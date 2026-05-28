@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 
@@ -65,5 +66,38 @@ exports.getBackendStatus = onCall({
     logger.error('Monitoring API Error:', error);
     if (error instanceof HttpsError) throw error;
     throw new HttpsError('internal', `Monitoring failed: ${error.message}`);
+  }
+});
+
+/**
+ * [MAINTENANCE] Nettoyage journalier des documents _rate_limits expirés.
+ * Sans ce scheduled job, la collection grossit sans limite
+ * (chaque uid × action accumule un doc qui ne se réinitialise qu'en écriture).
+ * Tourn à 3h du matin pour éviter toute collision avec le trafic de pointe.
+ */
+exports.cleanupExpiredRateLimits = onSchedule({
+  schedule: '0 3 * * *',    // Tous les jours à 03:00 UTC
+  region: 'europe-west1',
+  timeoutSeconds: 120,
+}, async () => {
+  const cutoff = Date.now() - 25 * 60 * 60 * 1000; // Docs > 25h → supprimés
+  const snap = await db.collection('_rate_limits').get();
+  if (snap.empty) { logger.info('[RateLimitCleanup] Aucun document à supprimer.'); return; }
+
+  const batch = db.batch();
+  let count = 0;
+  snap.docs.forEach((doc) => {
+    const { windowStart } = doc.data();
+    if (windowStart && windowStart < cutoff) {
+      batch.delete(doc.ref);
+      count++;
+    }
+  });
+
+  if (count > 0) {
+    await batch.commit();
+    logger.info(`[RateLimitCleanup] ${count} document(s) expirés supprimés.`);
+  } else {
+    logger.info('[RateLimitCleanup] Aucun document expiré.');
   }
 });

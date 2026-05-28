@@ -8,6 +8,7 @@ import {
 import { useStore } from '../../../store';
 import { useToastStore } from '../../../store/useToastStore';
 import { FirestoreService, StorageService } from '../../../services/firestore.service';
+import { logger } from '../../../utils/logger';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
 const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } };
@@ -73,7 +74,7 @@ const WallTab = ({ data, currentUser }) => {
       window.location.reload();
     } catch (err) {
       useToastStore.getState().addToast('Erreur de réparation : ' + err.message, 'error');
-      console.error(err);
+      logger.error(err);
     }
   };
   const [form, setForm] = useState({ type: 'success', title: '', content: '', category: '', image: null, uploading: false });
@@ -94,7 +95,8 @@ const WallTab = ({ data, currentUser }) => {
         reactionsCount: FirestoreService.increment(isLiked ? -1 : 1)
       });
     } catch (err) {
-      console.error("Erreur Like:", err);
+      logger.error('[WallTab] Like failed:', err.message);
+      useToastStore.getState().addToast('Impossible d\'enregistrer la réaction.', 'error');
     }
   };
 
@@ -115,7 +117,8 @@ const WallTab = ({ data, currentUser }) => {
       });
       setCommentInputs(prev => ({ ...prev, [postId]: '' }));
     } catch (err) {
-      console.error("Erreur Commentaire:", err);
+      logger.error('[WallTab] Comment failed:', err.message);
+      useToastStore.getState().addToast('Impossible d\'envoyer le commentaire.', 'error');
     }
   };
 
@@ -134,7 +137,7 @@ const WallTab = ({ data, currentUser }) => {
         }
       });
     } catch (err) {
-      console.warn('[WallTab] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[WallTab] Firestore non disponible (mode DEV sans auth):', err.message);
     }
     return () => unsubs.forEach(u => typeof u === 'function' && u());
   }, [openComments]);
@@ -175,7 +178,7 @@ const WallTab = ({ data, currentUser }) => {
       setForm({ type: 'success', title: '', content: '', category: '', image: null, uploading: false });
       setShowCompose(false);
     } catch (err) {
-      console.error("Erreur Publication:", err);
+      logger.error("Erreur Publication:", err);
       setForm(p => ({ ...p, uploading: false }));
     }
   };

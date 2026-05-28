@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Lightbulb, Send } from 'lucide-react';
 import { useStore } from '../../store';
+import { logger } from '../../utils/logger';
 
 const KaizenBox = () => {
   const { currentUser, addRecord } = useStore();
@@ -15,7 +16,7 @@ const KaizenBox = () => {
     try { 
       addRecord('hr', 'kaizen', { auteur: currentUser?.nom, idee: idea, date: new Date().toISOString() }); 
     } catch(err) {
-      console.warn('Failed to submit Kaizen idea:', err);
+      logger.warn('Failed to submit Kaizen idea:', err);
     }
     setSent(true);
     setIdea('');

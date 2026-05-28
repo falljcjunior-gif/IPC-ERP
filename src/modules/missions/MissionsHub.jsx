@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 
 import { useMissionsStore } from './store/useMissionsStore';
+import SkeletonLoader from '../../components/ui/SkeletonLoader';
 import { MissionsFS, seedDefaultWorkspaces } from './services/missions.firestore';
 import { useWorkspaceAuth } from './hooks/useWorkspaceAuth';
 import { useStore }         from '../../store';
 import MissionEngine        from './MissionEngine';
+import { logger } from '../../utils/logger';
 
 const CardModal        = lazy(() => import('./components/CardModal'));
 const ButlerPanel      = lazy(() => import('./components/ButlerPanel'));
@@ -51,9 +53,8 @@ const BG_PRESETS = [
 
 function Spinner() {
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100%', minHeight:200 }}>
-      <Loader2 size={32} style={{ animation:'spin 1s linear infinite', color:'var(--accent)' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    <div style={{ padding: '2rem' }}>
+      <SkeletonLoader.Page />
     </div>
   );
 }
@@ -300,7 +301,7 @@ function BoardGrid({ workspaceId, onSelectBoard, isAdmin }) {
         setLoading(false);
       });
     } catch (err) {
-      console.warn('[BoardGrid] subscribeBoards non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[BoardGrid] subscribeBoards non disponible (mode DEV sans auth):', err.message);
       setLoading(false);
     }
     return unsub;
@@ -386,7 +387,7 @@ export default function MissionsHub() {
     if (!uid || !workspacesLoaded) return;
     if (workspaces.length === 0) {
       seedDefaultWorkspaces(uid).catch(err =>
-        console.warn('[MissionsHub] Seeding failed:', err)
+        logger.warn('[MissionsHub] Seeding failed:', err)
       );
     }
   }, [uid, workspacesLoaded, workspaces.length]);

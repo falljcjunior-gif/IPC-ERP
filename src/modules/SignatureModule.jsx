@@ -9,6 +9,7 @@ import { useStore } from '../store';
 import { FirestoreService, StorageService } from '../services/firestore.service';
 import SmartButton from '../components/SmartButton';
 import '../components/GlobalDashboard.css';
+import { logger } from '../utils/logger';
 
 const SignatureModule = () => {
   const { currentUser, data, updateRecord } = useStore();
@@ -78,7 +79,7 @@ const SignatureModule = () => {
       setSignatureUrl(uploadUrl);
       setIsSigning(false);
     } catch (err) {
-      console.error("Signature Error:", err);
+      logger.error("Signature Error:", err);
       throw err;
     } finally {
       setIsSaving(false);

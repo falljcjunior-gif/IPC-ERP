@@ -10,6 +10,7 @@ import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
+import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
 const d = (s) => typeof atob !== 'undefined' ? atob(s) : s;
@@ -34,22 +35,28 @@ const APPCHECK_DEBUG_TOKEN = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
 const APP_CHECK_ENABLED = Boolean(
   RECAPTCHA_SITE_KEY && (import.meta.env.PROD || import.meta.env.VITE_ENABLE_APPCHECK === 'true')
 );
+
 if (typeof window !== 'undefined' && !import.meta.env?.VITEST && APP_CHECK_ENABLED) {
   if (APPCHECK_DEBUG_TOKEN) {
     window.FIREBASE_APPCHECK_DEBUG_TOKEN = APPCHECK_DEBUG_TOKEN;
   }
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-    isTokenAutoRefreshEnabled: true,
-  });
+
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
+    logger.info('[AppCheck] reCAPTCHA Enterprise active');
+  } catch (e) {
+    logger.warn('[AppCheck] reCAPTCHA init failed:', e.message);
+  }
 }
 
 export const auth = getAuth(app);
 
-// [FIX REAL-TIME] Disable Fetch Streams & Force Long Polling to prevent silent onSnapshot drop
+// [FIX REAL-TIME] Auto-detect long polling and keep multi-tab IndexedDB cache.
 export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false,
+  experimentalAutoDetectLongPolling: true,
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
   })

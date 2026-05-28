@@ -27,6 +27,7 @@
 import EventBus, { EVENTS } from './EventBus';
 import { FirestoreService } from './firestore.service';
 import { auth } from '../firebase/config';
+import logger from '../utils/logger';
 
 // ── Templates de posts par événement ────────────────────────────────────
 
@@ -139,7 +140,7 @@ const ConnectPublisher = {
       const unsub = EventBus.on(topic, (event) => {
         if (!_enabledTopics.has(topic)) return;
         this._publishToWall(topic, event.payload, event).catch(err => {
-          console.warn(`[ConnectPublisher] Échec publication pour ${topic}:`, err);
+          logger.warn(`[ConnectPublisher] Échec publication pour ${topic}:`, err);
         });
       });
       _unsubscribes.push(unsub);

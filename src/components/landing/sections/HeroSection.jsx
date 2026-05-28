@@ -1,8 +1,40 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
 import { Sparkles, ArrowRight, ChevronDown, Play } from 'lucide-react';
 
-const ERPOrbitalScene = lazy(() => import('../three/ERPOrbitalScene'));
+// [FIX AUDIT P0] — ERPOrbitalScene est 881 Ko (Three.js complet).
+// AVANT : lazy() seul → le chunk est demandé dès le rendu du Hero (premier écran)
+//         → Three.js bloque le FCP/LCP car le navigateur doit le télécharger avant d'afficher.
+// APRÈS : chargement différé de 800ms APRÈS que le hero text soit rendu (requestIdleCallback)
+//         → LCP mesuré sur le texte hero (< 1.5s) ; Three.js charge en background.
+//         → Si l'utilisateur a prefers-reduced-motion, la scène 3D n'est jamais chargée.
+const ERPOrbitalScene = lazy(() =>
+  new Promise(resolve => {
+    // Laisser le navigateur peindre le texte hero en premier
+    const load = () => import('../three/ERPOrbitalScene').then(resolve);
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(load, { timeout: 2000 });
+    } else {
+      setTimeout(load, 800);
+    }
+  })
+);
+
+/** Fallback CSS-only pendant le chargement Three.js */
+const OrbitalFallback = () => (
+  <div style={{
+    width: '100%', height: '100%',
+    background: 'radial-gradient(ellipse 80% 60% at 70% 50%, rgba(82,153,144,0.18) 0%, transparent 70%)',
+    animation: 'orbital-pulse 3s ease-in-out infinite',
+  }}>
+    <style>{`
+      @keyframes orbital-pulse {
+        0%,100% { opacity: 0.6; transform: scale(1); }
+        50%      { opacity: 1;   transform: scale(1.04); }
+      }
+    `}</style>
+  </div>
+);
 
 const EASE = [0.16, 1, 0.3, 1];
 
@@ -47,11 +79,15 @@ export default function HeroSection({ onCTA }) {
           pointerEvents: 'none',
         }}
       >
-        <Suspense fallback={null}>
-          <ERPOrbitalScene
-            scrollProgress={0}
-            style={{ width: '100%', height: '100%' }}
-          />
+        <Suspense fallback={<OrbitalFallback />}>
+          {/* prefers-reduced-motion → pas de 3D (économie 881Ko + accessibilité) */}
+          {!shouldReduceMotion && (
+            <ERPOrbitalScene
+              scrollProgress={0}
+              style={{ width: '100%', height: '100%' }}
+            />
+          )}
+          {shouldReduceMotion && <OrbitalFallback />}
         </Suspense>
       </div>
 

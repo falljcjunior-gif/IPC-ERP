@@ -72,24 +72,25 @@ export const InventoryService = {
         type: adjustment >= 0 ? 'IN' : 'OUT',
         quantity: Math.abs(adjustment),
         reason: `Inventaire Physique: ${reason}`,
-        referenceId: `STOCKTAKE_${Date.now()}`});
- } catch (error) {
- logger.error('Inventory', 'Échec inventaire physique', error);
- throw error;
- }
- },
+        referenceId: `STOCKTAKE_${Date.now()}`,
+      });
+    } catch (error) {
+      logger.error('Inventory', 'Échec inventaire physique', error);
+      throw error;
+    }
+  },
 
- /**
- * RÉSERVATION DE STOCK
- * Bloque une quantité pour une commande sans déduire le stock physique.
- * Utilise une transaction Firestore pour garantir l'intégrité.
- */
- async reserveStock(productId, quantity, orderId) {
- try {
- // 1. Vérification de disponibilité
- const isAvailable = await this.checkAvailability(productId, quantity);
- if (!isAvailable) {
- throw new Error(`Stock insuffisant pour le produit ${productId}`);
+  /**
+   * RÉSERVATION DE STOCK
+   * Bloque une quantité pour une commande sans déduire le stock physique.
+   * Utilise une transaction Firestore pour garantir l'intégrité.
+   */
+  async reserveStock(productId, quantity, orderId) {
+    try {
+      // 1. Vérification de disponibilité
+      const isAvailable = await this.checkAvailability(productId, quantity);
+      if (!isAvailable) {
+        throw new Error(`Stock insuffisant pour le produit ${productId}`);
       }
 
       // 2. Création du mouvement de réservation
@@ -98,11 +99,26 @@ export const InventoryService = {
         type: 'RESERVATION',
         quantity,
         reason: `Réservation pour Commande #${orderId}`,
-        referenceId: orderId
+        referenceId: orderId,
       });
     } catch (error) {
       logger.error('Inventory', 'Échec réservation stock', error);
       throw error;
     }
-  }
+  },
+
+  /**
+   * Retourne le stock disponible (physique - réservé) d'un produit.
+   */
+  async getAvailableStock(productId) {
+    try {
+      const stock = await FirestoreService.getDocument('inventory', productId);
+      if (!stock) return 0;
+      const reserved = stock.quantiteReservee || 0;
+      return Math.max(0, (stock.quantity || 0) - reserved);
+    } catch (error) {
+      logger.error('Inventory', 'Échec récupération stock disponible', error);
+      return 0;
+    }
+  },
 };

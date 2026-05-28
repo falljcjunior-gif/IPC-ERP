@@ -59,16 +59,17 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
     if (!currentUser?.id || !activeRoom.id) return;
     let unsubscribe;
     try {
-      unsubscribe = FirestoreService.subscribeToCollection('messages', (msgs) => {
+      unsubscribe = FirestoreService.subscribeToCollection('messages', {
+        filters: [{ field: 'roomId', operator: '==', value: activeRoom.id }],
+        orderByField: 'createdAt', descending: false, limit: 100
+      }, (msgs) => {
         setMessages(msgs);
         setTimeout(() => {
           if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }, 100);
-      }, [
-        { field: 'roomId', operator: '==', value: activeRoom.id }
-      ], { field: 'createdAt', direction: 'asc' }, 100);
+      });
     } catch (err) {
-      console.warn('[TeamChat] Firestore non disponible (mode DEV sans auth):', err.message);
+      logger.warn('[TeamChat] Firestore non disponible (mode DEV sans auth):', err.message);
     }
     return () => typeof unsubscribe === 'function' && unsubscribe();
   }, [activeRoom.id, currentUser?.id]);
@@ -115,7 +116,7 @@ const TeamChat = ({ isOpen, onClose, theme, mode = 'overlay' }) => {
         contactName: activeRoom.label 
       });
     } catch (err) {
-      console.error("Initiate Call Error:", err);
+      logger.error("Initiate Call Error:", err);
     }
   };
 

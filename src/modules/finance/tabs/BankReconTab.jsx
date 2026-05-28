@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../../store';
 import { useToastStore } from '../../../store/useToastStore';
 import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link, Cpu } from 'lucide-react';
+import { logger } from '../../../utils/logger';
 
 const BankReconTab = () => {
   const { data, formatCurrency, updateRecord, addHint } = useStore();
@@ -84,7 +85,7 @@ const BankReconTab = () => {
           reconciledAmount += Math.abs(match.amount);
         } catch (err) {
           writeFailures++;
-          console.error('[BankRecon] Échec écriture Firestore', { match, err });
+          logger.error('[BankRecon] Échec écriture Firestore', { match, err });
         }
     }
 

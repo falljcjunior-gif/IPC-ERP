@@ -24,6 +24,14 @@ export const CREDS = {
   staffSN:       { email: process.env.STAFF_SN_EMAIL,       password: process.env.STAFF_SN_PASSWORD },
 };
 
+export async function dismissConsentBanner(page) {
+  const banner = page.getByText(/confidentialité & cookies|cookies fonctionnels/i).first();
+  if (await banner.isVisible({ timeout: 1500 }).catch(() => false)) {
+    const decline = page.getByRole('button', { name: /fonctionnels uniquement|fermer et refuser|tout accepter/i }).first();
+    await decline.click({ timeout: 3000 }).catch(() => {});
+  }
+}
+
 /**
  * Log in to the IPC ERP and wait until the sidebar is visible.
  * @param {import('@playwright/test').Page} page
@@ -32,6 +40,7 @@ export const CREDS = {
  */
 export async function login(page, email, password) {
   await page.goto('/');
+  await dismissConsentBanner(page);
   // The public root can render either the login form or the marketing landing.
   // Follow the production UX before filling credentials.
   const emailInput = page.locator('input[type="email"]').first();

@@ -22,6 +22,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../firebase/config';
 import { validateData } from '../utils/validation';
 import { getTenantFields, getTenantContext, isHoldingSession } from './TenantContext';
+import logger from '../utils/logger';
 
 
 // ── Type Guards internes ──────────────────────────────────────────────────────
@@ -85,7 +86,7 @@ const wrapFirestoreError = (err, context) => {
     'unauthenticated': 'Session expirée. Veuillez vous reconnecter.',
   };
   const safeMessage = codeMap[err.code] || 'Une erreur est survenue. Réessayez.';
-  console.error(`[FirestoreService:${context}]`, err.code, err.message);
+  logger.error(`[FirestoreService:${context}]`, err.code, err.message);
   return new FirestoreServiceError(err.code || 'UNKNOWN', safeMessage);
 };
 
@@ -360,7 +361,7 @@ export const FirestoreService = {
           if (typeof onError === 'function') {
             onError(wrapFirestoreError(err, `subscribe(${collectionName})`));
           } else {
-            console.error(`[FirestoreService] Subscription error for ${collectionName}:`, err);
+            logger.error(`[FirestoreService] Subscription error for ${collectionName}:`, err);
           }
         }
       );
@@ -404,7 +405,7 @@ export const FirestoreService = {
           if (typeof onError === 'function') {
             onError(wrapFirestoreError(err, `subscribeGroup(${collectionGroupId})`));
           } else {
-            console.error(`[FirestoreService] Subscription group error for ${collectionGroupId}:`, err);
+            logger.error(`[FirestoreService] Subscription group error for ${collectionGroupId}:`, err);
           }
         }
       );

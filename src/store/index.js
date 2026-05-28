@@ -14,6 +14,7 @@ import { createAdminSlice } from './slices/createAdminSlice';
 import { createCallSlice } from './slices/createCallSlice';
 import { createOperationsSlice } from './slices/createOperationsSlice';
 import { createFoundationSlice } from './slices/foundation/createFoundationSlice';
+import logger from '../utils/logger';
 
 // ══════════════════════════════════════════════════════════════════════════
 //  IPC INTELLIGENCE ENGINE: CENTRAL STORE
@@ -139,7 +140,7 @@ export const useStore = create(
         try {
           await AuthService.logout();
         } catch (e) {
-          console.warn('Logout error:', e);
+          logger.warn('Logout error:', e);
         }
         localStorage.removeItem('ipc_erp_current_user');
         localStorage.removeItem('daxcelor_data');

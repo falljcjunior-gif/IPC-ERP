@@ -470,7 +470,9 @@ RÈGLES :
 
     // Update memory + log (async, don't await)
     const cleanText = fullText.replace(/\[.*?\]/g, '').trim();
-    updateMemory(uid, userName, message, cleanText).catch(() => {});
+    updateMemory(uid, userName, message, cleanText).catch((err) => {
+      logger.error('[JARVIS Stream] updateMemory failed:', err.message);
+    });
     db.collection('ai_logs').add({
       uid, userName, userRole,
       hasAction: !!action,
@@ -479,7 +481,9 @@ RÈGLES :
       hasImage: !!imageBase64,
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       system: 'JARVIS_v2_STREAM',
-    }).catch(() => {});
+    }).catch((err) => {
+      logger.error('[JARVIS Stream] ai_logs write failed:', err.message);
+    });
 
     send({
       type: 'done',

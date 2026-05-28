@@ -29,6 +29,7 @@
  */
 
 import { ENTITY_TYPES } from '../schemas/org.schema';
+import logger from '../utils/logger';
 
 // ── Internal state ────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ let _listeners = [];
  */
 export function setTenantContext(ctx) {
   if (!ctx?.tenant_id) {
-    console.warn('[TenantContext] tenant_id manquant — vérifier la configuration utilisateur.');
+    logger.warn('[TenantContext] tenant_id manquant — vérifier la configuration utilisateur.');
     return;
   }
 
@@ -79,7 +80,7 @@ export function setTenantContext(ctx) {
   _listeners.forEach(fn => fn({ ..._ctx }));
 
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] Contexte groupe défini :', _ctx);
+    logger.info('[TenantContext] Contexte groupe défini :', _ctx);
   }
 }
 
@@ -106,7 +107,7 @@ export function clearTenantContext() {
   };
   _listeners.forEach(fn => fn({ ..._ctx }));
   if (import.meta.env.DEV) {
-    console.info('[TenantContext] Contexte réinitialisé.');
+    logger.info('[TenantContext] Contexte réinitialisé.');
   }
 }
 

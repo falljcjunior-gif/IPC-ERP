@@ -1,3 +1,4 @@
+import logger from '../utils/logger';
 /**
  * ════════════════════════════════════════════════════════════════
  * NEXUS EVENT BUS — Architecture Event-Driven IPC ERP
@@ -158,7 +159,7 @@ const EventBus = {
    */
   emit(topic, payload = {}, opts = {}) {
     if (!topic || typeof topic !== 'string') {
-      console.warn('[EventBus] emit() appelé sans topic valide');
+      logger.warn('[EventBus] emit() appelé sans topic valide');
       return null;
     }
 
@@ -177,8 +178,8 @@ const EventBus = {
 
     if (import.meta.env.DEV) {
       console.groupCollapsed(`[EventBus] ${topic}`);
-      console.log('Source:', event.source, '| ID:', event.eventId);
-      console.log('Payload:', payload);
+      logger.log('Source:', event.source, '| ID:', event.eventId);
+      logger.log('Payload:', payload);
       console.groupEnd();
     }
 
@@ -187,14 +188,14 @@ const EventBus = {
     if (topicSubs?.size) {
       topicSubs.forEach(handler => {
         try { handler(event); }
-        catch (err) { console.error(`[EventBus] Handler error on ${topic}:`, err); }
+        catch (err) { logger.error(`[EventBus] Handler error on ${topic}:`, err); }
       });
     }
 
     // Notifier les wildcard subscribers
     _wildcardSubs.forEach(handler => {
       try { handler(event); }
-      catch (err) { console.error('[EventBus] Wildcard handler error:', err); }
+      catch (err) { logger.error('[EventBus] Wildcard handler error:', err); }
     });
 
     return event;
@@ -209,14 +210,14 @@ const EventBus = {
    *
    * @example
    * const unsub = EventBus.on(EVENTS.INVOICE_PAID, (event) => {
-   *   console.log('Facture payée:', event.payload.invoiceId);
+   *   logger.log('Facture payée:', event.payload.invoiceId);
    * });
    * // Dans useEffect cleanup:
    * return unsub;
    */
   on(topic, handler) {
     if (!handler || typeof handler !== 'function') {
-      console.warn('[EventBus] on() appelé avec un handler invalide');
+      logger.warn('[EventBus] on() appelé avec un handler invalide');
       return () => {};
     }
 

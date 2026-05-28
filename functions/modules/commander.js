@@ -20,6 +20,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { checkCallRate } = require('./rate_limiter');
 
 const db = admin.firestore();
 const FS = admin.firestore;
@@ -402,13 +403,16 @@ exports.commanderChat = onCall({
 }, async (request) => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
 
+  const uid = request.auth.uid;
+
+  // ── [SECURITY] Rate Limiting — max 20 msg/utilisateur/heure (appels LLM coûteux)
+  await checkCallRate(db, uid, 'commanderChat', { maxRequests: 20, windowMs: 60 * 60 * 1000 });
+
   const { messageId, reply, logId } = request.data || {};
   if (!reply || typeof reply !== 'string' || reply.trim().length < 3) {
     throw new HttpsError('invalid-argument', 'Réponse trop courte.');
   }
   if (reply.length > 1500) throw new HttpsError('invalid-argument', 'Réponse trop longue (max 1500 caractères).');
-
-  const uid = request.auth.uid;
 
   // Récupère le contexte du log original
   const logRef = db.collection('ai_management_logs').doc(logId);

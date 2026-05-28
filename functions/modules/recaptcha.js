@@ -41,8 +41,9 @@ async function verifyRecaptchaToken(token, expectedAction = 'LOGIN') {
       || process.env.GCP_PROJECT
       || 'ipc-erp'; // Fallback to the known project ID
       
-    // The API key must be provided in the environment variables
-    const apiKey = process.env.RECAPTCHA_API_KEY; 
+    // Clé via Cloud Secret Manager (fallback env var pour émulateur)
+    const { safeGet, RECAPTCHA_API_KEY: RECAPTCHA_SECRET } = require('./secrets');
+    const apiKey = safeGet(RECAPTCHA_SECRET, 'RECAPTCHA_API_KEY');
 
     if (!apiKey) {
       console.warn('[reCAPTCHA] RECAPTCHA_API_KEY manquante. Vérification ignorée (fail-open).');

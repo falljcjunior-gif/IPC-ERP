@@ -15,6 +15,7 @@ import SecurityThreatMap from './components/SecurityThreatMap';
 import SmartButton from '../../components/SmartButton';
 import { debugInteraction } from '../../utils/InteractionAuditor';
 import { useToastStore } from '../../store/useToastStore';
+import { logger } from '../../utils/logger';
 
 /**
  *  NEXUS OS: IT OPERATIONS MODULE (ELITE 2.0 COMMANDER HUD)
@@ -194,14 +195,19 @@ const ITModule = () => {
                     if (!nom?.trim()) return;
                     const type = window.prompt('Type (Laptop / Serveur / Switch / Imprimante / Autre)', 'Laptop');
                     const assignedTo = window.prompt('Assigné à (nom ou email, optionnel)', '') || '';
-                    await FirestoreService.addDocument('it_assets', {
-                      nom: nom.trim(),
-                      type: type?.trim() || 'Autre',
-                      assignedTo: assignedTo.trim(),
-                      status: 'Actif',
-                      healthScore: 100,
-                    });
-                    useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
+                    try {
+                      await FirestoreService.addDocument('it_assets', {
+                        nom: nom.trim(),
+                        type: type?.trim() || 'Autre',
+                        assignedTo: assignedTo.trim(),
+                        status: 'Actif',
+                        healthScore: 100,
+                      });
+                      useToastStore.getState().addToast(`Actif "${nom.trim()}" ajouté`, 'success');
+                    } catch (err) {
+                      logger.error('[ITModule] addDocument it_assets failed:', err.message);
+                      useToastStore.getState().addToast(`Erreur : impossible d'ajouter l'actif. ${err.message}`, 'error');
+                    }
                   }}
                 >
                   Nouvel Actif

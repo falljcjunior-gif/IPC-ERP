@@ -30,6 +30,7 @@ import {
 } from '../../../schemas/license.schema';
 import { EntityService } from '../../../services/EntityService';
 import { useStore } from '../../../store';
+import { logger } from '../../../utils/logger';
 
 // ── Design ────────────────────────────────────────────────────────────────────
 const T = {
@@ -168,7 +169,7 @@ export default function EntityManagementCenter() {
         });
       }, 3000);
     } catch (err) {
-      console.error('[EMC] Provisioning failed:', err);
+      logger.error('[EMC] Provisioning failed:', err);
       setProvisioningError(err?.message || 'Erreur inconnue');
       setProvisioning('error');
     }
@@ -183,7 +184,7 @@ export default function EntityManagementCenter() {
         l.entity_id === entityId ? { ...l, state: newState } : l
       ));
     } catch (err) {
-      console.error('[EMC] State change failed:', err);
+      logger.error('[EMC] State change failed:', err);
     } finally {
       setActionLoading(null);
     }
@@ -201,7 +202,7 @@ export default function EntityManagementCenter() {
       setLicenses(prev => prev.filter(l => l.entity_id !== entity.id));
       if (selectedId === entity.id) setSelectedId(null);
     } catch (err) {
-      console.error('[EMC] Delete failed:', err);
+      logger.error('[EMC] Delete failed:', err);
     } finally {
       setDeleteLoading(false);
       setShowDeleteConfirm(null);

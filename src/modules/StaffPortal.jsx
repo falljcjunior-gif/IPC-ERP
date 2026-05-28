@@ -12,6 +12,7 @@ import RecordModal from '../components/RecordModal';
 import { generatePDF } from '../utils/PDFExporter';
 import { FirestoreService } from '../services/firestore.service';
 import '../components/GlobalDashboard.css';
+import { logger } from '../utils/logger';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const fmt = (n) => (Number(n) || 0).toLocaleString('fr-FR') + ' XOF';
@@ -71,21 +72,21 @@ const StaffPortal = ({ embedded }) => {
     // Timeout de sécurité : si Firestore ne répond pas en 10s, on arrête le spinner
     const timeoutId = setTimeout(() => {
       setLoadingDossier(false);
-      console.warn('[StaffPortal] Timeout — Firestore ne répond pas après 10s');
+      logger.warn('[StaffPortal] Timeout — Firestore ne répond pas après 10s');
     }, 10000);
 
     // salaries/{uid}
     unsubSal = FirestoreService.subscribeToDocument(
       'salaries', currentUser.id,
       (doc) => { setMySalary(doc || null); setLoadingDossier(false); clearTimeout(timeoutId); },
-      (err) => { console.warn('[StaffPortal] salary sub:', err?.message); setLoadingDossier(false); clearTimeout(timeoutId); }
+      (err) => { logger.warn('[StaffPortal] salary sub:', err?.message); setLoadingDossier(false); clearTimeout(timeoutId); }
     );
 
     // contracts/{uid}
     unsubCon = FirestoreService.subscribeToDocument(
       'contracts', currentUser.id,
       (doc) => { setMyContract(doc || null); },
-      (err) => console.warn('[StaffPortal] contract sub:', err?.message)
+      (err) => logger.warn('[StaffPortal] contract sub:', err?.message)
     );
 
     return () => {
