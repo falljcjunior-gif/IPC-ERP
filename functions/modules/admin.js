@@ -3,6 +3,7 @@ const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
 const { checkCallRate } = require('./rate_limiter');
+const { assertCanModifyRole, isImmutableRole } = require('./roleGuard');
 
 logger.info('Admin module loading...');
 const db = admin.firestore();
@@ -13,15 +14,26 @@ const DeleteUserSchema = z.object({
 
 const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{12,}$/;
 
+// ── Rôles protégés — toute modification doit passer par setUserRole (rbac.js) ──
+const PROTECTED_ROLES = new Set(['SUPER_ADMIN', 'HOLDING_CEO', 'GROUP_AUDITOR']);
+
 const buildTenantClaims = (userData, existingClaims = {}, roleOverride = null) => {
   const entityId = userData.entity_id || existingClaims.entity_id;
   if (!entityId) {
     throw new HttpsError('failed-precondition', 'entity_id manquant : impossible de publier des Custom Claims sûrs.');
   }
 
+  const resolvedRole = roleOverride || userData.role || existingClaims.role;
+  if (!resolvedRole) {
+    // Refuse to silently fall back to EMPLOYEE — surface the missing role immediately.
+    throw new HttpsError('failed-precondition',
+      `Aucun rôle trouvé pour l'utilisateur ${userData.uid || existingClaims.uid || '?'}. ` +
+      'Utilisez setUserRole pour attribuer un rôle explicite avant de publier des claims.');
+  }
+
   return {
     ...existingClaims,
-    role: roleOverride || userData.role || existingClaims.role || 'EMPLOYEE',
+    role: resolvedRole,
     entity_type: userData.entity_type || existingClaims.entity_type || 'SUBSIDIARY',
     entity_id: entityId,
     tenant_id: userData.tenant_id || existingClaims.tenant_id || 'ipc_group',
@@ -34,8 +46,13 @@ const buildUnifiedUserPayload = (user, now, extraData = {}) => {
   const email = user.email;
   const displayName = user.displayName || extraData.nom || email?.split('@')[0] || 'Utilisateur';
   
-  // [ROLE SIMPLIFICATION 2026-05-22] Default to EMPLOYEE — GUEST role retired.
-  const role = extraData.role || 'EMPLOYEE';
+  // Role must always be explicitly supplied by the caller — no silent fallback.
+  // Every code path that calls buildUnifiedUserPayload must pass a role.
+  if (!extraData.role) {
+    logger.error('[buildUnifiedUserPayload] role is required — refusing to default to EMPLOYEE', { uid: user.uid });
+    throw new Error('role is required when building a unified user payload. Pass an explicit role.');
+  }
+  const role = extraData.role;
   
   return {
     _createdAt: now,
@@ -324,6 +341,10 @@ exports.updateUserPermissions = onCall({
     if (!snap.exists) throw new HttpsError('not-found', `Utilisateur ${uid} introuvable.`);
 
     const userData = snap.data();
+
+    // ── RBAC GUARD: Centralized role hierarchy enforcement ───────────────────
+    assertCanModifyRole(callerRole, userData.role, role || null, request.auth.uid, uid);
+
     const updates = { _updatedAt: admin.firestore.FieldValue.serverTimestamp() };
     if (permissions) updates.permissions = permissions;
     if (hierarchy_level) updates.hierarchy_level = hierarchy_level;
@@ -552,8 +573,17 @@ exports.backfillUsers = onCall({
               continue;
             }
 
+            // [RBAC GUARD] Never silently assign EMPLOYEE during backfill.
+            // If no role claim exists, skip this user and log — a SUPER_ADMIN must
+            // explicitly assign a role via setUserRole before the user can be backfilled.
+            if (!existingClaims.role) {
+              errors++;
+              logger.warn(`Backfill: skipped ${uid} (${user.email}) — no role claim. Assign a role via setUserRole first.`);
+              continue;
+            }
+
             const userData = buildUnifiedUserPayload(user, now, {
-              role: existingClaims.role || 'EMPLOYEE',
+              role: existingClaims.role,
               entity_type: existingClaims.entity_type || 'SUBSIDIARY',
               entity_id: existingClaims.entity_id,
               tenant_id: existingClaims.tenant_id || 'ipc_group',

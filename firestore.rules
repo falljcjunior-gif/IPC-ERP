@@ -83,7 +83,17 @@ service cloud.firestore {
           // Security audit trail — set by Cloud Functions only
           '_security'
         ])) ||
-        isAdmin()
+        // [RBAC GUARD] ADMIN can update most user fields, EXCEPT:
+        // 1. ADMIN cannot change the `role` field for a user whose current role is SUPER_ADMIN.
+        //    Only SUPER_ADMIN can modify another SUPER_ADMIN's document — all role changes
+        //    must go through Cloud Functions (Admin SDK) which enforce server-side guards.
+        // 2. ADMIN cannot demote role to below their own rank (enforced by Cloud Function).
+        (isAdmin() && !(
+          resource.data.get('role', '') == 'SUPER_ADMIN' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions'])
+        )) ||
+        // Only SUPER_ADMIN can write to any field of any user document without restriction.
+        isSuperAdmin()
       );
       allow delete: if isSuperAdmin();
 
