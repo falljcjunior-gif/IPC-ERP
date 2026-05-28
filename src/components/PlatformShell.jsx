@@ -3,21 +3,15 @@ import { AuthService } from '../services/auth.service';
 import { auth } from '../firebase/config';
 import { FirestoreService } from '../services/firestore.service';
 import { 
-  Users, Settings, ChevronLeft, ChevronRight, Bell, Search, LogOut,
-  Moon, Sun, Grid, Home, ShoppingCart, Package as Box, FileText, Users2,
-  Factory, Briefcase, ShoppingBag, Mail, ArrowRight, ShieldCheck,
-  Truck, Wallet, PiggyBank, ChevronDown, TrendingUp, LifeBuoy,
-  Calendar as CalIcon, Clock, Layers, FileSignature, BarChart3,
-  Folder, Activity as ActivityIcon, Zap, MessageCircle,
-  Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe, Command
+  ChevronLeft, ChevronRight, Bell, LogOut, ShieldCheck,
+  Zap, Key, Globe, Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
-import { isCreatorEmail } from '../utils/creators';
 import { useTranslation } from 'react-i18next';
 import { getTenantContext, onTenantContextChange } from '../services/TenantContext';
-import { resolveSpace, getSpaceTheme, getSpaceHome } from '../services/space.config';
+import { resolveSpace, getSpaceHome } from '../services/space.config';
 import SpaceBadge from './SpaceBadge';
 
 // Lazy loaded components
@@ -52,11 +46,9 @@ const PlatformShell = ({ theme, setView }) => {
   // [FIX AUDIT P0] Session idle timeout — déconnexion automatique après inactivité
   useIdleTimeout({ enabled: true });
   const globalSearch = useStore(s => s.globalSearch);
-  const searchResults = useStore(s => s.searchResults);
   const updateRecord = useStore(s => s.updateRecord);
   const addRecord = useStore(s => s.addRecord);
   const config = useStore(s => s.config);
-  const globalSettings = useStore(s => s.globalSettings);
   const permissions = useStore(s => s.permissions);
   const getModuleAccess = useStore(s => s.getModuleAccess);
   const logout = useStore(s => s.logout);
@@ -64,20 +56,17 @@ const PlatformShell = ({ theme, setView }) => {
   const setActiveApp = useStore(s => s.setActiveApp);
   const activeCall = useStore(s => s.activeCall);
   const setActiveCall = useStore(s => s.setActiveCall);
-  const acceptCall = useStore(s => s.acceptCall);
-  const rejectCall = useStore(s => s.rejectCall);
-  const setActiveBrand = useStore(s => s.setActiveBrand);
-  const BRANDS = useStore(s => s.BRANDS);
   const currentUser = useStore(s => s.user);
   const { unreadCount, toggleSidebar } = useNotificationStore();
-  const notifications = useStore(s => s.notifications || []);
   const data = useStore(s => s.data);
+  // [3-SPACE] TenantContext est la source de vérité pour l'espace actif.
+  // Il est posé par BusinessContext dès que syncProfile() complète.
+  const [tenantCtx, setTenantCtxLocal] = useState(() => getTenantContext());
 
   // Locatized subscription for campaigns to avoid massive shell re-renders
   const marketingCampaigns = useStore(state => state.data.marketing?.campaigns || []);
 
   const userRole = currentUser?.role || tenantCtx?.role || 'GUEST';
-  const activeBrand = globalSettings?.brand || 'ALL';
 
   // Unified UI Flags
   const [shellView, setShellView] = useState({
@@ -128,6 +117,44 @@ const PlatformShell = ({ theme, setView }) => {
 
   // Role is always sourced from Firebase Custom Claims via BusinessContext — no client-side override.
 
+  useEffect(() => {
+    // Souscrire aux changements de TenantContext pour forcer le re-render
+    const unsub = onTenantContextChange((ctx) => setTenantCtxLocal({ ...ctx }));
+    return unsub;
+  }, []);
+
+  const activeSpace = useMemo(() => {
+    // Priorité 1 : TenantContext (posé par syncProfile, fiable et réactif)
+    const ctxType = tenantCtx?.entity_type;
+    if (ctxType && ctxType !== 'SUBSIDIARY') return ctxType;
+    // Priorité 2 : fallback sur le profil store (cas SUBSIDIARY ou loading)
+    return resolveSpace(currentUser);
+  }, [tenantCtx?.entity_type, tenantCtx?.role, currentUser?.entity_type, currentUser?.role]);
+
+  const canAccessModule = useCallback((appId) => {
+    const module = registry.getModule(appId);
+    if (!module) return false;
+    if (module.hidden) return false;
+    if (module.entityTypes?.length && !module.entityTypes.includes(activeSpace)) return false;
+    if (appId === 'home') return true;
+    if (userRole === 'SUPER_ADMIN') return true;
+    if (!currentUser || currentUser.id === 'guest') return false;
+
+    const userHasDefinedPerms = Boolean(permissions && permissions[currentUser?.id]);
+    if (!userHasDefinedPerms) {
+      return (module.roles || []).includes(userRole);
+    }
+
+    return getModuleAccess(currentUser?.id, appId) !== 'none';
+  }, [activeSpace, currentUser, getModuleAccess, permissions, userRole]);
+
+  const getSafeFallbackApp = useCallback(() => {
+    const preferred = getSpaceHome(activeSpace);
+    if (preferred && canAccessModule(preferred)) return preferred;
+    const firstAllowed = registry.getModulesByEntityType(activeSpace).find(module => canAccessModule(module.id));
+    return firstAllowed?.id || 'home';
+  }, [activeSpace, canAccessModule]);
+
   //  [IPC] ROUTING ENGINE: SYNC URL WITH ACTIVE APP
   useEffect(() => {
     if (!activeApp) return;
@@ -157,14 +184,15 @@ const PlatformShell = ({ theme, setView }) => {
   useEffect(() => {
     const path = window.location.pathname.substring(1);
     if (path && path !== activeApp) {
-      // [SECURITY FIX] Validation du module avant switch
-      const modules = registry.getAllModules();
-      const validModule = modules.find(m => m.id === path);
-      if (validModule) {
+      if (canAccessModule(path)) {
         setActiveApp(path);
+      } else {
+        const fallbackApp = getSafeFallbackApp();
+        window.history.replaceState({ appId: fallbackApp }, '', fallbackApp === 'home' ? '/' : `/${fallbackApp}`);
+        setActiveApp(fallbackApp);
       }
     }
-  }, []);
+  }, [activeApp, canAccessModule, getSafeFallbackApp, setActiveApp]);
   
   // ── Connect Plus - Real-time Presence & Notifications ──
   useEffect(() => {
@@ -229,27 +257,6 @@ const PlatformShell = ({ theme, setView }) => {
 
   const navigateTo = useCallback((appId) => setActiveApp(appId), [setActiveApp]);
 
-  // [3-SPACE] TenantContext est la source de vérité pour l'espace actif.
-  // Il est posé par BusinessContext dès que syncProfile() complète (avant même
-  // que le store user soit re-rendu), donc plus fiable que currentUser.entity_type.
-  const [tenantCtx, setTenantCtxLocal] = useState(() => getTenantContext());
-
-  useEffect(() => {
-    // Souscrire aux changements de TenantContext pour forcer le re-render
-    const unsub = onTenantContextChange((ctx) => setTenantCtxLocal({ ...ctx }));
-    return unsub;
-  }, []);
-
-  const activeSpace = useMemo(() => {
-    // Priorité 1 : TenantContext (posé par syncProfile, fiable et réactif)
-    const ctxType = tenantCtx?.entity_type;
-    if (ctxType && ctxType !== 'SUBSIDIARY') return ctxType;
-    // Priorité 2 : fallback sur le profil store (cas SUBSIDIARY ou loading)
-    return resolveSpace(currentUser);
-  }, [tenantCtx?.entity_type, tenantCtx?.role, currentUser?.entity_type, currentUser?.role]);
-
-  const spaceTheme = useMemo(() => getSpaceTheme(activeSpace), [activeSpace]);
-
   useEffect(() => {
     // Sidebar dynamique : seuls les modules autorisés pour ce type d'entité
     setAppsPool(registry.getModulesByCategoryForSpace(activeSpace));
@@ -258,12 +265,17 @@ const PlatformShell = ({ theme, setView }) => {
   // [3-SPACE] Auto-routing vers le cockpit du bon espace au premier mount
   useEffect(() => {
     if (!activeApp || activeApp === 'home') {
-      const spaceHome = getSpaceHome(activeSpace);
+      const spaceHome = getSafeFallbackApp();
       // Ne reroute QUE si l'app active n'est pas valide pour cet espace
       if (spaceHome) setActiveApp(spaceHome);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSpace]);
+  }, [activeApp, getSafeFallbackApp, setActiveApp]);
+
+  useEffect(() => {
+    if (!activeApp || canAccessModule(activeApp)) return;
+    const fallbackApp = getSafeFallbackApp();
+    setActiveApp(fallbackApp);
+  }, [activeApp, canAccessModule, getSafeFallbackApp, setActiveApp]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -285,6 +297,48 @@ const PlatformShell = ({ theme, setView }) => {
   }, []);
 
   const renderContent = () => {
+    if (!canAccessModule(activeApp)) {
+      return (
+        <div style={{
+          minHeight: '420px',
+          display: 'grid',
+          placeItems: 'center',
+          padding: '2rem'
+        }}>
+          <div style={{
+            maxWidth: 520,
+            width: '100%',
+            border: '1px solid var(--antigravity-border)',
+            borderRadius: '1rem',
+            background: 'var(--antigravity-glass)',
+            boxShadow: 'var(--shadow-antigravity)',
+            padding: '2rem',
+            textAlign: 'center'
+          }}>
+            <ShieldCheck size={36} color="var(--antigravity-primary)" style={{ marginBottom: '1rem' }} />
+            <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'var(--antigravity-text)' }}>Accès module non autorisé</h2>
+            <p style={{ color: 'var(--antigravity-text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              Ce module n&apos;est pas activé pour votre espace ou votre rôle actuel.
+            </p>
+            <button
+              onClick={() => setActiveApp(getSafeFallbackApp())}
+              style={{
+                border: 'none',
+                borderRadius: '0.75rem',
+                padding: '0.75rem 1rem',
+                background: 'var(--antigravity-primary)',
+                color: 'white',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              Retour à l&apos;espace autorisé
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     const accessLevel = getModuleAccess(currentUser?.id, activeApp);
     const commonProps = { 
       onOpenDetail: openDetail, 
@@ -302,7 +356,7 @@ const PlatformShell = ({ theme, setView }) => {
           <Suspense fallback={
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
                <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid var(--border)', borderTop: '3px solid var(--accent)', borderRadius: '50%', marginBottom: '1rem' }} />
-               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cerveau analytique en cours d'activation...</div>
+               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Cerveau analytique en cours d&apos;activation...</div>
             </div>
           }>
             <RegComponent {...commonProps} />
@@ -405,24 +459,7 @@ style={{
         <div style={{ flex: 1, padding: '1rem 0.5rem', overflowY: 'auto' }}>
           {appsPool.map((cat) => {
             const visibleItems = (cat.items || []).filter(item => {
-              if (item.hidden) return false;
-              if (userRole === 'SUPER_ADMIN') return true;
-              if (!currentUser || currentUser.id === 'guest') return item.id === 'home';
-              
-              // 1. Always show home
-              if (item.id === 'home') return true;
-
-              // 2. Check explicit permissions
-              const access = getModuleAccess(currentUser?.id, item.id);
-              
-              // 3. FALLBACK: If no explicit permissions are defined for this user in the store, 
-              // use the registry's default roles as a safe baseline.
-              const userHasDefinedPerms = permissions && permissions[currentUser?.id];
-              if (!userHasDefinedPerms) {
-                return (item.roles || []).includes(userRole);
-              }
-
-              return access !== 'none';
+              return canAccessModule(item.id);
             });
             if (visibleItems.length === 0) return null;
 

@@ -83,7 +83,17 @@ service cloud.firestore {
           // Security audit trail — set by Cloud Functions only
           '_security'
         ])) ||
-        isAdmin()
+        // [RBAC GUARD] ADMIN can update most user fields, EXCEPT:
+        // 1. ADMIN cannot change the `role` field for a user whose current role is SUPER_ADMIN.
+        //    Only SUPER_ADMIN can modify another SUPER_ADMIN's document — all role changes
+        //    must go through Cloud Functions (Admin SDK) which enforce server-side guards.
+        // 2. ADMIN cannot demote role to below their own rank (enforced by Cloud Function).
+        (isAdmin() && !(
+          resource.data.get('role', '') == 'SUPER_ADMIN' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'permissions'])
+        )) ||
+        // Only SUPER_ADMIN can write to any field of any user document without restriction.
+        isSuperAdmin()
       );
       allow delete: if isSuperAdmin();
 
@@ -707,7 +717,8 @@ service cloud.firestore {
     }
 
     match /financial_audit_logs/{logId} {
-      allow read: if isAuthenticated() && (isSuperAdmin() || hasRole('AUDIT') || hasRole('CFO'));
+      allow read: if isAuthenticated() && canReadOwnEntity(resource.data.entity_id) &&
+                  (isSuperAdmin() || hasRole('AUDIT') || hasRole('CFO'));
       allow write: if false; // BANK-GRADE: Only Cloud Functions can write to financial audit logs
     }
 
@@ -755,13 +766,13 @@ service cloud.firestore {
     // ── [3-SPACE ISOLATION] Helper: tenant-aware read access ───────────────
     // HOLDING : voit tout (consolidation stratégique — lecture uniquement)
     // Sinon  : voit uniquement les docs de SON entity_id
-    // Si le doc n'a pas d'entity_id (collections globales pré-existantes),
-    // autorisation accordée pour compat — à durcir au cas par cas.
+    // Aucun accès legacy implicite : les documents opérationnels doivent porter
+    // un entity_id explicite. Les collections globales ont leurs propres règles.
     function canReadOwnEntity(docEntityId) {
       return isHoldingLevel() ||
-             docEntityId == null ||
-             docEntityId == '' ||
-             docEntityId == getEntityId();
+             (docEntityId != null &&
+              docEntityId != '' &&
+              docEntityId == getEntityId());
     }
 
     // ── [3-SPACE ISOLATION] Helper: tenant-aware WRITE access ──────────────
@@ -770,12 +781,12 @@ service cloud.firestore {
     // les données opérationnelles locales (filiales/foundations).
     //
     // Règle : entity_id du doc doit correspondre à entity_id du caller.
-    //         Exception : SUPER_ADMIN (opérations d'urgence) et docs sans entity_id (legacy).
+    //         Exception : SUPER_ADMIN uniquement pour les opérations d'urgence.
     function canWriteOwnEntity(docEntityId) {
       return isSuperAdmin() ||
-             docEntityId == null ||
-             docEntityId == '' ||
-             docEntityId == getEntityId();
+             (docEntityId != null &&
+              docEntityId != '' &&
+              docEntityId == getEntityId());
     }
 
     // Bonus : isolation country pour les rôles COUNTRY_* (filtre + strict)

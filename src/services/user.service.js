@@ -42,9 +42,21 @@ export const UserService = {
       // Si le claim ne correspond pas au rôle Firestore (ex: claim posé via admin SDK
       // après l'émission du token courant), forcer une nouvelle émission de token.
       if (profile?.role && claimedRole && profile.role !== claimedRole) {
-        logger.warn('[UserService] Mismatch claim/Firestore role, force refresh', {
-          claim: claimedRole, firestore: profile.role
-        });
+        const PROTECTED = ['SUPER_ADMIN', 'HOLDING_CEO', 'GROUP_AUDITOR'];
+        if (PROTECTED.includes(profile.role) || PROTECTED.includes(claimedRole)) {
+          // [SECURITY ALERT] A protected role has diverged between Firestore and Claims.
+          // Log a critical alert — this must be investigated by a SUPER_ADMIN.
+          logger.error('[UserService] CRITICAL: Protected role mismatch detected!', {
+            uid: fbUser.uid,
+            claimRole: claimedRole,
+            firestoreRole: profile.role,
+            timestamp: new Date().toISOString(),
+          });
+        } else {
+          logger.warn('[UserService] Mismatch claim/Firestore role, force refresh', {
+            claim: claimedRole, firestore: profile.role
+          });
+        }
         tokenResult = await fbUser.getIdTokenResult(true);
         claimedRole = tokenResult.claims?.role || claimedRole;
       }

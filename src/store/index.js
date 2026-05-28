@@ -20,119 +20,14 @@ import logger from '../utils/logger';
 //  IPC INTELLIGENCE ENGINE: CENTRAL STORE
 // ══════════════════════════════════════════════════════════════════════════
 
-// ── [SECURITY FIX] AES-256-GCM via Web Crypto API ────────────────────────
-// AVANT : XOR trivial (reversible en O(n), aucun secret réel)
-// APRÈS : AES-256-GCM authenticated encryption — standard NIST FIPS 197
-//
-// Clé dérivée via PBKDF2 (100 000 itérations, SHA-256) depuis une seed
-// générée par crypto.getRandomValues() et stockée en sessionStorage.
-// Chaque écriture génère un IV aléatoire unique (nonce 12 octets).
-// Le tag d'authentification GCM (16 octets) détecte toute altération.
-
-const _AES_ALGO = 'AES-GCM';
-const _PBKDF2_ITER = 100_000;
-
-/** Génère ou récupère la seed de session (32 hex chars) */
-const _getSessionSeed = () => {
-  const KEY = '_ipc_aes_seed';
-  let seed = sessionStorage.getItem(KEY);
-  if (!seed) {
-    const bytes = crypto.getRandomValues(new Uint8Array(16));
-    seed = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-    sessionStorage.setItem(KEY, seed);
-  }
-  return seed;
-};
-
-/** Dérive une CryptoKey AES-256-GCM depuis la seed via PBKDF2 */
-const _deriveKey = async (seed) => {
-  const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw', enc.encode(seed), 'PBKDF2', false, ['deriveKey']
-  );
-  return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: enc.encode('ipc-erp-salt-v2'), iterations: _PBKDF2_ITER, hash: 'SHA-256' },
-    keyMaterial,
-    { name: _AES_ALGO, length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  );
-};
-
-// Singleton de clé (évite re-dériver à chaque read/write)
-let _cachedKey = null;
-const _getKey = async () => {
-  if (!_cachedKey) {
-    const envSeed = import.meta.env.VITE_STORE_KEY || _getSessionSeed();
-    _cachedKey = await _deriveKey(envSeed);
-  }
-  return _cachedKey;
-};
-
-const _buf2b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf)));
-const _b642buf = (b64) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-
-const _aesEncrypt = async (plaintext) => {
-  const key = await _getKey();
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit nonce
-  const enc = new TextEncoder();
-  const cipherBuf = await crypto.subtle.encrypt(
-    { name: _AES_ALGO, iv },
-    key,
-    enc.encode(plaintext)
-  );
-  // Stocker : iv (12 octets) + ciphertext+tag (N+16 octets) en base64
-  const combined = new Uint8Array(iv.byteLength + cipherBuf.byteLength);
-  combined.set(iv, 0);
-  combined.set(new Uint8Array(cipherBuf), iv.byteLength);
-  return _buf2b64(combined.buffer);
-};
-
-const _aesDecrypt = async (b64) => {
-  try {
-    const key = await _getKey();
-    const combined = _b642buf(b64);
-    const iv = combined.slice(0, 12);
-    const cipherBuf = combined.slice(12);
-    const plainBuf = await crypto.subtle.decrypt(
-      { name: _AES_ALGO, iv },
-      key,
-      cipherBuf
-    );
-    return new TextDecoder().decode(plainBuf);
-  } catch {
-    // Données corrompues ou clé changée → nettoyer proprement
-    return null;
-  }
-};
-
-// Async storage compatible avec Zustand persist middleware
-const secureStorage = {
-  getItem: async (name) => {
-    try {
-      const encrypted = localStorage.getItem(name);
-      if (!encrypted) return null;
-      // Rétrocompatibilité : si l'ancienne donnée XOR existe, la supprimer
-      if (!encrypted.startsWith('AESGCM:')) {
-        localStorage.removeItem(name);
-        return null;
-      }
-      const decrypted = await _aesDecrypt(encrypted.slice(7));
-      return decrypted ? JSON.parse(decrypted) : null;
-    } catch (e) {
-      logger.error('[SecureStorage] Erreur déchiffrement AES-GCM:', e);
-      return null;
-    }
-  },
-  setItem: async (name, value) => {
-    try {
-      const encrypted = await _aesEncrypt(JSON.stringify(value));
-      localStorage.setItem(name, 'AESGCM:' + encrypted);
-    } catch (e) {
-      logger.error('[SecureStorage] Erreur chiffrement AES-GCM:', e);
-    }
-  },
-  removeItem: (name) => localStorage.removeItem(name),
+// ── Client persistence policy ───────────────────────────────────────────────
+// No business data and no user/role claims are persisted here. Firebase Auth is
+// the source of truth for session persistence, and Firestore is the source of
+// truth for tenant data. UI preferences live in sessionStorage only.
+const transientStorage = {
+  getItem: (name) => sessionStorage.getItem(name),
+  setItem: (name, value) => sessionStorage.setItem(name, value),
+  removeItem: (name) => sessionStorage.removeItem(name),
 };
 
 export const useStore = create(
@@ -258,7 +153,7 @@ export const useStore = create(
               if (db.name) window.indexedDB.deleteDatabase(db.name);
             }
           }
-        } catch (_e) { /* non-fatal */ }
+        } catch { /* non-fatal */ }
         set({
           user: { id: 'guest', nom: 'Utilisateur', role: 'GUEST' },
           currentUser: null,
@@ -320,16 +215,14 @@ export const useStore = create(
     }),
     {
       name: 'ipc-intelligence-store',
-      storage: createJSONStorage(() => secureStorage), // [SÉCURISÉ] Chiffrement AES-256-GCM actif
+      storage: createJSONStorage(() => transientStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // [HYDRATION GUARD] : State is sourced from encrypted localStorage
-          // Role consistency is verified during BusinessContext sync with UserService
+          // Role consistency is verified during BusinessContext sync with UserService.
           state.setHasHydrated(true);
         }
       },
       partialize: (state) => ({ 
-        user: state.user, 
         globalSettings: state.globalSettings,
         activeApp: state.activeApp,
         dashboardPreferences: state.dashboardPreferences
