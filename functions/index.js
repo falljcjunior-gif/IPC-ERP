@@ -147,6 +147,13 @@ exports.createEntityWithSaga  = provisioningJobs.createEntityWithSaga;
 exports.retryProvisioningJob  = provisioningJobs.retryProvisioningJob;
 exports.getProvisioningJob    = provisioningJobs.getProvisioningJob;
 
+// 11c. P1-A Role Claims Backfill — prerequisite for removing hasRole Firestore fallback
+//      Run backfillRoleClaims (dryRun:true) first to preview, then dryRun:false to patch.
+//      Deploy A3 rules only after verifyRoleClaimsCoverage returns { a3DeploymentSafe: true }.
+const backfillRoleClaimsModule = require('./modules/backfillRoleClaims');
+exports.backfillRoleClaims         = backfillRoleClaimsModule.backfillRoleClaims;
+exports.verifyRoleClaimsCoverage   = backfillRoleClaimsModule.verifyRoleClaimsCoverage;
+
 // 8. Rate Limiter (middleware — importé par les autres modules)
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
 // const { RATE_PRESETS } = require('./modules/rate_limiter');
