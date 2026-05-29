@@ -592,7 +592,7 @@ exports.onTaskAssigned = onDocumentWritten('projects/{taskId}', async (event) =>
         // [FIX] chefProjetUid doit être un UID, pas un nom.
         // chefProjet (nom lisible) conservé pour affichage, chefProjetUid pour les lookups.
         const managerUid = projectData.chefProjetUid || null;
-        const _managerName = projectData.chefProjet || 'Manager'; // eslint-disable-line no-unused-vars
+        const _managerName = projectData.chefProjet || 'Manager';  
 
         if (managerUid) {
           // [FIX] Lookup par UID — O(1), garanti unique

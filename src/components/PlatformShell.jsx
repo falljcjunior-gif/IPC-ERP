@@ -7,6 +7,7 @@ import {
   Zap, Key, Globe, Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageTransition } from '../lib/MotionComponents';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { useTranslation } from 'react-i18next';
@@ -588,8 +589,8 @@ const PlatformShell = ({ theme, setView }) => {
             )}
             <button
               onClick={() => { logout(); setView('login'); }}
-              aria-label="Se déconnecter"
-              title="Se déconnecter"
+              aria-label={t('auth.logout')}
+              title={t('auth.logout')}
               style={{
                 background: 'transparent', border: 'none', cursor: 'pointer',
                 color: 'var(--antigravity-text-muted)', opacity: 0.45,
@@ -633,8 +634,8 @@ const PlatformShell = ({ theme, setView }) => {
            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
               <button
                 onClick={() => setShellView(p => ({ ...p, sidebar: !p.sidebar }))}
-                aria-label={shellView.sidebar ? 'Réduire le menu' : 'Afficher le menu'}
-                title={shellView.sidebar ? 'Réduire' : 'Afficher'}
+                aria-label={shellView.sidebar ? t('nav.collapse_menu') : t('nav.expand_menu')}
+                title={shellView.sidebar ? t('nav.collapse') : t('nav.expand')}
                 style={{ background: 'var(--bg-subtle)', border: 'none', cursor: 'pointer', color: 'var(--antigravity-text)', width: '44px', height: '44px', minWidth: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
                 {shellView.sidebar ? <ChevronLeft size={20} aria-hidden="true" /> : <ChevronRight size={20} aria-hidden="true" />}
@@ -643,7 +644,7 @@ const PlatformShell = ({ theme, setView }) => {
               {/* ── BREADCRUMB NAVIGATION (WCAG 2.4.8) ── */}
               {activeApp && activeApp !== 'home' && (
                 <nav
-                  aria-label="Fil d'Ariane"
+                  aria-label={t('nav.breadcrumb')}
                   style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-muted)' }}
                 >
                   <button
@@ -750,17 +751,9 @@ const PlatformShell = ({ theme, setView }) => {
           padding: '1.75rem 2rem',
           paddingBottom: shellView.mobile ? 'calc(1.75rem + 80px)' : '1.75rem',
         }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeApp}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {renderContent()}
-            </motion.div>
-          </AnimatePresence>
+          <PageTransition id={activeApp}>
+            {renderContent()}
+          </PageTransition>
         </div>
       </main>
 
@@ -801,19 +794,19 @@ const PlatformShell = ({ theme, setView }) => {
         {pwdModal.open && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 5000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="glass" style={{ width: '100%', maxWidth: '400px', padding: '2rem', borderRadius: '1.5rem', border: '1px solid var(--border)', background: 'var(--bg)' }}>
-              <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={20} color="var(--accent)" /> Changer de mot de passe</h3>
+              <h3 style={{ margin: '0 0 1.5rem 0', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Key size={20} color="var(--accent)" /> {t('auth.change_password')}</h3>
               
               {pwdModal.error && <div style={{ padding: '0.75rem', background: '#EF444415', color: '#EF4444', borderRadius: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>{pwdModal.error}</div>}
               {pwdModal.success && <div style={{ padding: '0.75rem', background: '#10B98115', color: '#10B981', borderRadius: '0.5rem', fontSize: '0.85rem', marginBottom: '1rem', fontWeight: 600 }}>{pwdModal.success}</div>}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Nouveau mot de passe</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>{t('auth.new_password')}</label>
                   <input type="password" value={pwdModal.newPwd} onChange={e => setPwdModal(p => ({ ...p, newPwd: e.target.value, error: '', success: '' }))}
                     style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>Confirmer le mot de passe</label>
+                  <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.4rem', display: 'block' }}>{t('auth.confirm_password')}</label>
                   <input type="password" value={pwdModal.confirmPwd} onChange={e => setPwdModal(p => ({ ...p, confirmPwd: e.target.value, error: '', success: '' }))}
                     style={{ width: '100%', padding: '0.8rem 1rem', borderRadius: '0.75rem', border: '1px solid var(--border)', background: 'var(--bg-subtle)', color: 'var(--text)', outline: 'none' }} />
                 </div>
@@ -822,24 +815,24 @@ const PlatformShell = ({ theme, setView }) => {
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '2rem' }}>
                 <button onClick={() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false })}
                   style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontWeight: 700, cursor: 'pointer' }}>
-                  Fermer
+                  {t('common.close')}
                 </button>
-                <button 
+                <button
                   onClick={async () => {
-                    if (pwdModal.newPwd !== pwdModal.confirmPwd) { setPwdModal(p => ({ ...p, error: 'Les mots de passe ne correspondent pas.' })); return; }
-                    if (pwdModal.newPwd.length < 6) { setPwdModal(p => ({ ...p, error: 'Le mot de passe doit faire au moins 6 caractères.' })); return; }
+                    if (pwdModal.newPwd !== pwdModal.confirmPwd) { setPwdModal(p => ({ ...p, error: t('auth.passwords_mismatch') })); return; }
+                    if (pwdModal.newPwd.length < 6) { setPwdModal(p => ({ ...p, error: t('auth.password_too_short') })); return; }
                     setPwdModal(p => ({ ...p, loading: true, error: '' }));
                     try {
                       await AuthService.mandatoryPasswordUpdate(pwdModal.newPwd);
-                      setPwdModal(p => ({ ...p, success: 'Mot de passe mis à jour avec succès.', newPwd: '', confirmPwd: '', loading: false }));
+                      setPwdModal(p => ({ ...p, success: t('auth.password_updated'), newPwd: '', confirmPwd: '', loading: false }));
                       setTimeout(() => setPwdModal({ open: false, newPwd: '', confirmPwd: '', error: '', success: '', loading: false }), 2000);
                     } catch (err) {
-                      setPwdModal(p => ({ ...p, error: err.message || 'Erreur de sécurité.', loading: false }));
+                      setPwdModal(p => ({ ...p, error: err.message || t('auth.security_error'), loading: false }));
                     }
                   }}
                   disabled={pwdModal.loading || pwdModal.newPwd === ''}
                   style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'var(--accent)', color: 'white', fontWeight: 700, cursor: pwdModal.loading ? 'wait' : 'pointer', opacity: pwdModal.loading || pwdModal.newPwd === '' ? 0.7 : 1 }}>
-                  {pwdModal.loading ? 'En cours...' : 'Enregistrer'}
+                  {pwdModal.loading ? t('common.saving') : t('common.save')}
                 </button>
               </div>
             </motion.div>

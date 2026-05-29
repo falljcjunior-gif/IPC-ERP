@@ -138,7 +138,21 @@ exports.processMailOutbox = mail.processMailOutbox;
 
 // 11. One-shot Migrations (A.1.b backfill, etc.) — SUPER_ADMIN only
 const migrations = require('./modules/migrations');
-exports.backfillHrPrivateEntityId = migrations.backfillHrPrivateEntityId;
+exports.backfillHrPrivateEntityId  = migrations.backfillHrPrivateEntityId;
+exports.backfillFoundationEntityId = migrations.backfillFoundationEntityId;
+
+// 11b. Provisioning Saga — Saga-pattern entity creation with compensation + idempotency
+const provisioningJobs = require('./modules/provisioningJobs');
+exports.createEntityWithSaga  = provisioningJobs.createEntityWithSaga;
+exports.retryProvisioningJob  = provisioningJobs.retryProvisioningJob;
+exports.getProvisioningJob    = provisioningJobs.getProvisioningJob;
+
+// 11c. P1-A Role Claims Backfill — prerequisite for removing hasRole Firestore fallback
+//      Run backfillRoleClaims (dryRun:true) first to preview, then dryRun:false to patch.
+//      Deploy A3 rules only after verifyRoleClaimsCoverage returns { a3DeploymentSafe: true }.
+const backfillRoleClaimsModule = require('./modules/backfillRoleClaims');
+exports.backfillRoleClaims         = backfillRoleClaimsModule.backfillRoleClaims;
+exports.verifyRoleClaimsCoverage   = backfillRoleClaimsModule.verifyRoleClaimsCoverage;
 
 // 8. Rate Limiter (middleware — importé par les autres modules)
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js

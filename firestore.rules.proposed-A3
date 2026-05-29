@@ -1,0 +1,116 @@
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║  ⛔  DO NOT DEPLOY — AWAITING A3 VALIDATION                                ║
+// ║                                                                              ║
+// ║  This file contains the PROPOSED DIFF for P1-A3:                            ║
+// ║  "Remove hasRole() Firestore fallback → rely on custom claims only."        ║
+// ║                                                                              ║
+// ║  DEPLOYMENT GATE (must ALL be green before this goes to prod):              ║
+// ║    ✅  backfillRoleClaims(dryRun:false) completed with errors:[]            ║
+// ║    ✅  verifyRoleClaimsCoverage() returns { a3DeploymentSafe: true }        ║
+// ║    ✅  Staging/emulator smoke tests pass with these rules                   ║
+// ║    ✅  User has explicitly approved this file in chat                       ║
+// ║                                                                              ║
+// ║  Why this matters:                                                           ║
+// ║    The current hasRole() fallback reads users/{uid} from Firestore on EVERY ║
+// ║    authenticated request. This is an extra document read on every write,    ║
+// ║    costing latency and egress. Once all users have the `role` custom claim   ║
+// ║    set correctly (verified by verifyRoleClaimsCoverage), the fallback        ║
+// ║    becomes dead code — and a potential attack surface if a user can modify   ║
+// ║    their own Firestore role field via a misconfigured rule edge case.        ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
+
+// ── WHAT CHANGES ─────────────────────────────────────────────────────────────
+//
+// File:    firestore.rules  (the live production file)
+// Commit:  ONLY AFTER all gates above are green + user chat approval
+//
+// ── BEFORE (lines 28–51 of current firestore.rules) ─────────────────────────
+
+/*
+    function hasRole(roleName) {
+      // 1. Check Custom Claims first (no Firestore read, instant)
+      return hasClaimRole(roleName) ||
+      // 2. Fallback to Firestore doc check
+      (isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+        getUserData().get('role', '') == roleName ||
+        ('permissions' in getUserData() && 'roles' in getUserData().permissions && roleName in getUserData().permissions.roles)
+      ));
+    }
+
+
+    function isSuperAdmin() {
+      // Priority: Hardcoded UID → Custom Claims → Creator Email → Firestore doc
+      return isCreatorEmail() || hasClaimRole('SUPER_ADMIN') || hasRole('SUPER_ADMIN');
+    }
+
+    function isAdmin() {
+      // [3-SPACE] Les rôles HOLDING_* sont au-dessus de ADMIN — bypass complet
+      return isSuperAdmin() || isHoldingLevel() || hasClaimRole('ADMIN') || hasRole('ADMIN');
+    }
+
+    function isManager() {
+      return isAdmin() || hasClaimRole('MANAGER') || hasRole('MANAGER');
+    }
+*/
+
+// ── AFTER (replace the above block with this) ─────────────────────────────────
+
+/*
+    // [A3] Claims-only role check — Firestore fallback REMOVED.
+    // Prerequisite: backfillRoleClaims completed + verifyRoleClaimsCoverage = safe.
+    function hasRole(roleName) {
+      return hasClaimRole(roleName);
+    }
+
+
+    function isSuperAdmin() {
+      // isCreatorEmail() always returns false (security policy — see line 14).
+      // hasRole() is now hasClaimRole(), so the previous double-check is collapsed.
+      return hasClaimRole('SUPER_ADMIN');
+    }
+
+    function isAdmin() {
+      // [3-SPACE] Les rôles HOLDING_* sont au-dessus de ADMIN — bypass complet
+      return isSuperAdmin() || isHoldingLevel() || hasClaimRole('ADMIN');
+    }
+
+    function isManager() {
+      return isAdmin() || hasClaimRole('MANAGER');
+    }
+*/
+
+// ── RATIONALE ─────────────────────────────────────────────────────────────────
+//
+// 1. Performance: removes 1 Firestore read (get(users/{uid})) per hasRole() call.
+//    Every rule that calls isManager() / isAdmin() previously triggered a Firestore
+//    read; after A3 these are pure JWT checks (0 ms, no billing).
+//
+// 2. Security: a user who could trick a Firestore write to their own /users/{uid}
+//    doc (e.g. via a misconfigured rule or a compromised service account) could
+//    previously escalate their effective role in rules. Custom claims are only
+//    writable by the server-side Admin SDK — no client-side escalation possible.
+//
+// 3. Simplicity: hasRole() becomes a thin alias for hasClaimRole() that can be
+//    inlined in a future cleanup pass.
+//
+// ── NOTES ─────────────────────────────────────────────────────────────────────
+//
+// • getUserData() is NOT removed — still used at line ~800 for
+//   getUserData().permissions.modules (module access control). That is NOT
+//   a role check; it reads the user's enabled module list.
+//
+// • isCreatorEmail() is already a no-op (returns false, line 15). The collapsed
+//   isSuperAdmin() removes the dead call explicitly for clarity.
+//
+// • The 'permissions.roles' path in the old fallback was a legacy data model
+//   that has not been written to since the P0 schema migration. Removing it is safe.
+//
+// ── TESTING ───────────────────────────────────────────────────────────────────
+//
+// To smoke-test these rules against the emulator before deploying:
+//   1. Apply this diff to a copy of firestore.rules.
+//   2. export JAVA_HOME="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"
+//      export PATH="/opt/homebrew/opt/openjdk@21/bin:$PATH"
+//   3. npm run test:rules
+//      (foundation-isolation.test.js must still report 107/107 green)
+//   4. Manually verify admin login and a non-admin read/write in the emulator UI.

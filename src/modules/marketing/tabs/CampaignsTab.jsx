@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Plus, Search, Filter, Megaphone, Play, Pause, CheckCircle2,
   Clock, DollarSign, Users2, Eye, MousePointerClick, TrendingUp,

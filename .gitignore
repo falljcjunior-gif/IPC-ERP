@@ -12,6 +12,11 @@ yarn-error.log*
 functions_logs.txt
 firebase-debug.log
 firebase-debug.*.log
+firestore-debug.log
+firestore-debug.*.log
+ui-debug.log
+# Firestore emulator data exports
+.firebase-emulator/
 
 # Firebase Auth export / import seed files — contain password hashes
 users.json

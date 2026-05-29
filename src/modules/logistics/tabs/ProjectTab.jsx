@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Briefcase, CheckSquare, Plus, Calendar, Users, 
   Clock, ChevronRight, MoreVertical, Target, BarChart2,

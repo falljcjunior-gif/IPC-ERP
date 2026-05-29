@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore } from '../../../store';
 import { useToastStore } from '../../../store/useToastStore';
 import { Upload, CheckCircle2, ChevronRight, AlertCircle, Link, Cpu } from 'lucide-react';

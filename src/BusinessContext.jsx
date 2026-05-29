@@ -467,7 +467,7 @@ export const BusinessProvider = ({ children }) => {
     // setUser() à l'intérieur du listener change user.role → re-exécute l'effet →
     // re-registre onAuthStateChanged → boucle infinie (rafraîchissement permanent
     // en arrière-plan). Les listeners doivent rester stables pour la durée de la session.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [userId]);
 
   return <>{children}</>;

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Plus, Search, Filter, Layers, List as ListIcon, 
   Grid as KanbanIcon, PieChart as GraphIcon, 

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Mic, MicOff, Video, VideoOff, PhoneOff,
   User, AlertCircle, Wifi, WifiOff, Loader

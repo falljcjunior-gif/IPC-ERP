@@ -1,124 +1,303 @@
-import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import React from 'react';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
-import { Sparkles, ArrowRight, ChevronDown, Play } from 'lucide-react';
+import { ArrowRight, ChevronDown, Play, Zap } from 'lucide-react';
+import AfricanWorkplaceScene from '../AfricanWorkplaceScene';
 
-// [FIX AUDIT P0] — ERPOrbitalScene est 881 Ko (Three.js complet).
-// AVANT : lazy() seul → le chunk est demandé dès le rendu du Hero (premier écran)
-//         → Three.js bloque le FCP/LCP car le navigateur doit le télécharger avant d'afficher.
-// APRÈS : chargement différé de 800ms APRÈS que le hero text soit rendu (requestIdleCallback)
-//         → LCP mesuré sur le texte hero (< 1.5s) ; Three.js charge en background.
-//         → Si l'utilisateur a prefers-reduced-motion, la scène 3D n'est jamais chargée.
-const ERPOrbitalScene = lazy(() =>
-  new Promise(resolve => {
-    // Laisser le navigateur peindre le texte hero en premier
-    const load = () => import('../three/ERPOrbitalScene').then(resolve);
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(load, { timeout: 2000 });
-    } else {
-      setTimeout(load, 800);
-    }
-  })
-);
-
-/** Fallback CSS-only pendant le chargement Three.js */
-const OrbitalFallback = () => (
-  <div style={{
-    width: '100%', height: '100%',
-    background: 'radial-gradient(ellipse 80% 60% at 70% 50%, rgba(82,153,144,0.18) 0%, transparent 70%)',
-    animation: 'orbital-pulse 3s ease-in-out infinite',
-  }}>
-    <style>{`
-      @keyframes orbital-pulse {
-        0%,100% { opacity: 0.6; transform: scale(1); }
-        50%      { opacity: 1;   transform: scale(1.04); }
-      }
-    `}</style>
-  </div>
-);
-
+// ── Animation presets ─────────────────────────────────────────────────────────
 const EASE = [0.16, 1, 0.3, 1];
 
 const stagger = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.1 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.11, delayChildren: 0.08 } },
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
+  hidden: { opacity: 0, y: 32 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.72, ease: EASE } },
 };
 
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.6, ease: EASE } },
+};
+
+// ── Inline styles so the dark theme is self-contained (no global CSS dep) ─────
+const S = {
+  section: {
+    position: 'relative',
+    minHeight: '100svh',
+    display: 'flex',
+    alignItems: 'center',
+    overflow: 'hidden',
+    // Dark emerald gradient matching the scene
+    background: 'linear-gradient(135deg, #020D06 0%, #031A0E 45%, #041F10 75%, #052516 100%)',
+  },
+
+  // Ambient top-left glow for depth
+  glowTL: {
+    position: 'absolute',
+    top: '-10%',
+    left: '-5%',
+    width: 640,
+    height: 640,
+    borderRadius: '50%',
+    background: 'radial-gradient(ellipse, rgba(16,185,129,0.08) 0%, rgba(6,78,59,0.04) 40%, transparent 70%)',
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+
+  // Ambient bottom-right glow
+  glowBR: {
+    position: 'absolute',
+    bottom: '-20%',
+    right: '-5%',
+    width: 500,
+    height: 500,
+    borderRadius: '50%',
+    background: 'radial-gradient(ellipse, rgba(6,78,59,0.1) 0%, transparent 70%)',
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+
+  // Scene container (right side)
+  sceneWrap: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '58%',
+    height: '100%',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+
+  // Left-to-right fade so scene bleeds into text area
+  blendOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(90deg, #020D06 30%, rgba(2,13,6,0.75) 55%, rgba(2,13,6,0.08) 78%, transparent 92%)',
+    zIndex: 2,
+    pointerEvents: 'none',
+  },
+
+  // Grid noise texture subtle overlay
+  noise: {
+    position: 'absolute',
+    inset: 0,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E")`,
+    opacity: 0.4,
+    pointerEvents: 'none',
+    zIndex: 1,
+    mixBlendMode: 'overlay',
+  },
+
+  // Content wrapper
+  content: {
+    position: 'relative',
+    zIndex: 3,
+    maxWidth: 1280,
+    margin: '0 auto',
+    padding: '7rem 2rem 4rem',
+    width: '100%',
+  },
+
+  // Badge chip
+  badge: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '6px 14px 6px 10px',
+    borderRadius: 999,
+    background: 'rgba(16,185,129,0.1)',
+    border: '1px solid rgba(52,211,153,0.25)',
+    backdropFilter: 'blur(8px)',
+    WebkitBackdropFilter: 'blur(8px)',
+    marginBottom: '1.5rem',
+  },
+  badgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: '50%',
+    background: '#34D399',
+    boxShadow: '0 0 8px rgba(52,211,153,0.8)',
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 700,
+    color: 'rgba(52,211,153,0.9)',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+  },
+
+  // Headline
+  headline: {
+    margin: '0 0 1.5rem',
+    fontSize: 'clamp(2.4rem, 5.5vw, 4rem)',
+    fontWeight: 900,
+    lineHeight: 1.1,
+    letterSpacing: '-0.03em',
+    color: '#F0FDF4',
+  },
+  headlineAccent: {
+    background: 'linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text',
+    display: 'inline',
+  },
+
+  // Sub-copy
+  description: {
+    margin: '0 0 2.25rem',
+    fontSize: 'clamp(1rem, 1.8vw, 1.15rem)',
+    lineHeight: 1.7,
+    color: 'rgba(209,250,229,0.62)',
+    maxWidth: 520,
+    fontWeight: 400,
+  },
+
+  // CTA row
+  ctaGroup: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '0.875rem',
+    marginBottom: '2.75rem',
+  },
+
+  // Primary CTA
+  btnPrimary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '0.9rem 2rem',
+    borderRadius: 14,
+    background: 'linear-gradient(135deg, #059669 0%, #047857 60%, #065F46 100%)',
+    color: '#F0FDF4',
+    fontWeight: 800,
+    fontSize: '1.0625rem',
+    border: '1px solid rgba(52,211,153,0.35)',
+    cursor: 'pointer',
+    boxShadow: '0 8px 32px rgba(5,150,105,0.35), inset 0 1px 0 rgba(255,255,255,0.12)',
+    letterSpacing: '-0.01em',
+    outline: 'none',
+    WebkitTapHighlightColor: 'transparent',
+  },
+
+  // Secondary CTA
+  btnSecondary: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 8,
+    padding: '0.9rem 1.75rem',
+    borderRadius: 14,
+    background: 'rgba(255,255,255,0.04)',
+    color: 'rgba(209,250,229,0.85)',
+    fontWeight: 700,
+    fontSize: '1.0625rem',
+    border: '1px solid rgba(52,211,153,0.15)',
+    cursor: 'pointer',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    letterSpacing: '-0.01em',
+    outline: 'none',
+    WebkitTapHighlightColor: 'transparent',
+  },
+
+  // Stats row
+  stats: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '2rem',
+    flexWrap: 'wrap',
+  },
+  stat: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 2,
+  },
+  statValue: {
+    fontSize: 'clamp(1.45rem, 2.8vw, 1.9rem)',
+    fontWeight: 900,
+    color: '#F0FDF4',
+    letterSpacing: '-0.03em',
+    lineHeight: 1.1,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: 'rgba(52,211,153,0.6)',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    background: 'rgba(52,211,153,0.12)',
+    borderRadius: 1,
+    flexShrink: 0,
+  },
+
+  // Scroll hint
+  scrollHint: {
+    position: 'absolute',
+    bottom: '2rem',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 4,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+    color: 'rgba(52,211,153,0.45)',
+    fontSize: 11,
+    fontWeight: 600,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    cursor: 'default',
+    userSelect: 'none',
+  },
+};
+
+// ── Scroll-animated chevron ───────────────────────────────────────────────────
+function ScrollArrow() {
+  return (
+    <motion.div
+      animate={{ y: [0, 5, 0] }}
+      transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <ChevronDown size={16} />
+    </motion.div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 export default function HeroSection({ onCTA }) {
   const shouldReduceMotion = useReducedMotion();
   const { scrollY } = useScroll();
-  const scrollProgress = useTransform(scrollY, [0, 600], [0, 1]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
-  const heroY = useTransform(scrollY, [0, 400], [0, shouldReduceMotion ? 0 : -60]);
+  const heroOpacity = useTransform(scrollY, [0, 420], [1, 0]);
+  const heroY       = useTransform(scrollY, [0, 420], [0, shouldReduceMotion ? 0 : -56]);
 
   return (
-    <section
-      id="hero"
-      style={{
-        position: 'relative',
-        minHeight: '100svh',
-        display: 'flex',
-        alignItems: 'center',
-        overflow: 'hidden',
-        background: 'var(--bg)',
-      }}
-    >
-      {/* 3D Scene Background */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '56%',
-          height: '100%',
-          zIndex: 1,
-          pointerEvents: 'none',
-        }}
-      >
-        <Suspense fallback={<OrbitalFallback />}>
-          {/* prefers-reduced-motion → pas de 3D (économie 881Ko + accessibilité) */}
-          {!shouldReduceMotion && (
-            <ERPOrbitalScene
-              scrollProgress={0}
-              style={{ width: '100%', height: '100%' }}
-            />
-          )}
-          {shouldReduceMotion && <OrbitalFallback />}
-        </Suspense>
+    <section id="hero" style={S.section}>
+      {/* Ambient glows */}
+      <div style={S.glowTL} />
+      <div style={S.glowBR} />
+
+      {/* Noise texture */}
+      <div style={S.noise} aria-hidden="true" />
+
+      {/* Scene — right side */}
+      <div style={S.sceneWrap} aria-hidden="true">
+        <AfricanWorkplaceScene />
       </div>
 
-      {/* Gradient overlay to blend 3D with content */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'linear-gradient(90deg, rgba(255,255,255,1) 40%, rgba(255,255,255,0.3) 65%, transparent 80%)',
-          zIndex: 2,
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Left-to-right blend */}
+      <div style={S.blendOverlay} aria-hidden="true" />
 
-      {/* Content */}
-      <motion.div
-        className="hero-content"
-        style={{
-          position: 'relative',
-          zIndex: 3,
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: '8rem 2rem 4rem',
-          width: '100%',
-          opacity: heroOpacity,
-          y: heroY,
-        }}
-      >
+      {/* Text content */}
+      <motion.div style={{ ...S.content, opacity: heroOpacity, y: heroY }}>
         <motion.div
           variants={stagger}
           initial="hidden"
@@ -127,68 +306,77 @@ export default function HeroSection({ onCTA }) {
         >
           {/* Badge */}
           <motion.div variants={fadeUp}>
-            <div className="hero-badge">
-              <span className="hero-badge-dot" />
-              <Sparkles size={14} />
-              <span>ERP Intelligence — Nouvelle Génération</span>
+            <div style={S.badge}>
+              <span style={S.badgeDot} />
+              <Zap size={12} color="#34D399" />
+              <span style={S.badgeText}>ERP Intelligence — Nouvelle Génération</span>
             </div>
           </motion.div>
 
           {/* Headline */}
-          <motion.h1 className="hero-headline" variants={fadeUp}>
-            Visualisez votre{' '}
-            <span className="hero-headline-accent">entreprise en temps réel</span>
+          <motion.h1 style={S.headline} variants={fadeUp}>
+            Pilotez votre{' '}
+            <span style={S.headlineAccent}>entreprise africaine</span>
+            {' '}en temps réel
           </motion.h1>
 
           {/* Description */}
-          <motion.p className="hero-description" variants={fadeUp}>
-            I.P.C transforme la complexité de votre ERP en une expérience visuelle
-            fluide et narrative. Chaque département, chaque flux, chaque KPI —
-            observables en un coup d'œil.
+          <motion.p style={S.description} variants={fadeUp}>
+            I.P.C unifie finance, RH, CRM, production et stock dans une seule
+            expérience — fluide, intelligente, taillée pour les groupes africains
+            multi-filiales.
           </motion.p>
 
           {/* CTAs */}
-          <motion.div className="hero-cta-group" variants={fadeUp}>
+          <motion.div style={S.ctaGroup} variants={fadeUp}>
             <motion.button
-              className="btn btn-primary"
-              style={{ fontSize: '1.0625rem', padding: '0.9rem 2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              style={S.btnPrimary}
               onClick={onCTA}
-              whileHover={shouldReduceMotion ? {} : { scale: 1.03, y: -2 }}
+              whileHover={shouldReduceMotion ? {} : {
+                scale: 1.04,
+                y: -2,
+                boxShadow: '0 12px 40px rgba(5,150,105,0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
+              }}
               whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 18 }}
             >
               Demander une démo
               <ArrowRight size={18} />
             </motion.button>
 
             <motion.button
-              className="btn btn-secondary"
-              style={{ fontSize: '1.0625rem', padding: '0.9rem 1.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              style={S.btnSecondary}
               onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
-              whileHover={shouldReduceMotion ? {} : { scale: 1.02 }}
+              whileHover={shouldReduceMotion ? {} : {
+                scale: 1.02,
+                background: 'rgba(255,255,255,0.07)',
+                borderColor: 'rgba(52,211,153,0.28)',
+              }}
               whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 18 }}
             >
-              <Play size={16} fill="currentColor" />
+              <Play size={15} fill="currentColor" />
               Voir en action
             </motion.button>
           </motion.div>
 
           {/* Stats */}
-          <motion.div className="hero-stats" variants={fadeUp}>
+          <motion.div style={S.stats} variants={fadeIn}>
             {[
-              { value: '500+', label: 'Entreprises' },
+              { value: '500+',  label: 'Entreprises' },
               null,
               { value: '99.9%', label: 'Uptime SLA' },
               null,
-              { value: '< 2s', label: 'Chargement' },
+              { value: '< 2s',  label: 'Chargement' },
+              null,
+              { value: '12+',   label: 'Pays couverts' },
             ].map((item, i) =>
               item === null ? (
-                <div key={i} className="hero-stat-divider" />
+                <div key={i} style={S.statDivider} aria-hidden="true" />
               ) : (
-                <div key={i} className="hero-stat">
-                  <span className="hero-stat-value">{item.value}</span>
-                  <span className="hero-stat-label">{item.label}</span>
+                <div key={i} style={S.stat}>
+                  <span style={S.statValue}>{item.value}</span>
+                  <span style={S.statLabel}>{item.label}</span>
                 </div>
               )
             )}
@@ -198,14 +386,15 @@ export default function HeroSection({ onCTA }) {
 
       {/* Scroll hint */}
       <motion.div
-        className="hero-scroll-hint"
-        style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 4 }}
+        style={S.scrollHint}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5, duration: 0.6 }}
+        transition={{ delay: 1.8, duration: 0.7 }}
+        aria-hidden="true"
       >
-        <span>Défiler pour explorer</span>
-        <ChevronDown size={18} className="hero-scroll-arrow" />
+        <span>Défiler</span>
+        {!shouldReduceMotion && <ScrollArrow />}
+        {shouldReduceMotion && <ChevronDown size={16} />}
       </motion.div>
     </section>
   );

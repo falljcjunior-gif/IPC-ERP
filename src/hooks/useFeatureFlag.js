@@ -152,7 +152,7 @@ export const useFeatureFlags = (keys) => {
       }
     })();
     return () => { cancelled = true; };
-  }, [keys.join(',')]); // eslint-disable-line
+  }, [keys.join(',')]);  
 
   return { flags, isLoading };
 };
