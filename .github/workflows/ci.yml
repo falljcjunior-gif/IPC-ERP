@@ -217,6 +217,9 @@ jobs:
           channelId: live
           projectId: ${{ env.FIREBASE_PROJECT }}
 
+      - name: Install Functions dependencies
+        run: npm ci --prefix functions
+
       - name: Deploy Firebase Functions
         run: npx firebase-tools deploy --only functions --project ${{ env.FIREBASE_PROJECT }}
         env:

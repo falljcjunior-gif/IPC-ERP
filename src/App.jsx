@@ -70,7 +70,7 @@ function App() {
     initRegistry();
   }, []);
 
-  const theme = 'light';
+  const theme = 'dark';
 
   useEffect(() => {
     const setUser = useStore.getState().setUser;
@@ -179,42 +179,41 @@ const InitializingView = ({ label = "Initialisation du noyau..." }) => (
   <div style={{
     height: '100vh', display: 'flex', flexDirection: 'column',
     alignItems: 'center', justifyContent: 'center',
-    background: '#FFFFFF', gap: 28,
+    background: '#060E1B', gap: 28,
     fontFamily: "'Outfit', 'Inter', -apple-system, sans-serif",
   }}>
     {/* IPC Green Blocks cube mark */}
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <svg width="34" height="30" viewBox="0 0 64 56" fill="none">
-        <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#0F0F10"/>
-        <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.28)"/>
-        <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(0,0,0,0.14)"/>
-        <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="rgba(0,0,0,0.75)"/>
-        <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.22)"/>
-        <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(0,0,0,0.11)"/>
-        <path d="M18 29 L34 20 L46 16 L46 32 L34 36 L18 45 Z" fill="rgba(0,0,0,0.07)"/>
+        <path d="M2 20 L18 11 L34 20 L18 29 Z" fill="#10B981"/>
+        <path d="M2 20 L2 36 L18 45 L18 29 Z" fill="rgba(16,185,129,0.5)"/>
+        <path d="M34 20 L34 36 L18 45 L18 29 Z" fill="rgba(16,185,129,0.28)"/>
+        <path d="M30 8 L46 0 L62 8 L46 16 Z" fill="#34D399"/>
+        <path d="M30 8 L30 24 L46 32 L46 16 Z" fill="rgba(52,211,153,0.5)"/>
+        <path d="M62 8 L62 24 L46 32 L46 16 Z" fill="rgba(52,211,153,0.28)"/>
+        <path d="M18 29 L34 20 L46 16 L46 32 L34 36 L18 45 Z" fill="rgba(16,185,129,0.15)"/>
       </svg>
       <div>
-        <div style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '0.24em', color: '#9CA3AF', textTransform: 'uppercase', lineHeight: 1 }}>
+        <div style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '0.24em', color: '#94A3B8', textTransform: 'uppercase', lineHeight: 1 }}>
           I.P.C GREEN BLOCKS
         </div>
-        <div style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.32em', color: '#0F0F10', textTransform: 'uppercase', lineHeight: 1.4 }}>
+        <div style={{ fontSize: '12px', fontWeight: 800, letterSpacing: '0.32em', color: '#F0F6FF', textTransform: 'uppercase', lineHeight: 1.4 }}>
           INTELLIGENCE
         </div>
       </div>
     </div>
-    {/* Thin scan line */}
-    <div style={{ width: 120, height: 1, background: 'rgba(0,0,0,0.08)', borderRadius: 1, overflow: 'hidden' }}>
-      <div style={{ height: '100%', background: '#0F0F10', animation: 'ipc-scan 1.6s ease-in-out infinite' }} />
+    {/* Thin emerald scan line */}
+    <div style={{ width: 120, height: 1, background: 'rgba(16,185,129,0.08)', borderRadius: 1, overflow: 'hidden' }}>
+      <div style={{ height: '100%', background: 'linear-gradient(90deg, transparent, #10B981, transparent)', animation: 'ipc-scan 1.6s ease-in-out infinite' }} />
     </div>
-    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.22em', color: '#9CA3AF', textTransform: 'uppercase' }}>
+    <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.22em', color: '#94A3B8', textTransform: 'uppercase' }}>
       {label}
     </div>
     <style>{`
       @keyframes ipc-scan {
-        0%   { transform: scaleX(0); transform-origin: left; }
-        49%  { transform: scaleX(1); transform-origin: left; }
-        50%  { transform: scaleX(1); transform-origin: right; }
-        100% { transform: scaleX(0); transform-origin: right; }
+        0%   { transform: scaleX(0) translateX(-100%); }
+        50%  { transform: scaleX(1) translateX(0); }
+        100% { transform: scaleX(0) translateX(100%); }
       }
     `}</style>
   </div>

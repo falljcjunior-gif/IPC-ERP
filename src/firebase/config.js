@@ -1,11 +1,15 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, initializeFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 import { getDatabase } from "firebase/database";
 import { getFunctions } from "firebase/functions";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import logger from '../utils/logger';
 
 // Helper pour décoder les clés en production sans déclencher les alertes de sécurité statiques
@@ -26,47 +30,36 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 
 // ── [SECURITY] Firebase App Check ────────────────────────────────────
-// SETUP REQUIS (une seule fois) :
-//   1. Firebase Console → App Check → Register app → reCAPTCHA Enterprise
-//   2. Copier le Site Key dans VITE_RECAPTCHA_SITE_KEY (.env)
-//   3. Activer enforceAppCheck: true dans chaque Cloud Function
-//
-// En DEV : le debug token est auto-généré par le SDK et affiché dans la console.
-//          Enregistrer ce token dans Firebase Console → App Check → Apps → Add debug token.
-// En PROD : la clé reCAPTCHA Enterprise est obligatoire avant de passer enforceAppCheck: true.
-if (typeof window !== 'undefined') {
-  const recaptchaKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-  const isDevMode = import.meta.env.DEV || import.meta.env.MODE === 'development';
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const APPCHECK_DEBUG_TOKEN = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN;
+const APP_CHECK_ENABLED = Boolean(
+  RECAPTCHA_SITE_KEY && (import.meta.env.PROD || import.meta.env.VITE_ENABLE_APPCHECK === 'true')
+);
 
-  if (recaptchaKey) {
-    // PRODUCTION : reCAPTCHA Enterprise
-    try {
-      initializeAppCheck(app, {
-        provider: new ReCaptchaEnterpriseProvider(recaptchaKey),
-        isTokenAutoRefreshEnabled: true,
-      });
-      logger.info('[AppCheck] ✅ reCAPTCHA Enterprise activé');
-    } catch (e) {
-      logger.warn('[AppCheck] reCAPTCHA init failed:', e.message);
-    }
-  } else if (isDevMode) {
-    // DEV : debug token auto — copier le token affiché dans Firebase Console → App Check
-     
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    logger.info('[AppCheck] 🔧 Debug mode — token auto-généré (voir console)');
-  } else {
-    logger.warn('[AppCheck] ⚠️ VITE_RECAPTCHA_SITE_KEY absent — App Check désactivé. Configurer .env.production');
+if (typeof window !== 'undefined' && !import.meta.env?.VITEST && APP_CHECK_ENABLED) {
+  if (APPCHECK_DEBUG_TOKEN) {
+    window.FIREBASE_APPCHECK_DEBUG_TOKEN = APPCHECK_DEBUG_TOKEN;
+  }
+
+  try {
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
+    logger.info('[AppCheck] reCAPTCHA Enterprise active');
+  } catch (e) {
+    logger.warn('[AppCheck] reCAPTCHA init failed:', e.message);
   }
 }
 
 export const auth = getAuth(app);
 
-// [FIX P2] Utiliser autoDetect plutôt que force long polling.
-// experimentalAutoDetectLongPolling : WebSocket natif si disponible (Chrome/Firefox),
-// repli automatique sur long polling (Safari, proxies corporate).
-// Élimine la dégradation de performance de forceLongPolling en prod.
+// [FIX REAL-TIME] Auto-detect long polling and keep multi-tab IndexedDB cache.
 export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
 });
 
 export const rtdb = getDatabase(app);
@@ -74,17 +67,5 @@ export const storage = getStorage(app);
 export const functions = getFunctions(app, 'europe-west1'); // Region standard pour l'ERP
 export const messaging = (typeof window !== 'undefined' && typeof navigator !== 'undefined') ? getMessaging(app) : null;
 
-// Activer le mode Offline-First (Uniquement hors mode TEST)
-if (typeof window !== 'undefined' && !import.meta.env?.VITEST) {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      logger.warn('[Firestore] Multi-tab persistence: un seul onglet actif à la fois');
-    } else if (err.code === 'unimplemented') {
-      logger.warn('[Firestore] Persistence IndexedDB non supportée par ce navigateur');
-    }
-  });
-}
-
 export { firebaseConfig };
 export default app;
-

@@ -140,13 +140,31 @@ exports.detectPrivilegeEscalation = onDocumentCreated(
   },
   async (event) => {
     const data = event.data?.data();
-    if (!data || data.action !== 'ROLE_CHANGE') return;
+    if (!data) return;
 
-    const { targetUid, oldRole, newRole, performedBy, timestamp } = data;
+    // Match both operation field names used across the codebase
+    const op = data.operation || data.action || '';
+    const isRoleOp = ['SET_ROLE', 'ROLE_CHANGE', 'UPDATE_PERMISSIONS', 'MIGRATE_GUEST_TO_EMPLOYEE'].includes(op);
+    if (!isRoleOp) return;
 
-    // Escalade vers un rôle élevé ?
-    const sensitiveRoles = ['SUPER_ADMIN', 'ADMIN', 'HOLDING_ADMIN'];
-    if (!sensitiveRoles.includes(newRole)) return;
+    // Normalise field names — setUserRole uses changedBy/docId, older logs use performedBy/targetUid
+    const targetUid  = data.docId       || data.targetUid   || '?';
+    const performedBy = data.changedBy  || data.performedBy || 'system';
+    const timestamp   = data.timestamp;
+
+    // Extract old/new roles from diff or top-level fields
+    const oldRole = data.changes?.role?.from || data.oldRole || null;
+    const newRole = data.changes?.role?.to   || data.newRole || data.summary?.match?.(/→\s*(\S+)/)?.[1] || null;
+
+    // Only alert if a role actually changed
+    if (!newRole) return;
+
+    const SUPER_ADMIN_ROLES = new Set(['SUPER_ADMIN', 'HOLDING_CEO', 'GROUP_AUDITOR']);
+    const isEscalation = SUPER_ADMIN_ROLES.has(newRole);
+    // [BUG FIX] Also detect DEMOTION from a protected role (the actual bug scenario)
+    const isDemotion   = oldRole && SUPER_ADMIN_ROLES.has(oldRole) && !SUPER_ADMIN_ROLES.has(newRole);
+
+    if (!isEscalation && !isDemotion) return;
 
     // Hors horaires de bureau ? (avant 08:00 ou après 20:00 UTC)
     const hour = new Date(timestamp?.toDate?.() || Date.now()).getUTCHours();
@@ -154,13 +172,15 @@ exports.detectPrivilegeEscalation = onDocumentCreated(
 
     const riskScore = ANOMALY_SCORES.PRIVILEGE_ESCALATE
       + (isOddHours ? ANOMALY_SCORES.ODD_HOURS_ACCESS : 0)
-      + (newRole === 'SUPER_ADMIN' ? 20 : 0);
+      + (isEscalation && newRole === 'SUPER_ADMIN' ? 20 : 0)
+      + (isDemotion ? 35 : 0);  // Demotion of a super-privileged user is riskier than escalation
 
-    logger.warn(`[SIEM] Privilege escalation: ${oldRole} → ${newRole} for ${targetUid}`);
+    const eventType = isDemotion ? 'PRIVILEGE_DEMOTION' : 'PRIVILEGE_ESCALATION';
+    logger.warn(`[SIEM] ${eventType}: ${oldRole || '?'} → ${newRole} for ${targetUid} by ${performedBy}`);
 
     await writeSecurityEvent({
-      type:        'PRIVILEGE_ESCALATION',
-      severity:    riskScore >= RISK_THRESHOLDS.HIGH ? 'HIGH' : 'MEDIUM',
+      type:        eventType,
+      severity:    riskScore >= RISK_THRESHOLDS.CRITICAL ? 'CRITICAL' : riskScore >= RISK_THRESHOLDS.HIGH ? 'HIGH' : 'MEDIUM',
       targetUid,
       oldRole,
       newRole,
@@ -170,11 +190,13 @@ exports.detectPrivilegeEscalation = onDocumentCreated(
     });
 
     if (riskScore >= RISK_THRESHOLDS.HIGH) {
-      await alertAdmins(
-        '⚠️ Escalade de privilège détectée',
-        `${targetUid} est passé de ${oldRole} à ${newRole}${isOddHours ? ' (hors horaires)' : ''}`,
-        { targetUid, oldRole, newRole }
-      );
+      const title = isDemotion
+        ? '🚨 Rétrogradation d\'un rôle protégé détectée'
+        : '⚠️ Escalade de privilège détectée';
+      const body = isDemotion
+        ? `ALERTE : ${targetUid} rétrogradé de ${oldRole} → ${newRole} par ${performedBy}${isOddHours ? ' (hors horaires)' : ''}. Vérification requise.`
+        : `${targetUid} est passé de ${oldRole || '?'} à ${newRole}${isOddHours ? ' (hors horaires)' : ''}`;
+      await alertAdmins(title, body, { targetUid, oldRole, newRole, performedBy });
     }
   }
 );

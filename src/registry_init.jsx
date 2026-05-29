@@ -1,25 +1,23 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { lazy } from 'react';
 import { registry } from './services/Registry';
 import { 
-  Home, Users, ShoppingCart, Mail, Package, Truck,
-  Factory, Layers, CreditCard, Landmark, Wallet,
-  FileSignature, TrendingUp, BarChart3, Users2, Clock, Briefcase,
-  Calendar, Folder, LifeBuoy, Grid, Activity, Zap, ShieldCheck,
-  Settings, MessageCircle, Pin, PinOff, Landmark as LandmarkIcon,
-  PieChart, History as HistoryIcon, UserCircle, Scale, Heart, Rocket, Inbox, Shield,
+  Users, ShoppingCart, Mail, Package, Truck,
+  Factory, CreditCard, Landmark, Wallet,
+  FileSignature, BarChart3, Users2, Briefcase, 
+  Calendar, Folder, LifeBuoy, Zap, ShieldCheck, 
+  Settings, Landmark as LandmarkIcon,
+  PieChart, UserCircle, Scale, Heart, Rocket, Inbox, Shield,
   Banknote, Smartphone, GraduationCap, Building2
 } from 'lucide-react';
 
 // --- LAZY LOADED CORE COMPONENTS & MODULES ---
 // This prevents circular dependencies and heavy initialization at startup.
-const GlobalDashboard = lazy(() => import('./components/GlobalDashboard'));
 const PersonalWorkspace = lazy(() => import('./components/PersonalWorkspace'));
 const CRM = lazy(() => import('./modules/crm/CRM'));
 const Sales = lazy(() => import('./modules/sales/Sales'));
-const Production = lazy(() => import('./modules/production/Production'));
 const LogisticsHub = lazy(() => import('./modules/logistics/LogisticsHub'));
 const FinanceControlCenter = lazy(() => import('./modules/finance/FinanceControlCenter'));
-const EnterpriseHub = lazy(() => import('./modules/enterprise/EnterpriseHub'));
 const Connect = lazy(() => import('./modules/connect/ConnectHub'));
 const ControlHub = lazy(() => import('./modules/admin/ControlHub'));
 const TalentHub = lazy(() => import('./modules/hr/TalentHub'));
@@ -29,23 +27,14 @@ const LegalHub = lazy(() => import('./modules/legal/LegalHub'));
 const SignatureHub = lazy(() => import('./modules/signature/SignatureHub'));
 const Marketing = lazy(() => import('./modules/marketing/Marketing'));
 const BI = lazy(() => import('./modules/bi/BIHub'));
-const MasterData = lazy(() => import('./modules/MasterData'));
-const CalendarModule = lazy(() => import('./modules/Calendar'));
-const Timesheets = lazy(() => import('./modules/Timesheets'));
 const Quality = lazy(() => import('./modules/Quality'));
 const Expenses = lazy(() => import('./modules/Expenses'));
 const DMS = lazy(() => import('./modules/DMS'));
-const Contracts = lazy(() => import('./modules/Contracts'));
-const Planning = lazy(() => import('./modules/Planning'));
 const Analytics = lazy(() => import('./modules/Analytics'));
-const StaffPortal = lazy(() => import('./modules/StaffPortal'));
-const History = lazy(() => import('./modules/History'));
-const Workflows = lazy(() => import('./modules/Workflows'));
 const Shipping = lazy(() => import('./modules/Shipping'));
 const PlanningTemps = lazy(() => import('./components/PlanningTemps'));
 const FleetHub = lazy(() => import('./modules/enterprise/FleetHub'));
 const HelpdeskHub = lazy(() => import('./modules/enterprise/HelpdeskHub'));
-const MissionsPortal = lazy(() => import('./modules/MissionsPortal'));
 const NexusAcademy   = lazy(() => import('./modules/academy/NexusAcademy'));
 const HoldingCockpit    = lazy(() => import('./modules/holding/HoldingCockpit'));
 const FoundationCockpit = lazy(() => import('./modules/foundation/FoundationCockpit'));

@@ -189,6 +189,16 @@ exports.forecastStockDepletion = aiForecast.forecastStockDepletion;
 exports.forecastCashFlow       = aiForecast.forecastCashFlow;
 exports.computeForecastNow     = aiForecast.computeForecastNow;
 
+// 16. Holding Governance — Server-side approval validation (BUG-02 fix)
+const holdingGovernance = require('./modules/holding_governance');
+exports.approveGovernanceItem  = holdingGovernance.approveGovernanceItem;
+exports.rejectGovernanceItem   = holdingGovernance.rejectGovernanceItem;
+
+// 17. Holding Consolidation — Aggregate group metrics (BUG-01 fix)
+const holdingConsolidation = require('./modules/holding_consolidation');
+exports.aggregateHoldingMetrics       = holdingConsolidation.aggregateHoldingMetrics;
+exports.triggerConsolidationRefresh   = holdingConsolidation.triggerConsolidationRefresh;
+
 // 9. Firestore Partitioning Utilities
 // Pas d'export Cloud Function — utilitaires pour la migration
 // const partitioning = require('./modules/firestore_partitioning');

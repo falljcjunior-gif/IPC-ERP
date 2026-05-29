@@ -3,6 +3,7 @@ const { logger } = require('firebase-functions');
 const admin = require('firebase-admin');
 const { z } = require('zod');
 const { checkCallRate } = require('./rate_limiter');
+const { assertCanModifyRole, getRoleRank } = require('./roleGuard');
 
 const db = admin.firestore();
 
@@ -77,9 +78,30 @@ exports.setUserRole = onCall({
   }
 
   try {
+    // 4b. Read target's current role and enforce hierarchy guard
+    const targetUserAuth = await admin.auth().getUser(uid);
+    const existingClaims = targetUserAuth.customClaims || {};
+    const targetCurrentRole = existingClaims.role || null;
+
+    // SUPER_ADMIN can set any role for any user (highest privilege).
+    // But they cannot arbitrarily demote another SUPER_ADMIN without an extra check.
+    // A SUPER_ADMIN can only demote another SUPER_ADMIN if at least one other SUPER_ADMIN
+    // will remain in the system — prevents accidental full lockout.
+    if (targetCurrentRole === 'SUPER_ADMIN' && role !== 'SUPER_ADMIN' && uid !== request.auth.uid) {
+      const otherAdmins = await db.collection('users')
+        .where('role', '==', 'SUPER_ADMIN')
+        .limit(2)
+        .get();
+      const otherAdminCount = otherAdmins.docs.filter(d => d.id !== uid).length;
+      if (otherAdminCount < 1) {
+        logger.warn(`[setUserRole] Demotion of last SUPER_ADMIN ${uid} blocked — would lock out the system.`);
+        throw new HttpsError('failed-precondition',
+          'Impossible de rétrograder le dernier SUPER_ADMIN. Assignez d\'abord un autre SUPER_ADMIN.');
+      }
+    }
+
     // 5. Écrire les Custom Claims (source de vérité immuable côté client)
     // Inclut entity_id + entity_type + country_id si fournis — enforce isolation multi-tenant
-    const existingClaims = (await admin.auth().getUser(uid)).customClaims || {};
     const newClaims = {
       ...existingClaims,
       role,
@@ -103,14 +125,20 @@ exports.setUserRole = onCall({
     // 7. Forcer l'invalidation du token actuel (le user devra se re-connecter)
     await admin.auth().revokeRefreshTokens(uid);
 
-    // 8. Audit log
+    // 8. Audit log — structured for SIEM detectPrivilegeEscalation trigger
     await db.collection('audit_logs').add({
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
       collection: 'users',
       docId: uid,
       operation: 'SET_ROLE',
       changedBy: request.auth.uid,
-      summary: `Rôle modifié → ${role} pour l'utilisateur ${uid}`,
+      // SIEM-compatible diff fields
+      changes: {
+        role: { from: targetCurrentRole, to: role },
+      },
+      oldRole: targetCurrentRole,
+      newRole: role,
+      summary: `Rôle modifié ${targetCurrentRole || '?'} → ${role} pour l'utilisateur ${uid}`,
     });
 
     logger.info(`[setUserRole] ${uid} → ${role} par ${request.auth.uid}`);

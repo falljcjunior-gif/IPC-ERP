@@ -43,7 +43,8 @@ const item      = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, tra
 
 // ── Composant principal ───────────────────────────────────────────────────────
 const ImmobilisationsHub = () => {
-  const { formatCurrency, shellView } = useStore(s => ({ formatCurrency: s.formatCurrency, shellView: s.shellView }));
+  const formatCurrency = useStore(s => s.formatCurrency);
+  const shellView      = useStore(s => s.shellView);
   const { addToast } = useToastStore();
   const isMobile = shellView?.mobile;
 

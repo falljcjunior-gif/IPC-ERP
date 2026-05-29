@@ -134,6 +134,15 @@ export const createAdminSlice = (set, get) => ({
   },
 
   updateUserRole: async (userId, newRole) => {
+    // [RBAC GUARD] Role changes for SUPER_ADMIN must go through setUserRole (rbac.js),
+    // not this convenience helper. Check current role from store before sending to backend.
+    const allUsers = get().data?.base?.users || get().data?.employees || [];
+    const targetUser = allUsers.find(u => String(u.id) === String(userId));
+    const PROTECTED = ['SUPER_ADMIN', 'HOLDING_CEO', 'GROUP_AUDITOR'];
+    if (targetUser && PROTECTED.includes(targetUser.role)) {
+      throw new Error(`Le rôle ${targetUser.role} ne peut pas être modifié via ce panneau. Utilisez le module Rôles (setUserRole).`);
+    }
+
     const userPerms = get().permissions[userId] || { roles: [], moduleAccess: {} };
     const newPerms = { ...userPerms, roles: [newRole] };
     try {
