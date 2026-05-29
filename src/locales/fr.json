@@ -17,6 +17,11 @@
     "command_center": "Vue 360°",
     "analytics": "Analytique",
     "connect": "Connect & Communication",
+    "collapse_menu": "Réduire le menu",
+    "expand_menu": "Afficher le menu",
+    "collapse": "Réduire",
+    "expand": "Afficher",
+    "breadcrumb": "Fil d'Ariane",
     "legal": "Juridique",
     "fleet": "Flotte & Véhicules",
     "quality": "Qualité",
@@ -145,7 +150,14 @@
     "session_expired": "Votre session a expiré. Reconnectez-vous.",
     "unauthorized": "Accès refusé — Permissions insuffisantes",
     "welcome_back": "Bienvenue, {{name}}",
-    "remember_me": "Se souvenir de moi"
+    "remember_me": "Se souvenir de moi",
+    "change_password": "Changer de mot de passe",
+    "new_password": "Nouveau mot de passe",
+    "confirm_password": "Confirmer le mot de passe",
+    "passwords_mismatch": "Les mots de passe ne correspondent pas.",
+    "password_too_short": "Le mot de passe doit faire au moins 6 caractères.",
+    "password_updated": "Mot de passe mis à jour avec succès.",
+    "security_error": "Erreur de sécurité."
   },
   "finance": {
     "title": "Finance & Comptabilité",
