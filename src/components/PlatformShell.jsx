@@ -262,7 +262,7 @@ const PlatformShell = ({ theme, setView }) => {
       // Ne reroute QUE si l'app active n'est pas valide pour cet espace
       if (spaceHome) setActiveApp(spaceHome);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeSpace]);
 
   useEffect(() => {

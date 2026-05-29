@@ -40,7 +40,7 @@ export function useEventBus(topicOrTopics, handler, deps = []) {
       return EventBus.onMany(topicOrTopics, stableHandler);
     }
     return EventBus.on(topicOrTopics, stableHandler);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, Array.isArray(topicOrTopics) ? topicOrTopics : [topicOrTopics, ...deps]);
 }
 

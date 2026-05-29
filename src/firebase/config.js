@@ -51,7 +51,7 @@ if (typeof window !== 'undefined') {
     }
   } else if (isDevMode) {
     // DEV : debug token auto — copier le token affiché dans Firebase Console → App Check
-    // eslint-disable-next-line no-restricted-globals
+     
     self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     logger.info('[AppCheck] 🔧 Debug mode — token auto-généré (voir console)');
   } else {
