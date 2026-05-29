@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Bot, Save, Trash2, Plus, Zap } from 'lucide-react';
 
 const TrelloButlerModal = ({ project, updateProject, onClose }) => {

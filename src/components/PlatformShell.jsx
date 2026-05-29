@@ -12,6 +12,7 @@ import {
   Pin, PinOff, CreditCard, Landmark, Key, Camera, Globe, Command
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageTransition } from '../lib/MotionComponents';
 import { registry } from '../services/Registry';
 import { useStore } from '../store';
 import { isCreatorEmail } from '../utils/creators';
@@ -635,17 +636,9 @@ style={{
         />
         <AntigravitySearch isOpen={search.nexusOpen} onClose={(val) => setSearch(p => ({ ...p, nexusOpen: val }))} />
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeApp}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {renderContent()}
-          </motion.div>
-        </AnimatePresence>
+        <PageTransition id={activeApp}>
+          {renderContent()}
+        </PageTransition>
       </main>
 
       <Suspense fallback={null}>

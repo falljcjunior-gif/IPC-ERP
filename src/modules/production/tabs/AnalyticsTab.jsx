@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Activity, Zap, CheckCircle2, AlertTriangle, 
   BarChart3, Factory, Clock, Settings, ShieldCheck, 

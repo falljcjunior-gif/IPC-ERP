@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useAnimation, useInView } from 'framer-motion';
+import { useInView } from 'framer-motion';
 
 const AnimatedCounter = ({ from = 0, to, duration = 2, formatter }) => {
   const [currentValue, setCurrentValue] = useState(from);

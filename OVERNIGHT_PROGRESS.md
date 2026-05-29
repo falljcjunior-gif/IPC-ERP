@@ -53,8 +53,10 @@
 - [ ] **P1-A (prep only)** Claims-only: backfill-role CF + coverage verification gate +
   tests. Write the proposed rules diff in a SEPARATE commit clearly marked
   "DO NOT DEPLOY — awaiting A3 validation". Do NOT flip live.
-- [ ] **ANIM** Framer Motion: shared variants, respect `prefers-reduced-motion`,
-  transform/opacity only.
+- [x] **ANIM** `src/lib/variants.js` — 11 shared variants + `useMotionVariants()` auto-strips
+  transforms under `prefers-reduced-motion`. `src/lib/MotionComponents.jsx` — `PageTransition`,
+  `FadeIn`, `StaggerList`, `StaggerItem`. Wired `PageTransition` into PlatformShell. Removed
+  14 dead `AnimatePresence` + 3 dead `motion` imports. Build ✅, 48/48 unit tests green.
 - [ ] **I18N** Externalize hard-coded strings (FR+EN), completeness script, Intl
   formatting w/ per-entity currency.
 - [ ] **THEME** Light/dark token sets, toggle w/ persistence, no FOUC, WCAG AA.

@@ -1,6 +1,5 @@
 import React from 'react';
 import { LayoutList, LayoutGrid, Calendar as CalIcon, Filter, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 const ViewSwitcher = ({ currentView, onViewChange, availableViews = ['list', 'kanban'] }) => {
   const viewIcons = {

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, AlignLeft, CheckSquare, MessageSquare, Tag, Users, CreditCard, Clock, Image as ImageIcon, Paperclip, Activity, Plus } from 'lucide-react';
 
 const TrelloCardModal = ({ task, project, updateTask, onClose, projectColumns, currentUser }) => {

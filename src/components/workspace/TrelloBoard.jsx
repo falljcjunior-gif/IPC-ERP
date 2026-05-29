@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, MoreHorizontal, MessageSquare, AlignLeft, CheckSquare, Clock, Paperclip } from 'lucide-react';
 
 const TrelloBoard = ({ project, tasks, updateProject, updateTask, addTask, onCardClick, users = [], isAdmin = false }) => {

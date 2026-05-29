@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   FileCheck, ShieldCheck, Download, Trash2, 
   Send, History, FileText, Landmark, PenTool 

@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
 import {
   Activity, Zap, Target, TrendingUp, DollarSign,
   Briefcase, Users, LayoutDashboard, Sparkles

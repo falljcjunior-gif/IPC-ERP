@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Clock, Shield, Download, Activity } from 'lucide-react';
 import { useStore } from '../store';
 import EnterpriseView from '../components/EnterpriseView';
