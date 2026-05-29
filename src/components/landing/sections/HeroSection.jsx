@@ -28,14 +28,6 @@ const FEATURES = [
   { icon: BrainCircuit,  label: 'IA intégrée' },
 ];
 
-// ── Stats bar ────────────────────────────────────────────────────────────────
-const STATS = [
-  { value: '+1 200',  label: 'Entreprises équipées' },
-  { value: '+50',     label: 'Pays en Afrique' },
-  { value: '99.9%',   label: 'Disponibilité' },
-  { value: '+30%',    label: 'Productivité moyenne' },
-  { value: '360°',    label: 'Vision unifiée' },
-];
 
 // ── Inline styles ─────────────────────────────────────────────────────────────
 const S = {
@@ -46,16 +38,16 @@ const S = {
     background: '#ffffff',
     overflow: 'hidden',
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
   },
 
   // ---- hero body (text + video)
   heroBody: {
     position: 'relative',
-    flex: 1,
+    width: '100%',
+    minHeight: '100svh',
     display: 'flex',
     alignItems: 'center',
-    minHeight: 'calc(100svh - 132px)', // leave room for stats bar
   },
 
   // ---- video wrapper — right side, absolute
@@ -229,87 +221,6 @@ const S = {
     color: '#374151',
   },
 
-  // ---- trust bar
-  trustBar: {
-    position: 'relative',
-    zIndex: 2,
-    borderTop: '1px solid #F3F4F6',
-    background: '#ffffff',
-    padding: '1.25rem 2rem',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2rem',
-    maxWidth: 1280,
-    margin: '0 auto',
-    width: '100%',
-    flexWrap: 'wrap',
-  },
-  trustLabel: {
-    fontSize: 12,
-    fontWeight: 600,
-    color: '#9CA3AF',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    flexShrink: 0,
-  },
-  trustLogos: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '2rem',
-    flexWrap: 'wrap',
-  },
-  trustLogo: {
-    fontSize: 13,
-    fontWeight: 800,
-    color: '#9CA3AF',
-    letterSpacing: '0.04em',
-    textTransform: 'uppercase',
-  },
-
-  // ---- stats bar
-  statsBar: {
-    position: 'relative',
-    zIndex: 2,
-    borderTop: '1px solid #F3F4F6',
-    background: '#F9FAFB',
-    padding: '0',
-    width: '100%',
-  },
-  statsInner: {
-    maxWidth: 1280,
-    margin: '0 auto',
-    padding: '0 2rem',
-    display: 'flex',
-    alignItems: 'stretch',
-  },
-  statItem: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    padding: '1.25rem 0.5rem',
-    borderRight: '1px solid #E5E7EB',
-  },
-  statItemLast: {
-    borderRight: 'none',
-  },
-  statValue: {
-    fontSize: 'clamp(1.35rem, 2.2vw, 1.75rem)',
-    fontWeight: 900,
-    color: '#059669',
-    letterSpacing: '-0.03em',
-    lineHeight: 1.1,
-  },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: 500,
-    color: '#6B7280',
-    textAlign: 'center',
-    letterSpacing: '0.02em',
-  },
-
   // scroll hint
   scrollHint: {
     position: 'absolute',
@@ -471,45 +382,6 @@ export default function HeroSection({ onCTA }) {
 
         <ScrollHint reduced={reduced} />
       </div>
-
-      {/* ── Trust bar ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.1, duration: 0.6, ease: EASE }}
-      >
-        <div style={S.trustBar}>
-          <span style={S.trustLabel}>Déjà adopté par des entreprises ambitieuses</span>
-          <div style={S.trustLogos}>
-            {['Sonatel', 'COFINA', 'Dangote', 'AXIAN', 'Ecobank'].map(name => (
-              <span key={name} style={S.trustLogo}>{name}</span>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── Stats bar ── */}
-      <motion.div
-        style={S.statsBar}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.3, duration: 0.6, ease: EASE }}
-      >
-        <div style={S.statsInner}>
-          {STATS.map((s, i) => (
-            <div
-              key={s.label}
-              style={i === STATS.length - 1
-                ? { ...S.statItem, ...S.statItemLast }
-                : S.statItem
-              }
-            >
-              <span style={S.statValue}>{s.value}</span>
-              <span style={S.statLabel}>{s.label}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
 
     </section>
   );
