@@ -151,11 +151,10 @@ function IPCLogo() {
 // ════════════════════════════════════════════════════════════════════════════
 
 export default function HoldingCockpit() {
-  const { userRole, user, currentUser } = useStore(s => ({
-    userRole:    s.userRole || s.user?.role,
-    user:        s.user,
-    currentUser: s.currentUser,
-  }));
+  // ⚠️ Use separate selectors — inline object selectors cause infinite re-renders in Zustand
+  const userRole    = useStore(s => s.userRole || s.user?.role);
+  const user        = useStore(s => s.user);
+  const currentUser = useStore(s => s.currentUser);
   const role     = userRole;
   const callerUid = user?.uid || currentUser?.uid || null;
 

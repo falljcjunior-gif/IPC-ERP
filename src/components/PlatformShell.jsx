@@ -34,6 +34,7 @@ import './HoldingShell.css';
 import './SubsidiaryShell.css';
 import './FoundationShell.css';
 import './shell/ERPDark.css';
+import './AuraVision.css';
 import CommandPalette from './shell/CommandPalette';
 import ErrorBoundary from './ErrorBoundary';
 import { logger } from '../utils/logger';
