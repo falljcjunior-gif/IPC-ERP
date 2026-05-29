@@ -898,8 +898,8 @@ service cloud.firestore {
       // subsidiaries see their own + parent holding
       allow read: if isAuthenticated() && (
         isHoldingLevel() ||
-        resource.data.id == getEntityId() ||
-        resource.data.parentId == getEntityId() ||
+        resource.data.entity_id == getEntityId() ||
+        resource.data.parent_id == getEntityId() ||
         // v3.0 — country governance: country-scoped users see same-country entities
         (isCountryLevel() && resource.data.country_id == getCountryId())
       );
@@ -970,62 +970,90 @@ service cloud.firestore {
 
     // ── Foundation Donations ──────────────────────────────────────────────
     match /foundation_donations/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create: if isFoundationLevel();
-      allow update: if isFoundationLevel() && (
-        isFoundationAdmin() ||
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'statut', 'approuve_par', 'approuve_le', 'validation'
-        ])
-      );
+      // [3-SPACE ISOLATION] Une fondation ne lit/écrit QUE ses propres dons. Holding = lecture seule.
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id)
+        && (
+          isFoundationAdmin() ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'statut', 'approuve_par', 'approuve_le', 'validation'
+          ])
+        );
       allow delete: if false; // Financial immutability
     }
 
     // ── Foundation Programs ───────────────────────────────────────────────
     match /foundation_programs/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create, update: if isFoundationLevel();
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if false;
     }
 
     // ── Foundation Beneficiaries ──────────────────────────────────────────
     match /foundation_beneficiaries/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create, update: if isFoundationLevel();
+      // [3-SPACE ISOLATION] Données personnelles bénéficiaires — strictement cloisonnées par fondation.
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if false; // Personal data — soft delete only
     }
 
     // ── Foundation Campaigns ──────────────────────────────────────────────
     match /foundation_campaigns/{docId} {
-      allow read: if isAuthenticated(); // Public visibility for campaigns
-      allow create, update: if isFoundationLevel();
-      allow delete: if isFoundationAdmin();
+      // [3-SPACE ISOLATION 2026-05-29] Lecture publique (isAuthenticated) RETIRÉE :
+      // exposait les campagnes d'une fondation à toutes les autres entités (filiales incluses).
+      // Scope entité strict — fondation propriétaire + Holding (lecture seule).
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id);
+      allow delete: if isFoundationAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
     // ── Foundation Finance (Budgets, Disbursements) ───────────────────────
     match /foundation_finance/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create: if isFoundationLevel();
-      allow update: if isFoundationLevel() && (
-        isFoundationAdmin() ||
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
-          'statut', 'approuve_par', 'approuve_le', 'commentaire_validation'
-        ])
-      );
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id)
+        && (
+          isFoundationAdmin() ||
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+            'statut', 'approuve_par', 'approuve_le', 'commentaire_validation'
+          ])
+        );
       allow delete: if false;
     }
 
     // ── Foundation Partners ───────────────────────────────────────────────
     match /foundation_partners/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create, update: if isFoundationLevel();
-      allow delete: if isFoundationAdmin();
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      allow create: if isFoundationLevel() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationLevel()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id);
+      allow delete: if isFoundationAdmin() && canWriteOwnEntity(resource.data.entity_id);
     }
 
     // ── Foundation Governance (Board decisions, minutes) ──────────────────
     match /foundation_governance/{docId} {
-      allow read: if isFoundationLevel() || isHoldingLevel();
-      allow create, update: if isFoundationAdmin();
+      allow read: if (isFoundationLevel() && canReadOwnEntity(resource.data.entity_id)) || isHoldingLevel();
+      // create/update : FOUNDATION_DG de la fondation elle-même (SUPER_ADMIN en urgence).
+      // canWriteOwnEntity (sans bypass Holding) retire l'écriture Holding sur ces données opérationnelles.
+      allow create: if isFoundationAdmin() && canWriteOwnEntity(request.resource.data.entity_id);
+      allow update: if isFoundationAdmin()
+        && canWriteOwnEntity(resource.data.entity_id)
+        && canWriteOwnEntity(request.resource.data.entity_id);
       allow delete: if false;
     }
 

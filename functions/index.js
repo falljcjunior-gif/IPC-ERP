@@ -139,6 +139,7 @@ exports.processMailOutbox = mail.processMailOutbox;
 // 11. One-shot Migrations (A.1.b backfill, etc.) — SUPER_ADMIN only
 const migrations = require('./modules/migrations');
 exports.backfillHrPrivateEntityId = migrations.backfillHrPrivateEntityId;
+exports.backfillFoundationEntityId = migrations.backfillFoundationEntityId;
 
 // 8. Rate Limiter (middleware — importé par les autres modules)
 // Pas d'export Cloud Function — utilisé comme middleware dans nexus.js et social.js
