@@ -18,6 +18,9 @@ ui-debug.log
 # Firestore emulator data exports
 .firebase-emulator/
 
+# Claude Code internal worktrees directory
+.claire/
+
 # Firebase Auth export / import seed files — contain password hashes
 users.json
 # reCAPTCHA API test payloads — contain site key
